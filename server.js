@@ -37,7 +37,7 @@ const startTime = Date.now();
 // ---------------------------------------------------------------------------
 // Advisory file lock for task_board.md (prevents parallel-write corruption)
 // ---------------------------------------------------------------------------
-const TASK_LOCK_PATH = path.join(require("os").tmpdir(), "aicompany_taskboard.lock");
+const TASK_LOCK_PATH = path.join(DIR, ".aicompany_taskboard.lock");
 let _taskLockHolder = null;
 
 function withTaskLock(fn) {
@@ -910,7 +910,7 @@ async function handleRequest(req, res) {
     const tasks = parseTaskBoard().filter(
       (t) => (t.assignee || "").toLowerCase() === name.toLowerCase()
     );
-    return json(res, { name, status, heartbeat, statusMd, status_md: statusMd, persona, todo, inbox, tasks });
+    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks });
   }
 
   const agentLogMatch = pathname.match(/^\/api\/agents\/([^/]+)\/log$/);
@@ -938,11 +938,18 @@ async function handleRequest(req, res) {
     });
     res.write("event: connected\ndata: {}\n\n");
 
+    let streamClosed = false;
     function sendLines(text) {
+      if (streamClosed) return;
       const lines = text.split("\n");
       for (const line of lines) {
         if (line.trim()) {
-          res.write("event: log\ndata: " + JSON.stringify(line) + "\n\n");
+          try {
+            res.write("event: log\ndata: " + JSON.stringify(line) + "\n\n");
+          } catch (_) {
+            streamClosed = true;
+            return;
+          }
         }
       }
     }
@@ -1012,6 +1019,7 @@ async function handleRequest(req, res) {
     }, 15000);
 
     req.on("close", () => {
+      streamClosed = true;
       clearInterval(pollInterval);
       clearInterval(keepalive);
       if (watcher) { try { watcher.close(); } catch (_) {} }
@@ -1182,6 +1190,7 @@ async function handleRequest(req, res) {
     const body = await parseBody(req);
     const note = body.note ? String(body.note).trim() : "";
     if (!note) return badRequest(res, "note is required");
+    if (note.length > 10000) return badRequest(res, "note exceeds maximum length of 10000 characters");
     const personaPath = path.join(d, "persona.md");
     const existing = safeRead(personaPath) || "";
     const timestamp = new Date().toISOString();
@@ -1204,6 +1213,7 @@ async function handleRequest(req, res) {
     const body = await parseBody(req);
     const observation = body.observation ? String(body.observation).trim() : "";
     if (!observation) return badRequest(res, "observation is required");
+    if (observation.length > 10000) return badRequest(res, "observation exceeds maximum length of 10000 characters");
     const personaPath = path.join(d, "persona.md");
     const existing = safeRead(personaPath) || "";
     const timestamp = new Date().toISOString();
