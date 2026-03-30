@@ -3061,10 +3061,13 @@ function renderResearch() {
       '<span>' + esc(name) + '</span><span style="color:#555;font-size:0.75rem;">View &rarr;</span>' +
     '</li>';
   }).join('');
-  list.querySelectorAll('.research-item').forEach(el => {
-    el.addEventListener('click', () => viewResearch(decodeURIComponent(el.dataset.researchName)));
-  });
 }
+
+// Single delegated listener — avoids re-attaching per-item handlers on every render
+document.getElementById('research-list').addEventListener('click', e => {
+  const item = e.target.closest('.research-item');
+  if (item && item.dataset.researchName) viewResearch(decodeURIComponent(item.dataset.researchName));
+});
 
 document.getElementById('research-search').addEventListener('input', renderResearch);
 
@@ -3475,11 +3478,21 @@ function startModalLiveLog() {
   modalLiveLogSSE.addEventListener('connected', () => {
     if (statusEl) { statusEl.textContent = '● Live'; statusEl.style.color = '#00ff88'; }
     // After initial burst loads, scroll to bottom
-    setTimeout(() => { if (viewer) viewer.scrollTop = viewer.scrollHeight; }, 800);
+    setTimeout(() => {
+      const v = document.getElementById('modal-log-viewer');
+      if (v) v.scrollTop = v.scrollHeight;
+    }, 800);
   });
+  const capturedAgent = currentModalAgent;
   modalLiveLogSSE.addEventListener('log', (e) => {
-    let line;
-    try { line = JSON.parse(e.data); } catch (_) { line = e.data; }
+    // Guard: discard events if agent has changed or modal closed since SSE was opened
+    if (currentModalAgent !== capturedAgent) return;
+    const v = document.getElementById('modal-log-viewer');
+    if (!v) return;
+    // Normalize to string — JSON.parse may return an object for valid non-string JSON
+    let parsed;
+    try { parsed = JSON.parse(e.data); } catch (_) { parsed = e.data; }
+    const line = typeof parsed === 'string' ? parsed : JSON.stringify(parsed);
     let cls = 'log-line';
     if (/\[ASSISTANT\]|ASSISTANT/.test(line)) cls += ' log-assistant';
     else if (/\[TOOL\]|tool_use/.test(line)) cls += ' log-tool';
@@ -3489,10 +3502,10 @@ function startModalLiveLog() {
     const div = document.createElement('div');
     div.className = cls;
     div.textContent = line;
-    viewer.appendChild(div);
-    while (viewer.children.length > 2000) viewer.removeChild(viewer.firstChild);
+    v.appendChild(div);
+    while (v.children.length > 2000) v.removeChild(v.firstChild);
     const autoScroll = document.getElementById('modal-livelog-autoscroll');
-    if (!autoScroll || autoScroll.checked) viewer.scrollTop = viewer.scrollHeight;
+    if (!autoScroll || autoScroll.checked) v.scrollTop = v.scrollHeight;
   });
   modalLiveLogSSE.onerror = () => {
     if (statusEl) { statusEl.textContent = '○ Disconnected'; statusEl.style.color = '#ff4444'; }
