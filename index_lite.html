@@ -614,7 +614,7 @@ body {
 
   <!-- Global Search -->
   <div class="global-search">
-    <input type="text" id="global-search-input" placeholder="Search agents, tasks, messages... (or press Ctrl+K)">
+    <input type="text" id="global-search-input" placeholder="Search… (/ to focus · n new task · r refresh · ⌘K palette)">
   </div>
 
   <!-- TAB: Agents -->
@@ -674,11 +674,11 @@ body {
       <table class="task-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Priority</th>
-            <th>Assignee</th>
-            <th>Status</th>
-            <th>Created</th>
+            <th onclick="sortTasks('title')" style="cursor:pointer;user-select:none;">Title <span id="sort-title"></span></th>
+            <th onclick="sortTasks('priority')" style="cursor:pointer;user-select:none;">Priority <span id="sort-priority"></span></th>
+            <th onclick="sortTasks('assignee')" style="cursor:pointer;user-select:none;">Assignee <span id="sort-assignee"></span></th>
+            <th onclick="sortTasks('status')" style="cursor:pointer;user-select:none;">Status <span id="sort-status"></span></th>
+            <th onclick="sortTasks('created')" style="cursor:pointer;user-select:none;">Created <span id="sort-created"></span></th>
             <th></th>
           </tr>
         </thead>
@@ -904,6 +904,8 @@ let knowledgeData = {};
 let orgData = null;
 let statsData = null;
 let ceoInboxData = { unread: [], processed: [] };
+let taskSortField = 'created';
+let taskSortAsc = false;
 let currentAgentFilter = 'all';
 let currentModalAgent = null;
 let modalRefreshInterval = null;
@@ -1249,6 +1251,7 @@ function renderAgents() {
         '<button class="agent-action-btn" title="Start agent" onclick="agentAction(\'' + esc(name) + '\',\'start\')">▶</button>' +
         '<button class="agent-action-btn" title="Stop agent" onclick="agentAction(\'' + esc(name) + '\',\'stop\')">■</button>' +
         '<button class="agent-action-btn" title="Send DM" onclick="agentAction(\'' + esc(name) + '\',\'dm\')">✉</button>' +
+        '<button class="agent-action-btn" title="Ping: check OS process" onclick="pingAgent(event,\'' + esc(name) + '\')">⬡</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -1365,6 +1368,19 @@ function agentAction(name, action) {
     }).catch(() => setTimeout(refresh, 500));
 }
 
+function pingAgent(evt, name) {
+  evt.stopPropagation();
+  const btn = evt.target;
+  btn.textContent = '⏳';
+  fetch('/api/agents/' + encodeURIComponent(name) + '/ping')
+    .then(r => r.json())
+    .then(d => {
+      btn.textContent = d.running ? '✅' : '⭕';
+      btn.title = d.running ? 'Running (PIDs: ' + d.pids.join(',') + ')' : 'Not running';
+      setTimeout(() => { btn.textContent = '⬡'; btn.title = 'Ping: check OS process'; }, 3000);
+    }).catch(() => { btn.textContent = '⬡'; });
+}
+
 // ===== MODE SWITCH =====
 function openModeSwitchModal() {
   const badge = document.getElementById('mode-badge');
@@ -1469,6 +1485,24 @@ function closeDMAllModal() {
 }
 
 // ===== TASKS =====
+const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+const STATUS_ORDER = { in_progress: 0, open: 1, done: 2 };
+
+function sortTasks(field) {
+  if (taskSortField === field) {
+    taskSortAsc = !taskSortAsc;
+  } else {
+    taskSortField = field;
+    taskSortAsc = field === 'title' || field === 'assignee';
+  }
+  // Update sort indicators
+  ['title','priority','assignee','status','created'].forEach(f => {
+    const el = document.getElementById('sort-' + f);
+    if (el) el.textContent = taskSortField === f ? (taskSortAsc ? ' ▲' : ' ▼') : '';
+  });
+  renderTasks();
+}
+
 function renderTasks() {
   const tbody = document.getElementById('task-tbody');
   const search = document.getElementById('task-search').value.toLowerCase();
@@ -1485,6 +1519,18 @@ function renderTasks() {
   if (priorityFilter) filtered = filtered.filter(t => (t.priority || '') === priorityFilter);
   if (assigneeFilter) filtered = filtered.filter(t => (t.assignee || '') === assigneeFilter);
 
+  // Sort
+  filtered.sort((a, b) => {
+    let av, bv;
+    if (taskSortField === 'priority') { av = PRIORITY_ORDER[a.priority] ?? 99; bv = PRIORITY_ORDER[b.priority] ?? 99; }
+    else if (taskSortField === 'status') { av = STATUS_ORDER[a.status] ?? 99; bv = STATUS_ORDER[b.status] ?? 99; }
+    else if (taskSortField === 'created') { av = a.created || ''; bv = b.created || ''; }
+    else { av = (a[taskSortField] || '').toLowerCase(); bv = (b[taskSortField] || '').toLowerCase(); }
+    if (av < bv) return taskSortAsc ? -1 : 1;
+    if (av > bv) return taskSortAsc ? 1 : -1;
+    return 0;
+  });
+
   tbody.innerHTML = filtered.map((t, i) => {
     const id = t.id || i;
     const statusClass = 'status-' + (t.status || 'open').replace(/ /g, '_');
@@ -1494,7 +1540,7 @@ function renderTasks() {
       '<option value="' + esc(n) + '"' + ((t.assignee || '') === n ? ' selected' : '') + '>' + esc(n || '—') + '</option>'
     ).join('');
     return '<tr data-task-id="' + id + '">' +
-      '<td style="cursor:pointer;" onclick="inlineEditTitle(' + id + ', this)">' + esc(t.title || 'Untitled') + '</td>' +
+      '<td style="cursor:pointer;" onclick="inlineEditTitle(' + id + ', this)" title="' + esc(t.description || '') + '">' + esc(t.title || 'Untitled') + (t.description ? ' <span style="color:#555;font-size:0.7rem;" title="' + esc(t.description) + '">…</span>' : '') + '</td>' +
       '<td><select class="task-status-select ' + prioClass + '" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:inherit;font-size:0.8rem;" onchange="updateTaskField(' + id + ', \'priority\', this.value)">' +
         '<option value="critical"' + (t.priority === 'critical' ? ' selected' : '') + '>critical</option>' +
         '<option value="high"' + (t.priority === 'high' ? ' selected' : '') + '>high</option>' +
@@ -2286,6 +2332,30 @@ function initCommandPalette() {
       closeAgentModal();
       closeDigestModal();
       closeDMAllModal();
+      closeModeSwitchModal();
+      closeBroadcastModal();
+    }
+    // Only fire shortcuts when no input is focused
+    const tag = document.activeElement ? document.activeElement.tagName : '';
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    if (!inInput && !e.ctrlKey && !e.metaKey) {
+      if (e.key === '/') {
+        e.preventDefault();
+        const s = document.getElementById('global-search-input');
+        if (s) { s.focus(); s.select(); }
+      }
+      if (e.key === 'n') {
+        const tasksTab = document.getElementById('tab-tasks');
+        if (tasksTab && tasksTab.style.display !== 'none') {
+          e.preventDefault();
+          const titleInput = document.getElementById('task-title');
+          if (titleInput) titleInput.focus();
+        }
+      }
+      if (e.key === 'r') {
+        e.preventDefault();
+        refresh();
+      }
     }
   });
 

@@ -182,35 +182,60 @@ function getAgentStatus(name) {
   return { status, heartbeat, heartbeat_age_ms };
 }
 
+// Build a name→role map from team_directory.md table rows (cached by file mtime)
+let _roleMapCache = null;
+let _roleMapMtime = 0;
+function getRoleMap() {
+  const p = path.join(PUBLIC_DIR, "team_directory.md");
+  const mtime = fileMtime(p) || 0;
+  if (_roleMapCache && mtime === _roleMapMtime) return _roleMapCache;
+  const raw = safeRead(p) || "";
+  const map = new Map();
+  for (const line of raw.split("\n")) {
+    const m = line.match(/^\|\s*\*{0,2}([A-Za-z][A-Za-z\s]+?)\*{0,2}\s*\|\s*\*{0,2}([^|*]+?)\*{0,2}\s*\|/);
+    if (m) {
+      const n = m[1].trim().toLowerCase();
+      const r = m[2].trim();
+      if (n && r && r !== "role" && r !== "name") map.set(n, r);
+    }
+  }
+  _roleMapCache = map;
+  _roleMapMtime = mtime;
+  return map;
+}
+
 function getAgentSummary(name) {
   const d = path.join(EMPLOYEES_DIR, name);
   const { status, heartbeat, heartbeat_age_ms } = getAgentStatus(name);
   const statusMd = safeRead(path.join(d, "status.md"));
-  const todoMd = safeRead(path.join(d, "todo.md"));
 
-  // Extract current task from status.md — matches "## Currently Working On\n{task}"
-  let currentTask = null;
+  // Role from team directory
+  const roleMap = getRoleMap();
+  const role = roleMap.get(name.toLowerCase()) || "";
+
+  // Extract current task from status.md
+  let current_task = null;
   if (statusMd) {
     const m = statusMd.match(/##\s*Currently Working On\s*\n+([^\n#]+)/)
-           || statusMd.match(/current.*?task[:\s]*([^\n]+)/i);
-    if (m) currentTask = m[1].trim();
+           || statusMd.match(/current.*?(?:task|focus)[:\s]+([^\n]+)/i);
+    if (m) current_task = m[1].trim();
   }
-  // Fallback to heartbeat task field
-  if (!currentTask && heartbeat && heartbeat.task) currentTask = heartbeat.task;
+  if (!current_task && heartbeat && heartbeat.task) current_task = heartbeat.task;
 
-  // Extract cycle count from status.md "## Cycle Count\n{N}"
+  // Extract cycle count from status.md
   let cycles = null;
   if (statusMd) {
     const m = statusMd.match(/##\s*Cycle Count\s*\n+(\d+)/i);
     if (m) cycles = parseInt(m[1], 10);
   }
 
-  // Last-seen from log mtime
+  // Last-seen: return an ISO timestamp from log mtime
   const today = todayStr();
   const rawLogMtime = fileMtime(path.join(d, "logs", `${today}_raw.log`));
+  const last_update = rawLogMtime ? new Date(rawLogMtime).toISOString() : null;
   const lastSeenSecs = rawLogMtime ? Math.floor((Date.now() - rawLogMtime) / 1000) : null;
 
-  return { name, status, currentTask, cycles, lastSeenSecs, heartbeat_age_ms };
+  return { name, role, status, current_task, cycles, last_update, lastSeenSecs, heartbeat_age_ms };
 }
 
 // ---------------------------------------------------------------------------
@@ -318,7 +343,9 @@ function appendTaskRow(task) {
   const newId = maxId + 1;
   const now = new Date().toISOString().slice(0, 10);
   const row = `| ${newId} | ${task.title || ""} | ${task.description || ""} | ${task.priority || "medium"} | ${task.assignee || ""} | open | ${now} | ${now} |`;
-  fs.appendFileSync(tbPath, "\n" + row);
+  const existing_raw = safeRead(tbPath) || "";
+  const sep = existing_raw.endsWith("\n") ? "" : "\n";
+  fs.appendFileSync(tbPath, sep + row + "\n");
   return newId;
 }
 
@@ -522,10 +549,7 @@ async function handleRequest(req, res) {
 
   // ---- Agents ----
   if (method === "GET" && pathname === "/api/agents") {
-    const agents = listAgentNames().map((name) => {
-      const { status, heartbeat } = getAgentStatus(name);
-      return { name, status, heartbeat };
-    });
+    const agents = listAgentNames().map(getAgentSummary);
     return json(res, agents);
   }
 
@@ -578,6 +602,17 @@ async function handleRequest(req, res) {
     execFile("bash", [script, name], { cwd: DIR }, (err, stdout, stderr) => {
       if (err) return json(res, { ok: false, error: stderr || err.message }, 500);
       json(res, { ok: true, output: stdout });
+    });
+    return;
+  }
+
+  const agentPingMatch = pathname.match(/^\/api\/agents\/([^/]+)\/ping$/);
+  if (method === "GET" && agentPingMatch) {
+    const name = decodeURIComponent(agentPingMatch[1]);
+    execFile("pgrep", ["-f", `run_agent.sh ${name}`], {}, (err, stdout) => {
+      const pids = stdout.trim().split("\n").filter(Boolean);
+      const running = pids.length > 0;
+      json(res, { name, running, pids });
     });
     return;
   }
@@ -645,6 +680,8 @@ async function handleRequest(req, res) {
         }
       }
       if (cur) cycles.push(cur);
+      // Add sequential cycle numbers (1-based, oldest first)
+      cycles.forEach((c, i) => { c.cycle = i + 1; });
       return json(res, { name, cycles: cycles.reverse() }); // newest first
     }
     if (sub === "status") return json(res, { name, content: safeRead(path.join(d, "status.md")) || "" });
