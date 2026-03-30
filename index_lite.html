@@ -2812,7 +2812,7 @@ function inlineEditTitle(id, cell) {
   input.addEventListener('blur', save);
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-    if (e.key === 'Escape') { cell.textContent = current; }
+    if (e.key === 'Escape') { input.value = current; input.blur(); }
   });
 }
 
@@ -3802,6 +3802,29 @@ async function openDigest() {
 
     if (typeof data === 'string') {
       content.textContent = data;
+    } else if (Array.isArray(data)) {
+      // Array format from /api/digest: [{agent, completedCycles, activeCycle, cycles}]
+      if (data.length === 0) {
+        content.innerHTML = '<p class="text-muted">No activity logged today.</p>';
+      } else {
+        let html = '';
+        data.forEach(({ agent, completedCycles, activeCycle, cycles }) => {
+          html += '<div class="digest-agent"><h4>' + esc(agent) + '</h4>';
+          html += '<div>Completed cycles: ' + Number(completedCycles || 0) + '</div>';
+          if (activeCycle) html += '<div style="color:#ffaa00">Active cycle in progress</div>';
+          if (cycles && cycles.length > 0) {
+            cycles.forEach(cycle => {
+              if (cycle.tasks && cycle.tasks.length > 0) {
+                html += '<ul style="margin:4px 0 4px 16px">';
+                cycle.tasks.forEach(t => { html += '<li>' + esc(t) + '</li>'; });
+                html += '</ul>';
+              }
+            });
+          }
+          html += '</div>';
+        });
+        content.innerHTML = html;
+      }
     } else if (data.agents || data.summary) {
       let html = '';
       if (data.summary) html += '<p style="margin-bottom:16px;">' + esc(data.summary) + '</p>';
