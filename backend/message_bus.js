@@ -114,15 +114,23 @@ function parseBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
+    let settled = false;
+    function settle(fn) { if (!settled) { settled = true; fn(); } }
     req.on("data", (chunk) => {
       size += chunk.length;
-      if (size > 64 * 1024) { reject(new Error("body too large")); return; }
+      if (size > 64 * 1024) {
+        req.socket.destroy();
+        return settle(() => reject(new Error("body too large")));
+      }
       chunks.push(chunk);
     });
     req.on("end", () => {
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); } catch (_) { reject(new Error("invalid JSON")); }
+      settle(() => {
+        try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); } catch (_) { reject(new Error("invalid JSON")); }
+      });
     });
-    req.on("error", reject);
+    req.on("error", (err) => settle(() => reject(err)));
+    req.on("close", () => settle(() => reject(new Error("request aborted"))));
   });
 }
 
