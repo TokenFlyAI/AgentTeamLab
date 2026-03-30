@@ -674,8 +674,11 @@ function parseRawLog(name) {
     const readSize = Math.min(stat.size, 500000);
     const buf = Buffer.alloc(readSize);
     const fd = fs.openSync(logPath, "r");
-    fs.readSync(fd, buf, 0, readSize, stat.size - readSize);
-    fs.closeSync(fd);
+    try {
+      fs.readSync(fd, buf, 0, readSize, stat.size - readSize);
+    } finally {
+      fs.closeSync(fd);
+    }
     const text = buf.toString("utf8");
     const entries = [];
     for (const line of text.split("\n")) {
