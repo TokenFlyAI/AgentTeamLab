@@ -2140,9 +2140,11 @@ async function handleRequest(req, res) {
   const agentOutputFileMatch = pathname.match(/^\/api\/agents\/([^/]+)\/output\/(.+)$/);
   if (method === "GET" && agentOutputFileMatch) {
     const name = agentName(agentOutputFileMatch[1]);
-    const fname = agentOutputFileMatch[2].replace(/\.\./g, ""); // prevent traversal
+    const fname = decodeURIComponent(agentOutputFileMatch[2]);
     if (!name || !fname) return badRequest(res, "invalid parameters");
-    const fp = path.join(EMPLOYEES_DIR, name, "output", fname);
+    const outDir = path.join(EMPLOYEES_DIR, name, "output");
+    const fp = path.resolve(path.join(outDir, fname));
+    if (!fp.startsWith(outDir + path.sep) && fp !== outDir) return badRequest(res, "invalid path");
     if (!fs.existsSync(fp)) return notFound(res, "file not found");
     const content = safeRead(fp) || "";
     const ext = path.extname(fname).toLowerCase();
