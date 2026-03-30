@@ -349,11 +349,32 @@ test.describe("GET /api/search", () => {
     expect(status).toBe(400);
   });
 
+  test("returns 400 for single-character query", async () => {
+    const { status } = await apiGet("/api/search?q=a");
+    expect(status).toBe(400);
+  });
+
   test("returns results for valid query", async () => {
     const { status, body } = await apiGet("/api/search?q=charlie");
     expect(status).toBe(200);
     expect(typeof body.query).toBe("string");
     expect(Array.isArray(body.results)).toBe(true);
+    expect(typeof body.total).toBe("number");
+  });
+
+  test("task search results include task data", async () => {
+    // Create a task with a unique token to search for
+    const token = `srchtest${Date.now()}`;
+    const { body: created } = await apiPost("/api/tasks", { title: `Search-${token}`, priority: "low" });
+    const { status, body } = await apiGet(`/api/search?q=${token}`);
+    expect(status).toBe(200);
+    const taskResult = body.results.find(r => r.type === "tasks");
+    expect(taskResult).toBeDefined();
+    expect(taskResult.matches.some(m => m.title.includes(token))).toBe(true);
+    // Cleanup
+    if (created && created.id) {
+      await fetch(`${BASE}/api/tasks/${created.id}`, { method: "DELETE" });
+    }
   });
 });
 

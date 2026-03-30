@@ -795,18 +795,51 @@ async function handleRequest(req, res) {
   if (method === "GET" && pathname === "/api/search") {
     const q = (query.q || "").toLowerCase();
     if (!q) return badRequest(res, "missing q parameter");
+    if (q.length < 2) return badRequest(res, "query must be at least 2 characters");
     const results = [];
+
+    // Search agent status.md and todo.md
     for (const name of listAgentNames()) {
       const d = path.join(EMPLOYEES_DIR, name);
       for (const file of ["status.md", "todo.md"]) {
         const content = safeRead(path.join(d, file));
         if (content && content.toLowerCase().includes(q)) {
           const lines = content.split("\n").filter((l) => l.toLowerCase().includes(q));
-          results.push({ agent: name, file, matches: lines.slice(0, 10) });
+          results.push({ type: "agent", agent: name, file, matches: lines.slice(0, 5) });
         }
       }
     }
-    return json(res, { query: q, results });
+
+    // Search task board (title, description, notes, assignee)
+    const tasks = parseTaskBoard();
+    const matchedTasks = tasks.filter((t) =>
+      (t.title || "").toLowerCase().includes(q) ||
+      (t.description || "").toLowerCase().includes(q) ||
+      (t.assignee || "").toLowerCase().includes(q) ||
+      (t.notes || "").toLowerCase().includes(q)
+    );
+    if (matchedTasks.length > 0) {
+      results.push({ type: "tasks", matches: matchedTasks.slice(0, 10).map((t) => ({
+        id: t.id, title: t.title, status: t.status, assignee: t.assignee, priority: t.priority,
+      })) });
+    }
+
+    // Search announcements (title + body)
+    const annDir = path.join(PUBLIC_DIR, "announcements");
+    const annFiles = listDir(annDir).filter((f) => f.endsWith(".md"));
+    const matchedAnns = [];
+    for (const f of annFiles.slice(-50)) { // check most recent 50 announcements
+      const content = safeRead(path.join(annDir, f)) || "";
+      if (content.toLowerCase().includes(q)) {
+        const lines = content.split("\n").filter((l) => l.toLowerCase().includes(q));
+        matchedAnns.push({ filename: f, matches: lines.slice(0, 3) });
+      }
+    }
+    if (matchedAnns.length > 0) {
+      results.push({ type: "announcements", matches: matchedAnns.slice(0, 5) });
+    }
+
+    return json(res, { query: q, results, total: results.reduce((s, r) => s + (Array.isArray(r.matches) ? r.matches.length : 1), 0) });
   }
 
   // ---- Agents ----
