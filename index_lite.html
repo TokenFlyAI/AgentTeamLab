@@ -2709,7 +2709,10 @@ function tdUpdateStatus() {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: newStatus })
-  }).then(() => refresh()).catch(e => showToast('Update failed: ' + e.message, 3000));
+  }).then(r => r.json().then(d => {
+    if (!r.ok) showToast('Update failed: ' + (d.error || r.status), 3000);
+    else refresh();
+  })).catch(e => showToast('Update failed: ' + e.message, 3000));
 }
 
 function tdInlineEditTitle() {
@@ -2752,7 +2755,10 @@ function updateTaskStatus(id, status) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: status })
-  }).then(() => refresh()).catch(e => showToast('Status update failed: ' + e.message, 3000));
+  }).then(r => r.json().then(d => {
+    if (!r.ok) showToast('Status update failed: ' + (d.error || r.status), 3000);
+    else refresh();
+  })).catch(e => showToast('Status update failed: ' + e.message, 3000));
 }
 
 function updateTaskField(id, field, value) {
@@ -2760,7 +2766,10 @@ function updateTaskField(id, field, value) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ [field]: value })
-  }).then(() => refresh()).catch(e => showToast('Update failed: ' + e.message, 3000));
+  }).then(r => r.json().then(d => {
+    if (!r.ok) showToast('Update failed: ' + (d.error || r.status), 3000);
+    else refresh();
+  })).catch(e => showToast('Update failed: ' + e.message, 3000));
 }
 
 function inlineEditTitle(id, cell) {

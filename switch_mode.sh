@@ -7,12 +7,12 @@ COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
 MODE_FILE="${COMPANY_DIR}/public/company_mode.md"
 
 [ -z "$MODE" ] || [ -z "$WHO" ] || [ -z "$REASON" ] && \
-    echo "Usage: $0 <plan|normal|crazy> <who> <reason>" && exit 1
+    echo "Usage: $0 <plan|normal|crazy|autonomous> <who> <reason>" && exit 1
 
 # Validate mode
 case "$MODE" in
-    plan|normal|crazy) ;;
-    *) echo "Error: Invalid mode '$MODE'. Must be plan, normal, or crazy." && exit 1 ;;
+    plan|normal|crazy|autonomous) ;;
+    *) echo "Error: Invalid mode '$MODE'. Must be plan, normal, crazy, or autonomous." && exit 1 ;;
 esac
 
 # Read current mode

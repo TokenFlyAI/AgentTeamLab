@@ -1899,8 +1899,8 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/mode") {
     const body = await parseBody(req);
     if (!body.mode) return badRequest(res, "missing mode");
-    const VALID_MODES = new Set(["plan", "normal", "crazy"]);
-    if (!VALID_MODES.has(body.mode)) return badRequest(res, `invalid mode '${body.mode}': must be plan, normal, or crazy`);
+    const VALID_MODES = new Set(["plan", "normal", "crazy", "autonomous"]);
+    if (!VALID_MODES.has(body.mode)) return badRequest(res, `invalid mode '${body.mode}': must be plan, normal, crazy, or autonomous`);
     if (!body.who || !body.reason) return badRequest(res, "Missing required fields: who, reason");
     const script = path.join(DIR, "switch_mode.sh");
     if (!fs.existsSync(script)) return notFound(res, "switch_mode.sh not found");
