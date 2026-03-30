@@ -2466,7 +2466,7 @@ function closeDMAllModal() {
 
 // ===== TASKS =====
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
-const STATUS_ORDER = { in_progress: 0, open: 1, done: 2 };
+const STATUS_ORDER = { in_progress: 0, blocked: 1, open: 2, in_review: 3, done: 4, cancelled: 5 };
 
 function sortTasks(field) {
   if (taskSortField === field) {
@@ -3896,8 +3896,10 @@ function copyStatusReport() {
   const allTasks = Array.isArray(tasks) ? tasks : [];
   const openTasks = allTasks.filter(t => t.status === 'open').length;
   const inProgress = allTasks.filter(t => t.status === 'in_progress').length;
+  const blockedTasks = allTasks.filter(t => t.status === 'blocked').length;
+  const inReviewTasks = allTasks.filter(t => t.status === 'in_review').length;
   const doneTasks = allTasks.filter(t => t.status === 'done').length;
-  report += '- Open: ' + openTasks + ' | In Progress: ' + inProgress + ' | Done: ' + doneTasks + '\n';
+  report += '- Open: ' + openTasks + ' | In Progress: ' + inProgress + ' | Blocked: ' + blockedTasks + ' | In Review: ' + inReviewTasks + ' | Done: ' + doneTasks + '\n';
 
   if (statsData) {
     report += '\n## Stats (7-day)\n';
