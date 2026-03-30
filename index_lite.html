@@ -2159,9 +2159,13 @@ function bulkActionSelected(action) {
   if (!confirm(action.charAt(0).toUpperCase() + action.slice(1) + ' ' + names.length + ' agent(s): ' + names.join(', ') + '?')) return;
   Promise.all(names.map(name =>
     fetch('/api/agents/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
-  )).then(() => {
+      .then(r => r.json().then(d => ({ name, ok: r.ok && (d.ok !== false), error: d.error })))
+      .catch(e => ({ name, ok: false, error: e.message }))
+  )).then(results => {
     selectedAgents.clear();
     updateSelectedUI();
+    const failed = results.filter(x => !x.ok);
+    if (failed.length > 0) showToast('Bulk action failed for: ' + failed.map(x => x.name + (x.error ? ' (' + x.error + ')' : '')).join(', '), 5000);
     setTimeout(refresh, 500);
   }).catch(e => showToast('Bulk action error: ' + e.message, 4000));
 }
@@ -2577,12 +2581,12 @@ function createTask() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
-  }).then(r => r.json()).then(d => {
-    if (d.error) { showToast('Task creation failed: ' + d.error, 4000); return; }
+  }).then(r => r.json().then(d => {
+    if (!r.ok) { showToast('Task creation failed: ' + (d.error || r.status), 4000); return; }
     document.getElementById('task-title').value = '';
     document.getElementById('task-desc').value = '';
     refresh();
-  }).catch(e => showToast('Network error creating task: ' + e.message, 4000));
+  })).catch(e => showToast('Network error creating task: ' + e.message, 4000));
 }
 
 function toggleTaskSection(status) {
@@ -2634,11 +2638,10 @@ function tdAddNote() {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes: note })
-  }).then(r => r.json()).then(d => {
-    if (d.error) { showToast('Note failed: ' + d.error, 3000); return; }
+  }).then(r => r.json().then(d => {
+    if (!r.ok) { showToast('Note failed: ' + (d.error || r.status), 3000); return; }
     input.value = '';
     // Refresh notes display
-    const task = (Array.isArray(tasks) ? tasks : []).find(t => String(t.id) === String(currentTaskDetailId));
     const updatedNotes = d.notesList || [];
     const notesEl = document.getElementById('td-notes-list');
     if (updatedNotes.length > 0) {
@@ -2648,7 +2651,7 @@ function tdAddNote() {
     }
     refresh();
     showToast('Note added', 2000);
-  }).catch(e => showToast('Note error: ' + e.message, 3000));
+  })).catch(e => showToast('Note error: ' + e.message, 3000));
 }
 
 function copyTaskResult() {
@@ -2809,8 +2812,10 @@ function inlineEditTitle(id, cell) {
 function deleteTask(id) {
   if (!confirm('Delete task #' + id + '?')) return;
   fetch('/api/tasks/' + id, { method: 'DELETE' })
-    .then(r => r.json())
-    .then(d => { if (d.ok || d.deleted) refresh(); else alert('Delete failed: ' + (d.error || 'unknown')); })
+    .then(r => r.json().then(d => {
+      if (!r.ok) { alert('Delete failed: ' + (d.error || r.status)); return; }
+      refresh();
+    }))
     .catch(e => showToast('Delete error: ' + e.message, 3000));
 }
 
@@ -2860,6 +2865,7 @@ async function loadArchive() {
   tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">Loading…</td></tr>';
   try {
     const res = await fetch('/api/tasks/archive');
+    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="5" style="color:#ff6b6b;text-align:center;">Failed to load archive (' + res.status + ')</td></tr>'; return; }
     const tasks = await res.json();
     if (!Array.isArray(tasks) || tasks.length === 0) {
       tbody.innerHTML = '';
