@@ -1615,6 +1615,7 @@ let sseConnected = false;
 let pageLoadTime = Date.now();
 let cmdSelectedIndex = 0;
 let es = null;
+let sseReconnectTimer = null;
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -1640,7 +1641,20 @@ function updateUptime() {
 }
 
 // ===== SSE =====
+function scheduleReconnectSSE() {
+  if (sseReconnectTimer !== null) return; // already scheduled
+  sseReconnectTimer = setTimeout(() => {
+    sseReconnectTimer = null;
+    connectSSE();
+  }, 5000);
+}
+
 function connectSSE() {
+  // Close any existing connection before opening a new one
+  if (es) {
+    try { es.close(); } catch (_) {}
+    es = null;
+  }
   try {
     es = new EventSource('/api/events');
     es.addEventListener('refresh', () => refresh());
@@ -1648,11 +1662,12 @@ function connectSSE() {
     es.onerror = () => {
       setConnected(false);
       es.close();
-      setTimeout(connectSSE, 5000);
+      es = null;
+      scheduleReconnectSSE();
     };
   } catch (e) {
     setConnected(false);
-    setTimeout(connectSSE, 5000);
+    scheduleReconnectSSE();
   }
 }
 
@@ -3747,7 +3762,7 @@ async function refreshAgentModal() {
             '<span style="color:#00ff88;">' + esc(f.name) + '</span>' +
             '<span style="color:#555;font-size:0.75rem;">' + kb + ' KB · ' + (f.mtime ? f.mtime.slice(0,16).replace('T',' ') : '') + '</span>' +
             '</div>' +
-            '<div id="output-file-' + f.name.replace(/[^a-z0-9]/gi,'_') + '" style="display:none;margin-top:8px;"></div>' +
+            '<div data-output-key="' + encodeURIComponent(f.name) + '" style="display:none;margin-top:8px;"></div>' +
             '</div>';
         }).join('');
       if (outputEl._clickHandler) outputEl.removeEventListener('click', outputEl._clickHandler);
@@ -3777,8 +3792,9 @@ async function loadCycleDetail(agentName, cycleN, container) {
 }
 
 async function loadOutputFile(agentName, fileName, container) {
-  const key = fileName.replace(/[^a-z0-9]/gi, '_');
-  const detailEl = document.getElementById('output-file-' + key);
+  const detailEl = container.parentElement
+    ? container.parentElement.querySelector('[data-output-key="' + encodeURIComponent(fileName) + '"]')
+    : null;
   if (!detailEl) return;
   if (detailEl.style.display !== 'none') { detailEl.style.display = 'none'; return; }
   detailEl.style.display = 'block';
