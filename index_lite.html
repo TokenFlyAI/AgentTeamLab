@@ -3161,14 +3161,14 @@ function renderConsensus() {
     if (!sections[e.section]) sections[e.section] = [];
     sections[e.section].push(e);
   }
-  const typeColors = { group:'#4a90d9', authority:'#e2a64c', culture:'#4ade80', decision:'#f87171', relationship:'#c084fc' };
+  const typeColors = Object.assign(Object.create(null), { group:'#4a90d9', authority:'#e2a64c', culture:'#4ade80', decision:'#f87171', relationship:'#c084fc' });
   list.innerHTML = Object.entries(sections).map(([sec, items]) =>
     `<div style="margin-bottom:20px;">
       <h4 style="color:#8899aa;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">${esc(sec)}</h4>
       <div style="display:flex;flex-direction:column;gap:6px;">
         ${items.map(e => `
           <div style="background:#0f1a2e;border:1px solid #1a3a5c;border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;">
-            <span style="background:${typeColors[e.type]||'#444'};color:#fff;font-size:0.65rem;padding:2px 7px;border-radius:10px;white-space:nowrap;font-weight:600;margin-top:2px;">${esc(e.type)}</span>
+            <span style="background:${typeColors[e.type] || '#444'};color:#fff;font-size:0.65rem;padding:2px 7px;border-radius:10px;white-space:nowrap;font-weight:600;margin-top:2px;">${esc(e.type)}</span>
             <div style="flex:1;">
               <div style="color:#e0e0e0;font-size:0.85rem;line-height:1.4;">${esc(e.content)}</div>
               <div style="color:#555;font-size:0.7rem;margin-top:4px;">#${e.id} · by ${esc(e.author)} · ${esc(e.updated)}</div>
