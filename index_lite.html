@@ -1800,7 +1800,7 @@ function renderCeoInbox() {
           <span style="font-size:0.75rem;color:#888;">${esc(m.timestamp)}</span>
         </div>
         <pre style="white-space:pre-wrap;font-family:inherit;margin:0 0 8px 0;font-size:0.85rem;">${esc(m.content)}</pre>
-        <button onclick="markCeoInboxRead('${esc(m.filename)}')" style="font-size:0.75rem;padding:3px 8px;background:#333;border:1px solid #555;border-radius:3px;cursor:pointer;color:#eee;">Mark read</button>
+        <button data-filename="${esc(m.filename)}" onclick="markCeoInboxRead(this.dataset.filename)" style="font-size:0.75rem;padding:3px 8px;background:#333;border:1px solid #555;border-radius:3px;cursor:pointer;color:#eee;">Mark read</button>
       </div>`).join('');
   }
   if (processedEl) {
