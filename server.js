@@ -52,10 +52,24 @@ function withTaskLock(fn) {
         _taskLockHolder = null;
       }
     } catch (e) {
-      if (e.code === "EEXIST" && Date.now() < deadline) {
-        setTimeout(tryAcquire, 50);
+      if (e.code === "EEXIST") {
+        // Check for stale lock (>10s old = crashed holder)
+        try {
+          const stat = fs.statSync(TASK_LOCK_PATH);
+          if (Date.now() - stat.mtimeMs > 10000) {
+            try { fs.unlinkSync(TASK_LOCK_PATH); } catch (_) {}
+            return tryAcquire();
+          }
+        } catch (_) {}
+        if (Date.now() < deadline) {
+          setTimeout(tryAcquire, 50);
+        } else {
+          // Lock held >2s by live process — log and skip to avoid deadlock
+          console.error("[withTaskLock] timeout waiting for lock, proceeding without it");
+          fn();
+        }
       } else {
-        // Lock timeout or unexpected error — proceed without lock
+        // Unexpected error acquiring lock — proceed
         fn();
       }
     }
@@ -1662,12 +1676,14 @@ async function handleRequest(req, res) {
     const from = sanitizeFrom(body.from || "dashboard");
     const agents = listAgentNames();
     const filename = `${nowStamp()}_from_${from}.md`;
+    let failed = 0;
     for (const name of agents) {
       const inboxDir = path.join(EMPLOYEES_DIR, name, "chat_inbox");
       try { fs.mkdirSync(inboxDir, { recursive: true }); } catch (_) {}
-      try { fs.writeFileSync(path.join(inboxDir, filename), body.message); } catch (_) {}
+      try { fs.writeFileSync(path.join(inboxDir, filename), body.message); }
+      catch (_) { failed++; }
     }
-    return json(res, { ok: true, agents: agents.length, filename });
+    return json(res, { ok: true, agents: agents.length, failed, filename });
   }
 
   // ---- CEO Inbox ----
