@@ -1795,9 +1795,11 @@ async function markCeoInboxRead(filename) {
 
 async function markAllCeoInboxRead() {
   const unread = ceoInboxData.unread || [];
-  await Promise.all(unread.map(m =>
-    fetch('/api/ceo-inbox/' + encodeURIComponent(m.filename) + '/read', { method: 'POST' })
-  ));
+  try {
+    await Promise.all(unread.map(m =>
+      fetch('/api/ceo-inbox/' + encodeURIComponent(m.filename) + '/read', { method: 'POST' })
+    ));
+  } catch (e) { showToast('Mark-read error: ' + e.message, 3000); }
   refresh();
 }
 
@@ -2837,7 +2839,7 @@ function sendChatMessage() {
     }).then(() => {
       document.getElementById('chat-input').value = '';
       refresh();
-    });
+    }).catch(e => showToast('DM error: ' + e.message, 3000));
   } else {
     fetch('/api/team-channel', {
       method: 'POST',
@@ -2846,7 +2848,7 @@ function sendChatMessage() {
     }).then(() => {
       document.getElementById('chat-input').value = '';
       refresh();
-    });
+    }).catch(e => showToast('Chat error: ' + e.message, 3000));
   }
 }
 
@@ -2878,7 +2880,7 @@ function postAnnouncement() {
     document.getElementById('ann-title').value = '';
     document.getElementById('ann-body').value = '';
     refresh();
-  });
+  }).catch(e => showToast('Announcement error: ' + e.message, 3000));
 }
 
 // ===== RESEARCH =====
@@ -3047,19 +3049,21 @@ async function submitConsensusEntry() {
   const content = document.getElementById('consensus-content').value.trim();
   const section = document.getElementById('consensus-section').value.trim();
   if (!content) { showToast('Content is required', 2500); return; }
-  const res = await fetch('/api/consensus/entry', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, content, section, author: 'ceo' })
-  });
-  const data = await res.json();
-  if (res.ok && data.ok) {
-    document.getElementById('consensus-add-modal').style.display = 'none';
-    showToast(`Consensus entry #${data.id} added`, 3000);
-    loadConsensus();
-  } else {
-    showToast('Error: ' + (data.error || 'unknown'), 3000);
-  }
+  try {
+    const res = await fetch('/api/consensus/entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, content, section, author: 'ceo' })
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      document.getElementById('consensus-add-modal').style.display = 'none';
+      showToast(`Consensus entry #${data.id} added`, 3000);
+      loadConsensus();
+    } else {
+      showToast('Error: ' + (data.error || 'unknown'), 3000);
+    }
+  } catch (e) { showToast('Consensus error: ' + e.message, 3000); }
 }
 
 // ===== STATS =====
@@ -3629,7 +3633,7 @@ function sendModalDM() {
   }).then(() => {
     document.getElementById('modal-dm-input').value = '';
     refreshAgentModal();
-  });
+  }).catch(e => showToast('DM error: ' + e.message, 3000));
 }
 
 // ===== DIGEST =====
