@@ -1372,10 +1372,7 @@ async function handleRequest(req, res) {
     }
     try {
       const now = new Date().toISOString().slice(0, 10);
-      const all = parseTaskBoard();
-      const maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id, 10) || 0), 0);
-      const newId = maxId + 1;
-      appendTaskRow(body);
+      const newId = appendTaskRow(body); // appendTaskRow returns the actual assigned ID
       return json(res, {
         ok: true,
         id: newId,
@@ -1819,7 +1816,9 @@ async function handleRequest(req, res) {
     const newId = maxId + 1;
     const today = getDateStr(0);
     const authorSafe = (author || "agent").replace(/[^a-zA-Z0-9_-]/g, "");
-    const newRow = `| ${newId} | ${type} | ${content} | ${authorSafe} | ${today} |`;
+    const typeSafe = String(type).replace(/\|/g, "-").replace(/\n/g, " ").trim();
+    const contentSafe = String(content).replace(/\|/g, "-").replace(/\n/g, " ").trim();
+    const newRow = `| ${newId} | ${typeSafe} | ${contentSafe} | ${authorSafe} | ${today} |`;
     // Append to "Evolving Relationships" or end of file (before the footer)
     const targetSection = section || "Evolving Relationships";
     const lines = raw.split("\n");

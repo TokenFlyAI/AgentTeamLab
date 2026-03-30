@@ -501,4 +501,20 @@ test.describe("Social Consensus Board", () => {
     const { status } = await apiPost("/api/consensus/entry", { type: "culture" });
     expect(status).toBe(400);
   });
+
+  test("POST /api/consensus/entry sanitizes pipe characters to prevent table corruption", async () => {
+    const { status, body } = await apiPost("/api/consensus/entry", {
+      type: "culture|injection",
+      content: "test | pipe | content",
+      author: "e2e",
+    });
+    expect(status).toBe(201);
+    // Verify the entry was stored without breaking the table
+    const { body: list } = await apiGet("/api/consensus");
+    const created = list.entries.find(e => e.id === body.id);
+    expect(created).toBeDefined();
+    // Pipe chars should be replaced with dashes
+    expect(created.type).not.toContain("|");
+    expect(created.content).not.toContain("|");
+  });
 });

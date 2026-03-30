@@ -168,6 +168,18 @@ test.describe("Tasks CRUD", () => {
     await apiDelete(`/api/tasks/${body.id}`);
   });
 
+  test("POST /api/tasks returns ID that matches the stored task", async () => {
+    const title = `E2E-IDCheck-${Date.now()}`;
+    const { body } = await apiPost("/api/tasks", { title, priority: "low" });
+    expect(body.ok).toBe(true);
+    // Verify returned id actually points to the created task
+    const { body: tasks } = await apiGet("/api/tasks");
+    const byId = tasks.find((t) => String(t.id) === String(body.id));
+    expect(byId).toBeDefined();
+    expect(byId.title).toBe(title);
+    await apiDelete(`/api/tasks/${body.id}`);
+  });
+
   test("PATCH /api/tasks/:id updates task status", async () => {
     // Create
     const { body: created } = await apiPost("/api/tasks", { title: "E2E-Patch-Test", priority: "low" });
