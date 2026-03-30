@@ -4267,7 +4267,7 @@ function formatTime(ts) {
     if (diffMin < 60) return diffMin + 'm ago';
     if (diffHr < 24) return diffHr + 'h ago';
 
-    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return esc(d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   } catch (e) {
     return esc(String(ts));
   }
