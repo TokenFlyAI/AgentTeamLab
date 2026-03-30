@@ -1975,7 +1975,7 @@ function renderAgents() {
         '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;">' +
           '<span class="health-badge health-' + health.grade + '" title="' + esc(health.tip) + '">' + health.grade + ' ' + health.score + '</span>' +
-          '<div class="agent-status"><span class="status-dot dot-' + status + '"></span>' + status + '</div>' +
+          '<div class="agent-status"><span class="status-dot dot-' + (/^[a-z_-]+$/.test(status) ? status : 'unknown') + '"></span>' + esc(status) + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="agent-task" title="' + esc(task) + '">' + esc(task) + '</div>' +
