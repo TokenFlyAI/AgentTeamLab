@@ -41,40 +41,47 @@ const TASK_LOCK_PATH = path.join(require("os").tmpdir(), "aicompany_taskboard.lo
 let _taskLockHolder = null;
 
 function withTaskLock(fn) {
-  // Spin-wait up to 2s for lock, 50ms intervals
-  const deadline = Date.now() + 2000;
-  function tryAcquire() {
-    try {
-      fs.writeFileSync(TASK_LOCK_PATH, String(process.pid), { flag: "wx" });
-      _taskLockHolder = true;
-      try { fn(); } finally {
-        try { fs.unlinkSync(TASK_LOCK_PATH); } catch (_) {}
-        _taskLockHolder = null;
-      }
-    } catch (e) {
-      if (e.code === "EEXIST") {
-        // Check for stale lock (>10s old = crashed holder)
-        try {
-          const stat = fs.statSync(TASK_LOCK_PATH);
-          if (Date.now() - stat.mtimeMs > 10000) {
-            try { fs.unlinkSync(TASK_LOCK_PATH); } catch (_) {}
-            return tryAcquire();
-          }
-        } catch (_) {}
-        if (Date.now() < deadline) {
-          setTimeout(tryAcquire, 50);
-        } else {
-          // Lock held >2s by live process — log and skip to avoid deadlock
-          console.error("[withTaskLock] timeout waiting for lock, proceeding without it");
-          fn();
+  // Returns a Promise that resolves after fn() runs (holding the lock) or after timeout.
+  // Spin-wait up to 2s for lock, 50ms intervals.
+  return new Promise((resolve) => {
+    const deadline = Date.now() + 2000;
+    function tryAcquire() {
+      let acquired = false;
+      try {
+        fs.writeFileSync(TASK_LOCK_PATH, String(process.pid), { flag: "wx" });
+        acquired = true;
+        _taskLockHolder = true;
+        try { fn(); } finally {
+          try { fs.unlinkSync(TASK_LOCK_PATH); } catch (_) {}
+          _taskLockHolder = null;
         }
-      } else {
-        // Unexpected error acquiring lock — proceed
-        fn();
+        resolve();
+      } catch (e) {
+        if (!acquired && e.code === "EEXIST") {
+          // Check for stale lock (>10s old = crashed holder)
+          try {
+            const stat = fs.statSync(TASK_LOCK_PATH);
+            if (Date.now() - stat.mtimeMs > 10000) {
+              try { fs.unlinkSync(TASK_LOCK_PATH); } catch (_) {}
+              return tryAcquire();
+            }
+          } catch (_) {}
+          if (Date.now() < deadline) {
+            return void setTimeout(tryAcquire, 50);
+          }
+          // Lock held >2s by live process — proceed without lock to avoid deadlock
+          console.error("[withTaskLock] timeout waiting for lock, proceeding without it");
+          try { fn(); } catch (_) {}
+        } else if (!acquired) {
+          // Unexpected error acquiring lock — proceed without lock
+          try { fn(); } catch (_) {}
+        }
+        // acquired=true: fn() threw, lock already released by finally above
+        resolve();
       }
     }
-  }
-  tryAcquire();
+    tryAcquire();
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -564,9 +571,9 @@ function archiveDoneTasks() {
 // Sanitize a string for safe insertion into a markdown table cell (strip pipe chars)
 function sanitizeCell(v) { return String(v || "").replace(/\|/g, "-").replace(/\n/g, " ").trim(); }
 
-function appendTaskRow(task) {
+async function appendTaskRow(task) {
   let newId;
-  withTaskLock(() => {
+  await withTaskLock(() => {
     const tbPath = path.join(PUBLIC_DIR, "task_board.md");
     const existing = parseTaskBoard();
     // Auto-archive done tasks when board exceeds 50 rows
@@ -583,9 +590,9 @@ function appendTaskRow(task) {
   return newId;
 }
 
-function updateTaskRow(id, updates) {
+async function updateTaskRow(id, updates) {
   let found = false;
-  withTaskLock(() => {
+  await withTaskLock(() => {
     const tbPath = path.join(PUBLIC_DIR, "task_board.md");
     const raw = safeRead(tbPath);
     if (!raw) return;
@@ -1386,7 +1393,7 @@ async function handleRequest(req, res) {
     }
     try {
       const now = new Date().toISOString().slice(0, 10);
-      const newId = appendTaskRow(body); // appendTaskRow returns the actual assigned ID
+      const newId = await appendTaskRow(body); // appendTaskRow returns the actual assigned ID
       return json(res, {
         ok: true,
         id: newId,
@@ -1415,7 +1422,7 @@ async function handleRequest(req, res) {
     if (body.priority !== undefined && !VALID_PRIORITIES_PATCH.has(String(body.priority).toLowerCase())) {
       return badRequest(res, "invalid priority: must be low, medium, high, or critical");
     }
-    const ok = updateTaskRow(id, body);
+    const ok = await updateTaskRow(id, body);
     if (!ok) return notFound(res, "task not found");
     const updatedTask = parseTaskBoard().find((t) => String(t.id) === String(id));
     if (!updatedTask) return notFound(res, "task not found");
@@ -1497,7 +1504,7 @@ async function handleRequest(req, res) {
     const claimant = agentName(body.agent || query.agent || "");
     if (!claimant) return badRequest(res, "missing agent name");
     let result = null;
-    withTaskLock(() => {
+    await withTaskLock(() => {
       const tbPath = path.join(PUBLIC_DIR, "task_board.md");
       const raw = safeRead(tbPath);
       if (!raw) { result = { ok: false, error: "task board not found", status: 404 }; return; }
@@ -1760,7 +1767,7 @@ async function handleRequest(req, res) {
       const title = taskMatch[1].trim();
       if (!title) return badRequest(res, "task title is empty");
       try {
-        const newId = appendTaskRow({ title, description: "(CEO quick command)", priority: "medium", assignee: "unassigned" });
+        const newId = await appendTaskRow({ title, description: "(CEO quick command)", priority: "medium", assignee: "unassigned" });
         return json(res, { ok: true, action: "task_created", id: newId, title }, 201);
       } catch (e) {
         return json(res, { error: e.message }, 500);
