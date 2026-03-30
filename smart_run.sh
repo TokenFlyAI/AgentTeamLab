@@ -120,7 +120,12 @@ done
 # --max N: look for --max followed by a number
 for i in "$@"; do
     if [ "$PREV_ARG" = "--max" ]; then
-        MAX_AGENTS="$i"
+        # Validate: must be a positive integer between 1 and 100
+        if echo "$i" | grep -qE '^[1-9][0-9]?$|^100$'; then
+            MAX_AGENTS="$i"
+        else
+            echo "[smart_run] WARNING: invalid --max value '$i', using default $MAX_AGENTS" >&2
+        fi
         break
     fi
     PREV_ARG="$i"
@@ -188,7 +193,7 @@ echo "  Starting now:      ${START_LIST:-none}"
 echo ""
 
 # Dry-run: structured output for server.js parsing
-if [ $DRY_RUN_FLAG -eq 1 ] || [ "${1}" = "--dry-run" ]; then
+if [ $DRY_RUN_FLAG -eq 1 ]; then
     echo "  Always run: alice"
     echo "  Task-assigned: $(echo "$ASSIGNED_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
     echo "  Unassigned tasks: $UNASSIGNED_COUNT"

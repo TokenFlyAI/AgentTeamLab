@@ -81,6 +81,7 @@ if [ $USE_RESUME -eq 1 ]; then
     fi
 else
     # Fresh start: full prompt + prepend memory snapshot if it exists
+    [ -f "$PROMPT_FILE" ] || { echo "Error: prompt.md not found: $PROMPT_FILE" >&2; exit 1; }
     BASE_PROMPT=$(cat "$PROMPT_FILE")
     if [ -f "$MEMORY_FILE" ] && [ -s "$MEMORY_FILE" ]; then
         PROMPT_TEXT="$(printf '%s\n\n---\n\n%s' "$BASE_PROMPT" "$(cat "$MEMORY_FILE")")"
