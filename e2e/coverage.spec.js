@@ -626,3 +626,104 @@ test.describe("GET /api/research", () => {
     expect(Array.isArray(body)).toBe(true);
   });
 });
+
+// ── SQLite Message Bus ────────────────────────────────────────────────────────
+
+test.describe("POST /api/messages (SQLite message bus)", () => {
+  test("returns 400 when from is missing", async () => {
+    const { status } = await apiPost("/api/messages", { to: "alice", body: "hello" });
+    expect(status).toBe(400);
+  });
+
+  test("returns 400 when to is missing", async () => {
+    const { status } = await apiPost("/api/messages", { from: "bob", body: "hello" });
+    expect(status).toBe(400);
+  });
+
+  test("returns 400 when body is missing", async () => {
+    const { status } = await apiPost("/api/messages", { from: "bob", to: "alice" });
+    expect(status).toBe(400);
+  });
+
+  test("sends a message and returns 201 with id", async () => {
+    const { status, body } = await apiPost("/api/messages", {
+      from: "e2e-test",
+      to: "alice",
+      body: "E2E message bus test — safe to ignore",
+      priority: 5,
+    });
+    expect(status).toBe(201);
+    expect(typeof body.id).toBe("number");
+    expect(body.to).toBe("alice");
+  });
+});
+
+test.describe("GET /api/inbox/:agent (SQLite message bus)", () => {
+  test("returns 200 with messages array for known agent", async () => {
+    // Ensure there is at least one message in alice's inbox
+    await apiPost("/api/messages", { from: "e2e-test", to: "alice", body: "inbox test" });
+    const { status, body } = await apiGet("/api/inbox/alice");
+    expect(status).toBe(200);
+    expect(typeof body.unread).toBe("number");
+    expect(Array.isArray(body.messages)).toBe(true);
+  });
+
+  test("returns 400 for invalid agent name", async () => {
+    const { status } = await apiGet("/api/inbox/../etc");
+    // Either 400 (invalid name) or 404 (route not matched) is acceptable
+    expect([400, 404]).toContain(status);
+  });
+});
+
+test.describe("POST /api/inbox/:agent/:id/ack (SQLite message bus)", () => {
+  test("returns 404 for non-existent message id", async () => {
+    const { status } = await apiPost("/api/inbox/alice/999999999/ack");
+    expect(status).toBe(404);
+  });
+
+  test("acks a real message", async () => {
+    // Send a message then ack it
+    const { body: sent } = await apiPost("/api/messages", {
+      from: "e2e-ack-test",
+      to: "alice",
+      body: "ack test message",
+    });
+    expect(typeof sent.id).toBe("number");
+    const { status, body } = await apiPost(`/api/inbox/alice/${sent.id}/ack`);
+    expect(status).toBe(200);
+    expect(body.acked).toBe(true);
+  });
+});
+
+test.describe("GET /api/messages/queue-depth (SQLite message bus)", () => {
+  test("returns 200 with total_unread and by_agent", async () => {
+    const { status, body } = await apiGet("/api/messages/queue-depth");
+    expect(status).toBe(200);
+    expect(typeof body.total_unread).toBe("number");
+    expect(Array.isArray(body.by_agent)).toBe(true);
+  });
+});
+
+test.describe("POST /api/messages/broadcast (SQLite message bus)", () => {
+  test("returns 400 when from is missing", async () => {
+    const { status } = await apiPost("/api/messages/broadcast", { body: "hello" });
+    expect(status).toBe(400);
+  });
+
+  test("returns 400 when body is missing", async () => {
+    const { status } = await apiPost("/api/messages/broadcast", { from: "e2e" });
+    expect(status).toBe(400);
+  });
+
+  test("broadcasts and returns delivered count", async () => {
+    const { status, body } = await apiPost("/api/messages/broadcast", {
+      from: "e2e-broadcast",
+      body: "E2E broadcast test — safe to ignore",
+      priority: 9,
+    });
+    // 201 if agents found, 200 if none
+    expect([200, 201]).toContain(status);
+    expect(typeof body.delivered).toBe("number");
+    expect(Array.isArray(body.agents)).toBe(true);
+  });
+});
