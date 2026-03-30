@@ -408,3 +408,49 @@ test.describe("GET /api/agents/:name/ping", () => {
     expect(status).toBe(404);
   });
 });
+
+// ── Metrics sub-routes ────────────────────────────────────────────────────────
+
+test.describe("GET /api/metrics/agents", () => {
+  test("returns 200 with array", async () => {
+    const { status, body } = await apiGet("/api/metrics/agents");
+    expect(status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  test("agent entries have name field", async () => {
+    const { body } = await apiGet("/api/metrics/agents");
+    for (const a of body || []) {
+      expect(typeof a.name).toBe("string");
+    }
+  });
+});
+
+test.describe("GET /api/metrics/agents/:name", () => {
+  test("returns 200 for known agent", async () => {
+    const { status, body } = await apiGet("/api/metrics/agents/alice");
+    expect(status).toBe(200);
+    expect(body.name).toBe("alice");
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/metrics/agents/unknown_xyz");
+    expect(status).toBe(404);
+  });
+});
+
+test.describe("GET /api/metrics/tasks", () => {
+  test("returns 200 with task metrics", async () => {
+    const { status, body } = await apiGet("/api/metrics/tasks");
+    expect(status).toBe(200);
+    expect(typeof body.total).toBe("number");
+  });
+});
+
+test.describe("GET /api/metrics/health", () => {
+  test("returns 200 with health snapshot", async () => {
+    const { status, body } = await apiGet("/api/metrics/health");
+    expect(status).toBe(200);
+    expect(body).not.toBeNull();
+  });
+});
