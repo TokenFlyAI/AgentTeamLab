@@ -12,13 +12,14 @@ ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *
 [ -z "$ACTIVE" ] && exit 0
 
 # P0/critical assigned to me — always show, urgent
-MY_P0=$(echo "$ACTIVE" | grep -i "critical\|p0" | grep -i "| *${AGENT_NAME} *|" | tail -10)
+MY_P0=$(echo "$ACTIVE" | grep -iE "critical|p0" | grep -i "| *${AGENT_NAME} *|" | tail -10)
 
 # My latest assigned tasks (newest = highest row number = bottom of table), max 3
 MY_TASKS=$(echo "$ACTIVE" | grep -i "| *${AGENT_NAME} *|" | tail -10)
 
 # Latest unassigned tasks (for self-assignment), max 3
-UNASSIGNED=$(echo "$ACTIVE" | grep -E "\| *(—|-|unassigned)? *\|" | tail -10)
+# Match rows where assignee column (col 5) is empty, a dash variant, or "unassigned"
+UNASSIGNED=$(echo "$ACTIVE" | grep -E "\| *(—|-+|unassigned) *\|" | tail -10)
 
 if [ -n "$MY_P0" ]; then
     echo "=== P0/CRITICAL TASKS ASSIGNED TO YOU — DROP EVERYTHING ==="

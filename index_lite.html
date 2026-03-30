@@ -1957,6 +1957,8 @@ function renderAgents() {
     const hbLbl = heartbeatLabel(agent);
     const authErr = agent.auth_error;
     const health = computeHealthScore(agent);
+    const unreadCount = agent.unread_messages || 0;
+    const agentTaskCount = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase() === name && (t.status !== 'done' && t.status !== 'cancelled')).length : 0;
     return '<div class="card agent-card' + (isStaleHb ? ' stale-heartbeat' : '') + (authErr ? ' auth-error-card' : '') + '" data-agent="' + esc(name) + '" onclick="openAgentModal(\'' + esc(name) + '\')">' +
       '<span class="stuck-icon ' + (isStuck ? 'visible' : '') + '" title="Stuck: idle >5min with task assigned">&#9888;</span>' +
       (authErr ? '<span style="position:absolute;top:8px;right:10px;font-size:0.7rem;color:#ff4444;background:#1a0000;padding:2px 6px;border-radius:8px;border:1px solid #660000;">🔐 Not logged in</span>' : '') +
@@ -1967,6 +1969,8 @@ function renderAgents() {
             '<div class="agent-name" style="display:flex;align-items:center;gap:6px;">' +
               '<span class="hb-dot hb-dot-' + hbColor + '" title="' + esc(hbLbl) + '"></span>' +
               esc(name) +
+              (unreadCount > 0 ? '<span style="background:#e74c3c;color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:10px;font-weight:700;" title="Unread inbox messages">' + unreadCount + '</span>' : '') +
+              (agentTaskCount > 0 ? '<span style="background:rgba(0,200,255,0.15);color:#00c8ff;font-size:0.6rem;padding:1px 5px;border-radius:10px;border:1px solid rgba(0,200,255,0.3);" title="Open/in-progress tasks">' + agentTaskCount + ' task' + (agentTaskCount !== 1 ? 's' : '') + '</span>' : '') +
             '</div>' +
             '<div class="agent-role">' + esc(role) + '</div>' +
           '</div>' +

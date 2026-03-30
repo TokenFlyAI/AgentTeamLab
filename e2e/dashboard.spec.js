@@ -115,8 +115,9 @@ test.describe("Agents tab", () => {
     expect(count).toBeGreaterThan(0);
     // At least one should be "alice" or "charlie"
     const allText = await names.allTextContents();
-    const lower = allText.map((t) => t.toLowerCase());
-    expect(lower.some((n) => ["alice", "bob", "charlie"].includes(n))).toBe(true);
+    const lower = allText.map((t) => t.toLowerCase().trim());
+    // Use includes() since the agent-name element may contain badge child text
+    expect(lower.some((n) => ["alice", "bob", "charlie"].some((ag) => n.startsWith(ag)))).toBe(true);
   });
 
   test("filter buttons are visible", async ({ page }) => {

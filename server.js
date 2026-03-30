@@ -583,9 +583,10 @@ function updateTaskRow(id, updates) {
       if (String(cols[0]).trim() === String(id)) {
         // Rebuild the row preserving columns order: id, title, description, priority, assignee, status, created, updated
         if (updates.status !== undefined) cols[5] = String(updates.status).toLowerCase();
-        if (updates.assignee !== undefined) cols[4] = String(updates.assignee).toLowerCase();
+        if (updates.assignee !== undefined) cols[4] = sanitizeCell(String(updates.assignee).toLowerCase());
         if (updates.priority !== undefined) cols[3] = String(updates.priority).toLowerCase();
         if (updates.title !== undefined) cols[1] = sanitizeCell(updates.title);
+        if (updates.description !== undefined) cols[2] = sanitizeCell(updates.description);
         if (updates.notes !== undefined) {
           // Append note (timestamped), never replace
           const newNote = "[" + new Date().toISOString().slice(0, 10) + "] " + String(updates.notes).trim().replace(/;;/g, "--").replace(/\|/g, "-").replace(/\n/g, " ");
