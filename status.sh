@@ -22,20 +22,44 @@ for AGENT_DIR in "${COMPANY_DIR}"/agents/*/; do
     # Check if agent has prompt.md (is a real agent)
     [ ! -f "${AGENT_DIR}/prompt.md" ] && continue
 
-    # Status detection via raw log mtime
+    # Status detection via heartbeat.md (matches web dashboard criteria)
     RAW_LOG="${AGENT_DIR}/logs/${TODAY}_raw.log"
+    HB_FILE="${AGENT_DIR}/heartbeat.md"
     STATUS="offline"
     LAST_UPD="—"
     LOG_SIZE="—"
+    NOW=$(date +%s)
 
+    # Log file size (informational)
     if [ -f "$RAW_LOG" ]; then
         LOG_SIZE=$(du -sh "$RAW_LOG" 2>/dev/null | awk '{print $1}')
+    fi
+
+    if [ -f "$HB_FILE" ]; then
+        # Read status field from heartbeat.md (same as web status badge)
+        HB_STATUS=$(grep -E "^status:" "$HB_FILE" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//' | tr -d '\r')
+        HB_MTIME=$(stat -f %m "$HB_FILE" 2>/dev/null || stat -c %Y "$HB_FILE" 2>/dev/null)
+        if [ -n "$HB_MTIME" ]; then
+            AGE=$(( NOW - HB_MTIME ))
+            # Match web heartbeat dot: green <2min, yellow 2-10min, red >10min
+            if [ $AGE -lt 120 ]; then
+                STATUS="${HB_STATUS:-running}"
+                LAST_UPD="${AGE}s ago"
+            elif [ $AGE -lt 600 ]; then
+                STATUS="idle"
+                LAST_UPD="$((AGE / 60))m ago"
+            else
+                STATUS="stale"
+                LAST_UPD="$((AGE / 60))m ago"
+            fi
+        fi
+    elif [ -f "$RAW_LOG" ]; then
+        # Fallback: no heartbeat, use raw log mtime
         MTIME=$(stat -f %m "$RAW_LOG" 2>/dev/null || stat -c %Y "$RAW_LOG" 2>/dev/null)
-        NOW=$(date +%s)
         if [ -n "$MTIME" ]; then
             AGE=$(( NOW - MTIME ))
             if [ $AGE -lt 120 ]; then
-                STATUS="ACTIVE"
+                STATUS="running"
                 LAST_UPD="${AGE}s ago"
             elif [ $AGE -lt 600 ]; then
                 STATUS="idle"
@@ -64,12 +88,12 @@ for AGENT_DIR in "${COMPANY_DIR}"/agents/*/; do
     fi
     TASK_INFO=$(echo "$TASK_INFO" | cut -c1-50)
 
-    # Color based on status
+    # Color based on status (aligns with web: green=running, yellow=idle, red=stale/offline)
     case "$STATUS" in
-        ACTIVE) COLOR="$GREEN" ;;
-        idle)   COLOR="$YELLOW" ;;
-        stale)  COLOR="$RED" ;;
-        *)      COLOR="$NC" ;;
+        running|active|ACTIVE) COLOR="$GREEN" ;;
+        idle)                  COLOR="$YELLOW" ;;
+        stale|error|blocked)   COLOR="$RED" ;;
+        *)                     COLOR="$NC" ;;
     esac
 
     printf "${COLOR}%-12s %-8s %5s %8s %7s${NC}  %-50s\n" \
