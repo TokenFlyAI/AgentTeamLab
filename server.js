@@ -161,8 +161,8 @@ setInterval(() => {
   const STALE_MS = 15 * 60 * 1000;
   const names = [];
   try {
-    const d = fs.readdirSync(path.join(__dirname, "agents")).filter((n) =>
-      fs.statSync(path.join(__dirname, "agents", n)).isDirectory()
+    const d = fs.readdirSync(EMPLOYEES_DIR).filter((n) =>
+      fs.statSync(path.join(EMPLOYEES_DIR, n)).isDirectory()
     );
     names.push(...d);
   } catch (_) { return; }
