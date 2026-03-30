@@ -2437,11 +2437,13 @@ function sendDMAll() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: from, message: msg })
-    })
-  )).then(() => {
+    }).then(r => ({ name, ok: r.ok })).catch(e => ({ name, ok: false, error: e.message }))
+  )).then(results => {
+    const failed = results.filter(x => !x.ok);
     document.getElementById('dm-all-message').value = '';
     closeDMAllModal();
     refresh();
+    if (failed.length > 0) showToast('DM failed for: ' + failed.map(x => x.name).join(', '), 4000);
   }).catch(e => showToast('DM error: ' + e.message, 4000));
 }
 
@@ -3015,10 +3017,13 @@ function renderResearch() {
   }
   list.innerHTML = files.map((f, i) => {
     const name = typeof f === 'string' ? f : (f.name || f.filename || 'file');
-    return '<li class="research-item" onclick="viewResearch(\'' + esc(name) + '\')">' +
+    return '<li class="research-item" data-research-name="' + encodeURIComponent(name) + '">' +
       '<span>' + esc(name) + '</span><span style="color:#555;font-size:0.75rem;">View &rarr;</span>' +
     '</li>';
   }).join('');
+  list.querySelectorAll('.research-item').forEach(el => {
+    el.addEventListener('click', () => viewResearch(decodeURIComponent(el.dataset.researchName)));
+  });
 }
 
 document.getElementById('research-search').addEventListener('input', renderResearch);
