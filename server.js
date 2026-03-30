@@ -1610,7 +1610,7 @@ async function handleRequest(req, res) {
     for (const line of lines) {
       // Skip header row (contains "ID") and separator row (contains "---")
       if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
-      const cols = line.split("|").map((c) => c.trim()).filter(Boolean);
+      const cols = line.split("|").slice(1, -1).map((c) => c.trim());
       if (cols.length >= 6) tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], assignee: cols[4], status: cols[5], created: cols[6] || "", updated: cols[7] || "" });
     }
     return json(res, tasks);
