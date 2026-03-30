@@ -236,6 +236,7 @@ function listDirRecursive(dir, base) {
 
 function listAgentNames() {
   return listDir(EMPLOYEES_DIR).filter((n) => {
+    if (!/^[a-zA-Z0-9_-]+$/.test(n) || n.length > 64) return false;
     try { return fs.statSync(path.join(EMPLOYEES_DIR, n)).isDirectory(); } catch (_) { return false; }
   });
 }
@@ -1020,7 +1021,7 @@ async function handleRequest(req, res) {
     }, 1000);
 
     const keepalive = setInterval(() => {
-      try { res.write(": keepalive\n\n"); } catch (_) {}
+      try { res.write(": keepalive\n\n"); } catch (_) { streamClosed = true; }
     }, 15000);
 
     req.on("close", () => {
