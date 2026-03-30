@@ -1544,18 +1544,27 @@ async function handleRequest(req, res) {
   if (method === "DELETE" && taskDeleteMatch) {
     const id = decodeURIComponent(taskDeleteMatch[1]);
     const tbPath = path.join(PUBLIC_DIR, "task_board.md");
-    const raw = safeRead(tbPath);
-    if (!raw) return notFound(res, "task board not found");
-    const taskToDelete = parseTaskBoard().find((t) => String(t.id) === String(id));
-    if (!taskToDelete) return notFound(res, "task not found");
-    const lines = raw.split("\n");
-    const filtered = lines.filter((line) => {
-      if (!line.trim().startsWith("|")) return true;
-      const cols = line.split("|").slice(1, -1).map((c) => c.trim());
-      return cols.length < 1 || String(cols[0]) !== String(id);
+    let deleteResult = null;
+    await withTaskLock(() => {
+      const raw = safeRead(tbPath);
+      if (!raw) { deleteResult = { error: "task board not found", status: 404 }; return; }
+      const taskToDelete = parseTaskBoard().find((t) => String(t.id) === String(id));
+      if (!taskToDelete) { deleteResult = { error: "task not found", status: 404 }; return; }
+      const lines = raw.split("\n");
+      const filtered = lines.filter((line) => {
+        if (!line.trim().startsWith("|")) return true;
+        const cols = line.split("|").slice(1, -1).map((c) => c.trim());
+        return cols.length < 1 || String(cols[0]) !== String(id);
+      });
+      try {
+        fs.writeFileSync(tbPath, filtered.join("\n"));
+        deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } };
+      } catch (e) {
+        deleteResult = { error: "failed to write task board", status: 500 };
+      }
     });
-    try { fs.writeFileSync(tbPath, filtered.join("\n")); } catch (e) { return json(res, { error: "failed to write task board" }, 500); }
-    return json(res, { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } });
+    if (!deleteResult) deleteResult = { error: "lock timeout", status: 503 };
+    return json(res, deleteResult, deleteResult.status && !deleteResult.ok ? deleteResult.status : 200);
   }
 
   if (method === "GET" && pathname === "/api/tasks/archive") {
