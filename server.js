@@ -1582,7 +1582,8 @@ async function handleRequest(req, res) {
   }
 
   if (method === "POST" && pathname === "/api/tasks/archive") {
-    const archived = archiveDoneTasks();
+    let archived = 0;
+    await withTaskLock(() => { archived = archiveDoneTasks(); });
     return json(res, { ok: true, archived });
   }
 
