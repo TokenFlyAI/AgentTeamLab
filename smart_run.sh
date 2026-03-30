@@ -4,17 +4,18 @@
 # Philosophy: ONLY start an agent if it has actual work to do.
 # Running idle agents wastes tokens. Every cycle costs money.
 #
-# Decision logic:
+# Decision logic (priority order, subject to --max cap):
 #   1. Alice: if there are ANY open/in_progress tasks OR unread inbox msgs
-#   2. Named agents: ONLY if they have assigned open/in_progress tasks
-#              OR they have unread inbox messages
+#   2. Task-assigned agents: ONLY if they have assigned open/in_progress tasks
 #   3. Unassigned tasks: add 1 agent per unassigned task (cap 3 extra)
-#   4. NEVER add "random idle" agents — token waste
+#   4. Inbox-only agents: added LAST, only if under --max cap
 #   5. Skip already-running agents
 #
 # Flags:
 #   --dry-run      Print decision and exit (no launch)
 #   --force-alice  Always include alice even if no work
+#   --max N        Hard cap on total agents to start (default: 20)
+#                  Use --max 3 for testing to save tokens
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
 TASK_BOARD="${COMPANY_DIR}/public/task_board.md"
@@ -104,26 +105,51 @@ has_work() {
     return 1
 }
 
-# Determine if Alice flag is forced
+# ── Parse flags ─────────────────────────────────────────────────────────────
 FORCE_ALICE=0
-[ "${1}" = "--force-alice" ] || [ "${2}" = "--force-alice" ] && FORCE_ALICE=1
+MAX_AGENTS=20   # default: no effective cap
+DRY_RUN_FLAG=0
 
-# 1. Alice: only if there's actual work or forced
-if [ $FORCE_ALICE -eq 1 ] || has_work "alice" || [ "$OPEN_TASK_COUNT" -gt 0 ]; then
-    add_agent "alice"
-fi
-
-# 2. Agents with assigned tasks or inbox messages
-for ag in $ALL_AGENTS; do
-    [ "$ag" = "alice" ] && continue
-    has_work "$ag" && add_agent "$ag"
+for arg in "$@"; do
+    case "$arg" in
+        --force-alice) FORCE_ALICE=1 ;;
+        --dry-run)     DRY_RUN_FLAG=1 ;;
+    esac
+done
+# --max N: look for --max followed by a number
+for i in "$@"; do
+    if [ "$PREV_ARG" = "--max" ]; then
+        MAX_AGENTS="$i"
+        break
+    fi
+    PREV_ARG="$i"
 done
 
-# 3. Unassigned tasks: add agents to claim them (max 3 extra agents)
+under_max() {
+    local count running_count total
+    count=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+    running_count=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+    count=${count:-0}; running_count=${running_count:-0}
+    total=$(( count + running_count ))
+    [ "$total" -lt "$MAX_AGENTS" ]
+}
+
+# 1. Alice: only if there's actual work or forced
+if [ $FORCE_ALICE -eq 1 ] || [ "$OPEN_TASK_COUNT" -gt 0 ] || echo "$INBOX_AGENTS" | grep -qw "alice"; then
+    under_max && add_agent "alice"
+fi
+
+# 2. Task-assigned agents (highest priority after alice)
+for ag in $ALL_AGENTS; do
+    [ "$ag" = "alice" ] && continue
+    echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && under_max && add_agent "$ag"
+done
+
+# 3. Unassigned tasks: add agents to claim them (max 3 extra)
 if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
     queued=$(echo "$TO_START" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null || echo 0)
-    running=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null || echo 0)
-    total=$((queued + running))
+    running_c=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null || echo 0)
+    total=$((queued + running_c))
     need=$((UNASSIGNED_COUNT < 3 ? UNASSIGNED_COUNT : 3))
     add_more=$((need - total))
 
@@ -131,19 +157,28 @@ if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
         for ag in $ALL_AGENTS; do
             [ "$add_more" -le 0 ] && break
             [ "$ag" = "alice" ] && continue
-            has_work "$ag" && continue           # already added above
+            echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue
             echo "$RUNNING_AGENTS" | grep -qw "$ag" && continue
             echo "$TO_START" | grep -qw "$ag" && continue
-            add_agent "$ag"
+            under_max && add_agent "$ag"
             add_more=$((add_more - 1))
         done
     fi
 fi
 
+# 4. Inbox-only agents — lowest priority, only added if under --max cap
+for ag in $ALL_AGENTS; do
+    [ "$ag" = "alice" ] && continue
+    echo "$INBOX_AGENTS" | grep -qw "$ag" || continue          # has inbox
+    echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue       # already handled above
+    under_max && add_agent "$ag"
+done
+
 START_LIST=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 echo "=== Smart Run Decision ==="
+echo "  Max agents cap:    $MAX_AGENTS"
 echo "  Open tasks:        $OPEN_TASK_COUNT (unassigned: $UNASSIGNED_COUNT)"
 echo "  Already running:   $(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
 echo "  Task-assigned:     $(echo "$ASSIGNED_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
@@ -152,7 +187,7 @@ echo "  Starting now:      ${START_LIST:-none}"
 echo ""
 
 # Dry-run: structured output for server.js parsing
-if [ "${1}" = "--dry-run" ]; then
+if [ $DRY_RUN_FLAG -eq 1 ] || [ "${1}" = "--dry-run" ]; then
     echo "  Always run: alice"
     echo "  Task-assigned: $(echo "$ASSIGNED_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
     echo "  Unassigned tasks: $UNASSIGNED_COUNT"

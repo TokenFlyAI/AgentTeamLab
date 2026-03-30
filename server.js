@@ -1020,8 +1020,11 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/agents/smart-start") {
     const script = path.join(DIR, "smart_run.sh");
     if (!fs.existsSync(script)) return notFound(res, "smart_run.sh not found");
+    const body = await parseBody(req);
+    const maxAgents = body.max ? String(parseInt(body.max, 10) || 20) : "20";
+    const extraArgs = ["--max", maxAgents];
     // Run smart_run.sh and capture its decision summary before it launches agents
-    execFile("bash", [script, "--dry-run"], { cwd: DIR }, (err, stdout, stderr) => {
+    execFile("bash", [script, "--dry-run", ...extraArgs], { cwd: DIR }, (err, stdout, stderr) => {
       // Parse decision from stdout
       const lines = (stdout || "").split("\n");
       const decision = {};
@@ -1030,9 +1033,9 @@ async function handleRequest(req, res) {
         if (m) decision[m[1].trim()] = m[2].trim();
       }
       // Now actually run
-      const child = spawn("bash", [script], { cwd: DIR, detached: true, stdio: "ignore" });
+      const child = spawn("bash", [script, ...extraArgs], { cwd: DIR, detached: true, stdio: "ignore" });
       child.unref();
-      json(res, { ok: true, decision, message: "Smart run launched" });
+      json(res, { ok: true, decision, message: `Smart run launched (max: ${maxAgents})`, max: parseInt(maxAgents, 10) });
     });
     return;
   }

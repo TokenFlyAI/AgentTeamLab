@@ -1119,7 +1119,8 @@ body {
       <button class="filter-btn" data-filter="idle" title="Heartbeat 2–10 min">Idle <span class="hb-dot hb-dot-yellow" style="width:6px;height:6px;"></span></button>
       <button class="filter-btn" data-filter="unknown" title="Heartbeat &gt; 10 min or missing">Unknown <span class="hb-dot hb-dot-red" style="width:6px;height:6px;"></span></button>
       <button class="filter-btn" data-filter="offline" title="No heartbeat / process not running">Offline <span class="hb-dot hb-dot-red" style="width:6px;height:6px;background:#333;"></span></button>
-      <button class="bulk-btn" style="background:#1a2e1a;border-color:#00cc66;color:#00ff88;" onclick="smartStart()" title="Start alice + task-assigned agents + random idle. Scales up if many unassigned tasks.">⚡ Smart Start</button>
+      <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:40px;padding:4px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.8rem;text-align:center;">
+      <button class="bulk-btn" style="background:rgba(0,200,100,0.12);border-color:rgba(0,200,100,0.4);color:#00ff88;" onclick="smartStart()" title="Start up to N task-assigned agents (set number on left). Token-conservative.">⚡ Smart Start</button>
       <button class="bulk-btn" onclick="bulkAction('start')" title="Starts all 20 agents — high token cost">Start All ⚠</button>
       <button class="bulk-btn" onclick="bulkAction('stop')">Stop All</button>
       <button class="bulk-btn" onclick="bulkAction('dm')">DM All</button>
@@ -2309,21 +2310,23 @@ function showCostDetails() {
   showToast(`Today $${(c.today_usd||0).toFixed(2)} / ${c.today_cycles||0} cycles | 7d $${(c.total_7d_usd||0).toFixed(2)} / ${c.total_7d_cycles||0} cycles | ${topAgents}`, 8000);
 }
 
-function smartStart() {
-  const btn = document.querySelector('[onclick="smartStart()"]');
+function smartStart(maxOverride) {
+  const maxInput = document.getElementById('smart-start-max');
+  const max = maxOverride || (maxInput ? parseInt(maxInput.value, 10) : 20) || 20;
+  const btn = document.querySelector('[onclick^="smartStart"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Starting…'; }
-  fetch('/api/agents/smart-start', { method: 'POST' })
+  fetch('/api/agents/smart-start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ max })
+  })
     .then(r => r.json())
     .then(data => {
       if (btn) { btn.disabled = false; btn.textContent = '⚡ Smart Start'; }
       if (data.ok) {
         const d = data.decision || {};
-        const parts = [];
-        if (d['Always run']) parts.push('coordinator: ' + d['Always run']);
-        if (d['Task-assigned']) parts.push('assigned: ' + d['Task-assigned']);
-        if (d['Random idle']) parts.push('random: ' + d['Random idle']);
-        if (d['Unassigned tasks']) parts.push('unassigned tasks: ' + d['Unassigned tasks']);
-        showToast('⚡ Smart Start: ' + (parts.length ? parts.join(' | ') : 'launched'), 5000);
+        const starting = d['Starting now'] || 'none';
+        showToast('⚡ Smart Start (max ' + max + '): ' + starting, 5000);
         setTimeout(refresh, 2000);
       } else {
         showToast('Smart Start error: ' + (data.error || 'unknown'), 4000);
