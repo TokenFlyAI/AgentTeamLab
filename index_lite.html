@@ -1939,7 +1939,9 @@ function detectCycleCompletions(newAgents) {
 // ===== AGENTS =====
 function renderAgents() {
   const grid = document.getElementById('agent-grid');
-  const search = document.getElementById('global-search-input').value.toLowerCase();
+  if (!grid) return;
+  const searchEl = document.getElementById('global-search-input');
+  const search = searchEl ? searchEl.value.toLowerCase() : '';
   let filtered = Array.isArray(agents) ? [...agents] : [];
 
   if (currentAgentFilter !== 'all') {
@@ -2668,6 +2670,7 @@ function tdAddNote() {
   const input = document.getElementById('td-note-input');
   const note = input.value.trim();
   if (!note) return;
+  if (note.length > 2000) { showToast('Note too long (max 2000 chars)', 3000); return; }
   fetch('/api/tasks/' + currentTaskDetailId, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
