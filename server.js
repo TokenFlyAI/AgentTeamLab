@@ -1502,7 +1502,7 @@ async function handleRequest(req, res) {
       const cols = line.split("|").slice(1, -1).map((c) => c.trim());
       return cols.length < 1 || String(cols[0]) !== String(id);
     });
-    fs.writeFileSync(tbPath, filtered.join("\n"));
+    try { fs.writeFileSync(tbPath, filtered.join("\n")); } catch (e) { return json(res, { error: "failed to write task board" }, 500); }
     return json(res, { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } });
   }
 
@@ -1714,7 +1714,26 @@ async function handleRequest(req, res) {
       const validModes = ["plan", "normal", "crazy", "autonomous"];
       if (!validModes.includes(newMode)) return badRequest(res, `invalid mode, must be one of: ${validModes.join(', ')}`);
       try {
-        fs.writeFileSync(path.join(PUBLIC_DIR, "company_mode.md"), `# Company Mode\n\nmode: ${newMode}\nupdated_by: ceo\nupdated_at: ${new Date().toISOString()}\n`);
+        const today = new Date().toISOString().slice(0, 10);
+        const modeContent = [
+          "# Company Operating Mode",
+          "",
+          "## Current Mode",
+          `**${newMode}**`,
+          "",
+          "## Set By",
+          "ceo",
+          "",
+          "## Reason",
+          "Quick command switch via CEO command palette",
+          "",
+          "## Mode Switch Log",
+          "| Date | From | To | Who | Reason |",
+          "|------|------|----|-----|--------|",
+          `| ${today} | (previous) | ${newMode} | ceo | quick command |`,
+          "",
+        ].join("\n");
+        fs.writeFileSync(path.join(PUBLIC_DIR, "company_mode.md"), modeContent);
         return json(res, { ok: true, action: "mode_switched", mode: newMode });
       } catch (e) {
         return json(res, { error: e.message }, 500);
@@ -2090,9 +2109,9 @@ async function handleRequest(req, res) {
   // ---- Messages ----
   const messagesMatch = pathname.match(/^\/api\/messages\/([a-zA-Z0-9_-]+)$/);
   if (method === "POST" && messagesMatch) {
-    const agentName = messagesMatch[1];
-    const agentDir = path.join(EMPLOYEES_DIR, agentName);
-    if (!fs.existsSync(agentDir)) return notFound(res, `Agent '${agentName}' not found`);
+    const targetName = messagesMatch[1]; // avoid shadowing agentName() helper
+    const agentDir = path.join(EMPLOYEES_DIR, targetName);
+    if (!fs.existsSync(agentDir)) return notFound(res, `Agent '${targetName}' not found`);
     const body = await parseBody(req);
     if (!body.content) return badRequest(res, "content is required");
     const from = sanitizeFrom(body.from || "api");

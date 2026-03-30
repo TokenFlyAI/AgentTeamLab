@@ -442,6 +442,26 @@ test.describe("POST /api/ceo/command", () => {
     expect(body.action).toBe("routed_to_alice");
     expect(typeof body.filename).toBe("string");
   });
+
+  test("/mode command switches mode and GET /api/mode reflects the change", async () => {
+    // Save original mode
+    const { body: before } = await apiGet("/api/mode");
+    const originalMode = before.mode || "normal";
+
+    // Switch to plan via CEO command
+    const { status, body } = await apiPost("/api/ceo/command", { command: "/mode plan" });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.action).toBe("mode_switched");
+    expect(body.mode).toBe("plan");
+
+    // GET /api/mode must reflect the new mode (regression: used to write YAML format parsers couldn't read)
+    const { body: after } = await apiGet("/api/mode");
+    expect(after.mode).toBe("plan");
+
+    // Restore original mode
+    await apiPost("/api/ceo/command", { command: `/mode ${originalMode}` });
+  });
 });
 
 // ---------------------------------------------------------------------------

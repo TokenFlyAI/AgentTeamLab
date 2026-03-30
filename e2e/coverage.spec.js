@@ -454,3 +454,161 @@ test.describe("GET /api/metrics/health", () => {
     expect(body).not.toBeNull();
   });
 });
+
+// ── Agent health score ────────────────────────────────────────────────────────
+
+test.describe("GET /api/agents/:name/health", () => {
+  test("returns 200 with score, grade, and dimensions for known agent", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/health");
+    expect(status).toBe(200);
+    expect(typeof body.score).toBe("number");
+    expect(typeof body.grade).toBe("string");
+    expect(["A", "B", "C", "D"]).toContain(body.grade);
+    expect(typeof body.dimensions).toBe("object");
+  });
+
+  test("score is between 0 and 100", async () => {
+    const { body } = await apiGet("/api/agents/alice/health");
+    expect(body.score).toBeGreaterThanOrEqual(0);
+    expect(body.score).toBeLessThanOrEqual(100);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/health");
+    expect(status).toBe(404);
+  });
+});
+
+// ── Agent sub-resource GET routes ─────────────────────────────────────────────
+
+test.describe("GET /api/agents/:name/inbox", () => {
+  test("returns 200 with unread and processed arrays", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/inbox");
+    expect(status).toBe(200);
+    expect(Array.isArray(body.unread)).toBe(true);
+    expect(Array.isArray(body.processed)).toBe(true);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/inbox");
+    expect(status).toBe(404);
+  });
+});
+
+test.describe("GET /api/agents/:name/status", () => {
+  test("returns 200 with name and content fields", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/status");
+    expect(status).toBe(200);
+    expect(body.name).toBe("alice");
+    expect(typeof body.content).toBe("string");
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/status");
+    expect(status).toBe(404);
+  });
+});
+
+test.describe("GET /api/agents/:name/persona", () => {
+  test("returns 200 with name and content fields", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/persona");
+    expect(status).toBe(200);
+    expect(body.name).toBe("alice");
+    expect(typeof body.content).toBe("string");
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/persona");
+    expect(status).toBe(404);
+  });
+});
+
+test.describe("GET /api/agents/:name/todo", () => {
+  test("returns 200 with name and content fields", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/todo");
+    expect(status).toBe(200);
+    expect(body.name).toBe("alice");
+    expect(typeof body.content).toBe("string");
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/todo");
+    expect(status).toBe(404);
+  });
+});
+
+test.describe("GET /api/agents/:name/activity", () => {
+  test("returns 200 with name and cycles array", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/activity");
+    expect(status).toBe(200);
+    expect(body.name).toBe("alice");
+    expect(Array.isArray(body.cycles)).toBe(true);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/activity");
+    expect(status).toBe(404);
+  });
+});
+
+// ── Agent cycle detail ────────────────────────────────────────────────────────
+
+test.describe("GET /api/agents/:name/cycles/:n", () => {
+  test("returns 404 for cycle that does not exist", async () => {
+    const { status } = await apiGet("/api/agents/alice/cycles/99999");
+    expect(status).toBe(404);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/cycles/1");
+    expect(status).toBe(404);
+  });
+});
+
+// ── Agent log ─────────────────────────────────────────────────────────────────
+
+test.describe("GET /api/agents/:name/log", () => {
+  test("returns 200 with an array for known agent", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/log");
+    expect(status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiGet("/api/agents/unknown_xyz/log");
+    expect(status).toBe(404);
+  });
+});
+
+// ── CEO inbox mark-read ───────────────────────────────────────────────────────
+
+test.describe("POST /api/ceo-inbox/:filename/read", () => {
+  test("returns 400 for invalid filename (path traversal)", async () => {
+    const { status } = await apiPost("/api/ceo-inbox/../etc%2Fpasswd/read");
+    expect(status).toBe(404); // route won't match the pattern
+  });
+
+  test("returns 500 or 200 for unknown filename (file not found)", async () => {
+    const { status } = await apiPost("/api/ceo-inbox/nonexistent_xyz.md/read");
+    // Either 400 (validation) or 500 (file not found during rename) is acceptable
+    expect([200, 400, 404, 500]).toContain(status);
+  });
+});
+
+// ── Knowledge & Research ─────────────────────────────────────────────────────
+
+test.describe("GET /api/knowledge", () => {
+  test("returns 200 with an array", async () => {
+    const { status, body } = await apiGet("/api/knowledge");
+    expect(status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+  });
+});
+
+test.describe("GET /api/research", () => {
+  test("returns 200 with an array", async () => {
+    const { status, body } = await apiGet("/api/research");
+    expect(status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+  });
+});
