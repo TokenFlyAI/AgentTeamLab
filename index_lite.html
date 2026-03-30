@@ -3806,9 +3806,9 @@ async function openDigest() {
           html += '<div class="digest-agent"><h4>' + esc(name) + '</h4>';
           if (typeof info === 'string') html += '<p>' + esc(info) + '</p>';
           else {
-            if (info.cycles) html += '<div>Cycles: ' + info.cycles + '</div>';
+            if (info.cycles) html += '<div>Cycles: ' + Number(info.cycles) + '</div>';
             if (info.cost) html += '<div>Cost: $' + Number(info.cost).toFixed(2) + '</div>';
-            if (info.tasks_completed) html += '<div>Tasks completed: ' + info.tasks_completed + '</div>';
+            if (info.tasks_completed) html += '<div>Tasks completed: ' + Number(info.tasks_completed) + '</div>';
             if (info.summary) html += '<div>' + esc(info.summary) + '</div>';
           }
           html += '</div>';
