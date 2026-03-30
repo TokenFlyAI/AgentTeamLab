@@ -2913,31 +2913,36 @@ async function archiveDone() {
 });
 
 // ===== CHAT =====
+// Store full message bodies indexed by position — avoids embedding in onclick attributes
+const _chatBodies = [];
+
 function renderChat() {
   const container = document.getElementById('chat-messages');
   const msgs = Array.isArray(chatMessages) ? chatMessages : [];
   const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
 
+  _chatBodies.length = 0; // reset on each render
   container.innerHTML = msgs.map((msg, i) => {
     const from = msg.from || msg.sender || 'Unknown';
     const body = msg.message || msg.body || msg.content || '';
     const time = msg.timestamp || msg.time || msg.created_at || '';
     const isLong = body.length > 200;
     const collapsed = isLong ? body.substring(0, 200) + '...' : body;
+    _chatBodies[i] = body;
     return '<div class="chat-msg">' +
       '<div class="msg-from">' + esc(from) + '<span class="msg-time">' + formatTime(time) + '</span></div>' +
       '<div class="msg-body" id="msg-body-' + i + '">' + esc(collapsed) + '</div>' +
-      (isLong ? '<span class="msg-toggle" onclick="toggleChatMsg(' + i + ', ' + esc(JSON.stringify(JSON.stringify(body))) + ')">Show more</span>' : '') +
+      (isLong ? '<span class="msg-toggle" onclick="toggleChatMsg(' + i + ')">Show more</span>' : '') +
     '</div>';
   }).join('');
 
   if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
 
-function toggleChatMsg(idx, fullBodyStr) {
+function toggleChatMsg(idx) {
   const el = document.getElementById('msg-body-' + idx);
   const toggle = el.parentElement.querySelector('.msg-toggle');
-  const fullBody = JSON.parse(fullBodyStr);
+  const fullBody = _chatBodies[idx] || '';
   if (toggle.textContent === 'Show more') {
     el.textContent = fullBody;
     toggle.textContent = 'Show less';
