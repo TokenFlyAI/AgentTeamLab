@@ -939,8 +939,11 @@ async function handleRequest(req, res) {
       if (readSize > 0) {
         const buf = Buffer.alloc(readSize);
         const fd = fs.openSync(logFile, "r");
-        fs.readSync(fd, buf, 0, readSize, startPos);
-        fs.closeSync(fd);
+        try {
+          fs.readSync(fd, buf, 0, readSize, startPos);
+        } finally {
+          fs.closeSync(fd);
+        }
         sendLines(buf.toString("utf8"));
       }
       offset = stat.size;
@@ -957,8 +960,11 @@ async function handleRequest(req, res) {
           const newBytes = stat.size - offset;
           const buf = Buffer.alloc(newBytes);
           const fd = fs.openSync(logFile, "r");
-          fs.readSync(fd, buf, 0, newBytes, offset);
-          fs.closeSync(fd);
+          try {
+            fs.readSync(fd, buf, 0, newBytes, offset);
+          } finally {
+            fs.closeSync(fd);
+          }
           offset = stat.size;
           sendLines(buf.toString("utf8"));
         } catch (_) {}
@@ -973,8 +979,11 @@ async function handleRequest(req, res) {
         const newBytes = stat.size - offset;
         const buf = Buffer.alloc(newBytes);
         const fd = fs.openSync(logFile, "r");
-        fs.readSync(fd, buf, 0, newBytes, offset);
-        fs.closeSync(fd);
+        try {
+          fs.readSync(fd, buf, 0, newBytes, offset);
+        } finally {
+          fs.closeSync(fd);
+        }
         offset = stat.size;
         sendLines(buf.toString("utf8"));
       } catch (_) {}
