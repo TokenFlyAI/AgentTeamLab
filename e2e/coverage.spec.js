@@ -235,6 +235,31 @@ test.describe("POST /api/tasks/archive", () => {
   });
 });
 
+// ── CSV Export ────────────────────────────────────────────────────────────────
+
+test.describe("GET /api/tasks/export.csv", () => {
+  test("returns 200 with text/csv content-type", async () => {
+    const res = await fetch(`${BASE}/api/tasks/export.csv`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/csv");
+  });
+
+  test("response body contains CSV header row", async () => {
+    const res = await fetch(`${BASE}/api/tasks/export.csv`);
+    const text = await res.text();
+    expect(text).toContain("ID");
+    expect(text).toContain("Title");
+    expect(text).toContain("Status");
+  });
+
+  test("content-disposition header suggests file download", async () => {
+    const res = await fetch(`${BASE}/api/tasks/export.csv`);
+    const disp = res.headers.get("content-disposition") || "";
+    expect(disp).toContain("attachment");
+    expect(disp).toContain(".csv");
+  });
+});
+
 // ── Agent persona note ────────────────────────────────────────────────────────
 
 test.describe("POST /api/agents/:name/persona/note", () => {

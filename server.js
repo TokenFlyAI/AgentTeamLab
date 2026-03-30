@@ -1521,6 +1521,26 @@ async function handleRequest(req, res) {
     return json(res, { ok: true, archived });
   }
 
+  // GET /api/tasks/export.csv — download task board as CSV
+  if (method === "GET" && pathname === "/api/tasks/export.csv") {
+    const tasks = parseTaskBoard();
+    const header = ["ID", "Title", "Description", "Priority", "Assignee", "Status", "Created", "Updated", "Notes"];
+    const escape = (v) => `"${String(v || "").replace(/"/g, '""')}"`;
+    const rows = [
+      header.map(escape).join(","),
+      ...tasks.map((t) =>
+        [t.id, t.title, t.description, t.priority, t.assignee, t.status, t.created, t.updated, t.notes || ""]
+          .map(escape).join(",")
+      ),
+    ].join("\r\n");
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="task_board_${new Date().toISOString().slice(0,10)}.csv"`,
+      "Access-Control-Allow-Origin": "*",
+    });
+    return res.end(rows);
+  }
+
   // ---- Communication ----
   if (method === "GET" && pathname === "/api/team-channel") {
     const dir = path.join(PUBLIC_DIR, "team_channel");

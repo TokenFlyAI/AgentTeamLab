@@ -1195,6 +1195,8 @@ body {
         <option value="low">Low</option>
       </select>
       <select id="task-filter-assignee"><option value="">All Assignees</option></select>
+      <button onclick="exportTasksCSV()" title="Download task board as CSV" style="padding:5px 10px;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);color:#00c8ff;border-radius:6px;cursor:pointer;font-size:0.78rem;">⬇ CSV</button>
+      <button onclick="toggleArchive()" id="archive-toggle-btn" title="Show archived tasks" style="padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#888;border-radius:6px;cursor:pointer;font-size:0.78rem;">📦 Archive</button>
     </div>
     <div style="overflow-x:auto;">
       <table class="task-table">
@@ -1215,6 +1217,23 @@ body {
       <div class="task-progress-fill" id="task-progress-fill" style="width:0%"></div>
     </div>
     <div style="font-size:0.75rem; color:#666; margin-top:4px;" id="task-progress-label"></div>
+
+    <!-- Archive section (hidden by default) -->
+    <div id="task-archive-section" style="display:none;margin-top:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:1rem;color:#888;">Archived Tasks</h3>
+        <button onclick="archiveDone()" title="Move all done tasks to archive" style="padding:4px 10px;background:rgba(255,165,0,0.1);border:1px solid rgba(255,165,0,0.3);color:#ffa500;border-radius:6px;cursor:pointer;font-size:0.78rem;">Archive Done</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="task-table" style="opacity:0.8;">
+          <thead><tr>
+            <th>ID</th><th>Title</th><th>Assignee</th><th>Status</th><th>Created</th>
+          </tr></thead>
+          <tbody id="archive-tbody"></tbody>
+        </table>
+      </div>
+      <div id="archive-empty" style="color:#555;font-size:0.85rem;text-align:center;padding:20px;display:none;">No archived tasks yet</div>
+    </div>
   </div>
 
   <!-- TAB: Chat -->
@@ -2781,6 +2800,71 @@ function quickAssignTask(agentName) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, priority, assignee: agentName, status: 'open' })
   }).then(() => { refresh(); refreshAgentModal(); }).catch(e => showToast('Task create error: ' + e.message, 3000));
+}
+
+// ── Task Archive & CSV Export ──────────────────────────────────────────────────
+
+let archiveVisible = false;
+
+function exportTasksCSV() {
+  window.open('/api/tasks/export.csv', '_blank');
+}
+
+function toggleArchive() {
+  archiveVisible = !archiveVisible;
+  const section = document.getElementById('task-archive-section');
+  const btn = document.getElementById('archive-toggle-btn');
+  if (archiveVisible) {
+    section.style.display = 'block';
+    btn.style.background = 'rgba(0,255,136,0.1)';
+    btn.style.borderColor = 'rgba(0,255,136,0.3)';
+    btn.style.color = '#00ff88';
+    loadArchive();
+  } else {
+    section.style.display = 'none';
+    btn.style.background = 'rgba(255,255,255,0.05)';
+    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+    btn.style.color = '#888';
+  }
+}
+
+async function loadArchive() {
+  const tbody = document.getElementById('archive-tbody');
+  const emptyEl = document.getElementById('archive-empty');
+  tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">Loading…</td></tr>';
+  try {
+    const res = await fetch('/api/tasks/archive');
+    const tasks = await res.json();
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      tbody.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    tbody.innerHTML = tasks.map(t =>
+      '<tr style="opacity:0.7;">' +
+        '<td style="color:#555;">' + esc(String(t.id || '')) + '</td>' +
+        '<td>' + esc(t.title || '') + '</td>' +
+        '<td>' + esc(t.assignee || '—') + '</td>' +
+        '<td><span style="color:#00ff88;font-size:0.75rem;">' + esc(t.status || '') + '</span></td>' +
+        '<td style="color:#555;font-size:0.75rem;">' + esc(t.created || '') + '</td>' +
+      '</tr>'
+    ).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#ff6b6b;text-align:center;">Failed to load archive</td></tr>';
+  }
+}
+
+async function archiveDone() {
+  const { ok, archived } = await fetch('/api/tasks/archive', { method: 'POST' })
+    .then(r => r.json()).catch(() => ({ ok: false }));
+  if (ok) {
+    showToast(`Archived ${archived} done task${archived !== 1 ? 's' : ''}`, 3000);
+    refresh();
+    if (archiveVisible) loadArchive();
+  } else {
+    showToast('Archive failed', 3000);
+  }
 }
 
 // Task filter listeners
