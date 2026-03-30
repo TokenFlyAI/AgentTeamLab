@@ -17,8 +17,8 @@ trap 'kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' INT TERM
 agent_has_work() {
     local ag="$1"
     local inbox_dir="${COMPANY_DIR}/agents/${ag}/chat_inbox"
-    # Check inbox
-    if [ -d "$inbox_dir" ] && ls "$inbox_dir"/*.md >/dev/null 2>&1; then
+    # Check inbox — only count UNREAD messages (not read_ prefixed files)
+    if [ -d "$inbox_dir" ] && ls "$inbox_dir"/*.md 2>/dev/null | grep -qv '/read_'; then
         return 0
     fi
     # Check task board for assigned open/in_progress tasks
