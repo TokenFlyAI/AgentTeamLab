@@ -2528,7 +2528,8 @@ function renderTasks() {
 
   // Group by status for collapsible sections (only when no status filter active)
   function buildTaskRow(t, i) {
-    const id = t.id || i;
+    // Ensure id is always a safe integer for inline onclick handlers
+    const id = (Number.isInteger(t.id) && t.id > 0) ? t.id : (parseInt(t.id, 10) > 0 ? parseInt(t.id, 10) : i);
     const statusClass = 'status-' + (t.status || 'open').replace(/[^a-z0-9_-]/gi, '_');
     const prioClass = 'priority-' + (t.priority || 'medium').replace(/[^a-z0-9_-]/gi, '_');
     const agentNames = (Array.isArray(agents) ? agents : []).map(a => a.name || a.agent).filter(Boolean);
