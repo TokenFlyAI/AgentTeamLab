@@ -3071,7 +3071,9 @@ async function viewKnowledge(cat, name) {
   viewer.style.display = 'block';
   viewer.textContent = 'Loading...';
   try {
-    const res = await fetch('/api/knowledge/' + encodeURIComponent(cat) + '/' + encodeURIComponent(name));
+    // name is already the full relative path from knowledge root (e.g. "standards/foo.md")
+    // cat is a display category ("General"), not a directory prefix on disk
+    const res = await fetch('/api/knowledge/' + encodeURIComponent(name));
     if (!res.ok) throw new Error('Not found');
     const data = await res.json();
     const content = typeof data === 'string' ? data : (data.content || JSON.stringify(data, null, 2));
