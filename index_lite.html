@@ -583,6 +583,7 @@ body {
     <button class="topbar-btn" id="digest-btn" title="Daily Digest">Digest</button>
     <button class="topbar-btn" id="copy-status-btn" title="Copy Status Report">Copy Report</button>
     <button class="topbar-btn" id="cmd-palette-btn" title="Command Palette (Ctrl+K)">Ctrl+K</button>
+    <button class="topbar-btn" id="broadcast-btn" title="Broadcast CEO message to all agents" onclick="openBroadcastModal()" style="color:#ffaa00;">📢 Broadcast</button>
     <button class="topbar-btn" id="mode-switch-btn" title="Switch operating mode" onclick="openModeSwitchModal()">⚙ Switch Mode</button>
     <span class="mode-badge" id="mode-badge">autonomous</span>
   </div>
@@ -670,6 +671,7 @@ body {
             <th>Assignee</th>
             <th>Status</th>
             <th>Created</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="task-tbody"></tbody>
@@ -805,6 +807,25 @@ body {
   </div>
 </div>
 
+<!-- ===== BROADCAST MODAL ===== -->
+<div class="modal-overlay" id="broadcast-modal-overlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>📢 CEO Broadcast</h2>
+      <button class="modal-close" onclick="closeBroadcastModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.82rem;color:#aaa;margin-bottom:12px;">Send an urgent message to ALL agents. Delivered before their next tool call via PreToolUse hook.</p>
+      <div class="form-row">
+        <textarea id="broadcast-message" placeholder="Your message to all agents..." rows="4" style="width:100%;padding:10px;background:#0e0e1a;border:1px solid #ffaa00;border-radius:6px;color:#e0e0e0;font-family:inherit;font-size:0.85rem;resize:vertical;"></textarea>
+      </div>
+      <div class="form-row" style="margin-top:10px;justify-content:flex-end;">
+        <button class="submit-btn" style="background:#3a2a00;border:1px solid #ffaa00;color:#ffaa00;" onclick="sendBroadcast()">📢 Send to All Agents</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODE SWITCH MODAL ===== -->
 <div class="modal-overlay" id="mode-switch-modal-overlay">
   <div class="modal" style="max-width:400px;">
@@ -936,15 +957,14 @@ function setConnected(connected) {
 async function refresh() {
   try {
     const results = await Promise.allSettled([
-      safeFetch('/api/agents'),
-      safeFetch('/api/tasks'),
-      safeFetch('/api/team-channel'),
-      safeFetch('/api/announcements'),
-      safeFetch('/api/research'),
-      safeFetch('/api/knowledge'),
-      safeFetch('/api/org'),
-      safeFetch('/api/stats'),
-      safeFetch('/api/mode'),
+      safeFetch('/api/agents'),       // 0
+      safeFetch('/api/tasks'),        // 1
+      safeFetch('/api/team-channel'), // 2
+      safeFetch('/api/announcements'),// 3
+      safeFetch('/api/research'),     // 4
+      safeFetch('/api/knowledge'),    // 5
+      safeFetch('/api/stats'),        // 6
+      safeFetch('/api/mode'),         // 7
     ]);
     if (results[0].status === 'fulfilled' && results[0].value) {
       const newAgents = results[0].value;
@@ -974,21 +994,52 @@ async function refresh() {
       renderKnowledge();
     }
     if (results[6].status === 'fulfilled' && results[6].value) {
-      orgData = results[6].value;
-      renderOrg();
-    }
-    if (results[7].status === 'fulfilled' && results[7].value) {
-      statsData = results[7].value;
+      statsData = results[6].value;
       renderStats();
     }
-    if (results[8].status === 'fulfilled' && results[8].value) {
-      const modeData = results[8].value;
+    if (results[7].status === 'fulfilled' && results[7].value) {
+      const modeData = results[7].value;
       document.getElementById('mode-badge').textContent = modeData.mode || modeData || 'autonomous';
     }
+    updateTabBadges();
     if (!sseConnected) setConnected(false);
   } catch (e) {
     console.error('Refresh error:', e);
   }
+}
+
+function updateTabBadges() {
+  // Agents badge: count active/running
+  const activeCount = (Array.isArray(agents) ? agents : []).filter(a => {
+    const s = (a.status || '').toLowerCase();
+    return s === 'running' || s === 'active';
+  }).length;
+  const badgeAgents = document.getElementById('badge-agents');
+  if (badgeAgents) badgeAgents.textContent = activeCount > 0 ? activeCount : '';
+
+  // Tasks badge: open + in_progress
+  const openTasks = (Array.isArray(tasks) ? tasks : []).filter(t =>
+    (t.status || '') !== 'done'
+  ).length;
+  const badgeTasks = document.getElementById('badge-tasks');
+  if (badgeTasks) badgeTasks.textContent = openTasks > 0 ? openTasks : '';
+
+  // Chat badge: message count today
+  const todayPrefix = new Date().toISOString().slice(0, 10);
+  const todayMsgs = (Array.isArray(chatMessages) ? chatMessages : []).filter(m => {
+    const t = m.timestamp || m.time || m.date || m.filename || '';
+    return t.includes(todayPrefix.replace(/-/g, '_')) || t.includes(todayPrefix);
+  }).length;
+  const badgeChat = document.getElementById('badge-chat');
+  if (badgeChat) badgeChat.textContent = todayMsgs > 0 ? todayMsgs : '';
+
+  // Announcements badge: count from today
+  const todayAnns = (Array.isArray(announcements) ? announcements : []).filter(a => {
+    const d = a.date || a.filename || '';
+    return d.includes(todayPrefix.replace(/-/g, '_')) || d.includes(todayPrefix);
+  }).length;
+  const badgeAnn = document.getElementById('badge-announcements');
+  if (badgeAnn) badgeAnn.textContent = todayAnns > 0 ? todayAnns : '';
 }
 
 async function safeFetch(url) {
@@ -1268,6 +1319,40 @@ document.getElementById('mode-switch-modal-overlay').addEventListener('click', e
   if (e.target === e.currentTarget) closeModeSwitchModal();
 });
 
+// ===== BROADCAST =====
+function openBroadcastModal() {
+  document.getElementById('broadcast-message').value = '';
+  document.getElementById('broadcast-modal-overlay').classList.add('visible');
+  setTimeout(() => document.getElementById('broadcast-message').focus(), 100);
+}
+function closeBroadcastModal() {
+  document.getElementById('broadcast-modal-overlay').classList.remove('visible');
+}
+function sendBroadcast() {
+  const msg = document.getElementById('broadcast-message').value.trim();
+  if (!msg) return;
+  fetch('/api/broadcast', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: msg, from: 'ceo' })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      closeBroadcastModal();
+      // Show brief confirmation
+      const btn = document.getElementById('broadcast-btn');
+      const orig = btn.textContent;
+      btn.textContent = '✓ Sent to ' + (d.agents || '?') + ' agents';
+      btn.style.color = '#00ff88';
+      setTimeout(() => { btn.textContent = orig; btn.style.color = '#ffaa00'; }, 3000);
+    } else {
+      alert('Broadcast failed: ' + (d.error || 'unknown'));
+    }
+  });
+}
+document.getElementById('broadcast-modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeBroadcastModal();
+});
+
 // ===== BULK ACTIONS =====
 function bulkAction(action) {
   if (action === 'start') {
@@ -1345,6 +1430,7 @@ function renderTasks() {
         '<option value="done"' + (t.status === 'done' ? ' selected' : '') + '>Done</option>' +
       '</select></td>' +
       '<td class="text-muted">' + formatTime(t.created_at || t.created || '') + '</td>' +
+      '<td><button onclick="deleteTask(\'' + id + '\')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;padding:2px 6px;" title="Delete task">✕</button></td>' +
     '</tr>';
   }).join('');
 
@@ -1416,6 +1502,13 @@ function inlineEditTitle(id, cell) {
     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
     if (e.key === 'Escape') { cell.textContent = current; }
   });
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete task #' + id + '?')) return;
+  fetch('/api/tasks/' + id, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(d => { if (d.ok) refresh(); else alert('Delete failed: ' + (d.error || 'unknown')); });
 }
 
 function quickAssignTask(agentName) {

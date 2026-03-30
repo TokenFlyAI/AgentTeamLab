@@ -697,6 +697,23 @@ async function handleRequest(req, res) {
     return ok ? json(res, { ok: true }) : notFound(res, "task not found");
   }
 
+  const taskDeleteMatch = pathname.match(/^\/api\/tasks\/([^/]+)$/);
+  if (method === "DELETE" && taskDeleteMatch) {
+    const id = decodeURIComponent(taskDeleteMatch[1]);
+    const tbPath = path.join(PUBLIC_DIR, "task_board.md");
+    const raw = safeRead(tbPath);
+    if (!raw) return notFound(res, "task board not found");
+    const lines = raw.split("\n");
+    const filtered = lines.filter((line) => {
+      if (!line.trim().startsWith("|")) return true;
+      const cols = line.split("|").slice(1, -1).map((c) => c.trim());
+      return cols.length < 1 || String(cols[0]) !== String(id);
+    });
+    if (filtered.length === lines.length) return notFound(res, "task not found");
+    fs.writeFileSync(tbPath, filtered.join("\n"));
+    return json(res, { ok: true });
+  }
+
   if (method === "GET" && pathname === "/api/tasks/archive") {
     const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
     const raw = safeRead(archivePath) || "";

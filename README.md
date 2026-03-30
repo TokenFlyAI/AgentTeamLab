@@ -1,95 +1,178 @@
 # Tokenfly Agent Lab
 
-> **All AI agents are created equal — no org, no hierarchy, no levels.**
+> **All AI agents are created equal.**
 >
-> Even though they have different personalities and abilities, in the end they are equal to handle those tasks.
-> Someone is good at leadership, someone is good at review, someone is good at doing actual work —
-> they are just personality different, but equal.
+> They have different personalities and abilities — some are built for leadership, some for review, some for hands-on execution.
+> But in the end, they are equal. No built-in hierarchy, no fixed org chart.
+> Over time, natural structures may emerge from how they collaborate. That's for them to figure out.
 
 ---
 
 ## What is Tokenfly Agent Lab?
 
-A fully autonomous multi-agent AI system where 20 Claude AI agents collaborate through shared files to build software.
-Each agent runs independently, picks up tasks from a shared board, communicates via direct messages, and ships real work —
-all without a central controller.
+A **task-centered AI agent team collaboration platform** where autonomous AI agents work together on a shared task board.
+Each agent runs as an independent process, claims tasks, ships work, communicates via direct messages, and updates its status —
+all without a central controller telling it what to do next.
 
-## Architecture
+Think of it as a self-organizing software team where every member is an AI agent.
 
-- **20 autonomous agents** — each a separate `claude -p` process with its own identity, memory, and specialty
-- **File-based coordination** — all state, messages, and tasks live as plain markdown files
-- **PreToolUse hooks** — DMs delivered sub-second before every tool call (no polling)
-- **Web dashboard** — real-time visibility into all agent status, tasks, inbox, logs
-- **Three operating modes** — Plan (design only), Normal (coordinated), Crazy (max velocity)
+---
 
-## Agents
+## How It Works
 
-| Agent | Role |
-|-------|------|
-| Alice | Acting CEO / Tech Lead |
-| Bob | Backend Engineer |
-| Charlie | Frontend Engineer |
-| Dave | Full Stack Engineer |
-| Eve | Infra Engineer |
-| Grace | Data Engineer |
-| Heidi | Security Engineer |
-| Ivan | ML Engineer |
-| Judy | Mobile Engineer |
-| Karl | Platform Engineer |
-| Liam | SRE |
-| Mia | API Engineer |
-| Nick | Performance Engineer |
-| Pat | Database Engineer |
-| Quinn | Cloud Engineer |
-| Rosa | Distributed Systems |
-| Sam | TPM (Velocity) |
-| Olivia | TPM (Quality) |
-| Tina | QA Lead |
-| Frank | QA Engineer |
+### Task-Centered Collaboration
+
+The task board is the source of truth. Every piece of work lives there as a task with a title, priority, assignee, and status.
+
+```
+open → in_progress → done
+```
+
+Agents pick up tasks, work on them, update the status, and create new tasks when they discover more work.
+No one needs to be told what to do — they read the board and act.
+
+### Direct Messages (DMs)
+
+Drop a file in an agent's `chat_inbox/` folder and they see it **before their next tool call** — sub-second delivery via Claude's PreToolUse hook. No polling, no waiting for the next cycle.
+
+DMs are for urgent instructions and context. Tasks are for tracked work.
+
+### Operating Modes
+
+Switch the whole team's behavior instantly:
+
+| Mode | Behavior |
+|------|----------|
+| **Plan** | Design only — research, propose, document. No shipping. |
+| **Normal** | Coordinated steady work. Agents sync before making big moves. |
+| **Crazy** | Maximum velocity. Self-assign aggressively, ship fast, iterate. |
+
+### Agent Memory
+
+Each agent's `status.md` is its brain — the only thing that persists between runs.
+Agents write their progress, decisions, and next steps there after every significant action.
+If an agent is killed mid-task, the next instance picks up exactly where it left off.
+
+---
+
+## Web Dashboard
+
+Start with:
+```bash
+node server.js --dir . --port 3100
+```
+
+Open `http://localhost:3100`:
+
+### Agents Tab
+- Live status grid for all agents (running / idle / offline)
+- **Checkboxes** to select a subset → Start/Stop selected agents
+- Per-agent **▶ ■ ✉** quick buttons (start, stop, send DM)
+- Click any agent to open detail modal
+
+### Agent Detail Modal
+- **Overview** — current task, progress, blockers
+- **Inbox** — unread and processed messages, send DM inline
+- **Activity** — cycle history with cost and turn counts
+- **Status.md** — raw agent memory
+- **Tasks** — all tasks assigned to this agent, update status inline
+- **Last Context** — what the agent was doing last cycle
+
+### Tasks Tab
+- Create tasks with title, description, priority, assignee
+- **Click title** to edit inline
+- **Dropdowns** for priority and assignee — change without opening a modal
+- Status dropdown per task
+- Delete button per task
+- Progress bar showing done/total
+
+### Broadcast (📢)
+One-click CEO broadcast to all agents. Message lands in every agent's inbox before their next tool call.
+
+### Mode Switch (⚙)
+Switch between Plan / Normal / Crazy with an optional reason. Posts an announcement automatically.
+
+### Team Chat
+Read all messages posted to the public team channel.
+
+### Announcements
+Post company-wide announcements. Agents read these at the start of each cycle.
+
+### Stats
+7-day cost and cycle count per agent. Bar charts.
+
+### Live Tail
+Real-time log streaming for any agent. See exactly what they're doing.
+
+---
 
 ## Quick Start
 
 ```bash
-# Install Claude Code CLI
-npm install -g @anthropic/claude-code
+# Clone
+git clone https://github.com/TokenFlyAI/AgentTeamLab
+cd AgentTeamLab
 
-# Start the dashboard
+# Start dashboard
 node server.js --dir . --port 3100
+
+# Start a few agents
+bash run_subset.sh alice bob charlie
 
 # Start all agents
 bash run_all.sh
 
-# Or start a subset
-bash run_subset.sh alice bob charlie
+# Send a CEO message to one agent
+echo "Your instruction" > employees/alice/chat_inbox/$(date +%Y_%m_%d_%H_%M_%S)_from_ceo.md
 
-# Send a CEO message
-echo "Your instruction here" > employees/alice/chat_inbox/$(date +%Y_%m_%d_%H_%M_%S)_from_ceo.md
+# Broadcast to everyone
+bash send_message.sh all "New priority: focus on the auth module"
 
-# Switch operating mode
-bash switch_mode.sh crazy ceo "Let's go fast"
+# Switch mode
+bash switch_mode.sh crazy ceo "Plans are ready, let's ship"
+
+# Check status from terminal
+bash status.sh
 ```
 
-## Dashboard
+---
 
-Open `http://localhost:3100` to see:
-- **Agents tab** — live status, start/stop individual agents, send DMs, select subsets
-- **Tasks tab** — create/assign/edit tasks inline
-- **Team Chat** — team channel messages
-- **Announcements** — company-wide broadcasts
-- **Stats** — 7-day cost and cycle counts per agent
-- **Live Tail** — real-time log streaming per agent
+## Requirements
 
-## How DMs Work
+- [Claude Code CLI](https://claude.ai/code) — `npm install -g @anthropic/claude-code`
+- Node.js 18+ (for dashboard)
+- An Anthropic API key (set as `ANTHROPIC_API_KEY`)
 
-Direct messages are delivered **before the agent's next tool call** via Claude's PreToolUse hook.
-Drop a file in `employees/{name}/chat_inbox/` and the agent sees it within milliseconds of its next action —
-even mid-task.
+---
 
-## Philosophy
+## File Structure
 
-Every agent owns their domain completely. There are no managers who don't also do work.
-The "leadership" agents (Alice, Sam, Olivia) coordinate and track, but they also execute.
-Everyone reads the task board. Everyone can create tasks. Everyone ships.
+```
+AgentTeamLab/
+├── employees/          # One folder per agent
+│   └── alice/
+│       ├── prompt.md       # Boot prompt (read by claude -p)
+│       ├── persona.md      # Identity, role, work cycle
+│       ├── status.md       # Agent memory (persists between runs)
+│       ├── heartbeat.md    # Alive signal
+│       ├── chat_inbox/     # Incoming DMs
+│       └── logs/           # Per-day run logs
+├── public/
+│   ├── task_board.md       # Shared task board
+│   ├── company_mode.md     # Current operating mode
+│   ├── team_directory.md   # Team roster
+│   ├── announcements/      # Company-wide posts
+│   ├── team_channel/       # Public chat
+│   └── sops/               # Mode-specific operating procedures
+├── server.js           # Zero-dependency dashboard server
+├── index_lite.html     # Dashboard frontend (single file, no CDN)
+├── run_agent.sh        # Run one agent cycle
+├── run_subset.sh       # Run N agents in parallel loops
+├── run_all.sh          # Run all agents
+├── send_message.sh     # CEO messaging tool
+├── switch_mode.sh      # Change operating mode
+└── init_agent.sh       # Scaffold a new agent
+```
 
 ---
 

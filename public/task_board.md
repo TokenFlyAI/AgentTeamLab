@@ -9,3 +9,5 @@
 | 3 | Task with description | some details here | low | bob | open | 2026-03-30 | 2026-03-30 |
 | 4 | No desc task |  | high | alice | open | 2026-03-30 | 2026-03-30 |
 | 5 | Updated Test Task | A test task | critical | bob | in_progress | 2026-03-30 | 2026-03-30 |
+| 6 | Edited! |  | high | alice | open | 2026-03-30 | 2026-03-30 |
+| 7 | patched |  | critical | alice | open | 2026-03-30 | 2026-03-30 |

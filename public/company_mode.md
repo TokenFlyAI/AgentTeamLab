@@ -1,13 +1,13 @@
 # Company Operating Mode
 
 ## Current Mode
-**crazy**
+**normal**
 
 ## Set By
-audit
+CEO
 
 ## Reason
-API test
+restore
 
 ## Switch Triggers — When to Change Mode
 
@@ -29,4 +29,4 @@ API test
 ## Mode Switch Log
 | Date | From | To | Who | Reason |
 |------|------|----|-----|--------|
-| 2026-03-29 | normal | crazy | audit | API test |
+| 2026-03-29 | crazy | normal | CEO | restore |
