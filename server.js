@@ -1306,8 +1306,8 @@ async function handleRequest(req, res) {
     const lines = raw.split("\n");
     let current = null;
     for (const line of lines) {
-      const startM = line.match(/^={5,} CYCLE START — (\S+) ={5,}$/);
-      const endM = line.match(/^={5,} CYCLE END — (\S+) ={5,}$/);
+      const startM = line.match(/^={5,} CYCLE START — (\S+)/);
+      const endM = line.match(/^={5,} CYCLE END — (\S+)/);
       const doneM = line.match(/^\[DONE\] turns=(\d+) cost=\$([0-9.]+) duration=([0-9.]+)s/);
       if (startM) {
         current = { n: cycles.length + 1, started: startM[1].replace(/_/g, " "), ended: null, turns: null, cost_usd: null, duration_s: null, actions: [] };
@@ -1882,7 +1882,7 @@ async function handleRequest(req, res) {
       if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
     }
     const newId = maxId + 1;
-    const today = getDateStr(0);
+    const today = new Date().toISOString().slice(0, 10);
     const authorSafe = (author || "agent").replace(/[^a-zA-Z0-9_-]/g, "");
     const typeSafe = String(type).replace(/\|/g, "-").replace(/\n/g, " ").trim();
     const contentSafe = String(content).replace(/\|/g, "-").replace(/\n/g, " ").trim();
