@@ -1104,7 +1104,7 @@ async function handleRequest(req, res) {
       base = existing.trimEnd() + "\n\n---\n\n## Persona Evolution Log\n\n";
     }
     const entry = `### [${timestamp}] Note\n${note}\n\n---\n`;
-    fs.writeFileSync(personaPath, base + entry);
+    try { fs.writeFileSync(personaPath, base + entry); } catch (e) { return json(res, { error: "failed to write persona note" }, 500); }
     return json(res, { ok: true, timestamp, type: "Note", note });
   }
 
@@ -1126,7 +1126,7 @@ async function handleRequest(req, res) {
       base = existing.trimEnd() + "\n\n---\n\n## Persona Evolution Log\n\n";
     }
     const entry = `### [${timestamp}] Evolution\n${observation}\n\n---\n`;
-    fs.writeFileSync(personaPath, base + entry);
+    try { fs.writeFileSync(personaPath, base + entry); } catch (e) { return json(res, { error: "failed to write persona evolution" }, 500); }
     return json(res, { ok: true, timestamp, type: "Evolution", observation });
   }
 
