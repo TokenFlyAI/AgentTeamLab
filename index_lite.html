@@ -2903,7 +2903,7 @@ function renderChat() {
     return '<div class="chat-msg">' +
       '<div class="msg-from">' + esc(from) + '<span class="msg-time">' + formatTime(time) + '</span></div>' +
       '<div class="msg-body" id="msg-body-' + i + '">' + esc(collapsed) + '</div>' +
-      (isLong ? '<span class="msg-toggle" onclick="toggleChatMsg(' + i + ', ' + JSON.stringify(JSON.stringify(body)) + ')">Show more</span>' : '') +
+      (isLong ? '<span class="msg-toggle" onclick="toggleChatMsg(' + i + ', ' + esc(JSON.stringify(JSON.stringify(body))) + ')">Show more</span>' : '') +
     '</div>';
   }).join('');
 
