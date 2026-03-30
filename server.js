@@ -1418,6 +1418,9 @@ async function handleRequest(req, res) {
     if (body.priority !== undefined && !VALID_PRIORITIES_PATCH.has(String(body.priority).toLowerCase())) {
       return badRequest(res, "invalid priority: must be low, medium, high, or critical");
     }
+    if (body.assignee !== undefined && String(body.assignee).trim() !== "" && !/^[a-zA-Z0-9_-]+$/.test(String(body.assignee).trim())) {
+      return badRequest(res, "invalid assignee: must be alphanumeric agent name");
+    }
     const ok = await updateTaskRow(id, body);
     if (!ok) return notFound(res, "task not found");
     const updatedTask = parseTaskBoard().find((t) => String(t.id) === String(id));
@@ -1453,7 +1456,9 @@ async function handleRequest(req, res) {
     // 2. Fall back to assignee's output folder
     const assignee = (task.assignee || "").toLowerCase().trim();
     if (!assignee) return notFound(res, "task has no assignee and no shared result file");
-    const agentOutDir = path.join(EMPLOYEES_DIR, assignee, "output");
+    const agentOutDir = path.resolve(path.join(EMPLOYEES_DIR, assignee, "output"));
+    // Guard against path traversal via a task's assignee field
+    if (!agentOutDir.startsWith(path.resolve(EMPLOYEES_DIR) + path.sep)) return badRequest(res, "invalid assignee path");
     if (!fs.existsSync(agentOutDir)) return notFound(res, `no output found for task ${id}`);
 
     const agentFiles = listDir(agentOutDir).filter(f => {
