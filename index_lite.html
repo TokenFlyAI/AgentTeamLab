@@ -1713,7 +1713,7 @@ async function refresh() {
     }
     if (results[7].status === 'fulfilled' && results[7].value) {
       const modeData = results[7].value;
-      document.getElementById('mode-badge').textContent = modeData.mode || modeData || 'autonomous';
+      document.getElementById('mode-badge').textContent = (modeData && modeData.mode) || 'normal';
     }
     if (results[8].status === 'fulfilled' && results[8].value) {
       ceoInboxData = results[8].value;
@@ -1745,9 +1745,10 @@ function updateTabBadges() {
   if (badgeAgents) badgeAgents.textContent = activeCount > 0 ? activeCount : '';
 
   // Tasks badge: open + in_progress
-  const openTasks = (Array.isArray(tasks) ? tasks : []).filter(t =>
-    (t.status || '') !== 'done'
-  ).length;
+  const openTasks = (Array.isArray(tasks) ? tasks : []).filter(t => {
+    const s = (t.status || '').toLowerCase();
+    return s !== 'done' && s !== 'cancelled';
+  }).length;
   const badgeTasks = document.getElementById('badge-tasks');
   if (badgeTasks) badgeTasks.textContent = openTasks > 0 ? openTasks : '';
 
