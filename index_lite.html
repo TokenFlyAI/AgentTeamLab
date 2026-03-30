@@ -657,6 +657,32 @@ body {
   z-index: 1;
 }
 
+/* ===== FONT SIZE IMPROVEMENTS ===== */
+body { font-size: 14px; }
+.tab-btn { font-size: 0.88rem !important; }
+.agent-card .agent-name { font-size: 1.05rem !important; }
+.agent-card .agent-role { font-size: 0.82rem !important; color: #9a9ab0 !important; }
+.agent-card .agent-task { font-size: 0.84rem !important; }
+.agent-card .agent-meta { font-size: 0.78rem !important; }
+.task-table th { font-size: 0.78rem !important; }
+.task-table td { font-size: 0.88rem !important; }
+.modal-header h2 { font-size: 1.15rem !important; }
+.modal-tab-btn { font-size: 0.84rem !important; }
+.chat-msg .msg-body { font-size: 0.9rem !important; }
+.chat-msg .msg-from { font-size: 0.84rem !important; }
+.stat-card .stat-value { font-size: 2.2rem !important; }
+.stat-card .stat-label { font-size: 0.85rem !important; }
+.section-title { font-size: 1.05rem !important; }
+.create-form h3 { font-size: 0.85rem !important; }
+.form-row input, .form-row textarea, .form-row select { font-size: 0.9rem !important; }
+.task-controls input, .task-controls select { font-size: 0.88rem !important; }
+.topbar-btn { font-size: 0.8rem !important; }
+.bulk-btn { font-size: 0.82rem !important; }
+.filter-btn { font-size: 0.82rem !important; }
+.submit-btn { font-size: 0.9rem !important; }
+.company-name { font-size: 1.25rem !important; }
+#ceo-cmd-input { font-size: 0.84rem !important; }
+
 /* ===== MODERN DESIGN OVERHAUL ===== */
 :root {
   --bg-base: #080810;
@@ -1488,6 +1514,16 @@ body {
           <div class="task-detail-value" id="td-created"></div>
         </div>
       </div>
+      <!-- Notes section -->
+      <div class="task-detail-field" style="margin-top:12px;">
+        <div class="task-detail-label">Notes</div>
+        <div id="td-notes-list" style="margin-bottom:8px;"></div>
+        <div style="display:flex;gap:6px;">
+          <input id="td-note-input" type="text" placeholder="Add a note…" style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.82rem;outline:none;"
+            onkeydown="if(event.key==='Enter')tdAddNote()">
+          <button onclick="tdAddNote()" style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;">+ Note</button>
+        </div>
+      </div>
       <div class="task-detail-actions">
         <select id="td-status-select" class="task-status-select" style="background:#16213e;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;padding:5px 10px;font-size:0.8rem;" onchange="tdUpdateStatus()">
           <option value="open">Open</option>
@@ -1512,6 +1548,7 @@ body {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
         <span id="task-result-meta" style="font-size:0.75rem;color:#888;"></span>
         <span id="task-result-file-badge" style="font-size:0.72rem;background:#16213e;border:1px solid #0f3460;padding:2px 8px;border-radius:4px;color:#4da8da;"></span>
+        <button id="task-result-copy-btn" onclick="copyTaskResult()" style="display:none;margin-left:auto;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#aaa;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:0.72rem;" title="Copy content to clipboard">Copy</button>
       </div>
       <div id="task-result-loading" style="color:#888;font-size:0.85rem;display:none;">Loading…</div>
       <div id="task-result-error" style="color:#ff6666;font-size:0.85rem;display:none;"></div>
@@ -2091,7 +2128,7 @@ function bulkActionSelected(action) {
     selectedAgents.clear();
     updateSelectedUI();
     setTimeout(refresh, 500);
-  });
+  }).catch(e => showToast('Bulk action error: ' + e.message, 4000));
 }
 
 function agentAction(name, action) {
@@ -2194,7 +2231,7 @@ function doSwitchMode(mode) {
     } else {
       alert('Error switching mode: ' + (d.error || 'unknown'));
     }
-  });
+  }).catch(e => alert('Network error switching mode: ' + e.message));
 }
 
 document.getElementById('mode-switch-modal-overlay').addEventListener('click', e => {
@@ -2220,7 +2257,6 @@ function sendBroadcast() {
   }).then(r => r.json()).then(d => {
     if (d.ok) {
       closeBroadcastModal();
-      // Show brief confirmation
       const btn = document.getElementById('broadcast-btn');
       const orig = btn.textContent;
       btn.textContent = '✓ Sent to ' + (d.agents || '?') + ' agents';
@@ -2229,7 +2265,7 @@ function sendBroadcast() {
     } else {
       alert('Broadcast failed: ' + (d.error || 'unknown'));
     }
-  });
+  }).catch(e => showToast('Broadcast error: ' + e.message, 4000));
 }
 document.getElementById('broadcast-modal-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeBroadcastModal();
@@ -2341,11 +2377,11 @@ function smartStart(maxOverride) {
 function bulkAction(action) {
   if (action === 'start') {
     if (confirm('⚠ Start ALL 20 agents?\n\nThis burns significant tokens. Consider using "Start Selected" to start just 2–3 agents instead.\n\nClick OK to start all anyway.')) {
-      fetch('/api/agents/start-all', { method: 'POST' }).then(() => refresh());
+      fetch('/api/agents/start-all', { method: 'POST' }).then(() => refresh()).catch(e => showToast('Error: ' + e.message, 4000));
     }
   } else if (action === 'stop') {
     if (confirm('Stop all running agents?')) {
-      fetch('/api/agents/stop-all', { method: 'POST' }).then(() => refresh());
+      fetch('/api/agents/stop-all', { method: 'POST' }).then(() => refresh()).catch(e => showToast('Error: ' + e.message, 4000));
     }
   } else if (action === 'dm') {
     document.getElementById('dm-all-modal-overlay').classList.add('visible');
@@ -2367,7 +2403,7 @@ function sendDMAll() {
     document.getElementById('dm-all-message').value = '';
     closeDMAllModal();
     refresh();
-  });
+  }).catch(e => showToast('DM error: ' + e.message, 4000));
 }
 
 function closeDMAllModal() {
@@ -2506,11 +2542,12 @@ function createTask() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
-  }).then(() => {
+  }).then(r => r.json()).then(d => {
+    if (d.error) { showToast('Task creation failed: ' + d.error, 4000); return; }
     document.getElementById('task-title').value = '';
     document.getElementById('task-desc').value = '';
     refresh();
-  });
+  }).catch(e => showToast('Network error creating task: ' + e.message, 4000));
 }
 
 function toggleTaskSection(status) {
@@ -2534,12 +2571,58 @@ function openTaskDetail(id) {
   const sel = document.getElementById('td-status-select');
   sel.value = t.status || 'open';
   sel.className = 'task-status-select status-' + (t.status || 'open');
+  // Render notes
+  const notesEl = document.getElementById('td-notes-list');
+  const notesList = Array.isArray(t.notesList) ? t.notesList : (t.notes ? t.notes.split(' ;; ').filter(Boolean) : []);
+  if (notesList.length > 0) {
+    notesEl.innerHTML = notesList.map(n =>
+      '<div style="padding:5px 10px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-left:2px solid rgba(0,255,136,0.3);border-radius:0 5px 5px 0;font-size:0.8rem;color:#bbb;">' + esc(n) + '</div>'
+    ).join('');
+  } else {
+    notesEl.innerHTML = '<div style="color:#555;font-size:0.78rem;font-style:italic;">No notes yet</div>';
+  }
+  document.getElementById('td-note-input').value = '';
   document.getElementById('task-detail-modal-overlay').classList.add('visible');
 }
 
 function closeTaskDetail() {
   document.getElementById('task-detail-modal-overlay').classList.remove('visible');
   currentTaskDetailId = null;
+}
+
+function tdAddNote() {
+  if (!currentTaskDetailId) return;
+  const input = document.getElementById('td-note-input');
+  const note = input.value.trim();
+  if (!note) return;
+  fetch('/api/tasks/' + currentTaskDetailId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes: note })
+  }).then(r => r.json()).then(d => {
+    if (d.error) { showToast('Note failed: ' + d.error, 3000); return; }
+    input.value = '';
+    // Refresh notes display
+    const task = (Array.isArray(tasks) ? tasks : []).find(t => String(t.id) === String(currentTaskDetailId));
+    const updatedNotes = d.notesList || [];
+    const notesEl = document.getElementById('td-notes-list');
+    if (updatedNotes.length > 0) {
+      notesEl.innerHTML = updatedNotes.map(n =>
+        '<div style="padding:5px 10px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-left:2px solid rgba(0,255,136,0.3);border-radius:0 5px 5px 0;font-size:0.8rem;color:#bbb;">' + esc(n) + '</div>'
+      ).join('');
+    }
+    refresh();
+    showToast('Note added', 2000);
+  }).catch(e => showToast('Note error: ' + e.message, 3000));
+}
+
+function copyTaskResult() {
+  const content = document.getElementById('task-result-content');
+  if (!content || !content.textContent) return;
+  navigator.clipboard.writeText(content.textContent).then(() => {
+    const btn = document.getElementById('task-result-copy-btn');
+    if (btn) { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+  }).catch(() => showToast('Copy failed (clipboard not available)', 2000));
 }
 
 async function viewTaskResult(taskId, taskTitle) {
@@ -2574,6 +2657,8 @@ async function viewTaskResult(taskId, taskTitle) {
     badgeEl.textContent = data.file || '';
     contentEl.textContent = data.content || '(empty file)';
     contentEl.style.display = 'block';
+    const copyBtn = document.getElementById('task-result-copy-btn');
+    if (copyBtn) copyBtn.style.display = '';
   } catch (e) {
     loadingEl.style.display = 'none';
     errorEl.textContent = 'Network error: ' + e.message;
@@ -2599,7 +2684,7 @@ function tdUpdateStatus() {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: newStatus })
-  }).then(() => refresh());
+  }).then(() => refresh()).catch(e => showToast('Update failed: ' + e.message, 3000));
 }
 
 function tdInlineEditTitle() {
@@ -2642,7 +2727,7 @@ function updateTaskStatus(id, status) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: status })
-  }).then(() => refresh());
+  }).then(() => refresh()).catch(e => showToast('Status update failed: ' + e.message, 3000));
 }
 
 function updateTaskField(id, field, value) {
@@ -2650,7 +2735,7 @@ function updateTaskField(id, field, value) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ [field]: value })
-  }).then(() => refresh());
+  }).then(() => refresh()).catch(e => showToast('Update failed: ' + e.message, 3000));
 }
 
 function inlineEditTitle(id, cell) {
@@ -2681,7 +2766,8 @@ function deleteTask(id) {
   if (!confirm('Delete task #' + id + '?')) return;
   fetch('/api/tasks/' + id, { method: 'DELETE' })
     .then(r => r.json())
-    .then(d => { if (d.ok || d.deleted) refresh(); else alert('Delete failed: ' + (d.error || 'unknown')); });
+    .then(d => { if (d.ok || d.deleted) refresh(); else alert('Delete failed: ' + (d.error || 'unknown')); })
+    .catch(e => showToast('Delete error: ' + e.message, 3000));
 }
 
 function quickAssignTask(agentName) {
@@ -2692,7 +2778,7 @@ function quickAssignTask(agentName) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, priority, assignee: agentName, status: 'open' })
-  }).then(() => { refresh(); refreshAgentModal(); });
+  }).then(() => { refresh(); refreshAgentModal(); }).catch(e => showToast('Task create error: ' + e.message, 3000));
 }
 
 // Task filter listeners

@@ -429,3 +429,59 @@ test.describe("Task Filters", () => {
     expect(filtered.length).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Task Result Endpoint: GET + POST /api/tasks/:id/result
+// ---------------------------------------------------------------------------
+test.describe("Task result endpoint", () => {
+  let resultTaskId;
+
+  test.beforeAll(async () => {
+    // Create a task assigned to a known agent for result tests
+    const { body } = await apiPost("/api/tasks", {
+      title: "E2E Result Test Task",
+      priority: "low",
+      assignee: "charlie",
+      status: "done",
+    });
+    resultTaskId = body && (body.id || (body.task && body.task.id));
+  });
+
+  test.afterAll(async () => {
+    if (resultTaskId) await apiDelete(`/api/tasks/${resultTaskId}`);
+  });
+
+  test("GET /api/tasks/:id/result returns 404 for unknown task", async () => {
+    const { status } = await apiGet("/api/tasks/999999/result");
+    expect(status).toBe(404);
+  });
+
+  test("POST /api/tasks/:id/result returns 400 when content missing", async () => {
+    if (!resultTaskId) test.skip();
+    const { status, body } = await apiPost(`/api/tasks/${resultTaskId}/result`, { filename: "test.md" });
+    expect(status).toBe(400);
+    expect(body.error).toBeTruthy();
+  });
+
+  test("POST /api/tasks/:id/result writes result file to task_outputs/", async () => {
+    if (!resultTaskId) test.skip();
+    const { status, body } = await apiPost(`/api/tasks/${resultTaskId}/result`, {
+      content: "# E2E Test Result\nTest passed.",
+      filename: `task-${resultTaskId}-e2e-result.md`,
+    });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.task_id).toBe(String(resultTaskId));
+    expect(body.file).toContain(`task-${resultTaskId}`);
+  });
+
+  test("GET /api/tasks/:id/result retrieves written result", async () => {
+    if (!resultTaskId) test.skip();
+    const { status, body } = await apiGet(`/api/tasks/${resultTaskId}/result`);
+    expect(status).toBe(200);
+    expect(body.task_id).toBe(String(resultTaskId));
+    expect(body.source).toBe("task_outputs");
+    expect(body.content).toContain("E2E Test Result");
+    expect(body.file).toBeTruthy();
+  });
+});

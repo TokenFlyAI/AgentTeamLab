@@ -1425,7 +1425,7 @@ async function handleRequest(req, res) {
 
   // POST /api/tasks/:id/result — write a task result file to public/task_outputs/
   if (method === "POST" && taskResultMatch) {
-    const id = taskResultWriteMatch[1];
+    const id = taskResultMatch[1];
     const body = await parseBody(req);
     const content = body.content !== undefined ? String(body.content) : null;
     const filename = body.filename ? String(body.filename).replace(/[^a-zA-Z0-9_.\-]/g, '_') : `task-${id}-result.md`;
