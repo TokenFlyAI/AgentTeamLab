@@ -167,7 +167,26 @@ echo "task: Processing work cycle" >> "${AGENT_DIR}/heartbeat.md"
 # ── Run Agent ─────────────────────────────────────────────────────────────────
 cd "$AGENT_DIR"
 
-if [ "$EXECUTOR" = "kimi" ]; then
+# ── Dry-run mode: skip real CLI call ─────────────────────────────────────────
+# Set DRY_RUN=1 (env var) or "dry_run": true in public/smart_run_config.json
+_DRY_RUN="${DRY_RUN:-0}"
+if [ "$_DRY_RUN" != "1" ] && [ -f "${COMPANY_DIR}/public/smart_run_config.json" ]; then
+    _cfg_dry=$(jq -r '.dry_run // false' "${COMPANY_DIR}/public/smart_run_config.json" 2>/dev/null)
+    [ "$_cfg_dry" = "true" ] && _DRY_RUN=1
+fi
+
+if [ "$_DRY_RUN" = "1" ]; then
+    echo "[DRY RUN] ${AGENT_NAME} — skipping ${EXECUTOR} call"
+    FAKE_SESSION="dryrun-$(date +%s)-${AGENT_NAME}"
+    printf '{"type":"assistant","message":{"content":[{"type":"text","text":"[DRY RUN] No API call made."}]}}\n{"type":"result","num_turns":0,"total_cost_usd":0,"duration_ms":100,"session_id":"%s"}\n' \
+        "$FAKE_SESSION" \
+        | tee -a "$RAW_LOG" \
+        | jq --unbuffered -r '
+            if .type == "assistant" then "[ASSISTANT] [DRY RUN] No API call made."
+            elif .type == "result" then "[DONE] turns=0 cost=$0 duration=0.1s session=dryrun"
+            else empty end
+        ' >> "$DAILY_LOG" 2>/dev/null || true
+elif [ "$EXECUTOR" = "kimi" ]; then
     # Kimi execution - uses ~/.kimi/config.toml for model settings
     # NOTE: --config-file would override all settings including models,
     # so we don't use it. Hooks are not supported until merge-config is available.

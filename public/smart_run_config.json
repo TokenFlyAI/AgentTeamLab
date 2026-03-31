@@ -1,0 +1,11 @@
+{
+  "max_agents": 3,
+  "enabled": true,
+  "dry_run": true,
+  "cycle_sleep_seconds": 2,
+  "interval_seconds": 30,
+  "last_updated": "2026-03-31T08:11:36.230Z",
+  "mode": "smart",
+  "force_alice": true,
+  "description": "Smart Run configuration - Controls how many agents run and selection strategy"
+}

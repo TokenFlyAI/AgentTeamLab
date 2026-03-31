@@ -273,6 +273,14 @@ function wsDecode(buf) {
 // ---------------------------------------------------------------------------
 const watchdogLog = [];
 setInterval(() => {
+  // Respect enabled flag — don't auto-restart if smart run is disabled
+  const smartRunConfigPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+  let smartRunEnabled = true;
+  try { smartRunEnabled = JSON.parse(fs.readFileSync(smartRunConfigPath, "utf8")).enabled !== false; } catch (_) {}
+  if (!smartRunEnabled) {
+    console.log("[watchdog] Skipping — smart run is disabled in config");
+    return;
+  }
   const STALE_MS = 15 * 60 * 1000;
   const names = listAgentNames();
   names.forEach((name) => {
@@ -1398,9 +1406,17 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/agents/smart-start") {
     const script = path.join(DIR, "smart_run.sh");
     if (!fs.existsSync(script)) return notFound(res, "operation not available");
+    // Check enabled flag in config
+    const smartRunConfigPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+    let smartRunConfig = { enabled: true, max_agents: 20 };
+    try { smartRunConfig = JSON.parse(fs.readFileSync(smartRunConfigPath, "utf8")); } catch (_) {}
+    if (smartRunConfig.enabled === false) {
+      return json(res, { ok: false, message: "Smart run is disabled. Set enabled:true in smart_run_config.json to allow." }, 403);
+    }
     const body = await parseBody(req);
     const parsedMax = parseInt(body.max, 10);
-    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : "20";
+    const configMax = parseInt(smartRunConfig.max_agents, 10) || 20;
+    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : String(configMax);
     const extraArgs = ["--max", maxAgents];
     // Run smart_run.sh and capture its decision summary before it launches agents
     execFile("bash", [script, "--dry-run", ...extraArgs], { cwd: DIR }, (err, stdout, stderr) => {
@@ -1417,6 +1433,269 @@ async function handleRequest(req, res) {
       json(res, { ok: true, decision, message: `Smart run launched (max: ${maxAgents})`, max: parseInt(maxAgents, 10) });
     });
     return;
+  }
+
+  // ---- Smart Run Daemon Management (Portal Control) ----
+  // GET /api/smart-run/config - Read current smart_run configuration
+  if (method === "GET" && pathname === "/api/smart-run/config") {
+    const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+    const pidPath = path.join(DIR, ".smart_run_daemon.pid");
+    let config = { max_agents: 3, enabled: false, interval_seconds: 30, mode: "smart" };
+    let daemonRunning = false;
+    let daemonPid = null;
+    
+    // Read config file
+    try {
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, "utf8");
+        config = JSON.parse(raw);
+      }
+    } catch (e) {
+      console.error("[smart-run] Error reading config:", e.message);
+    }
+    
+    // Check daemon status
+    try {
+      if (fs.existsSync(pidPath)) {
+        const pid = parseInt(fs.readFileSync(pidPath, "utf8").trim(), 10);
+        if (!isNaN(pid)) {
+          try {
+            process.kill(pid, 0); // Check if process exists
+            daemonRunning = true;
+            daemonPid = pid;
+          } catch (e) {
+            // Process not running, clean up stale PID file
+            fs.unlinkSync(pidPath);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore errors checking daemon status
+    }
+    
+    return json(res, {
+      config,
+      daemon: {
+        running: daemonRunning,
+        pid: daemonPid,
+      },
+    });
+  }
+  
+  // POST /api/smart-run/config - Update smart_run configuration
+  if (method === "POST" && pathname === "/api/smart-run/config") {
+    const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+    const body = await parseBody(req);
+    
+    // Read existing config
+    let config = { max_agents: 3, enabled: false, interval_seconds: 30, mode: "smart", force_alice: true };
+    try {
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, "utf8");
+        config = JSON.parse(raw);
+      }
+    } catch (e) {
+      console.error("[smart-run] Error reading existing config:", e.message);
+    }
+    
+    // Validate and update fields
+    if (body.max_agents !== undefined) {
+      const max = parseInt(body.max_agents, 10);
+      if (!isNaN(max) && max >= 0 && max <= 20) {
+        config.max_agents = max;
+      } else {
+        return badRequest(res, "max_agents must be between 0 and 20");
+      }
+    }
+    
+    if (body.interval_seconds !== undefined) {
+      const interval = parseInt(body.interval_seconds, 10);
+      if (!isNaN(interval) && interval >= 10 && interval <= 300) {
+        config.interval_seconds = interval;
+      } else {
+        return badRequest(res, "interval_seconds must be between 10 and 300");
+      }
+    }
+    
+    if (body.mode !== undefined) {
+      if (["smart", "round_robin", "priority"].includes(body.mode)) {
+        config.mode = body.mode;
+      } else {
+        return badRequest(res, "mode must be smart, round_robin, or priority");
+      }
+    }
+    
+    if (body.force_alice !== undefined) {
+      config.force_alice = Boolean(body.force_alice);
+    }
+
+    if (body.dry_run !== undefined) {
+      config.dry_run = Boolean(body.dry_run);
+    }
+
+    if (body.enabled !== undefined) {
+      config.enabled = Boolean(body.enabled);
+    }
+
+    if (body.cycle_sleep_seconds !== undefined) {
+      const sleep = parseInt(body.cycle_sleep_seconds, 10);
+      if (!isNaN(sleep) && sleep >= 0 && sleep <= 300) {
+        config.cycle_sleep_seconds = sleep;
+      } else {
+        return badRequest(res, "cycle_sleep_seconds must be between 0 and 300");
+      }
+    }
+
+    // Update timestamp
+    config.last_updated = new Date().toISOString();
+    
+    // Write config
+    try {
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    } catch (e) {
+      console.error("[smart-run] Error writing config:", e.message);
+      return json(res, { error: "Failed to write config" }, 500);
+    }
+    
+    return json(res, { ok: true, config });
+  }
+  
+  // POST /api/smart-run/start - Start the daemon
+  if (method === "POST" && pathname === "/api/smart-run/start") {
+    const script = path.join(DIR, "smart_run.sh");
+    const pidPath = path.join(DIR, ".smart_run_daemon.pid");
+    
+    if (!fs.existsSync(script)) {
+      return notFound(res, "smart_run.sh not found");
+    }
+    
+    // Check if already running
+    try {
+      if (fs.existsSync(pidPath)) {
+        const pid = parseInt(fs.readFileSync(pidPath, "utf8").trim(), 10);
+        if (!isNaN(pid)) {
+          try {
+            process.kill(pid, 0);
+            return json(res, { ok: false, error: "Daemon already running", pid });
+          } catch (e) {
+            // Stale PID file, clean it up
+            fs.unlinkSync(pidPath);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Start daemon
+    const child = spawn("bash", [script, "--daemon"], { 
+      cwd: DIR, 
+      detached: true, 
+      stdio: ["ignore", "ignore", "ignore"] 
+    });
+    child.unref();
+    
+    // Give it a moment to write the PID file
+    await new Promise(r => setTimeout(r, 500));
+    
+    let newPid = null;
+    try {
+      if (fs.existsSync(pidPath)) {
+        newPid = parseInt(fs.readFileSync(pidPath, "utf8").trim(), 10);
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    return json(res, { ok: true, message: "Daemon started", pid: newPid });
+  }
+  
+  // POST /api/smart-run/stop - Stop the daemon
+  if (method === "POST" && pathname === "/api/smart-run/stop") {
+    const script = path.join(DIR, "smart_run.sh");
+    const pidPath = path.join(DIR, ".smart_run_daemon.pid");
+    
+    if (!fs.existsSync(script)) {
+      return notFound(res, "smart_run.sh not found");
+    }
+    
+    // Use the --stop flag on the script
+    return new Promise((resolve) => {
+      execFile("bash", [script, "--stop"], { cwd: DIR }, (err, stdout, stderr) => {
+        const output = (stdout || "") + (stderr || "");
+        if (err && !output.includes("stopped")) {
+          resolve(json(res, { ok: false, error: "Failed to stop daemon", details: output }));
+        } else {
+          resolve(json(res, { ok: true, message: "Daemon stopped", output }));
+        }
+      });
+    });
+  }
+  
+  // GET /api/smart-run/status - Get detailed daemon status
+  if (method === "GET" && pathname === "/api/smart-run/status") {
+    const script = path.join(DIR, "smart_run.sh");
+    const pidPath = path.join(DIR, ".smart_run_daemon.pid");
+    const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+    
+    let daemonRunning = false;
+    let daemonPid = null;
+    let runningAgents = [];
+    let config = { max_agents: 3 };
+    
+    // Read config
+    try {
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, "utf8");
+        config = JSON.parse(raw);
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Check daemon
+    try {
+      if (fs.existsSync(pidPath)) {
+        const pid = parseInt(fs.readFileSync(pidPath, "utf8").trim(), 10);
+        if (!isNaN(pid)) {
+          try {
+            process.kill(pid, 0);
+            daemonRunning = true;
+            daemonPid = pid;
+          } catch (e) {
+            fs.unlinkSync(pidPath);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Get running agents
+    const agents = listAgentNames();
+    for (const name of agents) {
+      const { status } = getAgentStatus(name);
+      if (status === "running") {
+        runningAgents.push(name);
+      }
+    }
+    
+    return json(res, {
+      daemon: {
+        running: daemonRunning,
+        pid: daemonPid,
+      },
+      config: {
+        max_agents: config.max_agents,
+        interval_seconds: config.interval_seconds,
+        mode: config.mode,
+      },
+      agents: {
+        running: runningAgents,
+        count: runningAgents.length,
+        target: config.max_agents,
+      },
+    });
   }
 
   // ---- Watchdog: restart agents whose loop is running but heartbeat is stale ----

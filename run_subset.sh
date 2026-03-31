@@ -8,6 +8,14 @@ LOGDIR="/tmp/aicompany_runtime_logs"
 mkdir -p "$LOGDIR"
 MAX_IDLE_CYCLES=3   # Stop agent after this many consecutive no-work cycles
 
+# Read cycle sleep from config (env var overrides, default 2s)
+_CONFIG="${COMPANY_DIR}/public/smart_run_config.json"
+CYCLE_SLEEP="${CYCLE_SLEEP_SECONDS:-}"
+if [ -z "$CYCLE_SLEEP" ] && [ -f "$_CONFIG" ]; then
+    CYCLE_SLEEP=$(jq -r '.cycle_sleep_seconds // 2' "$_CONFIG" 2>/dev/null)
+fi
+CYCLE_SLEEP="${CYCLE_SLEEP:-2}"
+
 [ ${#AGENTS[@]} -eq 0 ] && echo "Usage: $0 <agent1> <agent2> ..." && exit 1
 
 echo "Launching ${#AGENTS[@]} agents: ${AGENTS[*]}"
@@ -65,7 +73,7 @@ for AGENT in "${AGENTS[@]}"; do
                 echo "[$(date +%H:%M:%S)] ${AGENT} — fast fail #${FAIL_COUNT}, backoff ${BACKOFF}s"
                 sleep $BACKOFF
             else
-                FAIL_COUNT=0; sleep 2
+                FAIL_COUNT=0; sleep "$CYCLE_SLEEP"
             fi
         done
     ) >> "${LOGDIR}/${AGENT}.log" 2>&1 &

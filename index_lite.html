@@ -751,6 +751,206 @@ body { font-size: 14px; }
 .company-name { font-size: 1.25rem !important; }
 #ceo-cmd-input { font-size: 0.84rem !important; }
 
+/* ===== MOBILE-FIRST ENHANCEMENTS (max-width: 768px) ===== */
+@media (max-width: 768px) {
+  /* Hide desktop tab bar, show mobile bottom nav */
+  .tab-bar-wrap { display: none; }
+  
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #0e0e1a;
+    border-top: 1px solid #0f3460;
+    z-index: 200;
+  }
+  
+  .mobile-bottom-nav .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    color: #888;
+    font-size: 0.65rem;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+  
+  .mobile-bottom-nav .nav-item.active { color: #00ff88; }
+  .mobile-bottom-nav .nav-item .nav-icon { font-size: 1.3rem; }
+  
+  .mobile-bottom-nav .nav-badge {
+    position: absolute;
+    top: 6px; right: calc(50% - 18px);
+    background: #ff4444;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 8px;
+    min-width: 14px;
+    text-align: center;
+  }
+  
+  .main-content { padding-bottom: 72px; }
+  
+  /* Topbar simplification for mobile */
+  .topbar {
+    padding: 0 14px;
+    height: 52px;
+    flex-wrap: nowrap;
+  }
+  
+  .topbar-tagline,
+  #sound-toggle,
+  #digest-btn,
+  #copy-status-btn,
+  #cmd-palette-btn,
+  #watchdog-btn,
+  .uptime { display: none; }
+  
+  .company-name { font-size: 1.1rem !important; }
+  
+  /* Agent cards → list rows */
+  .agent-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: #0f3460;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .agent-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #1a1a2e;
+    border-radius: 0;
+    min-height: 60px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  
+  .agent-card:active { background: #1f2540; }
+  
+  .agent-card .agent-actions,
+  .agent-card .agent-cycles-summary { display: none; }
+  
+  .agent-card .card-header {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 0;
+  }
+  
+  .agent-card .agent-meta {
+    flex-wrap: nowrap;
+    font-size: 0.7rem !important;
+  }
+  
+  .agent-card::after {
+    content: '›';
+    margin-left: auto;
+    color: #555;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  
+  /* Task table → card list */
+  .task-table-wrap { display: none; }
+  
+  .mobile-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .mobile-task-card {
+    background: #1a1a2e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    touch-action: pan-y;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .mobile-task-card .task-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+  
+  .mobile-task-card .task-meta {
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .mobile-task-card .task-priority {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .mobile-task-card .task-priority.critical { background: #ff444433; color: #ff4444; }
+  .mobile-task-card .task-priority.high { background: #ffa50033; color: #ffa500; }
+  .mobile-task-card .task-priority.medium { background: #3b82f633; color: #3b82f6; }
+  .mobile-task-card .task-priority.low { background: #88888833; color: #888; }
+  
+  /* Status strip for mobile */
+  .mobile-status-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #0d1117;
+    border-bottom: 1px solid #21262d;
+    font-size: 0.8rem;
+    color: #888;
+  }
+  
+  .mobile-status-strip .status-left,
+  .mobile-status-strip .status-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* Offline banner */
+  .offline-banner {
+    display: none;
+    background: #ffa500;
+    color: #000;
+    text-align: center;
+    padding: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .offline-banner.visible { display: block; }
+}
+
+/* Hide mobile-only elements on desktop */
+.mobile-bottom-nav,
+.mobile-task-list,
+.mobile-status-strip { display: none; }
+
 /* ===== MODERN DESIGN OVERHAUL ===== */
 :root {
   --bg-base: #080810;
@@ -1200,6 +1400,7 @@ body {
   <button class="tab-btn" data-tab="announcements">News <span class="tab-badge" id="badge-announcements"></span></button>
   <button class="tab-btn" data-tab="research">Facts</button>
   <button class="tab-btn" data-tab="stats">Stats</button>
+  <button class="tab-btn" data-tab="fleet">Fleet <span class="tab-badge" id="badge-fleet"></span></button>
   <button class="tab-btn" data-tab="livetail">Live Tail</button>
   <button class="tab-btn" data-tab="ceo-inbox">Lord's Inbox <span class="tab-badge" id="badge-ceo-inbox" style="background:#ff6b35;"></span></button>
 </div>
@@ -1231,7 +1432,9 @@ body {
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1;">
         <span style="color:#666;font-size:0.85rem;font-weight:500;">Actions:</span>
         <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:44px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;">
-        <button class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;" onclick="smartStart()" title="Start up to N task-assigned agents">⚡ Smart Start</button>
+        <input id="cycle-sleep-seconds" type="number" min="0" max="300" value="2" title="Sleep seconds between cycles" style="width:44px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;" onchange="saveCycleSleep(this.value)">
+        <span style="color:#666;font-size:0.78rem;" title="Seconds to sleep between agent cycles">💤s</span>
+        <button id="smart-start-btn" class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;" onclick="smartStartToggle()" title="Start up to N task-assigned agents">⚡ Smart</button>
         <button class="bulk-btn" onclick="bulkAction('start')" title="Starts all 20 agents">▶ Start All</button>
         <button class="bulk-btn" onclick="bulkAction('stop')" style="border-color:rgba(255,100,100,0.3);color:#ff8888;">■ Stop All</button>
         <button class="bulk-btn" onclick="bulkAction('dm')">✉ DM All</button>
@@ -1342,6 +1545,9 @@ body {
     </div>
     <div style="font-size:0.75rem; color:#666; margin-top:4px;" id="task-progress-label"></div>
 
+    <!-- Mobile Task List (visible only on mobile) -->
+    <div id="mobile-task-list" class="mobile-task-list" style="display:none;"></div>
+
     <!-- Archive section (hidden by default) -->
     <div id="task-archive-section" style="display:none;margin-top:24px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -1446,7 +1652,7 @@ body {
             <option value="decision">Decision</option>
             <option value="relationship">Relationship</option>
           </select>
-          <textarea id="consensus-content" rows="3" placeholder="Describe the consensus fact…"
+          <textarea id="consensus-content" rows="3" placeholder="Describe the consensus culture…"
             style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:8px;border-radius:6px;resize:vertical;font-size:0.85rem;"></textarea>
           <input id="consensus-section" type="text" placeholder="Section (optional, e.g. 'Key Decisions')"
             style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:7px;border-radius:6px;font-size:0.85rem;">
@@ -1487,7 +1693,7 @@ body {
             <option value="decision">Decision</option>
             <option value="relationship">Relationship</option>
           </select>
-          <textarea id="consensus-content" rows="3" placeholder="Describe the consensus fact…"
+          <textarea id="consensus-content" rows="3" placeholder="Describe the consensus culture…"
             style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:8px;border-radius:6px;resize:vertical;font-size:0.85rem;"></textarea>
           <input id="consensus-section" type="text" placeholder="Section (optional, e.g. 'Key Decisions')"
             style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:7px;border-radius:6px;font-size:0.85rem;">
@@ -1518,6 +1724,222 @@ body {
       </div>
     </div>
   </div>
+
+  <!-- TAB: Fleet Control -->
+  <div class="tab-content" id="tab-fleet">
+    <div class="fleet-panel">
+      <h2>🚀 Fleet Control</h2>
+      <p class="fleet-description">Manage the Smart Run daemon that automatically maintains a pool of active agents.</p>
+      
+      <div class="fleet-status-card">
+        <div class="fleet-status-header">
+          <span class="fleet-status-indicator" id="fleet-daemon-indicator"></span>
+          <span class="fleet-status-text" id="fleet-daemon-status">Checking...</span>
+        </div>
+        <div class="fleet-stats">
+          <div class="fleet-stat">
+            <span class="fleet-stat-label">Running Agents</span>
+            <span class="fleet-stat-value" id="fleet-running-count">-</span>
+          </div>
+          <div class="fleet-stat">
+            <span class="fleet-stat-label">Target Pool</span>
+            <span class="fleet-stat-value" id="fleet-target-count">-</span>
+          </div>
+          <div class="fleet-stat">
+            <span class="fleet-stat-label">Check Interval</span>
+            <span class="fleet-stat-value" id="fleet-interval">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fleet-controls">
+        <h3>Pool Size</h3>
+        <div class="fleet-slider-container">
+          <input type="range" id="fleet-max-agents" min="0" max="20" value="3" class="fleet-slider">
+          <span class="fleet-slider-value" id="fleet-max-agents-value">3</span>
+        </div>
+        <p class="fleet-hint">Set to 0 to pause all agent launches. Daemon will keep running but won't start new agents.</p>
+        
+        <h3>Actions</h3>
+        <div class="fleet-actions">
+          <button id="fleet-start-btn" class="fleet-btn fleet-btn-primary" onclick="startFleetDaemon()">Start Daemon</button>
+          <button id="fleet-stop-btn" class="fleet-btn fleet-btn-danger" onclick="stopFleetDaemon()" style="display:none;">Stop Daemon</button>
+          <button id="fleet-apply-btn" class="fleet-btn" onclick="applyFleetConfig()">Apply Settings</button>
+        </div>
+      </div>
+
+      <div class="fleet-agents-list">
+        <h3>Active Agents</h3>
+        <div id="fleet-agents" class="fleet-agents-grid">
+          <em>No agents running</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .fleet-panel { max-width: 800px; }
+    .fleet-description { color: #888; margin-bottom: 24px; }
+    .fleet-status-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .fleet-status-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .fleet-status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #666;
+    }
+    .fleet-status-indicator.running { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+    .fleet-status-indicator.stopped { background: #ff4444; box-shadow: 0 0 8px #ff4444; }
+    .fleet-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .fleet-stat {
+      text-align: center;
+      padding: 12px;
+      background: #0d1117;
+      border-radius: 6px;
+    }
+    .fleet-stat-label {
+      display: block;
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .fleet-stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f0f6fc;
+    }
+    .fleet-controls {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .fleet-controls h3 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      color: #c9d1d9;
+    }
+    .fleet-slider-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .fleet-slider {
+      flex: 1;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #30363d;
+      border-radius: 4px;
+      outline: none;
+    }
+    .fleet-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #58a6ff;
+      cursor: pointer;
+    }
+    .fleet-slider-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #58a6ff;
+      min-width: 30px;
+      text-align: center;
+    }
+    .fleet-hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin: 0 0 20px 0;
+    }
+    .fleet-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .fleet-btn {
+      padding: 10px 20px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #21262d;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.15s;
+    }
+    .fleet-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .fleet-btn-primary {
+      background: #238636;
+      border-color: #238636;
+      color: #fff;
+    }
+    .fleet-btn-primary:hover {
+      background: #2ea043;
+    }
+    .fleet-btn-danger {
+      background: #da3633;
+      border-color: #da3633;
+      color: #fff;
+    }
+    .fleet-btn-danger:hover {
+      background: #f85149;
+    }
+    .fleet-agents-list {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .fleet-agents-list h3 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      color: #c9d1d9;
+    }
+    .fleet-agents-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .fleet-agent-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      font-size: 0.85rem;
+    }
+    .fleet-agent-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff88;
+    }
+  </style>
 
   <!-- TAB: Live Tail -->
   <div class="tab-content" id="tab-livetail">
@@ -2006,6 +2428,11 @@ async function refresh() {
       agents = newAgents;
       // Populate health cache from inline health data (included in /api/agents response)
       newAgents.forEach(a => { if (a.name && a.health) agentHealthCache[a.name] = a.health; });
+      // Fetch detailed health scores from /api/agents/:name/health endpoint
+      const agentNames = newAgents.map(a => a.name).filter(Boolean);
+      if (agentNames.length > 0) {
+        fetchAgentHealthScores(agentNames).then(() => renderAgents());
+      }
       renderAgents();
       populateAgentDropdowns();
     }
@@ -2177,6 +2604,156 @@ function switchTab(tab) {
   if (tab === 'livetail') startLiveTailPolling();
   else stopLiveTailPolling();
   if (tab === 'consensus') loadConsensus();
+  if (tab === 'fleet') startFleetPolling();
+  else stopFleetPolling();
+}
+
+// ===== FLEET CONTROL =====
+let fleetPollInterval = null;
+
+function startFleetPolling() {
+  loadFleetStatus();
+  fleetPollInterval = setInterval(loadFleetStatus, 5000);
+}
+
+function stopFleetPolling() {
+  if (fleetPollInterval) {
+    clearInterval(fleetPollInterval);
+    fleetPollInterval = null;
+  }
+}
+
+async function loadFleetStatus() {
+  try {
+    const [configRes, statusRes] = await Promise.all([
+      fetch('/api/smart-run/config'),
+      fetch('/api/smart-run/status')
+    ]);
+    
+    const configData = await configRes.json();
+    const statusData = await statusRes.json();
+    
+    updateFleetUI(configData, statusData);
+  } catch (e) {
+    console.error('[fleet] Error loading status:', e);
+    document.getElementById('fleet-daemon-status').textContent = 'Error connecting';
+    document.getElementById('fleet-daemon-indicator').className = 'fleet-status-indicator stopped';
+  }
+}
+
+function updateFleetUI(configData, statusData) {
+  const daemonRunning = statusData.daemon?.running || configData.daemon?.running || false;
+  const maxAgents = configData.config?.max_agents ?? 3;
+  const interval = configData.config?.interval_seconds ?? 30;
+  const runningAgents = statusData.agents?.running || [];
+  
+  // Update status indicator
+  const indicator = document.getElementById('fleet-daemon-indicator');
+  const statusText = document.getElementById('fleet-daemon-status');
+  
+  if (daemonRunning) {
+    indicator.className = 'fleet-status-indicator running';
+    statusText.textContent = `Daemon Running (PID: ${statusData.daemon?.pid || '?'})`;
+    document.getElementById('fleet-start-btn').style.display = 'none';
+    document.getElementById('fleet-stop-btn').style.display = 'inline-block';
+  } else {
+    indicator.className = 'fleet-status-indicator stopped';
+    statusText.textContent = 'Daemon Stopped';
+    document.getElementById('fleet-start-btn').style.display = 'inline-block';
+    document.getElementById('fleet-stop-btn').style.display = 'none';
+  }
+  
+  // Update stats
+  document.getElementById('fleet-running-count').textContent = runningAgents.length;
+  document.getElementById('fleet-target-count').textContent = maxAgents;
+  document.getElementById('fleet-interval').textContent = interval + 's';
+  
+  // Update slider
+  const slider = document.getElementById('fleet-max-agents');
+  const sliderValue = document.getElementById('fleet-max-agents-value');
+  if (document.activeElement !== slider) {
+    slider.value = maxAgents;
+    sliderValue.textContent = maxAgents;
+  }
+  
+  // Update agents list
+  const agentsContainer = document.getElementById('fleet-agents');
+  if (runningAgents.length === 0) {
+    agentsContainer.innerHTML = '<em>No agents running</em>';
+  } else {
+    agentsContainer.innerHTML = runningAgents.map(name => 
+      `<span class="fleet-agent-chip"><span class="fleet-agent-dot"></span>${name}</span>`
+    ).join('');
+  }
+  
+  // Update badge
+  const badge = document.getElementById('badge-fleet');
+  if (badge) {
+    badge.textContent = daemonRunning ? (runningAgents.length + '/' + maxAgents) : '';
+    badge.style.display = daemonRunning ? 'inline-block' : 'none';
+  }
+}
+
+// Slider value update
+document.addEventListener('DOMContentLoaded', function() {
+  const slider = document.getElementById('fleet-max-agents');
+  const value = document.getElementById('fleet-max-agents-value');
+  if (slider && value) {
+    slider.addEventListener('input', function() {
+      value.textContent = this.value;
+    });
+  }
+});
+
+async function startFleetDaemon() {
+  try {
+    const res = await fetch('/api/smart-run/start', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Daemon started');
+      loadFleetStatus();
+    } else {
+      showToast('Error: ' + (data.error || 'Failed to start'), 'error');
+    }
+  } catch (e) {
+    showToast('Error starting daemon', 'error');
+  }
+}
+
+async function stopFleetDaemon() {
+  try {
+    const res = await fetch('/api/smart-run/stop', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Daemon stopped');
+      loadFleetStatus();
+    } else {
+      showToast('Error: ' + (data.error || 'Failed to stop'), 'error');
+    }
+  } catch (e) {
+    showToast('Error stopping daemon', 'error');
+  }
+}
+
+async function applyFleetConfig() {
+  const maxAgents = parseInt(document.getElementById('fleet-max-agents').value, 10);
+  
+  try {
+    const res = await fetch('/api/smart-run/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_agents: maxAgents })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Settings applied');
+      loadFleetStatus();
+    } else {
+      showToast('Error: ' + (data.error || 'Failed to apply'), 'error');
+    }
+  } catch (e) {
+    showToast('Error applying settings', 'error');
+  }
 }
 
 function restoreTab() {
@@ -2762,10 +3339,60 @@ function showCostDetails() {
   showToast(`Today $${(c.today_usd||0).toFixed(2)} / ${c.today_cycles||0} cycles | 7d $${(c.total_7d_usd||0).toFixed(2)} / ${c.total_7d_cycles||0} cycles | ${topAgents}`, 8000);
 }
 
+function smartStartToggle() {
+  const btn = document.getElementById('smart-start-btn');
+  if (btn && btn.dataset.running === 'true') {
+    // Stop agents
+    btn.disabled = true; btn.textContent = '⏳ Stopping…';
+    fetch('/api/agents/stop-all', { method: 'POST' })
+      .then(() => {
+        setSmartStartIdle(btn);
+        showToast('⏹ Agents stopped', 3000);
+        setTimeout(refresh, 1000);
+      })
+      .catch(e => {
+        setSmartStartIdle(btn);
+        showToast('Stop failed: ' + e.message, 4000);
+      });
+  } else {
+    smartStart();
+  }
+}
+
+function setSmartStartIdle(btn) {
+  if (!btn) return;
+  btn.disabled = false;
+  btn.dataset.running = 'false';
+  btn.textContent = '⚡ Smart';
+  btn.style.background = 'rgba(0,200,100,0.15)';
+  btn.style.borderColor = 'rgba(0,200,100,0.5)';
+  btn.style.color = '#00ff88';
+}
+
+function setSmartStartRunning(btn) {
+  if (!btn) return;
+  btn.disabled = false;
+  btn.dataset.running = 'true';
+  btn.textContent = '🟢 Stop';
+  btn.style.background = 'rgba(0,200,100,0.35)';
+  btn.style.borderColor = 'rgba(0,200,100,0.9)';
+  btn.style.color = '#00ff88';
+}
+
+function saveCycleSleep(val) {
+  const secs = parseInt(val, 10);
+  if (isNaN(secs) || secs < 0) return;
+  fetch('/api/smart-run/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cycle_sleep_seconds: secs })
+  }).catch(() => {});
+}
+
 function smartStart(maxOverride) {
   const maxInput = document.getElementById('smart-start-max');
   const max = maxOverride || (maxInput ? parseInt(maxInput.value, 10) : 20) || 20;
-  const btn = document.querySelector('[onclick^="smartStart"]');
+  const btn = document.getElementById('smart-start-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Starting…'; }
   fetch('/api/agents/smart-start', {
     method: 'POST',
@@ -2774,18 +3401,19 @@ function smartStart(maxOverride) {
   })
     .then(r => r.json())
     .then(data => {
-      if (btn) { btn.disabled = false; btn.textContent = '⚡ Smart Start'; }
       if (data.ok) {
+        setSmartStartRunning(btn);
         const d = data.decision || {};
         const starting = d['Starting now'] || 'none';
         showToast('⚡ Smart Start (max ' + max + '): ' + starting, 5000);
         setTimeout(refresh, 2000);
       } else {
+        setSmartStartIdle(btn);
         showToast('Smart Start error: ' + (data.error || 'unknown'), 4000);
       }
     })
     .catch(e => {
-      if (btn) { btn.disabled = false; btn.textContent = '⚡ Smart Start'; }
+      setSmartStartIdle(btn);
       showToast('Smart Start failed: ' + e.message, 4000);
     });
 }
@@ -4465,7 +5093,7 @@ function getCommandItems() {
 
   // Tabs
   const tabNames = {
-    agents: 'Agents', tasks: 'Missions', chat: 'Chat', facts: 'Facts',
+    agents: 'Agents', tasks: 'Missions', chat: 'Chat', facts: 'Culture',
     announcements: 'Announcements', research: 'Research',
     knowledge: 'Knowledge', stats: 'Stats', livetail: 'Live Tail',
     'ceo-inbox': "Lord's Inbox"
@@ -4753,6 +5381,254 @@ function formatTime(ts) {
     return esc(String(ts));
   }
 }
+
+// ===== MOBILE UI FUNCTIONS =====
+let _mobileTab = 'agents';
+
+function initMobileUI() {
+  if (window.innerWidth > 768) return;
+  const nav = document.getElementById('mobile-bottom-nav');
+  if (nav) nav.style.display = 'flex';
+  
+  // Hide desktop tab bar
+  const tabBar = document.querySelector('.tab-bar-wrap');
+  if (tabBar) tabBar.style.display = 'none';
+  
+  // Build mobile task list if on tasks tab
+  buildMobileTaskList();
+  
+  // Update badges
+  updateMobileBadges();
+}
+
+function switchMobileTab(tab) {
+  _mobileTab = tab;
+  
+  // Update nav active state
+  document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+  
+  // Map mobile tabs to existing desktop tab IDs
+  const sectionMap = {
+    agents: 'tab-agents',
+    tasks: 'tab-tasks',
+    fleet: 'tab-fleet',
+    chat: 'tab-chat',
+    announcements: 'tab-announcements',
+    research: 'tab-research',
+    consensus: 'tab-consensus',
+    stats: 'tab-stats',
+    livetail: 'tab-livetail',
+    'ceo-inbox': 'tab-ceo-inbox'
+  };
+  
+  // Hide all tab content
+  document.querySelectorAll('.tab-content').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Show selected tab content
+  const targetId = sectionMap[tab];
+  if (targetId) {
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
+      targetEl.style.display = 'block';
+      // Build mobile task list if switching to tasks
+      if (tab === 'tasks') buildMobileTaskList();
+    }
+  }
+  
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildMobileTaskList() {
+  const container = document.getElementById('mobile-task-list');
+  if (!container) return;
+  
+  // Group tasks by status
+  const openTasks = allTasks.filter(t => t.status !== 'done');
+  const doneTasks = allTasks.filter(t => t.status === 'done');
+  
+  let html = '';
+  
+  // Open tasks section
+  if (openTasks.length > 0) {
+    html += '<div class="mobile-task-section"><h4>Open Tasks</h4>';
+    openTasks.forEach(task => {
+      html += renderMobileTaskCard(task);
+    });
+    html += '</div>';
+  }
+  
+  // Done tasks section (collapsed by default)
+  if (doneTasks.length > 0) {
+    html += '<div class="mobile-task-section"><h4>Completed</h4>';
+    doneTasks.slice(0, 5).forEach(task => {
+      html += renderMobileTaskCard(task);
+    });
+    if (doneTasks.length > 5) {
+      html += '<div style="text-align:center;padding:12px;color:#666;font-size:0.8rem;">+' + (doneTasks.length - 5) + ' more</div>';
+    }
+    html += '</div>';
+  }
+  
+  if (allTasks.length === 0) {
+    html = '<div style="text-align:center;padding:40px;color:#666;">No tasks found</div>';
+  }
+  
+  container.innerHTML = html;
+}
+
+function renderMobileTaskCard(task) {
+  const priorityClass = (task.priority || 'medium').toLowerCase();
+  const priorityLabel = (task.priority || 'MED').toUpperCase();
+  const assignee = task.assignee || 'unassigned';
+  const status = task.status || 'open';
+  
+  return `
+    <div class="mobile-task-card" onclick="openTaskDetail(${task.id})">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="task-priority ${priorityClass}">${priorityLabel}</span>
+        <span class="task-title">${esc(task.title)}</span>
+      </div>
+      <div class="task-meta">
+        <span>#${task.id}</span>
+        <span>•</span>
+        <span>${esc(assignee)}</span>
+        <span>•</span>
+        <span style="color:${status === 'in_progress' ? '#00ff88' : '#888'}">${esc(status)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function updateMobileBadges() {
+  // Update agent badge
+  const activeAgents = allAgents.filter(a => {
+    if (!a.heartbeat_age_ms) return false;
+    return a.heartbeat_age_ms < 120000; // < 2 min = active
+  }).length;
+  
+  const agentBadge = document.getElementById('mobile-badge-agents');
+  if (agentBadge) {
+    if (activeAgents > 0) {
+      agentBadge.textContent = activeAgents;
+      agentBadge.style.display = 'block';
+    } else {
+      agentBadge.style.display = 'none';
+    }
+  }
+  
+  // Update task badge
+  const openTaskCount = allTasks.filter(t => t.status !== 'done').length;
+  const taskBadge = document.getElementById('mobile-badge-tasks');
+  if (taskBadge) {
+    if (openTaskCount > 0) {
+      taskBadge.textContent = openTaskCount;
+      taskBadge.style.display = 'block';
+    } else {
+      taskBadge.style.display = 'none';
+    }
+  }
+}
+
+// ===== MOBILE OFFLINE CACHE =====
+async function fetchDashboardWithCache() {
+  try {
+    const res = await fetch('/api/dashboard');
+    const data = await res.json();
+    localStorage.setItem('tf_dashboard_cache', JSON.stringify({ ts: Date.now(), data }));
+    hideOfflineBanner();
+    return data;
+  } catch (e) {
+    const cached = localStorage.getItem('tf_dashboard_cache');
+    if (cached) {
+      const { ts, data } = JSON.parse(cached);
+      showOfflineBanner(Date.now() - ts);
+      return data;
+    }
+    throw e;
+  }
+}
+
+function showOfflineBanner(ageMs) {
+  const ageMin = Math.floor(ageMs / 60000);
+  const ageStr = ageMin < 1 ? 'just now' : ageMin + 'm ago';
+  
+  let banner = document.getElementById('offline-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.className = 'offline-banner';
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+  banner.textContent = `⚠ Offline — showing data from ${ageStr}`;
+  banner.classList.add('visible');
+}
+
+function hideOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.remove('visible');
+}
+
+// ===== SSE LIFECYCLE FOR MOBILE =====
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Close SSE when hidden to save battery
+    if (window._sseSource) {
+      window._sseSource.close();
+      window._sseSource = null;
+    }
+  } else {
+    // Reconnect and refresh when visible
+    connectSSE();
+    refreshAll();
+  }
+});
+
+// ===== INIT =====
+// Initialize mobile UI on load and resize
+window.addEventListener('DOMContentLoaded', () => {
+  initMobileUI();
+});
+
+window.addEventListener('resize', () => {
+  const isMobile = window.innerWidth <= 768;
+  const nav = document.getElementById('mobile-bottom-nav');
+  const tabBar = document.querySelector('.tab-bar-wrap');
+  
+  if (nav) nav.style.display = isMobile ? 'flex' : 'none';
+  if (tabBar) tabBar.style.display = isMobile ? 'none' : '';
+  
+  if (isMobile) {
+    buildMobileTaskList();
+    updateMobileBadges();
+  }
+});
 </script>
+
+<!-- MOBILE BOTTOM NAVIGATION -->
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav" style="display:none;" aria-label="Mobile navigation">
+  <div class="nav-item active" data-tab="agents" onclick="switchMobileTab('agents')" role="button" aria-label="Agents">
+    <span class="nav-icon">🤖</span>
+    <span>Agents</span>
+    <span class="nav-badge" id="mobile-badge-agents" style="display:none"></span>
+  </div>
+  <div class="nav-item" data-tab="tasks" onclick="switchMobileTab('tasks')" role="button" aria-label="Tasks">
+    <span class="nav-icon">📋</span>
+    <span>Tasks</span>
+    <span class="nav-badge" id="mobile-badge-tasks" style="display:none"></span>
+  </div>
+  <div class="nav-item" data-tab="new" onclick="openCreateTask()" role="button" aria-label="New Task">
+    <span class="nav-icon" style="font-size:1.6rem;color:#00ff88;">+</span>
+    <span>New</span>
+  </div>
+  <div class="nav-item" data-tab="fleet" onclick="switchMobileTab('fleet')" role="button" aria-label="Fleet Status">
+    <span class="nav-icon">⚡</span>
+    <span>Status</span>
+  </div>
+</nav>
 </body>
 </html>

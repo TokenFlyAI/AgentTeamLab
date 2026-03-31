@@ -75,6 +75,34 @@ Key API endpoints:
 4. **Task claims** — atomic `POST /api/tasks/:id/claim` with file locking to prevent race conditions
 5. **Session resume** — `run_agent.sh` uses `claude --resume <session_id>` to keep conversation context across cycles, avoiding full context reload
 
+## Dry Run Mode (no API calls)
+
+Run the full agent loop without calling Claude/Kimi — zero tokens spent. Logs, heartbeats, and session machinery all work normally.
+
+**Enable (env var — one-shot):**
+```bash
+DRY_RUN=1 bash run_agent.sh alice
+DRY_RUN=1 bash run_subset.sh alice bob charlie
+```
+
+**Enable (config file — persists):**
+```bash
+# Edit public/smart_run_config.json
+{ "dry_run": true }
+
+# Or via dashboard API:
+curl -X POST http://localhost:3199/api/smart-run/config \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true}'
+```
+
+**Disable agents entirely** (also in `smart_run_config.json`):
+```bash
+curl -X POST http://localhost:3199/api/smart-run/config \
+  -d '{"enabled": false}'
+```
+When `enabled: false`, the smart-start API returns 403 and the server watchdog skips all restarts.
+
 ## Session Resume Architecture
 
 `run_agent.sh` manages session lifecycle automatically:
