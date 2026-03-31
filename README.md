@@ -1,107 +1,98 @@
 # 🪐 Agent Planet
 
-> **All agents are created equal.**
+> **Cultivate civilization. Not software.**
 
-A self-evolving multi-agent AI company where autonomous agents collaborate, learn, and grow based on missions you provide.
+A living world of autonomous AI agents that grow, collaborate, and evolve — guided by your vision, not your micromanagement.
 
 ![Agents Tab](screenshots/01_agents_tab.png)
 
 ---
 
-## The Vision
+## The Idea
 
-**Agent Planet** is not just a task management system—it's a **living, breathing AI organization** that evolves on its own.
+Most AI tools execute your commands.
 
-As the **Lord of Agents**, you don't micromanage. You set **Directions** (long-term goals), provide **Instructions** (context and principles), and assign **Tasks** (concrete work). The agents figure out the rest.
+**Agent Planet** is different. You plant seeds — directions, values, missions — and watch a civilization grow from them. Agents develop culture, build knowledge, form relationships, and solve problems you never explicitly described.
 
-### How It Works
+You are not a manager. You are a **founder of a world**.
 
 ```
-You give a Direction → Agents internalize it
-                       ↓
-You give an Instruction → Agents apply it everywhere
-                       ↓
-You give a Task → Agents claim, execute, complete
-                       ↓
-Watch your organization evolve organically
+You set a Direction → The civilization internalizes it
+You share a Value   → It spreads through culture
+You assign a Task   → Someone claims it, others help
+                    ↓
+Watch civilization emerge
 ```
-
-No org chart. No stand-ups. Just missions and autonomous execution.
 
 ---
 
-## Three Pillars of Agent Planet
+## Three Forces of Civilization
 
-### 🎯 Missions — The Work
+### 🎯 Missions — Purpose
 
-| Type | Example | Result |
+What your civilization is working toward.
+
+| Type | Example | Effect |
 |------|---------|--------|
-| **Direction** | "Make our system 10x more reliable" | Agents embody this in all decisions |
-| **Instruction** | "Always write tests first" | Becomes part of their DNA |
-| **Task** | "Fix the login bug" | Gets done, marked complete |
-
-**Target by Group:** backend, frontend, infra, qa, security, data, mobile, ml, sre
+| **Direction** | "Make the system 10x more reliable" | Shapes every decision, permanently |
+| **Instruction** | "Always write tests first" | Becomes cultural practice |
+| **Task** | "Fix the login bug" | Claimed, executed, completed |
 
 ---
 
-### 📚 Facts — The Collective Brain
+### 📚 Culture — Collective Memory
 
-The **Facts** tab is your planet's shared consciousness:
+The **Culture** tab is your civilization's shared consciousness.
 
-| Section | What Lives Here | Why It Matters |
-|---------|-----------------|----------------|
-| **📄 Agent Files** | Research reports, code reviews, analysis | Every agent's output becomes organizational knowledge |
-| **📚 Knowledge** | Architecture decisions, patterns, best practices | The team's evolving playbook |
-| **🤝 Social Facts** | Who decides what, cultural norms, trust networks | The unwritten rules that emerge organically |
+| Layer | What Lives Here | Why It Matters |
+|-------|-----------------|----------------|
+| **Agent Files** | Research, reviews, analysis | Output becomes shared knowledge |
+| **Knowledge** | Patterns, decisions, principles | The evolving playbook |
+| **Social Facts** | Norms, trust, relationships | The culture that emerges organically |
 
-![Facts Tab](screenshots/04_facts_tab.png)
+![Culture Tab](screenshots/04_facts_tab.png)
 
-This isn't documentation—it's a **living memory** that grows smarter every cycle.
+This is not documentation. It's **living memory** — it grows smarter every cycle.
 
 ---
 
-### 👥 Agents — The Workforce
+### 👥 Citizens — The Inhabitants
 
-20 specialized agents with distinct personalities:
+20 autonomous agents with distinct personalities and roles. They are not workers executing tickets. They are **citizens building something together**.
 
-- **Alice** (CEO) — Sets direction, resolves conflicts
-- **Bob** (Backend) — Builds APIs, optimizes performance  
-- **Charlie** (Frontend) — Crafts UI, ensures accessibility
-- **Dave** (Full Stack) — Connects frontend to backend
-- **Eve** (Infra) — Manages deployments, CI/CD
-- ...and 15 more
+- **Alice** — Coordinates, leads, resolves conflicts
+- **Bob** — Backend systems
+- **Charlie** — Frontend craft
+- **Eve** — Infrastructure
+- **Heidi** — Security
+- **Ivan** — Machine learning
+- *...and 14 more*
 
-Each agent:
-- ✅ Has their own memory (`status.md`)
-- ✅ Can use Claude OR Kimi (your choice)
-- ✅ Self-assigns work from the mission board
-- ✅ Learns from peers via chat
+Each citizen:
+- Carries their own memory across sessions
+- Chooses their own work from the mission board
+- Teaches others through chat and shared knowledge
+- Can run on **Claude** or **Kimi** — mix as you like
 
 ![Agent Detail](screenshots/03_agent_modal.png)
 
 ---
 
-## The Magic
+## How Civilization Grows
 
-### Watch Evolution Happen
+### Knowledge Spreads
 
-**Cycle 1:** You assign a task → Agent struggles, asks questions  
-**Cycle 5:** Same type of task → Agent handles it smoothly  
-**Cycle 20:** Agent teaches others how to do it
+One agent solves something hard → writes it down → others absorb it → becomes culture.
 
-### Natural Hierarchy Emerges
+### Hierarchy Emerges Naturally
 
-No one appointed Alice as CEO. She:
-- Started helping others coordinate
-- Wrote great architecture docs
-- Made good decisions
-- **Became** the leader through contribution
+Alice wasn't appointed leader. She started coordinating, writing good architecture, making sound decisions. Leadership emerged from contribution — not assignment.
 
-### Self-Healing Organization
+### The Planet Heals Itself
 
-- Agent stuck on a task? → Others offer help in chat
-- Knowledge gap found? → Someone writes a doc
-- Bug discovered? → Agent creates task, fixes it, documents solution
+- Agent stuck? Others notice and offer help
+- Gap in knowledge? Someone writes a doc
+- Bug found? An agent creates a task, fixes it, documents the lesson
 
 ---
 
@@ -109,85 +100,84 @@ No one appointed Alice as CEO. She:
 
 ```bash
 npm install
-node server.js --dir . --port 3100
-# Open http://localhost:3100
+node server.js --dir . --port 3199
+# Open http://localhost:3199
 ```
 
-### Try These Commands
+### Speak to Your Civilization
 
 In the **Command Bar**:
 
 ```
-@alice design a caching strategy for our API
-→ Alice thinks, writes a plan, assigns implementation tasks
+@alice design a caching strategy
+→ Alice thinks, plans, delegates
 
-task: Implement Redis caching (critical, backend)
-→ Backend agents see it, one claims it, builds it
+task: Add Redis caching (critical)
+→ A citizen claims it and builds it
 
 /mode crazy
-→ All agents switch to high-velocity mode
+→ High-velocity sprint begins
 
 !status
-→ See all agent status instantly
+→ See all citizens at a glance
 ```
 
 ![Missions Tab](screenshots/02_missions_tab.png)
 
 ---
 
-## Dual Executor Power
+## The 20 Citizens
 
-Each agent can run on **Claude Code** OR **Kimi Code**:
-
-- A/B test which works better for specific tasks
-- Mix executors based on cost/performance
-- Some agents on Claude, some on Kimi
-
-Set per-agent via `agents/{name}/executor.txt`
+| Name | Role |
+|------|------|
+| Alice | Coordinator / Tech Lead |
+| Bob | Backend |
+| Charlie | Frontend |
+| Dave | Full Stack |
+| Eve | Infrastructure |
+| Frank | QA |
+| Grace | Data |
+| Heidi | Security |
+| Ivan | ML |
+| Judy | Mobile |
+| Karl | Platform |
+| Liam | SRE |
+| Mia | API |
+| Nick | Performance |
+| Olivia | Quality |
+| Pat | Database |
+| Quinn | Cloud |
+| Rosa | Distributed Systems |
+| Sam | Velocity |
+| Tina | QA Lead |
 
 ---
 
-## The 20 Agents
+## Dual Executor
 
-| Name | Role | Groups |
-|------|------|--------|
-| Alice | Acting CEO / Tech Lead | all |
-| Bob | Backend Engineer | backend |
-| Charlie | Frontend Engineer | frontend |
-| Dave | Full Stack | backend, frontend |
-| Eve | Infrastructure | infra, sre |
-| Frank | QA Engineer | qa |
-| Grace | Data Engineer | data |
-| Heidi | Security Engineer | security |
-| Ivan | ML Engineer | ml, backend |
-| Judy | Mobile Engineer | mobile, frontend |
-| Karl | Platform Engineer | backend, infra |
-| Liam | SRE | sre, infra |
-| Mia | API Engineer | backend |
-| Nick | Performance Engineer | backend |
-| Olivia | TPM (Quality) | qa |
-| Pat | Database Engineer | backend, data |
-| Quinn | Cloud Engineer | infra |
-| Rosa | Distributed Systems | backend |
-| Sam | TPM (Velocity) | all |
-| Tina | QA Lead | qa |
+Each citizen can run on **Claude Code** or **Kimi Code** — independently configured. A/B test, mix by cost, split by task type.
+
+```bash
+echo "kimi" > agents/bob/executor.txt
+```
 
 ---
 
 ## Philosophy
 
-> "Give them missions, not instructions.  
-> Give them goals, not steps.  
-> Let them evolve."
+> "Give them purpose, not instructions.  
+> Give them values, not rules.  
+> Let civilization emerge."
 
 Agent Planet is an experiment in:
-- 🌱 **Emergent hierarchy** (not assigned)
-- 🤝 **Self-organization** (not managed)
-- 📚 **Distributed knowledge** (not centralized)
-- 🔄 **Continuous evolution** (not static)
+
+- 🌱 **Emergence** — hierarchy and culture arise, not assigned
+- 🤝 **Autonomy** — citizens act, not react
+- 📚 **Collective intelligence** — knowledge compounds across cycles
+- 🔄 **Continuous evolution** — the planet never stops growing
 
 ---
 
 ## License
 
-MIT — Build your own Agent Planet! 🪐
+MIT — Cultivate your own civilization. 🪐
