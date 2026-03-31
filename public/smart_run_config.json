@@ -3,6 +3,7 @@
   "enabled": true,
   "dry_run": true,
   "cycle_sleep_seconds": 2,
+  "session_max_cycles": 20,
   "interval_seconds": 30,
   "last_updated": "2026-03-31T08:11:36.230Z",
   "mode": "smart",

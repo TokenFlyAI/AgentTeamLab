@@ -65,15 +65,23 @@ Key API endpoints:
 | `/mode <name>` | Switch civilization mode (plan/normal/crazy/autonomous) |
 | anything else | Route to alice's inbox as Founder priority |
 
+## Agent Architecture Philosophy
+
+**Citizens as environment**: Each agent treats other citizens as its environment. It reads their `heartbeat.md`, `status.md`, and `output/` files to observe what's happening, coordinate, and self-organize — without central orchestration.
+
+**Routine work = scripts, not LLM**: The launcher handles heartbeat writes. Inbox detection and task-board scanning use shell hooks. The LLM focuses on judgment and real work, not bookkeeping.
+
+**Resume-first, KV cache by default**: Sessions run for 20 cycles before resetting. Every resume cycle costs only the new tokens appended — the entire prior conversation is cached by the API. Fresh sessions load a static prompt prefix (always identical → cached) and append dynamic memory last.
+
 ## Token Conservation Architecture
 
 1. **`smart_run.sh`** — only starts agents with assigned open tasks OR unread inbox messages (no idle agents)
    - `--max N` flag caps total agents started (default 20, use 3 for testing: `bash smart_run.sh --max 3`)
    - Priority: alice → task-assigned → unassigned tasks → inbox-only (added last)
 2. **`run_subset.sh`** — auto-stops agent after `MAX_IDLE_CYCLES=3` consecutive cycles with no work
-3. **Agent prompts** — token-efficient rules: grep task board, use tail/head, prefer tools over LLM
+3. **Agent prompts** — resume prompt is ~15 tokens; fresh prompt is static (KV cached); no re-loading of files already in context
 4. **Task claims** — atomic `POST /api/tasks/:id/claim` with file locking to prevent race conditions
-5. **Session resume** — `run_agent.sh` uses `claude --resume <session_id>` to keep conversation context across cycles, avoiding full context reload
+5. **Session resume** — `run_agent.sh` uses `claude --resume <session_id>` for 20 cycles; entire conversation is KV-cached at the API level
 
 ## Dry Run Mode (no API calls)
 
@@ -114,13 +122,28 @@ When `enabled: false`, the smart-start API returns 403 and the server watchdog s
 | `agents/{name}/memory.md` | Auto-saved snapshot of status.md at session boundary |
 
 **Lifecycle:**
-- Cycles 1..`SESSION_MAX_CYCLES` (default: 5): each cycle uses `--resume <session_id>` — cheap, context preserved
-- At cycle `SESSION_MAX_CYCLES`: `status.md` is snapshotted into `memory.md`, session files are cleared
-- Next cycle: fresh start with `memory.md` injected into the full prompt
+- Cycles 1..`SESSION_MAX_CYCLES` (default: **20**): each cycle uses `--resume` — the entire conversation is KV-cached, only new tokens cost money
+- At cycle `SESSION_MAX_CYCLES`: `status.md` snapshotted into `memory.md`, session cleared
+- Fresh start: static `prompt.md` loaded first (KV-cached after first use), `memory.md` **appended last** so static prefix is always identical
+
+**Resume prompt (ultra-short — ~15 tokens):**
+- No inbox: `"Next cycle. Check tasks, observe teammates, keep working. Stay active."`
+- With inbox: `"Next cycle. You have N unread message(s) — handle inbox first, then continue work."`
+
+**Fresh prompt structure (KV cache order):**
+```
+[prompt.md — static, identical every time → cached]
+---
+## Memory Snapshot (from last session)
+[memory.md — dynamic, appended last → not cached, but prefix above is]
+```
 
 **Env vars:**
-- `SESSION_MAX_CYCLES=5` — how many cycles per session before reset
+- `SESSION_MAX_CYCLES=20` — cycles per session before reset (also in `smart_run_config.json`)
 - `SESSION_FORCE_FRESH=1` — force a fresh start, ignoring saved session
+
+**Config (`public/smart_run_config.json`):**
+- `"session_max_cycles": 20` — override default without env var
 
 ## Executors (Claude + Kimi)
 

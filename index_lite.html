@@ -1428,28 +1428,37 @@ body {
     </div>
     
     <!-- Agent Actions -->
-    <div style="background:rgba(15,52,96,0.15);padding:12px 16px;border-radius:10px;border:1px solid rgba(15,52,96,0.3);margin-bottom:24px;display:flex;flex-direction:column;gap:10px;">
-      <!-- Row 1: bulk actions + smart run config -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="color:#666;font-size:0.8rem;font-weight:500;white-space:nowrap;">Actions:</span>
-        <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:0.8rem;white-space:nowrap;">
-          Agents
-          <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:38px;padding:4px 5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.82rem;text-align:center;">
-        </label>
-        <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:0.8rem;white-space:nowrap;">
-          Sleep(s)
-          <input id="cycle-sleep-seconds" type="number" min="0" max="300" value="2" title="Seconds to sleep between agent cycles" style="width:38px;padding:4px 5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.82rem;text-align:center;" onchange="saveCycleSleep(this.value)">
-        </label>
-        <button id="smart-start-btn" class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;white-space:nowrap;" onclick="smartStartToggle()" title="Start only agents with actual work">⚡ Smart Run</button>
-        <button class="bulk-btn" style="white-space:nowrap;" onclick="bulkAction('start')" title="Starts all agents">▶ Start All</button>
-        <button class="bulk-btn" style="border-color:rgba(255,100,100,0.3);color:#ff8888;white-space:nowrap;" onclick="bulkAction('stop')">■ Stop All</button>
-        <button class="bulk-btn" style="white-space:nowrap;" onclick="bulkAction('dm')">✉ DM All</button>
+    <div style="background:rgba(15,52,96,0.15);padding:12px 16px;border-radius:10px;border:1px solid rgba(15,52,96,0.3);margin-bottom:24px;">
+      <!-- Row 1: config + actions -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:8px;">
+        <!-- Config pill -->
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:4px 10px;flex-shrink:0;">
+          <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:0.78rem;white-space:nowrap;">
+            Agents
+            <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start"
+              style="width:34px;padding:3px 4px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:#e0e0e0;font-size:0.78rem;text-align:center;">
+          </label>
+          <span style="color:#333;font-size:0.75rem;">|</span>
+          <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:0.78rem;white-space:nowrap;">
+            Sleep(s)
+            <input id="cycle-sleep-seconds" type="number" min="0" max="300" value="2" title="Seconds between cycles"
+              style="width:34px;padding:3px 4px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:#e0e0e0;font-size:0.78rem;text-align:center;" onchange="saveCycleSleep(this.value)">
+          </label>
+        </div>
+        <!-- Divider -->
+        <div style="width:1px;height:22px;background:rgba(255,255,255,0.08);flex-shrink:0;"></div>
+        <!-- Primary action -->
+        <button id="smart-start-btn" class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;font-weight:600;" onclick="smartStartToggle()" title="Start only agents with actual work">⚡ Smart Run</button>
+        <!-- Secondary actions -->
+        <button class="bulk-btn" onclick="bulkAction('start')" title="Start all agents">▶ All</button>
+        <button class="bulk-btn" style="border-color:rgba(255,100,100,0.3);color:#ff8888;" onclick="bulkAction('stop')">■ Stop</button>
+        <button class="bulk-btn" onclick="bulkAction('dm')">✉ DM</button>
       </div>
-      <!-- Row 2: selection actions (hidden until agents selected) -->
-      <div id="selection-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <span style="font-size:0.75rem;color:#555;">Select agents below to enable targeted actions</span>
-        <button class="bulk-btn" id="start-selected-btn" style="display:none;background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);color:#00ff88;white-space:nowrap;" onclick="bulkActionSelected('start')">▶ Start Selected</button>
-        <button class="bulk-btn" id="stop-selected-btn" style="display:none;background:rgba(255,68,68,0.15);border-color:rgba(255,68,68,0.5);color:#ff6b6b;white-space:nowrap;" onclick="bulkActionSelected('stop')">■ Stop Selected</button>
+      <!-- Row 2: selection actions (shown when agents are selected) -->
+      <div id="selection-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);">
+        <span style="font-size:0.75rem;color:#444;">Select agents to target</span>
+        <button class="bulk-btn" id="start-selected-btn" style="display:none;background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);color:#00ff88;" onclick="bulkActionSelected('start')">▶ Start Selected</button>
+        <button class="bulk-btn" id="stop-selected-btn" style="display:none;background:rgba(255,68,68,0.15);border-color:rgba(255,68,68,0.5);color:#ff6b6b;" onclick="bulkActionSelected('stop')">■ Stop Selected</button>
         <span id="selected-count" style="display:none;font-size:0.85rem;color:#00ff88;font-weight:600;"></span>
       </div>
     </div>

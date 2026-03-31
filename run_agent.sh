@@ -34,7 +34,13 @@ mkdir -p "${AGENT_DIR}/logs" "${AGENT_DIR}/chat_inbox/processed" "${AGENT_DIR}/k
 # ── Session management ────────────────────────────────────────────────────────
 SESSION_ID_FILE=$(get_session_id_file "$AGENT_DIR" "$EXECUTOR")
 SESSION_CYCLE_FILE=$(get_session_cycle_file "$AGENT_DIR" "$EXECUTOR")
-SESSION_MAX_CYCLES="${SESSION_MAX_CYCLES:-5}"
+# Read session_max_cycles from config (env var overrides, default 20)
+SESSION_MAX_CYCLES="${SESSION_MAX_CYCLES:-}"
+if [ -z "$SESSION_MAX_CYCLES" ] && [ -f "${COMPANY_DIR}/public/smart_run_config.json" ]; then
+    _cfg_cycles=$(jq -r '.session_max_cycles // 20' "${COMPANY_DIR}/public/smart_run_config.json" 2>/dev/null)
+    echo "$_cfg_cycles" | grep -qE '^[0-9]+$' && SESSION_MAX_CYCLES="$_cfg_cycles"
+fi
+SESSION_MAX_CYCLES="${SESSION_MAX_CYCLES:-20}"
 
 # Read saved state (best-effort, never abort on failure)
 SAVED_SESSION_ID=""
@@ -85,19 +91,22 @@ PROMPT_FILE="${AGENT_DIR}/prompt.md"
 MEMORY_FILE="${AGENT_DIR}/memory.md"
 
 if [ $USE_RESUME -eq 1 ]; then
-    # Resuming: short continuation — full context already in agent's memory
-    PROMPT_TEXT="New work cycle. Check inbox for new messages, scan task board for assigned open tasks, then continue your work. Update status.md when done."
-    # Append any urgent inbox summary so agent doesn't miss new messages (skip read_ files)
-    INBOX_COUNT=$(ls "${AGENT_DIR}/chat_inbox/"*.md 2>/dev/null | grep -v '/read_' | wc -l | tr -d ' ')
+    # Resuming — full context is KV-cached in the session, just append a short nudge.
+    # Agent already knows who it is, the rules, and its previous work. Don't repeat it.
+    INBOX_COUNT=$(ls "${AGENT_DIR}/chat_inbox/"*.md 2>/dev/null | grep -v '/processed' | wc -l | tr -d ' ')
     if [ "${INBOX_COUNT:-0}" -gt 0 ]; then
-        PROMPT_TEXT="${PROMPT_TEXT} You have ${INBOX_COUNT} unread inbox message(s) — read them first."
+        PROMPT_TEXT="Next cycle. You have ${INBOX_COUNT} unread message(s) — handle inbox first, then continue work. Stay active."
+    else
+        PROMPT_TEXT="Next cycle. Check tasks, observe teammates (scan ../../agents/*/heartbeat.md), keep working. Stay active and productive."
     fi
 else
-    # Fresh start: full prompt + prepend memory snapshot if it exists
+    # Fresh start — load static prompt first (KV-cached after first use), then append dynamic memory.
+    # Order matters: static prefix must be identical every time for cache hits.
     [ -f "$PROMPT_FILE" ] || { echo "Error: prompt.md not found: $PROMPT_FILE" >&2; exit 1; }
     BASE_PROMPT=$(cat "$PROMPT_FILE")
     if [ -f "$MEMORY_FILE" ] && [ -s "$MEMORY_FILE" ]; then
-        PROMPT_TEXT="$(printf '%s\n\n---\n\n%s' "$BASE_PROMPT" "$(cat "$MEMORY_FILE")")"
+        # Memory appended LAST so static prefix stays cacheable
+        PROMPT_TEXT="$(printf '%s\n\n---\n## Memory Snapshot (from last session)\n\n%s' "$BASE_PROMPT" "$(cat "$MEMORY_FILE")")"
         echo "[session:${AGENT_NAME}] Injecting memory.md into fresh session"
     else
         PROMPT_TEXT="$BASE_PROMPT"
