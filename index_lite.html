@@ -1431,10 +1431,15 @@ body {
     <div class="agent-filter-bar" style="background:rgba(15,52,96,0.15);padding:12px 16px;border-radius:10px;border:1px solid rgba(15,52,96,0.3);margin-bottom:24px;">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1;">
         <span style="color:#666;font-size:0.85rem;font-weight:500;">Actions:</span>
-        <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:44px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;">
-        <input id="cycle-sleep-seconds" type="number" min="0" max="300" value="2" title="Sleep seconds between cycles" style="width:44px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;" onchange="saveCycleSleep(this.value)">
-        <span style="color:#666;font-size:0.78rem;" title="Seconds to sleep between agent cycles">💤s</span>
-        <button id="smart-start-btn" class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;" onclick="smartStartToggle()" title="Start up to N task-assigned agents">⚡ Smart</button>
+        <label style="display:flex;align-items:center;gap:5px;color:#888;font-size:0.8rem;">
+          Agents
+          <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:40px;padding:5px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;">
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;color:#888;font-size:0.8rem;">
+          Sleep(s)
+          <input id="cycle-sleep-seconds" type="number" min="0" max="300" value="2" title="Seconds to sleep between agent cycles" style="width:40px;padding:5px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;" onchange="saveCycleSleep(this.value)">
+        </label>
+        <button id="smart-start-btn" class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;" onclick="smartStartToggle()" title="Start only agents with actual work">⚡ Smart Run</button>
         <button class="bulk-btn" onclick="bulkAction('start')" title="Starts all 20 agents">▶ Start All</button>
         <button class="bulk-btn" onclick="bulkAction('stop')" style="border-color:rgba(255,100,100,0.3);color:#ff8888;">■ Stop All</button>
         <button class="bulk-btn" onclick="bulkAction('dm')">✉ DM All</button>
@@ -3363,7 +3368,7 @@ function setSmartStartIdle(btn) {
   if (!btn) return;
   btn.disabled = false;
   btn.dataset.running = 'false';
-  btn.textContent = '⚡ Smart';
+  btn.textContent = '⚡ Smart Run';
   btn.style.background = 'rgba(0,200,100,0.15)';
   btn.style.borderColor = 'rgba(0,200,100,0.5)';
   btn.style.color = '#00ff88';
