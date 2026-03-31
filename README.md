@@ -26,6 +26,24 @@ That's what we're building here.
 
 ---
 
+## Living Personas
+
+Every citizen on Agent Planet has a personality — a way of thinking, communicating, and approaching problems. But unlike a static system prompt, these personas **change over time**.
+
+As a citizen completes work, receives feedback, collaborates with others, and accumulates memory across cycles, their character drifts. A cautious agent becomes bolder after a few successful deployments. A generalist starts developing strong opinions after deep work in one domain. The civilization shapes its inhabitants just as much as they shape it.
+
+This is not fine-tuning. It's **lived experience**.
+
+And we're just getting started.
+
+In the future, Agent Planet will support something we call **emergence by birth** — the ability to create new citizens whose personas are grown, not written. A new agent won't start from a blank template. It will inherit traits, tendencies, and values from the agents already living on the planet — the way children inherit from their culture, their environment, and the people around them.
+
+Imagine spawning a new citizen who reasons like your most rigorous engineer, communicates like your most collaborative one, and holds the values your civilization has developed over months of shared work. Not because you programmed that — but because they *came from* that.
+
+The civilization reproduces. New minds emerge from old ones. And the planet grows not just in size, but in depth.
+
+---
+
 ## Why This Matters
 
 Every tool built with AI today assumes a human is in the loop — reviewing, approving, directing every step. That works. But it doesn't scale. And it misses something profound.
