@@ -3374,21 +3374,55 @@ function showCostDetails() {
 function smartStartToggle() {
   const btn = document.getElementById('smart-start-btn');
   if (btn && btn.dataset.running === 'true') {
-    // Stop agents
-    btn.disabled = true; btn.textContent = '⏳ Stopping…';
-    fetch('/api/agents/stop-all', { method: 'POST' })
-      .then(() => {
-        setSmartStartIdle(btn);
-        showToast('⏹ Agents stopped', 3000);
-        setTimeout(refresh, 1000);
-      })
-      .catch(e => {
-        setSmartStartIdle(btn);
-        showToast('Stop failed: ' + e.message, 4000);
-      });
+    stopAllAgents();
   } else {
     smartStart();
   }
+}
+
+// Shared stop function — calls stop-all API, waits for completion, then polls
+// to verify agents are truly stopped (no background processes restarting them).
+function stopAllAgents() {
+  const btn = document.getElementById('smart-start-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Stopping…'; }
+  showToast('Sending stop signal…', 2000);
+
+  fetch('/api/agents/stop-all', { method: 'POST' })
+    .then(r => r.json())
+    .then(() => {
+      showToast('Kill signal sent — verifying…', 2000);
+      // Poll up to 8 times (×1.5s = 12s) to confirm all agents show idle
+      let polls = 0;
+      const check = () => {
+        polls++;
+        fetch('/api/smart-run/status')
+          .then(r => r.json())
+          .then(data => {
+            const running = data.agents?.running || [];
+            if (running.length === 0) {
+              if (btn) setSmartStartIdle(btn);
+              showToast('✅ All agents stopped and verified', 3000);
+              refresh();
+            } else if (polls < 8) {
+              if (btn) btn.textContent = `⏳ Stopping… (${running.length} left)`;
+              setTimeout(check, 1500);
+            } else {
+              // Gave up polling — force stop once more then accept
+              fetch('/api/agents/stop-all', { method: 'POST' }).finally(() => {
+                if (btn) setSmartStartIdle(btn);
+                showToast(`⚠ Stop sent twice. ${running.length} agent(s) may still be winding down.`, 5000);
+                refresh();
+              });
+            }
+          })
+          .catch(() => { if (btn) setSmartStartIdle(btn); refresh(); });
+      };
+      setTimeout(check, 1500);
+    })
+    .catch(e => {
+      if (btn) setSmartStartIdle(btn);
+      showToast('Stop failed: ' + e.message, 4000);
+    });
 }
 
 function setSmartStartIdle(btn) {
@@ -3468,7 +3502,7 @@ function bulkAction(action) {
     }
   } else if (action === 'stop') {
     if (confirm('Stop all running agents?')) {
-      fetch('/api/agents/stop-all', { method: 'POST' }).then(() => refresh()).catch(e => showToast('Error: ' + e.message, 4000));
+      stopAllAgents();
     }
   } else if (action === 'dm') {
     document.getElementById('dm-all-modal-overlay').classList.add('visible');

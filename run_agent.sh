@@ -186,6 +186,10 @@ fi
 
 if [ "$_DRY_RUN" = "1" ]; then
     echo "[DRY RUN] ${AGENT_NAME} — skipping ${EXECUTOR} call"
+    # Sleep briefly so stop commands have a window to interrupt (testable stop behavior)
+    _DRY_SLEEP=$(jq -r '.dry_run_sleep // 8' "${COMPANY_DIR}/public/smart_run_config.json" 2>/dev/null)
+    echo "[DRY RUN] Simulating work for ${_DRY_SLEEP}s (killable) ..."
+    sleep "${_DRY_SLEEP:-8}"
     FAKE_SESSION="dryrun-$(date +%s)-${AGENT_NAME}"
     printf '{"type":"assistant","message":{"content":[{"type":"text","text":"[DRY RUN] No API call made."}]}}\n{"type":"result","num_turns":0,"total_cost_usd":0,"duration_ms":100,"session_id":"%s"}\n' \
         "$FAKE_SESSION" \

@@ -1398,8 +1398,12 @@ async function handleRequest(req, res) {
   }
   if (method === "POST" && pathname === "/api/agents/stop-all") {
     const script = path.join(DIR, "stop_all.sh");
-    execFile("bash", [script], { cwd: DIR }, () => {});
-    return json(res, { ok: true });
+    // Wait for stop script to complete so response reflects actual stopped state
+    execFile("bash", [script], { cwd: DIR, timeout: 15000 }, (err, stdout, stderr) => {
+      if (err) console.error("[stop-all] error:", stderr || err.message);
+      json(res, { ok: true, output: stdout || "" });
+    });
+    return;
   }
 
   // ---- Smart Start ----
