@@ -18,6 +18,32 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
+
+// ---------------------------------------------------------------------------
+// SEC-010: API key authentication
+// Set API_KEY env var to enable. If unset, auth is skipped (dev mode).
+// Accepts: Authorization: Bearer <key>  OR  X-API-Key: <key>
+// ---------------------------------------------------------------------------
+const API_KEY = process.env.API_KEY || "";
+
+function isAuthorized(req) {
+  if (!API_KEY) return true;
+  const authHeader = req.headers["authorization"] || "";
+  const xApiKey = req.headers["x-api-key"] || "";
+  const provided = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : xApiKey;
+  if (!provided) return false;
+  try {
+    const keyLen = Math.max(provided.length, API_KEY.length, 1);
+    const a = Buffer.alloc(keyLen);
+    const b = Buffer.alloc(keyLen);
+    Buffer.from(provided).copy(a);
+    Buffer.from(API_KEY).copy(b);
+    return provided.length === API_KEY.length && crypto.timingSafeEqual(a, b);
+  } catch (_) {
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Config
@@ -248,22 +274,29 @@ function handleMetricsRequest(req, res, companyDir) {
     const body = JSON.stringify(data, null, 2);
     res.writeHead(status || 200, {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": res._corsOrigin || "*",
     });
     res.end(body);
   }
 
   if (method === "OPTIONS") {
     res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": res._corsOrigin || "*",
       "Access-Control-Allow-Methods": "GET,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
     });
     res.end();
     return true;
   }
 
   if (!pathname.startsWith("/api/metrics")) return false;
+
+  // SEC-010: require valid API key when API_KEY env var is set
+  if (!isAuthorized(req)) {
+    res.writeHead(401, { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" });
+    res.end(JSON.stringify({ error: "Unauthorized" }));
+    return true;
+  }
 
   if (method !== "GET") {
     respond({ error: "Method not allowed" }, 405);

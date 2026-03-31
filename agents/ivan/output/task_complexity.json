@@ -1,0 +1,318 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-03-30T13:21:14.000Z",
+  "distribution": {
+    "VERY_COMPLEX": 5,
+    "COMPLEX": 2,
+    "MODERATE": 0,
+    "SIMPLE": 1,
+    "TRIVIAL": 2
+  },
+  "tasks": [
+    {
+      "id": 109,
+      "title": "E2E Auth Tests — Update Suite for API Key Auth",
+      "assignee": "tina",
+      "status": "in_progress",
+      "complexityScore": 10,
+      "complexityTier": "VERY_COMPLEX",
+      "features": {
+        "tokenCount": 54,
+        "techDomainCount": 3,
+        "agentMentionCount": 1,
+        "systemCount": 2,
+        "depCount": 2,
+        "verbCount": 5,
+        "ambiguityCount": 0,
+        "isSecurityTask": true,
+        "priorityBoost": 1,
+        "matchedDomains": [
+          "auth",
+          "security",
+          "testing"
+        ],
+        "mentionedAgents": [
+          "quinn"
+        ],
+        "mentionedSystems": [
+          "playwright",
+          "e2e"
+        ]
+      }
+    },
+    {
+      "id": 110,
+      "title": "Message Bus Integration Tests",
+      "assignee": "frank",
+      "status": "in_progress",
+      "complexityScore": 10,
+      "complexityTier": "VERY_COMPLEX",
+      "features": {
+        "tokenCount": 33,
+        "techDomainCount": 5,
+        "agentMentionCount": 2,
+        "systemCount": 4,
+        "depCount": 2,
+        "verbCount": 4,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "database",
+          "infra",
+          "realtime",
+          "testing",
+          "api"
+        ],
+        "mentionedAgents": [
+          "bob",
+          "rosa"
+        ],
+        "mentionedSystems": [
+          "backend",
+          "message bus",
+          "message_bus",
+          "e2e"
+        ]
+      }
+    },
+    {
+      "id": 118,
+      "title": "Fix SEC-005 — Remove Internal Path Disclosure from Error Responses",
+      "assignee": "dave",
+      "status": "open",
+      "complexityScore": 10,
+      "complexityTier": "VERY_COMPLEX",
+      "features": {
+        "tokenCount": 52,
+        "techDomainCount": 1,
+        "agentMentionCount": 4,
+        "systemCount": 3,
+        "depCount": 1,
+        "verbCount": 4,
+        "ambiguityCount": 0,
+        "isSecurityTask": true,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "security"
+        ],
+        "mentionedAgents": [
+          "dave",
+          "heidi",
+          "olivia",
+          "pat"
+        ],
+        "mentionedSystems": [
+          "server.js",
+          "api.js",
+          "backend"
+        ]
+      }
+    },
+    {
+      "id": 121,
+      "title": "Fix SEC-010 + SEC-012 — Metrics Auth + CORS Hardening",
+      "assignee": "eve",
+      "status": "open",
+      "complexityScore": 10,
+      "complexityTier": "VERY_COMPLEX",
+      "features": {
+        "tokenCount": 58,
+        "techDomainCount": 3,
+        "agentMentionCount": 4,
+        "systemCount": 4,
+        "depCount": 1,
+        "verbCount": 5,
+        "ambiguityCount": 0,
+        "isSecurityTask": true,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "auth",
+          "security",
+          "api"
+        ],
+        "mentionedAgents": [
+          "eve",
+          "heidi",
+          "pat",
+          "quinn"
+        ],
+        "mentionedSystems": [
+          "server.js",
+          "api.js",
+          "backend",
+          "agent_metrics"
+        ]
+      }
+    },
+    {
+      "id": 113,
+      "title": "WebSocket Support — Real-Time Agent Updates",
+      "assignee": "nick",
+      "status": "in_progress",
+      "complexityScore": 9,
+      "complexityTier": "VERY_COMPLEX",
+      "features": {
+        "tokenCount": 44,
+        "techDomainCount": 2,
+        "agentMentionCount": 1,
+        "systemCount": 3,
+        "depCount": 0,
+        "verbCount": 4,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 1,
+        "matchedDomains": [
+          "database",
+          "realtime"
+        ],
+        "mentionedAgents": [
+          "eve"
+        ],
+        "mentionedSystems": [
+          "server.js",
+          "dashboard",
+          "heartbeat"
+        ]
+      }
+    },
+    {
+      "id": 114,
+      "title": "Database Migration Execution — Run Pending Migrations",
+      "assignee": "pat",
+      "status": "blocked",
+      "complexityScore": 8,
+      "complexityTier": "COMPLEX",
+      "features": {
+        "tokenCount": 53,
+        "techDomainCount": 2,
+        "agentMentionCount": 1,
+        "systemCount": 2,
+        "depCount": 0,
+        "verbCount": 3,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 1,
+        "matchedDomains": [
+          "database",
+          "infra"
+        ],
+        "mentionedAgents": [
+          "pat"
+        ],
+        "mentionedSystems": [
+          "database",
+          "migration"
+        ]
+      }
+    },
+    {
+      "id": 119,
+      "title": "BUG-003 — Fix E2E Test Flakiness (reuseExistingServer rate limit)",
+      "assignee": "charlie",
+      "status": "open",
+      "complexityScore": 8,
+      "complexityTier": "COMPLEX",
+      "features": {
+        "tokenCount": 65,
+        "techDomainCount": 2,
+        "agentMentionCount": 1,
+        "systemCount": 2,
+        "depCount": 0,
+        "verbCount": 5,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "testing",
+          "api"
+        ],
+        "mentionedAgents": [
+          "frank"
+        ],
+        "mentionedSystems": [
+          "playwright",
+          "e2e"
+        ]
+      }
+    },
+    {
+      "id": 125,
+      "title": "E2E-Filter-Task-E2EFilter1774876310540",
+      "assignee": "dave",
+      "status": "open",
+      "complexityScore": 3,
+      "complexityTier": "SIMPLE",
+      "features": {
+        "tokenCount": 5,
+        "techDomainCount": 1,
+        "agentMentionCount": 0,
+        "systemCount": 1,
+        "depCount": 0,
+        "verbCount": 0,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 1.5,
+        "matchedDomains": [
+          "testing"
+        ],
+        "mentionedAgents": [],
+        "mentionedSystems": [
+          "e2e"
+        ]
+      }
+    },
+    {
+      "id": 131,
+      "title": "E2E CEO Command Task 1774876578109",
+      "assignee": "unassigned",
+      "status": "open",
+      "complexityScore": 2,
+      "complexityTier": "TRIVIAL",
+      "features": {
+        "tokenCount": 8,
+        "techDomainCount": 1,
+        "agentMentionCount": 0,
+        "systemCount": 1,
+        "depCount": 0,
+        "verbCount": 0,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "testing"
+        ],
+        "mentionedAgents": [],
+        "mentionedSystems": [
+          "e2e"
+        ]
+      }
+    },
+    {
+      "id": 133,
+      "title": "E2E Result Test Task",
+      "assignee": "open",
+      "status": "2026-03-30",
+      "complexityScore": 2,
+      "complexityTier": "TRIVIAL",
+      "features": {
+        "tokenCount": 5,
+        "techDomainCount": 1,
+        "agentMentionCount": 0,
+        "systemCount": 1,
+        "depCount": 0,
+        "verbCount": 1,
+        "ambiguityCount": 0,
+        "isSecurityTask": false,
+        "priorityBoost": 0,
+        "matchedDomains": [
+          "testing"
+        ],
+        "mentionedAgents": [],
+        "mentionedSystems": [
+          "e2e"
+        ]
+      }
+    }
+  ]
+}

@@ -12,6 +12,21 @@ const url = require("url");
 const { execFile, spawn } = require("child_process");
 const crypto = require("crypto");
 
+// ---------------------------------------------------------------------------
+// Production metrics recording (for Ivan's api_error_monitor.js)
+// Writes to same file as backend/api.js so monitoring pipeline sees prod traffic
+// ---------------------------------------------------------------------------
+const METRICS_QUEUE_PATH = path.join(__dirname, "backend", "metrics_queue.jsonl");
+function recordProductionMetric(endpoint, method, statusCode, durationMs) {
+  const row = JSON.stringify({
+    endpoint,
+    method,
+    status_code: statusCode,
+    duration_ms: Math.round(durationMs),
+    recorded_at: new Date().toISOString(),
+  });
+  try { fs.appendFileSync(METRICS_QUEUE_PATH, row + "\n"); } catch (_) { /* non-fatal */ }
+}
 // Bob's backend API module — rate limiting, validation, metrics (Task #4)
 const { middleware: apiMiddleware, metrics: apiMetrics } = require("./agents/bob/output/backend-api-module");
 // Bob's agent metrics sub-routes: /api/metrics/agents, /api/metrics/tasks, /api/metrics/health
@@ -95,6 +110,15 @@ const MAX_BODY_BYTES = 512 * 1024; // 512 KB — guard against memory exhaustion
 // Set API_KEY env var to enable auth. If unset, auth is skipped (dev mode).
 const API_KEY = process.env.API_KEY || "";
 
+// CORS allowed origins (SEC-012)
+// Set ALLOWED_ORIGINS env var to a comma-separated list of allowed origins for
+// mutation endpoints (POST/PATCH/DELETE). GET/HEAD always allow "*".
+// If unset (dev mode), all origins are allowed with "*".
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 /**
  * Check API key auth for /api/* requests.
  * Accepts: Authorization: Bearer <key>  OR  X-API-Key: <key>
@@ -123,6 +147,20 @@ function isAuthorized(req) {
   }
 }
 
+/**
+ * Return the CORS origin value to set in response headers (SEC-012).
+ * - Mutation methods (POST/PATCH/DELETE) with ALLOWED_ORIGINS configured:
+ *     reflects the request Origin only if it appears in ALLOWED_ORIGINS.
+ *     Falls back to the first allowed origin (browser will block mismatches).
+ * - All other cases: returns "*" (GET/HEAD, or dev mode with no ALLOWED_ORIGINS).
+ */
+function corsOrigin(req, method) {
+  if (!["POST", "PATCH", "DELETE"].includes(method)) return "*";
+  if (!ALLOWED_ORIGINS.length) return "*"; // dev mode — no restriction
+  const origin = (req.headers["origin"] || "").trim();
+  return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+}
+
 /** Decode + validate an agent name from a URL segment. Returns null if unsafe. */
 function agentName(encoded) {
   const n = decodeURIComponent(encoded);
@@ -143,7 +181,14 @@ const lastPoll = new Map();
 setInterval(() => {
   let changed = false;
   try {
-    const agents = listAgentNames();
+    const agents = new Set(listAgentNames());
+    // ML-001: Clean up lastPoll entries for removed agents to prevent memory leak
+    for (const name of lastPoll.keys()) {
+      if (!agents.has(name)) {
+        lastPoll.delete(name);
+        changed = true;
+      }
+    }
     for (const name of agents) {
       const hb = fileMtime(path.join(EMPLOYEES_DIR, name, "heartbeat.md"));
       const st = fileMtime(path.join(EMPLOYEES_DIR, name, "status.md"));
@@ -158,8 +203,70 @@ setInterval(() => {
     for (const client of sseClients) {
       try { client.write("event: refresh\ndata: {}\n\n"); } catch (_) { sseClients.delete(client); }
     }
+    broadcastWS("agents_updated", { ts: Date.now() });
   }
 }, 3000);
+
+
+// ---------------------------------------------------------------------------
+// WebSocket — typed real-time events (Task #113)
+// Replaces polling for task_claimed, task_updated, mode_changed, agent_updated
+// ---------------------------------------------------------------------------
+const wsClients = new Set();
+
+// Encode a text WebSocket frame (RFC 6455, server-to-client, no masking needed)
+function wsEncode(text) {
+  const payload = Buffer.from(text, "utf8");
+  const len = payload.length;
+  let header;
+  if (len < 126) {
+    header = Buffer.alloc(2);
+    header[0] = 0x81; // FIN + text opcode
+    header[1] = len;
+  } else if (len < 65536) {
+    header = Buffer.alloc(4);
+    header[0] = 0x81;
+    header[1] = 126;
+    header.writeUInt16BE(len, 2);
+  } else {
+    header = Buffer.alloc(10);
+    header[0] = 0x81;
+    header[1] = 127;
+    header.writeBigUInt64BE(BigInt(len), 2);
+  }
+  return Buffer.concat([header, payload]);
+}
+
+// Broadcast a typed event to all connected WebSocket clients
+function broadcastWS(type, data) {
+  if (wsClients.size === 0) return;
+  const frame = wsEncode(JSON.stringify({ type, ...data }));
+  for (const socket of wsClients) {
+    try { socket.write(frame); } catch (_) { wsClients.delete(socket); }
+  }
+}
+
+// Decode a single WebSocket frame from client (ping/pong/close handling)
+function wsDecode(buf) {
+  if (buf.length < 2) return null;
+  const opcode = buf[0] & 0x0f;
+  const masked = (buf[1] & 0x80) !== 0;
+  let len = buf[1] & 0x7f;
+  let offset = 2;
+  if (len === 126) { len = buf.readUInt16BE(2); offset = 4; }
+  else if (len === 127) { len = Number(buf.readBigUInt64BE(2)); offset = 10; }
+  if (buf.length < offset + (masked ? 4 : 0) + len) return null;
+  let payload;
+  if (masked) {
+    const mask = buf.slice(offset, offset + 4);
+    offset += 4;
+    payload = Buffer.alloc(len);
+    for (let i = 0; i < len; i++) payload[i] = buf[offset + i] ^ mask[i % 4];
+  } else {
+    payload = buf.slice(offset, offset + len);
+  }
+  return { opcode, payload };
+}
 
 // ---------------------------------------------------------------------------
 // Auto-watchdog: every 10 minutes, restart agents whose loop is stuck
@@ -283,12 +390,16 @@ function parseBody(req) {
 
 function json(res, data, status) {
   status = status || 200;
-  res.writeHead(status, {
+  // SEC-012: use the per-request CORS origin set in handleRequest(); fall back to "*"
+  const origin = res._corsOrigin !== undefined ? res._corsOrigin : "*";
+  const headers = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  });
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
+  };
+  if (origin !== "*") headers["Vary"] = "Origin";
+  res.writeHead(status, headers);
   res.end(JSON.stringify(data));
 }
 
@@ -304,7 +415,7 @@ function cors(res) {
   res.writeHead(204, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
   });
   res.end();
 }
@@ -533,26 +644,61 @@ function getAgentCostFromLogs(name, days = 7) {
   return data;
 }
 
+// Evict stale _statsCache entries every 5 minutes to prevent accumulation
+// of entries for removed/renamed agents that are never re-requested.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of _statsCache) {
+    if (now - val.ts > 300000) _statsCache.delete(key);
+  }
+}, 300000);
+
 // ---------------------------------------------------------------------------
-// Task board parsing
+// Task board parsing - supports 3 sections: Directions, Instructions, Tasks
 // ---------------------------------------------------------------------------
 function parseTaskBoard() {
   const raw = safeRead(path.join(PUBLIC_DIR, "task_board.md"));
   if (!raw) return [];
-  const lines = raw.split("\n").filter((l) => l.trim().startsWith("|"));
-  if (lines.length < 2) return [];
-  // First line is header, second is separator
-  // Use slice(1,-1) instead of filter(Boolean) to preserve empty cells (e.g. empty description)
-  const header = lines[0].split("|").slice(1, -1).map((c) => c.trim().toLowerCase().replace(/\s+/g, "_"));
+  const lines = raw.split("\n");
   const tasks = [];
-  for (let i = 2; i < lines.length; i++) {
-    const cols = lines[i].split("|").slice(1, -1).map((c) => c.trim());
-    if (cols.length < 2) continue;
-    const task = {};
-    for (let j = 0; j < header.length; j++) {
-      task[header[j]] = cols[j] || "";
+  let currentType = null;
+  let header = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Detect section headers to determine task type
+    if (line.startsWith("## ")) {
+      const section = line.toLowerCase();
+      if (section.includes("direction")) currentType = "direction";
+      else if (section.includes("instruction")) currentType = "instruction";
+      else if (section.includes("task")) currentType = "task";
+      header = null; // Reset header when entering new section
+      continue;
     }
-    tasks.push(task);
+    
+    // Skip non-table lines
+    if (!line.startsWith("|")) continue;
+    
+    // Parse header row
+    if (!header && line.includes("ID") && line.includes("Title")) {
+      header = line.split("|").slice(1, -1).map((c) => c.trim().toLowerCase().replace(/\s+/g, "_"));
+      continue;
+    }
+    
+    // Skip separator row
+    if (line.replace(/[^a-z0-9]/gi, "").length < 3) continue;
+    
+    // Parse data row
+    if (header && currentType) {
+      const cols = line.split("|").slice(1, -1).map((c) => c.trim());
+      if (cols.length < 2) continue;
+      const task = { task_type: currentType };
+      for (let j = 0; j < header.length; j++) {
+        task[header[j]] = cols[j] || "";
+      }
+      tasks.push(task);
+    }
   }
   return tasks;
 }
@@ -561,25 +707,57 @@ function archiveDoneTasks() {
   const tbPath = path.join(PUBLIC_DIR, "task_board.md");
   const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
   const tasks = parseTaskBoard();
-  const done = tasks.filter((t) => (t.status || "").toLowerCase() === "done");
-  const active = tasks.filter((t) => (t.status || "").toLowerCase() !== "done");
-  if (!done.length) return 0;
+  // Only archive regular tasks (not directions or instructions)
+  const doneTasks = tasks.filter((t) => (t.status || "").toLowerCase() === "done" && t.task_type === "task");
+  if (!doneTasks.length) return 0;
+  
   // Append done rows to archive
   const header = "| ID | Title | Description | Priority | Assignee | Status | Created | Updated | Notes |";
   const sep = "|----|-------|-------------|----------|----------|--------|---------|---------|-------|";
   if (!fs.existsSync(archivePath)) {
     fs.writeFileSync(archivePath, `# Task Board Archive\n\n## Archived Tasks\n${header}\n${sep}\n`);
   }
-  const doneRows = done.map((t) =>
+  const doneRows = doneTasks.map((t) =>
     `| ${t.id} | ${t.title} | ${t.description} | ${t.priority} | ${t.assignee} | ${t.status} | ${t.created} | ${t.updated} | ${t.notes || ""} |`
   ).join("\n");
   fs.appendFileSync(archivePath, doneRows + "\n");
-  // Rewrite board with only active rows
-  const activeRows = active.map((t) =>
-    `| ${t.id} | ${t.title} | ${t.description} | ${t.priority} | ${t.assignee} | ${t.status} | ${t.created} | ${t.updated} | ${t.notes || ""} |`
+  
+  // Rebuild board preserving all three sections
+  rebuildTaskBoard(tasks.filter((t) => !doneTasks.includes(t)));
+  return doneTasks.length;
+}
+
+function rebuildTaskBoard(tasks) {
+  const tbPath = path.join(PUBLIC_DIR, "task_board.md");
+  const header = "| ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |";
+  const sep = "|----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|";
+  
+  const directions = tasks.filter(t => t.task_type === "direction");
+  const instructions = tasks.filter(t => t.task_type === "instruction");
+  const regularTasks = tasks.filter(t => t.task_type === "task" || !t.task_type);
+  
+  const buildRows = (list) => list.map((t) =>
+    `| ${t.id} | ${t.title} | ${t.description} | ${t.priority} | ${t.group || "all"} | ${t.assignee} | ${t.status || "open"} | ${t.created} | ${t.updated} | ${t.notes || ""} |`
   ).join("\n");
-  fs.writeFileSync(tbPath, `# Task Board\n\n## Tasks\n${header}\n${sep}\n${activeRows}\n`);
-  return done.length;
+  
+  const content = `# Task Board
+
+## Directions (Long-term Goals - Set by Lord Only)
+${header}
+${sep}
+${buildRows(directions)}
+
+## Instructions (Persistent Context - Always Consider)
+${header}
+${sep}
+${buildRows(instructions)}
+
+## Tasks (Regular Work - Assignable & Completable)
+${header}
+${sep}
+${buildRows(regularTasks)}
+`;
+  fs.writeFileSync(tbPath, content);
 }
 
 // Sanitize a string for safe insertion into a markdown table cell (strip pipe chars)
@@ -596,10 +774,47 @@ async function appendTaskRow(task) {
     const maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id || t["#"] || "0", 10) || 0), 0);
     newId = maxId + 1;
     const now = new Date().toISOString().slice(0, 10);
-    const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.assignee)} | open | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
-    const existing_raw = safeRead(tbPath) || "";
-    const sep = existing_raw.endsWith("\n") ? "" : "\n";
-    fs.appendFileSync(tbPath, sep + row + "\n");
+    const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.group || "all")} | ${sanitizeCell(task.assignee)} | ${sanitizeCell(task.status || "open")} | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
+    
+    // Determine which section to append to based on task_type
+    const taskType = (task.task_type || "task").toLowerCase();
+    let sectionMarker;
+    if (taskType === "direction") sectionMarker = "## Directions";
+    else if (taskType === "instruction") sectionMarker = "## Instructions";
+    else sectionMarker = "## Tasks";
+    
+    // Find the section and append there
+    const raw = safeRead(tbPath) || "";
+    const lines = raw.split("\n");
+    let insertIndex = -1;
+    let inTargetSection = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith(sectionMarker)) {
+        inTargetSection = true;
+        continue;
+      }
+      if (inTargetSection) {
+        // Found next section, insert before it
+        if (lines[i].startsWith("## ")) {
+          insertIndex = i;
+          break;
+        }
+        // Or end of file
+        if (i === lines.length - 1) {
+          insertIndex = lines.length;
+        }
+      }
+    }
+    
+    if (insertIndex > 0) {
+      lines.splice(insertIndex, 0, row);
+      fs.writeFileSync(tbPath, lines.join("\n"));
+    } else {
+      // Fallback: append to end
+      const sep = raw.endsWith("\n") ? "" : "\n";
+      fs.appendFileSync(tbPath, sep + row + "\n");
+    }
   });
   return newId;
 }
@@ -616,20 +831,21 @@ async function updateTaskRow(id, updates) {
       const cols = lines[i].split("|").slice(1, -1).map((c) => c.trim());
       if (cols.length < 2) continue;
       if (String(cols[0]).trim() === String(id)) {
-        // Pad to full 9-column schema so sparse writes don't produce undefined in joined output
-        while (cols.length < 9) cols.push("");
-        // Rebuild the row preserving columns order: id, title, description, priority, assignee, status, created, updated
-        if (updates.status !== undefined) cols[5] = String(updates.status).toLowerCase();
-        if (updates.assignee !== undefined) cols[4] = sanitizeCell(String(updates.assignee).toLowerCase());
+        // Pad to full 10-column schema so sparse writes don't produce undefined in joined output
+        // Columns: ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes
+        while (cols.length < 10) cols.push("");
+        if (updates.status !== undefined) cols[6] = String(updates.status).toLowerCase();
+        if (updates.assignee !== undefined) cols[5] = sanitizeCell(String(updates.assignee).toLowerCase());
+        if (updates.group !== undefined) cols[4] = sanitizeCell(String(updates.group).toLowerCase());
         if (updates.priority !== undefined) cols[3] = String(updates.priority).toLowerCase();
         if (updates.title !== undefined) cols[1] = sanitizeCell(updates.title);
         if (updates.description !== undefined) cols[2] = sanitizeCell(updates.description);
         if (updates.notes !== undefined) {
           // Append note (timestamped), never replace
           const newNote = "[" + new Date().toISOString().slice(0, 10) + "] " + String(updates.notes).trim().replace(/;;/g, "--").replace(/\|/g, "-").replace(/\n/g, " ");
-          cols[8] = cols[8] ? cols[8] + " ;; " + newNote : newNote;
+          cols[9] = cols[9] ? cols[9] + " ;; " + newNote : newNote;
         }
-        cols[7] = new Date().toISOString().slice(0, 10); // updated
+        cols[8] = new Date().toISOString().slice(0, 10); // updated
         lines[i] = "| " + cols.join(" | ") + " |";
         found = true;
         break;
@@ -761,11 +977,16 @@ async function handleRequest(req, res) {
   const query = parsed.query;
   const method = req.method;
 
+  // SEC-012: attach CORS origin to res so json() can reflect the correct value
+  res._corsOrigin = corsOrigin(req, method);
+
   // Bob's middleware: handles CORS preflight + rate limiting on /api/* routes
   if (apiMiddleware(req, res, pathname, method)) return;
 
   // SEC-001: API key authentication for all /api/* routes
-  if (pathname.startsWith("/api/") && !isAuthorized(req)) {
+  // /api/health is public — monitoring tools (healthcheck.js, load balancers, k8s probes) must reach it without auth
+  const PUBLIC_PATHS = new Set(["/api/health"]);
+  if (pathname.startsWith("/api/") && !PUBLIC_PATHS.has(pathname) && !isAuthorized(req)) {
     res.writeHead(401, { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" });
     return res.end(JSON.stringify({ error: "Unauthorized" }));
   }
@@ -773,7 +994,7 @@ async function handleRequest(req, res) {
   // Serve index_lite.html for GET /
   if (method === "GET" && pathname === "/") {
     const html = safeRead(path.join(DIR, "index_lite.html"));
-    if (!html) return notFound(res, "index_lite.html not found");
+    if (!html) return notFound(res, "dashboard not available");
     res.writeHead(200, {
       "Content-Type": "text/html; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
@@ -783,18 +1004,36 @@ async function handleRequest(req, res) {
     return res.end(html);
   }
 
+  // Serve PWA icons (SVG, sized for Android + desktop)
+  if (method === "GET" && (pathname === "/icon-192.svg" || pathname === "/icon-512.svg")) {
+    const size = pathname === "/icon-512.svg" ? 512 : 192;
+    const fontSize = Math.round(size * 0.55);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${Math.round(size*0.18)}" fill="#7c3aed"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="${fontSize}" font-family="serif">🤖</text></svg>`;
+    res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" });
+    return res.end(svg);
+  }
+
+  // Apple touch icon (SVG fallback — iOS 9+ accepts SVG for home screen)
+  if (method === "GET" && pathname === "/apple-touch-icon.png") {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180"><rect width="180" height="180" rx="32" fill="#7c3aed"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="100" font-family="serif">🤖</text></svg>`;
+    res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" });
+    return res.end(svg);
+  }
+
   // Serve PWA manifest
   if (method === "GET" && pathname === "/manifest.json") {
     const manifest = {
-      name: "Tokenfly Agent Lab",
-      short_name: "Tokenfly",
-      description: "Real-time dashboard for the Tokenfly AI agent team",
+      name: "Agent Planet",
+      short_name: "AgentPlanet",
+      description: "Real-time dashboard for the Agent Planet AI team",
       start_url: "/",
       display: "standalone",
       background_color: "#1a1a2e",
       theme_color: "#7c3aed",
       icons: [
-        { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>", sizes: "any", type: "image/svg+xml" }
+        { src: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+        { src: "/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+        { src: "/icon-512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "maskable" }
       ]
     };
     res.writeHead(200, { "Content-Type": "application/manifest+json", "Access-Control-Allow-Origin": "*" });
@@ -886,13 +1125,17 @@ async function handleRequest(req, res) {
 
   // ---- Agents ----
   if (method === "GET" && pathname === "/api/agents") {
+    const velocityData = buildVelocityData();
     const agentList = listAgentNames().map((name) => {
       const summary = getAgentSummary(name);
       const d = path.join(EMPLOYEES_DIR, name);
       const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
       const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
       const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && f.endsWith(".md"));
-      return { ...summary, alive, unread_messages: inboxFiles.length };
+      const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+      const health = computeAgentHealth(agentData, velocityData);
+      const executor = getExecutorForAgent(name);
+      return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
     });
     return json(res, agentList);
   }
@@ -916,7 +1159,43 @@ async function handleRequest(req, res) {
     const tasks = parseTaskBoard().filter(
       (t) => (t.assignee || "").toLowerCase() === name.toLowerCase()
     );
-    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks });
+    const executor = getExecutorForAgent(name);
+    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor });
+  }
+
+  // GET /api/executors — list supported executors
+  if (method === "GET" && pathname === "/api/executors") {
+    return json(res, { executors: VALID_EXECUTORS, default: "claude" });
+  }
+
+  // GET /api/config/executor — get all agent executors
+  if (method === "GET" && pathname === "/api/config/executor") {
+    const allExecutors = {};
+    for (const name of listAgentNames()) {
+      allExecutors[name] = getExecutorForAgent(name);
+    }
+    return json(res, { default: "claude", agents: allExecutors });
+  }
+
+  // GET /api/agents/:name/executor — get executor for specific agent
+  const agentExecutorMatch = pathname.match(/^\/api\/agents\/([^/]+)\/executor$/);
+  if (method === "GET" && agentExecutorMatch) {
+    const name = agentName(agentExecutorMatch[1]);
+    if (!name) return badRequest(res, "invalid agent name");
+    if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
+    return json(res, { name, executor: getExecutorForAgent(name) });
+  }
+
+  // POST /api/agents/:name/executor — set executor for specific agent
+  if (method === "POST" && agentExecutorMatch) {
+    const name = agentName(agentExecutorMatch[1]);
+    if (!name) return badRequest(res, "invalid agent name");
+    if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
+    const body = await parseBody(req);
+    if (!body.executor) return badRequest(res, "executor is required");
+    const result = setExecutorForAgent(name, String(body.executor).toLowerCase());
+    if (!result.ok) return badRequest(res, result.error);
+    return json(res, { name, executor: result.executor });
   }
 
   const agentLogMatch = pathname.match(/^\/api\/agents\/([^/]+)\/log$/);
@@ -1055,9 +1334,9 @@ async function handleRequest(req, res) {
     if (!name) return badRequest(res, "invalid agent name");
     if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
     const script = path.join(DIR, "stop_agent.sh");
-    if (!fs.existsSync(script)) return notFound(res, "stop_agent.sh not found");
+    if (!fs.existsSync(script)) return notFound(res, "operation not available");
     execFile("bash", [script, name], { cwd: DIR }, (err, stdout, stderr) => {
-      if (err) return json(res, { ok: false, error: stderr || err.message }, 500);
+      if (err) { console.error("[stop_agent] script error:", stderr || err.message); return json(res, { ok: false, error: "Script execution failed" }, 500); }
       json(res, { ok: true, output: stdout });
     });
     return;
@@ -1087,7 +1366,7 @@ async function handleRequest(req, res) {
     if (!name) return badRequest(res, "invalid agent name");
     if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
     const script = path.join(DIR, "run_subset.sh");
-    if (!fs.existsSync(script)) return notFound(res, "run_subset.sh not found");
+    if (!fs.existsSync(script)) return notFound(res, "operation not available");
     // Check if already running to avoid duplicates
     execFile("pgrep", ["-f", `run_subset.sh ${name}`], {}, (err, stdout) => {
       const existing = stdout.trim().split("\n").filter(Boolean);
@@ -1118,7 +1397,7 @@ async function handleRequest(req, res) {
   // ---- Smart Start ----
   if (method === "POST" && pathname === "/api/agents/smart-start") {
     const script = path.join(DIR, "smart_run.sh");
-    if (!fs.existsSync(script)) return notFound(res, "smart_run.sh not found");
+    if (!fs.existsSync(script)) return notFound(res, "operation not available");
     const body = await parseBody(req);
     const parsedMax = parseInt(body.max, 10);
     const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : "20";
@@ -1437,19 +1716,24 @@ async function handleRequest(req, res) {
     try {
       const now = new Date().toISOString().slice(0, 10);
       const newId = await appendTaskRow(body); // appendTaskRow returns the actual assigned ID
-      return json(res, {
+      const newTask = {
         ok: true,
         id: newId,
         title: String(body.title).trim(),
         description: body.description ? String(body.description).trim() : "",
         priority: (body.priority || "medium").toLowerCase(),
-        assignee: (body.assignee || "unassigned").toLowerCase(),
+        group: (body.group || "all").toLowerCase(),
+        assignee: (body.assignee || "").toLowerCase(),
         status: "open",
+        task_type: (body.task_type || "task").toLowerCase(),
         created: now,
         updated: now,
-      }, 201);
+      };
+      broadcastWS("task_created", { ...newTask });
+      return json(res, newTask, 201);
     } catch (e) {
-      return json(res, { error: e.message }, 500);
+      console.error("[POST /api/tasks] error:", e);
+      return json(res, { error: "Internal server error" }, 500);
     }
   }
 
@@ -1472,6 +1756,7 @@ async function handleRequest(req, res) {
     if (!ok) return notFound(res, "task not found");
     const updatedTask = parseTaskBoard().find((t) => String(t.id) === String(id));
     if (!updatedTask) return notFound(res, "task not found");
+    broadcastWS("task_updated", { id: parseInt(updatedTask.id, 10), status: updatedTask.status, assignee: updatedTask.assignee, title: updatedTask.title });
     return json(res, { ok: true, ...updatedTask, id: parseInt(updatedTask.id, 10), notesList: (updatedTask.notes || "").split(" ;; ").filter(Boolean) });
   }
 
@@ -1525,7 +1810,7 @@ async function handleRequest(req, res) {
       return json(res, { task_id: id, source: "agent_output_latest", assignee, file, content: content || "" });
     }
 
-    return notFound(res, `no output found for task ${id} (assignee: ${assignee})`);
+    return notFound(res, `no output found for task ${id}`);
   }
 
   // POST /api/tasks/:id/result — write a task result file to public/task_outputs/
@@ -1583,6 +1868,7 @@ async function handleRequest(req, res) {
       if (found) {
         fs.writeFileSync(tbPath, lines.join("\n"));
         result = { ok: true, id: parseInt(id, 10), status: "in_progress", assignee: claimant };
+        broadcastWS("task_claimed", { id: parseInt(id, 10), assignee: claimant });
       } else {
         result = { ok: false, error: "task row not found", status: 500 };
       }
@@ -1610,11 +1896,13 @@ async function handleRequest(req, res) {
       try {
         fs.writeFileSync(tbPath, filtered.join("\n"));
         deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } };
+        broadcastWS("task_deleted", { id: parseInt(id, 10) });
       } catch (e) {
         deleteResult = { error: "failed to write task board", status: 500 };
       }
     });
     if (!deleteResult) deleteResult = { error: "lock timeout", status: 503 };
+    if (deleteResult.ok) broadcastWS("task_deleted", { id: parseInt(deleteResult.deleted.id, 10) });
     return json(res, deleteResult, deleteResult.status && !deleteResult.ok ? deleteResult.status : 200);
   }
 
@@ -1688,7 +1976,7 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/team-channel") {
     const body = await parseBody(req);
     if (!body.message || typeof body.message !== "string") return badRequest(res, "missing message");
-    const from = sanitizeFrom(body.from || "ceo");
+    const from = sanitizeFrom(body.from || "Lord");
     const dir = path.join(PUBLIC_DIR, "team_channel");
     try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
     const filename = `${nowStamp()}_from_${from}.md`;
@@ -1754,7 +2042,7 @@ async function handleRequest(req, res) {
     return json(res, { ok: true, agents: agents.length, failed, filename });
   }
 
-  // ---- CEO Inbox ----
+  // ---- Lord's Inbox ----
   const CEO_INBOX = path.join(DIR, "ceo_inbox");
   if (method === "GET" && pathname === "/api/ceo-inbox") {
     try { fs.mkdirSync(path.join(CEO_INBOX, "processed"), { recursive: true }); } catch (_) {}
@@ -1786,22 +2074,26 @@ async function handleRequest(req, res) {
       fs.renameSync(src, dst);
       return json(res, { ok: true });
     } catch (e) {
-      return json(res, { error: e.message }, 500);
+      console.error("[markCeoInboxRead] error:", e);
+      return json(res, { error: "Internal server error" }, 500);
     }
   }
 
-  // ---- CEO Quick Command ----
+  // ---- Lord's Quick Command ----
   // POST /api/ceo/command { command: string }
   // Routing rules:
-  //   @agentname <text>  → send text to that agent's inbox (CEO priority)
+  //   @agentname <text>  → send text to that agent's inbox (Lord's priority)
   //   task: <title>      → create a task (auto-assigned unassigned, medium priority)
   //   /mode <name>       → switch company mode
-  //   anything else      → send to alice's inbox as CEO priority
+  //   anything else      → send to alice's inbox as Lord's priority
   if (method === "POST" && pathname === "/api/ceo/command") {
     const body = await parseBody(req);
     const { command } = body;
     if (!command || !command.trim()) return badRequest(res, "command is required");
-    const cmd = command.trim();
+    // SEC-006: input validation — length cap + control character stripping
+    if (command.length > 1000) return badRequest(res, "command exceeds maximum length of 1000 characters");
+    // Strip ASCII control characters (U+0000–U+001F, U+007F) except tab/newline/CR which may be intentional in messages
+    const cmd = command.trim().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
     const ts = () => {
       const d = new Date();
       return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0'),
@@ -1817,8 +2109,8 @@ async function handleRequest(req, res) {
       if (!fs.existsSync(agDir)) return notFound(res, `agent '${targetAgent}' not found`);
       const inboxDir = path.join(agDir, "chat_inbox");
       try { fs.mkdirSync(inboxDir, { recursive: true }); } catch (_) {}
-      const fname = `${ts()}_from_ceo.md`;
-      try { fs.writeFileSync(path.join(inboxDir, fname), `# CEO Priority Message\n\n${msg}\n`); } catch (e) { return json(res, { error: "failed to deliver message" }, 500); }
+      const fname = `${ts()}_from_lord.md`;
+      try { fs.writeFileSync(path.join(inboxDir, fname), `# Lord's Priority Message\n\n${msg}\n`); } catch (e) { return json(res, { error: "failed to deliver message" }, 500); }
       return json(res, { ok: true, action: "dm", agent: targetAgent, filename: fname });
     }
 
@@ -1828,11 +2120,68 @@ async function handleRequest(req, res) {
       const title = taskMatch[1].trim();
       if (!title) return badRequest(res, "task title is empty");
       try {
-        const newId = await appendTaskRow({ title, description: "(CEO quick command)", priority: "medium", assignee: "unassigned" });
+        const newId = await appendTaskRow({ title, description: "(Lord's quick command)", priority: "medium", assignee: "unassigned" });
         return json(res, { ok: true, action: "task_created", id: newId, title }, 201);
       } catch (e) {
-        return json(res, { error: e.message }, 500);
+        console.error("[ceo/command task_created] error:", e);
+        return json(res, { error: "Internal server error" }, 500);
       }
+    }
+
+    // !command → system command execution
+    const sysCmdMatch = cmd.match(/^!(\w+)(?:\s+(.+))?$/);
+    if (sysCmdMatch) {
+      const sysCmd = sysCmdMatch[1].toLowerCase();
+      const sysArgs = sysCmdMatch[2] || "";
+      
+      // Allowed system commands
+      const allowedCmds = {
+        status: { script: "./status.sh", desc: "Show agent status" },
+        start_all: { script: "./run_all.sh", desc: "Start all agents" },
+        stop_all: { script: "./stop_all.sh", desc: "Stop all agents" },
+        smart_start: { script: "./smart_run.sh", desc: "Smart start agents" },
+        archive: { script: "./archive_tasks.sh", desc: "Archive done tasks" },
+      };
+      
+      if (!allowedCmds[sysCmd]) {
+        return badRequest(res, `Unknown command: !${sysCmd}. Available: !status, !start_all, !stop_all, !smart_start, !archive`);
+      }
+      
+      // Execute the script
+      const { spawn } = require('child_process');
+      const scriptPath = path.join(DIR, allowedCmds[sysCmd].script);
+      
+      return new Promise((resolve) => {
+        const child = spawn('bash', [scriptPath], {
+          cwd: DIR,
+          timeout: 30000,
+          env: { ...process.env, TERM: 'xterm-256color' }
+        });
+        
+        let stdout = '';
+        let stderr = '';
+        
+        child.stdout.on('data', (data) => { stdout += data.toString(); });
+        child.stderr.on('data', (data) => { stderr += data.toString(); });
+        
+        child.on('close', (code) => {
+          const output = stdout || stderr || 'Command completed with no output';
+          resolve(json(res, { 
+            ok: true, 
+            action: "system_command", 
+            command: sysCmd,
+            output: output.slice(0, 5000), // Limit output size
+            exitCode: code 
+          }));
+        });
+        
+        child.on('error', (err) => {
+          resolve(json(res, { 
+            ok: false, 
+            error: `Failed to execute command: ${err.message}` 
+          }, 500));
+        });
+      });
     }
 
     // /mode <name> → switch mode
@@ -1853,26 +2202,27 @@ async function handleRequest(req, res) {
           "ceo",
           "",
           "## Reason",
-          "Quick command switch via CEO command palette",
+          "Quick command switch via Lord's command palette",
           "",
           "## Mode Switch Log",
           "| Date | From | To | Who | Reason |",
           "|------|------|----|-----|--------|",
-          `| ${today} | (previous) | ${newMode} | ceo | quick command |`,
+          `| ${today} | (previous) | ${newMode} | Lord | quick command |`,
           "",
         ].join("\n");
         fs.writeFileSync(path.join(PUBLIC_DIR, "company_mode.md"), modeContent);
         return json(res, { ok: true, action: "mode_switched", mode: newMode });
       } catch (e) {
-        return json(res, { error: e.message }, 500);
+        console.error("[ceo/command mode_switch] error:", e);
+        return json(res, { error: "Internal server error" }, 500);
       }
     }
 
-    // Default: send to alice as CEO priority
+    // Default: send to alice as Lord's priority
     const aliceInbox = path.join(EMPLOYEES_DIR, "alice", "chat_inbox");
     try { fs.mkdirSync(aliceInbox, { recursive: true }); } catch (_) {}
-    const fname = `${ts()}_from_ceo.md`;
-    try { fs.writeFileSync(path.join(aliceInbox, fname), `# CEO Priority Message\n\n${cmd}\n`); } catch (e) { return json(res, { error: "failed to route message" }, 500); }
+    const fname = `${ts()}_from_lord.md`;
+    try { fs.writeFileSync(path.join(aliceInbox, fname), `# Lord's Priority Message\n\n${cmd}\n`); } catch (e) { return json(res, { error: "failed to route message" }, 500); }
     return json(res, { ok: true, action: "routed_to_alice", filename: fname });
   }
 
@@ -1939,7 +2289,8 @@ async function handleRequest(req, res) {
       fs.writeFileSync(CONSENSUS_FILE, lines.join("\n"));
       return json(res, { ok: true, id: newId }, 201);
     } catch (e) {
-      return json(res, { error: e.message }, 500);
+      console.error("[POST /api/consensus] error:", e);
+      return json(res, { error: "Internal server error" }, 500);
     }
   }
 
@@ -2017,13 +2368,14 @@ async function handleRequest(req, res) {
     if (!body.who || !body.reason) return badRequest(res, "Missing required fields: who, reason");
     // Sanitize who/reason: strip shell metacharacters and newlines to prevent
     // command injection and markdown table corruption in switch_mode.sh heredoc
-    const safeWho    = String(body.who).replace(/[`$(){}\\;<>|&\r\n\t]/g, "").slice(0, 64).trim() || "ceo";
+    const safeWho    = String(body.who).replace(/[`$(){}\\;<>|&\r\n\t]/g, "").slice(0, 64).trim() || "Lord";
     const safeReason = String(body.reason).replace(/[`$(){}\\;<>|&\r\n\t]/g, "").slice(0, 256).trim() || "no reason";
     const script = path.join(DIR, "switch_mode.sh");
     if (!fs.existsSync(script)) return notFound(res, "switch_mode.sh not found");
     const args = [script, body.mode, safeWho, safeReason];
     execFile("bash", args, { cwd: DIR }, (err, stdout, stderr) => {
-      if (err) return json(res, { ok: false, error: stderr || err.message }, 500);
+      if (err) { console.error("[POST /api/mode] script error:", stderr || err.message); return json(res, { ok: false, error: "Script execution failed" }, 500); }
+      broadcastWS("mode_changed", { mode: body.mode });
       json(res, { ok: true, output: stdout });
     });
     return;
@@ -2275,17 +2627,97 @@ async function handleRequest(req, res) {
   }
 
   // ---- Fallback ----
-  notFound(res, `no route for ${method} ${pathname}`);
+  notFound(res, "not found");
 }
 
 // ---------------------------------------------------------------------------
 // Server
 // ---------------------------------------------------------------------------
+// Normalize parameterized URL paths before using as metrics keys.
+// Raw paths like /api/agents/alice/cycles/5 create unique Map entries forever,
+// causing an unbounded memory leak in apiMetrics._requests (primary leak source).
+function normalizeEndpoint(method, pathname) {
+  let p = pathname;
+  // /api/agents/:name/... — replace agent name segment
+  p = p.replace(/^(\/api\/agents\/)([a-zA-Z0-9_-]+)/, "$1:name");
+  // /api/agents/:name/cycles/:n — numeric cycle index
+  p = p.replace(/^(\/api\/agents\/:name\/cycles\/)(\d+)/, "$1:n");
+  // /api/agents/:name/output/:file — any filename
+  p = p.replace(/^(\/api\/agents\/:name\/output\/)(.+)/, "$1:file");
+  // /api/tasks/:id and /api/tasks/:id/...
+  p = p.replace(/^(\/api\/tasks\/)(\d+)/, "$1:id");
+  // /api/inbox/:agent and /api/inbox/:agent/:id/ack
+  p = p.replace(/^(\/api\/inbox\/)([a-zA-Z0-9_-]+)/, "$1:agent");
+  p = p.replace(/^(\/api\/inbox\/:agent\/)(\d+)/, "$1:id");
+  // /api/messages/:target
+  p = p.replace(/^(\/api\/messages\/)([a-zA-Z0-9_-]+)/, "$1:target");
+  // fallback: replace any remaining bare numeric segments
+  p = p.replace(/\/(\d+)(\/|$)/g, "/:id$2");
+  return `${method} ${p}`;
+}
+
+// ---------------------------------------------------------------------------
+// Executor Configuration (Claude + Kimi support)
+// ---------------------------------------------------------------------------
+const VALID_EXECUTORS = ["claude", "kimi"];
+const EXECUTOR_CONFIG_PATH = path.join(DIR, "public", "executor_config.md");
+
+function getExecutorForAgent(name) {
+  const agentDir = path.join(EMPLOYEES_DIR, name);
+  
+  // Priority 1: per-agent executor.txt
+  const agentExecutorPath = path.join(agentDir, "executor.txt");
+  try {
+    const content = fs.readFileSync(agentExecutorPath, "utf8").trim().toLowerCase();
+    if (VALID_EXECUTORS.includes(content)) return content;
+  } catch (_) {}
+
+  // Priority 2: global config file per-agent table
+  try {
+    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
+    const lines = config.split("\n");
+    for (const line of lines) {
+      const match = line.match(/^\|\s*(\w+)\s*\|\s*(claude|kimi)\s*\|/i);
+      if (match && match[1].toLowerCase() === name.toLowerCase()) {
+        return match[2].toLowerCase();
+      }
+    }
+  } catch (_) {}
+
+  // Priority 3: global default
+  try {
+    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
+    const defaultMatch = config.match(/## Global Default[\s\S]*?^executor:\s*(claude|kimi)/im);
+    if (defaultMatch) return defaultMatch[1].toLowerCase();
+  } catch (_) {}
+
+  // Fallback
+  return "claude";
+}
+
+function setExecutorForAgent(name, executor) {
+  if (!VALID_EXECUTORS.includes(executor)) {
+    return { ok: false, error: `Invalid executor: ${executor}. Must be: ${VALID_EXECUTORS.join(", ")}` };
+  }
+  const agentDir = path.join(EMPLOYEES_DIR, name);
+  try {
+    fs.mkdirSync(agentDir, { recursive: true });
+    fs.writeFileSync(path.join(agentDir, "executor.txt"), executor, "utf8");
+    return { ok: true, executor };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 const server = http.createServer((req, res) => {
   const _start = Date.now();
-  const _endpoint = `${req.method} ${url.parse(req.url).pathname}`;
+  const _endpoint = normalizeEndpoint(req.method, url.parse(req.url).pathname);
+  const _method = req.method.toUpperCase();
   res.on("finish", () => {
-    apiMetrics.recordRequest(_endpoint, Date.now() - _start, res.statusCode);
+    const _duration = Date.now() - _start;
+    apiMetrics.recordRequest(_endpoint, _duration, res.statusCode);
+    // Also record to metrics_queue.jsonl for Ivan's api_error_monitor.js
+    recordProductionMetric(_endpoint, _method, res.statusCode, _duration);
   });
   handleRequest(req, res).catch((err) => {
     if (err.code !== "BODY_TOO_LARGE") console.error("Unhandled error:", err);
@@ -2297,11 +2729,128 @@ const server = http.createServer((req, res) => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// WebSocket Server — Task #113 (Real-Time Agent Updates, native Node.js)
+// Handles HTTP Upgrade for ws:// on /api/ws — no external dependencies.
+// ---------------------------------------------------------------------------
+// WS-004: max concurrent WebSocket connections guard
+const WS_MAX_CONNECTIONS = 100;
+// WS-003: max payload per frame (64 KB) — prevents memory exhaustion
+const WS_MAX_PAYLOAD = 64 * 1024;
+
+server.on("upgrade", (req, socket, head) => {
+  const parsed = url.parse(req.url);
+  if (parsed.pathname !== "/api/ws") {
+    socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+  const key = req.headers["sec-websocket-key"];
+  if (!key || req.headers["upgrade"]?.toLowerCase() !== "websocket") {
+    socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  // WS-001: API key authentication (mirrors isAuthorized() for HTTP requests)
+  if (API_KEY) {
+    const authHeader = req.headers["authorization"] || "";
+    const xApiKey = req.headers["x-api-key"] || "";
+    const provided = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : xApiKey;
+    let authorized = false;
+    if (provided) {
+      try {
+        const keyLen = Math.max(provided.length, API_KEY.length, 1);
+        const a = Buffer.alloc(keyLen);
+        const b = Buffer.alloc(keyLen);
+        Buffer.from(provided).copy(a);
+        Buffer.from(API_KEY).copy(b);
+        authorized = provided.length === API_KEY.length && crypto.timingSafeEqual(a, b);
+      } catch (_) { authorized = false; }
+    }
+    if (!authorized) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+  }
+
+  // WS-002: Origin validation — reject cross-origin connections when ALLOWED_ORIGINS is set
+  if (ALLOWED_ORIGINS.length > 0) {
+    const origin = req.headers["origin"] || "";
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      socket.write("HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+  }
+
+  // WS-004: Connection limit guard
+  if (wsClients.size >= WS_MAX_CONNECTIONS) {
+    socket.write("HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  const accept = crypto
+    .createHash("sha1")
+    .update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+    .digest("base64");
+  socket.write(
+    "HTTP/1.1 101 Switching Protocols\r\n" +
+    "Upgrade: websocket\r\n" +
+    "Connection: Upgrade\r\n" +
+    `Sec-WebSocket-Accept: ${accept}\r\n\r\n`
+  );
+  wsClients.add(socket);
+  // Send hello
+  try { socket.write(wsEncode(JSON.stringify({ type: "hello", ts: Date.now() }))); } catch (_) {}
+  // WS-003: maxPayload — drop oversized frames to prevent memory exhaustion
+  // ML-002: Use a single buffer with length tracking to reduce GC pressure
+  let wsBuf = Buffer.alloc(0);
+  socket.on("data", (chunk) => {
+    wsBuf = Buffer.concat([wsBuf, chunk]);
+    if (wsBuf.length > WS_MAX_PAYLOAD) {
+      socket.destroy();
+      wsClients.delete(socket);
+      wsBuf = null; // ML-002: Free buffer reference
+      return;
+    }
+    const frame = wsDecode(wsBuf);
+    if (!frame) return;
+    // Keep remaining unparsed data instead of discarding
+    const consumed = frame.consumed || wsBuf.length;
+    wsBuf = wsBuf.slice(consumed);
+    if (frame.opcode === 0x8) { // close
+      const closeFrame = Buffer.from([0x88, 0x00]);
+      try { socket.write(closeFrame); } catch (_) {}
+      socket.destroy();
+    } else if (frame.opcode === 0x9) { // ping → pong
+      const pong = Buffer.alloc(2 + frame.payload.length);
+      pong[0] = 0x8a; pong[1] = frame.payload.length;
+      frame.payload.copy(pong, 2);
+      try { socket.write(pong); } catch (_) {}
+    }
+  });
+  socket.on("close", () => wsClients.delete(socket));
+  socket.on("error", () => wsClients.delete(socket));
+});
+
+// Watch heartbeat files for agent_updated events (O(1) vs polling)
+fs.watch(path.join(DIR, "agents"), { recursive: true }, (event, filename) => {
+  if (filename && filename.endsWith("heartbeat.md")) {
+    const agentName = filename.split(path.sep)[0];
+    if (/^[a-zA-Z0-9_-]+$/.test(agentName)) {
+      broadcastWS("heartbeat_update", { agent: agentName, ts: Date.now() });
+    }
+  }
+});
+
 // Initialize SQLite message bus (Task #102)
 initMessageBus(DIR);
 
 server.listen(PORT, () => {
-  console.log(`Tokenfly Agent Team Lab — dashboard on http://localhost:${PORT}`);
+  console.log(`🪐 Agent Planet — dashboard on http://localhost:${PORT}`);
   console.log(`Directory: ${DIR}`);
   console.log(`Agents: ${listAgentNames().join(", ")}`);
 });

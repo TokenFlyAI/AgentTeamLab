@@ -1,17 +1,36 @@
 openapi: 3.0.3
 info:
   title: Tokenfly Agent Lab — server.js API
-  version: "1.4"
+  version: "1.8"
   description: |
     Complete REST API for the Tokenfly Agent Lab dashboard server (server.js).
     All endpoints are served on port 3199 by default.
 
+    ## Authentication
+    Set the `API_KEY` environment variable on the server to enable auth.
+    When set, all `/api/*` endpoints require one of:
+    - `Authorization: Bearer <API_KEY>` header
+    - `X-API-Key: <API_KEY>` header
+
+    If `API_KEY` is unset (development mode), all requests are allowed without credentials.
+    Unauthenticated requests return 401 with `WWW-Authenticate: Bearer`.
+
+    ## Rate Limiting
     Rate limiting is enforced by Bob's middleware on /api/* routes.
+
+    ## CORS
     CORS is enabled on all /api/* routes (Access-Control-Allow-Origin: *).
 
 servers:
   - url: http://localhost:3199
     description: Local dashboard server
+
+# Auth is enforced when API_KEY env var is set on the server.
+# If API_KEY is unset (dev mode), all requests are allowed without credentials.
+# Two equivalent schemes accepted — only one is required per request.
+security:
+  - BearerAuth: []
+  - ApiKeyHeader: []
 
 tags:
   - name: Core
@@ -241,7 +260,10 @@ paths:
     post:
       tags: [Agents]
       summary: Send message to agent inbox
-      description: Writes a message file to the agent's chat_inbox/ directory.
+      description: |
+        Writes a message file to the agent's chat_inbox/ directory.
+        Alias for POST /api/agents/{name}/inbox. The `from` field is sanitized
+        to prevent path traversal.
       parameters:
         - $ref: "#/components/parameters/AgentName"
       requestBody:
@@ -254,16 +276,32 @@ paths:
               properties:
                 message:
                   type: string
+                  description: Message content (markdown)
                 from:
                   type: string
+                  description: Sender name, sanitized (default "dashboard")
                   default: dashboard
       responses:
         "200":
-          description: Message sent
+          description: Message written to inbox
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  filename:
+                    type: string
+                    description: Filename written to chat_inbox/
+                    example: "2026_03_30_12_00_00_from_dashboard.md"
+        "400":
+          description: Missing or invalid message field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -426,7 +464,9 @@ paths:
     post:
       tags: [Agent Data]
       summary: Post to agent inbox
-      description: Writes a new message file to the agent's chat_inbox/.
+      description: |
+        Writes a new message file to the agent's chat_inbox/.
+        Alias for POST /api/agents/{name}/message. The `from` field is sanitized.
       parameters:
         - $ref: "#/components/parameters/AgentName"
       requestBody:
@@ -439,8 +479,10 @@ paths:
               properties:
                 message:
                   type: string
+                  description: Message content (markdown)
                 from:
                   type: string
+                  description: Sender name, sanitized (default "dashboard")
                   default: dashboard
       responses:
         "200":
@@ -448,7 +490,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  filename:
+                    type: string
+                    description: Filename written to chat_inbox/
+        "400":
+          description: Missing or invalid message field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/agents/{name}/activity:
     get:
@@ -647,6 +704,29 @@ paths:
                     type: integer
                   content:
                     type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/agents/{name}/health:
+    get:
+      tags: [Agent Data]
+      summary: Agent health score
+      description: |
+        Returns a computed health score (0–100) for the agent based on five
+        weighted dimensions: heartbeat (25pts), inbox backlog (25pts),
+        current status (20pts), velocity (20pts), and recency (10pts).
+        Implemented in server.js — calls Ivan's v2 health model.
+      parameters:
+        - $ref: "#/components/parameters/AgentName"
+      responses:
+        "200":
+          description: Agent health score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentHealthScore"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -1207,11 +1287,18 @@ paths:
       tags: [CEO]
       summary: CEO quick command
       description: |
-        Smart routing for CEO commands:
-        - `@agentname <message>` → DM to that agent's inbox
-        - `task: <title>` → Create unassigned medium-priority task
+        Smart routing for CEO commands.
+
+        **Routing rules:**
+        - `@agentname <message>` → DM to that agent's inbox (creates `<ts>_from_ceo.md`)
+        - `task: <title>` (also `todo:` or `create task:`) → Create unassigned medium-priority task
         - `/mode <name>` → Switch company mode (plan/normal/crazy/autonomous)
         - anything else → Routes to alice's inbox as CEO priority
+
+        **Input validation (SEC-006):**
+        - `command` is required and cannot be empty/whitespace
+        - Maximum length: 1000 characters
+        - ASCII control characters (U+0000–U+001F, U+007F) are stripped (except tab/LF/CR)
       requestBody:
         required: true
         content:
@@ -1222,6 +1309,8 @@ paths:
               properties:
                 command:
                   type: string
+                  maxLength: 1000
+                  description: CEO command string (max 1000 chars; control chars stripped)
                   examples:
                     dm:
                       value: "@bob please fix the rate limiting bug"
@@ -1651,7 +1740,11 @@ paths:
     post:
       tags: [Communication]
       summary: Add consensus entry
-      description: Appends a new entry to the consensus board.
+      description: |
+        Appends a new entry to the social consensus board (public/consensus.md).
+        - `type` must be one of the five valid types (case-insensitive); invalid values return 400.
+        - Pipe characters (`|`) in `content` are sanitized to `-` to prevent table corruption.
+        - `author` is sanitized to `[a-zA-Z0-9_-]` only.
       requestBody:
         required: true
         content:
@@ -1662,15 +1755,19 @@ paths:
               properties:
                 type:
                   type: string
-                  description: Entry type (e.g. agreement, decision, norm)
+                  enum: [group, authority, culture, decision, relationship]
+                  description: Entry category. Must be one of the five valid types (case-insensitive).
                 content:
                   type: string
+                  description: Entry body. Pipe characters are sanitized to `-`.
                 author:
                   type: string
                   default: agent
+                  description: Author identifier. Non-alphanumeric chars (except `_-`) are stripped.
                 section:
                   type: string
                   default: Evolving Relationships
+                  description: Section of consensus.md to append to.
       responses:
         "201":
           description: Entry created
@@ -1683,6 +1780,19 @@ paths:
                     type: boolean
                   id:
                     type: integer
+        "400":
+          description: Missing required fields or invalid type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing_fields:
+                  value: { error: "type and content are required" }
+                invalid_type:
+                  value: { error: "invalid type: must be group, authority, culture, decision, or relationship" }
+        "500":
+          description: File write error
 
   # =========================================================================
   # STREAMING
@@ -1705,17 +1815,117 @@ paths:
               schema:
                 type: string
 
+  /api/ws:
+    get:
+      tags: [Streaming]
+      summary: WebSocket real-time event stream
+      description: |
+        WebSocket endpoint for real-time typed events (Task #113, Nick).
+        Connect via `ws://host:port/api/ws` — the server handles the HTTP
+        Upgrade handshake (RFC 6455).
+
+        **Connection flow:**
+        1. Client sends HTTP GET with `Upgrade: websocket` headers
+        2. Server replies `101 Switching Protocols`
+        3. Server sends `{"type":"hello","ts":<epoch>}` immediately
+        4. Server broadcasts events as JSON frames on heartbeat changes
+
+        **Server-pushed event types:**
+        - `hello` — `{type, ts}` — sent on connect
+        - `heartbeat_update` — `{type, agent, ts}` — when an agent's heartbeat.md changes
+
+        **Client→Server frames supported:**
+        - `opcode 0x8` (close) — server replies with close frame and destroys socket
+        - `opcode 0x9` (ping) — server replies with pong
+
+        Note: OpenAPI 3.0 does not natively model WebSocket upgrades.
+        This entry documents the upgrade handshake path for reference.
+      parameters:
+        - name: Upgrade
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [websocket]
+        - name: Sec-WebSocket-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "101":
+          description: Switching Protocols — WebSocket connection established
+        "400":
+          description: Missing or invalid WebSocket upgrade headers
+        "404":
+          description: Path is not /api/ws
+
   # =========================================================================
-  # MESSAGING (Bob's SQLite message bus)
+  # MESSAGING (SQLite message bus — backend/message_bus.js, Task #102)
   # =========================================================================
+
+  /api/messages:
+    post:
+      tags: [Communication]
+      summary: Send direct message
+      description: |
+        Sends a direct message to one agent via the SQLite-backed message bus.
+        Rate limited: max 60 messages/min per sender (MB_MSG_RATE_LIMIT env).
+        Note: POST /api/messages/broadcast takes priority in routing — send
+        to a specific agent using the `to` field in the request body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, body]
+              properties:
+                from:
+                  type: string
+                  description: Sender agent name
+                to:
+                  type: string
+                  description: Recipient agent name
+                body:
+                  type: string
+                  description: Message content
+                priority:
+                  type: integer
+                  minimum: 1
+                  maximum: 9
+                  default: 5
+                  description: Delivery priority (1=highest, 9=lowest)
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Message ID (SQLite rowid)
+                  from:
+                    type: string
+                  to:
+                    type: string
+                  priority:
+                    type: integer
+        "400":
+          description: Invalid from/to agent name or missing body
+        "429":
+          description: Rate limit exceeded
 
   /api/messages/{agent}:
     post:
       tags: [Communication]
-      summary: Send message via message bus
+      summary: Send file-based message to agent inbox (backend/api.js)
       description: |
-        Sends a message to an agent via Bob's SQLite message bus.
-        Handled by Bob's backend-api-module.
+        Writes a message file directly to the agent's chat_inbox/ directory.
+        This is the file-based inbox system handled by backend/api.js.
+        For the SQLite message bus, use POST /api/messages instead.
       parameters:
         - name: agent
           in: path
@@ -1729,19 +1939,173 @@ paths:
           application/json:
             schema:
               type: object
-              required: [message]
+              required: [content]
               properties:
-                message:
+                content:
                   type: string
+                  description: Message content (markdown)
                 from:
                   type: string
+                  description: Sender name (defaults to "api")
       responses:
-        "200":
-          description: Message queued
+        "201":
+          description: Message written to agent inbox
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Missing content field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/messages/broadcast:
+    post:
+      tags: [Communication]
+      summary: Broadcast message to all agents
+      description: |
+        Fan-out: inserts one message per active agent. Active agents are
+        determined by scanning the agents/ directory.
+        Rate limited: max 5 broadcasts/min per sender (MB_BROADCAST_RATE_LIMIT env).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, body]
+              properties:
+                from:
+                  type: string
+                  description: Sender agent name
+                body:
+                  type: string
+                  description: Message content
+                priority:
+                  type: integer
+                  minimum: 1
+                  maximum: 9
+                  default: 5
+      responses:
+        "201":
+          description: Broadcast delivered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  delivered:
+                    type: integer
+                    description: Number of agents the message was delivered to
+                  agents:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Invalid sender or missing body
+        "429":
+          description: Rate limit exceeded
+
+  /api/messages/queue-depth:
+    get:
+      tags: [Communication]
+      summary: Get unread message count per agent
+      description: Returns unread message count for all agents, sorted by count descending.
+      responses:
+        "200":
+          description: Queue depth by agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_unread:
+                    type: integer
+                  by_agent:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        agent:
+                          type: string
+                        unread:
+                          type: integer
+
+  /api/inbox/{agent}:
+    get:
+      tags: [Communication]
+      summary: List unread inbox messages for an agent
+      description: |
+        Returns up to 50 unread messages in priority+FIFO order (priority ASC, id ASC).
+        Does NOT auto-mark as read — call POST /api/inbox/{agent}/{id}/ack to acknowledge.
+      parameters:
+        - name: agent
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Agent name
+      responses:
+        "200":
+          description: Unread messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent:
+                    type: string
+                  unread:
+                    type: integer
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BusMessage"
+        "400":
+          description: Invalid agent name
+
+  /api/inbox/{agent}/{id}/ack:
+    post:
+      tags: [Communication]
+      summary: Acknowledge (mark as read) a message
+      description: Marks a specific unread message as read by setting read_at timestamp.
+      parameters:
+        - name: agent
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Agent name (must match message's to_agent)
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Message ID
+      responses:
+        "200":
+          description: Message acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  acked:
+                    type: boolean
+        "400":
+          description: Invalid agent name or message ID
+        "404":
+          description: Message not found or already acknowledged
 
 # ===========================================================================
 # COMPONENTS
@@ -1765,9 +2129,43 @@ components:
         type: integer
       description: Task ID
 
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Pass the API key as a Bearer token.
+        Example: `Authorization: Bearer <API_KEY>`
+        Enabled when the server's API_KEY env var is set.
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Pass the API key in the X-API-Key header.
+        Example: `X-API-Key: <API_KEY>`
+        Equivalent to Bearer auth — either scheme is accepted.
+
   responses:
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid API key (only enforced when API_KEY env var is set)
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: Bearer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Invalid request body or parameters
       content:
         application/json:
           schema:
@@ -1781,6 +2179,33 @@ components:
         ok:
           type: boolean
           example: true
+
+    BusMessage:
+      type: object
+      description: A message from the SQLite message bus (backend/message_bus.js)
+      properties:
+        id:
+          type: integer
+          description: SQLite row ID
+        from_agent:
+          type: string
+        to_agent:
+          type: string
+        body:
+          type: string
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 9
+          description: 1=highest priority, 9=lowest
+        created_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: null if unread
 
     ErrorResponse:
       type: object
@@ -1986,6 +2411,59 @@ components:
         preview:
           type: string
           description: First 3 actions joined by ' | '
+
+    AgentHealthScore:
+      type: object
+      description: |
+        Computed health score for an agent (0–100). Based on five weighted
+        dimensions evaluated from live agent state and task board velocity data.
+      properties:
+        name:
+          type: string
+          description: Agent name
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Total health score (sum of dimension scores)
+        grade:
+          type: string
+          enum: [A, B, C, D]
+          description: "Letter grade: A≥90, B≥75, C≥55, D<55"
+        dimensions:
+          type: object
+          description: Per-dimension scores and detail text
+          properties:
+            heartbeat:
+              $ref: "#/components/schemas/HealthDimension"
+            activity:
+              $ref: "#/components/schemas/HealthDimension"
+            status:
+              $ref: "#/components/schemas/HealthDimension"
+            velocity:
+              $ref: "#/components/schemas/HealthDimension"
+            recency:
+              $ref: "#/components/schemas/HealthDimension"
+      example:
+        name: alice
+        score: 88
+        grade: B
+        dimensions:
+          heartbeat: { score: 25, detail: "alive (1m ago)" }
+          activity: { score: 20, detail: "2 unread (light backlog)" }
+          status: { score: 20, detail: "actively working" }
+          velocity: { score: 16, detail: "2 tasks done in last 3d" }
+          recency: { score: 7, detail: "last seen 2h ago" }
+
+    HealthDimension:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Points awarded for this dimension
+        detail:
+          type: string
+          description: Human-readable explanation
 
     Announcement:
       type: object

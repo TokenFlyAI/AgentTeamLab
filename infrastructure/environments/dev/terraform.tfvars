@@ -29,3 +29,9 @@ alert_emails_infra_ops   = []  # e.g. ["dev-team@tokenfly.ai"]
 
 # GitHub OIDC
 github_repo = "tokenfly/agent-lab"  # update to actual GitHub org/repo
+
+# Route53 — DNS module (leave empty for dev without a real domain)
+route53_hosted_zone_id = ""  # e.g. "Z1234567890ABC"
+
+# AWS Account ID — used in EFS ARN strings (avoids data.aws_caller_identity live lookup)
+aws_account_id = "123456789012"  # replace with actual AWS account ID

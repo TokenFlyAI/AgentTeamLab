@@ -10,19 +10,21 @@ const { test, expect } = require("@playwright/test");
  */
 
 const BASE = "http://localhost:3199";
+// SEC-001: API key for authenticated requests
+const AUTH_HEADERS = { "Authorization": "Bearer test" };
 
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
 async function apiGet(path) {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: AUTH_HEADERS });
   return { status: res.status, body: await res.json().catch(() => null) };
 }
 
 async function apiPost(path, body) {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
     body: JSON.stringify(body),
   });
   return { status: res.status, body: await res.json().catch(() => null) };
@@ -31,14 +33,14 @@ async function apiPost(path, body) {
 async function apiPatch(path, body) {
   const res = await fetch(`${BASE}${path}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
     body: JSON.stringify(body),
   });
   return { status: res.status, body: await res.json().catch(() => null) };
 }
 
 async function apiDelete(path) {
-  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE", headers: AUTH_HEADERS });
   return { status: res.status, body: await res.json().catch(() => null) };
 }
 
@@ -94,6 +96,17 @@ test.describe("GET /api/agents", () => {
     expect(names).toContain("alice");
     expect(names).toContain("bob");
     expect(names).toContain("charlie");
+  });
+
+  test("each agent includes inline health score (Task #157)", async () => {
+    const { body } = await apiGet("/api/agents");
+    for (const agent of body) {
+      expect(agent.health).toBeDefined();
+      expect(typeof agent.health.score).toBe("number");
+      expect(["A", "B", "C", "D"]).toContain(agent.health.grade);
+      expect(agent.health.score).toBeGreaterThanOrEqual(0);
+      expect(agent.health.score).toBeLessThanOrEqual(100);
+    }
   });
 });
 
@@ -274,6 +287,10 @@ test.describe("Tasks CRUD", () => {
 test.describe("Task Claim", () => {
   let taskId;
 
+  test.afterAll(async () => {
+    if (taskId) await apiDelete(`/api/tasks/${taskId}`).catch(() => {});
+  });
+
   test("POST /api/tasks/:id/claim claims an open task", async () => {
     // Create a task to claim
     const { body: created } = await apiPost("/api/tasks", { title: "E2E-Claim-Test", priority: "low" });
@@ -281,7 +298,7 @@ test.describe("Task Claim", () => {
 
     const { status, body } = await fetch(`${BASE}/api/tasks/${taskId}/claim`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
       body: JSON.stringify({ agent: "alice" }),
     }).then(r => r.json().then(b => ({ status: r.status, body: b })));
 
@@ -294,7 +311,7 @@ test.describe("Task Claim", () => {
   test("POST /api/tasks/:id/claim returns 409 if already claimed by another agent", async () => {
     const res = await fetch(`${BASE}/api/tasks/${taskId}/claim`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
       body: JSON.stringify({ agent: "bob" }),
     });
     const body = await res.json();
@@ -308,7 +325,7 @@ test.describe("Task Claim", () => {
 
   test("POST /api/tasks/:id/claim returns 400 without agent", async () => {
     const { body: created } = await apiPost("/api/tasks", { title: "E2E-Claim-NoAgent", priority: "low" });
-    const res = await fetch(`${BASE}/api/tasks/${created.id}/claim`, { method: "POST" });
+    const res = await fetch(`${BASE}/api/tasks/${created.id}/claim`, { method: "POST", headers: AUTH_HEADERS });
     expect(res.status).toBe(400);
     await apiDelete(`/api/tasks/${created.id}`);
   });
@@ -405,7 +422,7 @@ test.describe("GET /api/search", () => {
     expect(taskResult.matches.some(m => m.title.includes(token))).toBe(true);
     // Cleanup
     if (created && created.id) {
-      await fetch(`${BASE}/api/tasks/${created.id}`, { method: "DELETE" });
+      await fetch(`${BASE}/api/tasks/${created.id}`, { method: "DELETE", headers: AUTH_HEADERS });
     }
   });
 });
@@ -553,13 +570,17 @@ test.describe("Task input sanitization", () => {
     expect(status).toBe(201);
     const taskId = body.id;
 
-    // Re-fetch the task and verify the table row is not corrupted
-    const { body: tasks } = await apiGet("/api/tasks");
-    const task = (Array.isArray(tasks) ? tasks : []).find((t) => String(t.id) === String(taskId));
-    expect(task).toBeTruthy();
-    // Title should exist but without literal pipes that would break the table
-    expect(task.title).toBeTruthy();
-    // The task board must still parse correctly (we got the task back = not corrupted)
+    try {
+      // Re-fetch the task and verify the table row is not corrupted
+      const { body: tasks } = await apiGet("/api/tasks");
+      const task = (Array.isArray(tasks) ? tasks : []).find((t) => String(t.id) === String(taskId));
+      expect(task).toBeTruthy();
+      // Title should exist but without literal pipes that would break the table
+      expect(task.title).toBeTruthy();
+      // The task board must still parse correctly (we got the task back = not corrupted)
+    } finally {
+      await apiDelete(`/api/tasks/${taskId}`);
+    }
   });
 
   test("newlines in title are replaced with spaces", async () => {
@@ -567,10 +588,16 @@ test.describe("Task input sanitization", () => {
       title: "line1\nline2",
     });
     expect(status).toBe(201);
-    const { body: tasks } = await apiGet("/api/tasks");
-    const task = (Array.isArray(tasks) ? tasks : []).find((t) => String(t.id) === String(body.id));
-    expect(task).toBeTruthy();
-    // Task board should still parse cleanly
-    expect(task.title).not.toContain("\n");
+    const taskId = body.id;
+
+    try {
+      const { body: tasks } = await apiGet("/api/tasks");
+      const task = (Array.isArray(tasks) ? tasks : []).find((t) => String(t.id) === String(taskId));
+      expect(task).toBeTruthy();
+      // Task board should still parse cleanly
+      expect(task.title).not.toContain("\n");
+    } finally {
+      await apiDelete(`/api/tasks/${taskId}`);
+    }
   });
 });

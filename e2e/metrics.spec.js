@@ -14,19 +14,25 @@ const { test, expect } = require("@playwright/test");
  */
 
 const BASE = "http://localhost:3199";
+const AUTH_HEADERS = { "Authorization": "Bearer test" };
 
 async function apiGet(path) {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: AUTH_HEADERS });
   return { status: res.status, body: await res.json().catch(() => null) };
 }
 
 async function apiPost(path, body) {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
     body: JSON.stringify(body),
   });
   return { status: res.status, body: await res.json().catch(() => null), res };
+}
+
+async function apiDelete(path) {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE", headers: AUTH_HEADERS });
+  return { status: res.status, body: await res.json().catch(() => null) };
 }
 
 // ---------------------------------------------------------------------------
@@ -221,12 +227,12 @@ test.describe("POST /api/broadcast", () => {
 // ---------------------------------------------------------------------------
 test.describe("CORS headers", () => {
   test("GET /api/agents response includes Access-Control-Allow-Origin", async () => {
-    const res = await fetch(`${BASE}/api/agents`);
+    const res = await fetch(`${BASE}/api/agents`, { headers: AUTH_HEADERS });
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
   });
 
   test("GET /api/metrics response includes Access-Control-Allow-Origin", async () => {
-    const res = await fetch(`${BASE}/api/metrics`);
+    const res = await fetch(`${BASE}/api/metrics`, { headers: AUTH_HEADERS });
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
   });
 
@@ -236,6 +242,7 @@ test.describe("CORS headers", () => {
       headers: {
         "Origin": "http://example.com",
         "Access-Control-Request-Method": "GET",
+        ...AUTH_HEADERS,
       },
     });
     expect(res.status).toBe(204);
@@ -263,7 +270,7 @@ test.describe("Rate limiting", () => {
     const responses = [];
     // Fire 10 requests in quick succession (well under the limit)
     for (let i = 0; i < 10; i++) {
-      const res = await fetch(`${BASE}/api/health`);
+      const res = await fetch(`${BASE}/api/health`, { headers: AUTH_HEADERS });
       responses.push(res.status);
     }
     // All should succeed (10 << 120/min)
@@ -279,7 +286,7 @@ test.describe("Rate limiting", () => {
     //
     // Strategy: make a request and check header is absent (not rate limited),
     // confirming the normal path works.
-    const res = await fetch(`${BASE}/api/metrics`);
+    const res = await fetch(`${BASE}/api/metrics`, { headers: AUTH_HEADERS });
     expect([200, 429]).toContain(res.status);
     if (res.status === 429) {
       const retryAfter = res.headers.get("retry-after");
@@ -305,7 +312,7 @@ test.describe("Response Content-Type", () => {
 
   for (const ep of jsonEndpoints) {
     test(`${ep} returns application/json`, async () => {
-      const res = await fetch(`${BASE}${ep}`);
+      const res = await fetch(`${BASE}${ep}`, { headers: AUTH_HEADERS });
       const ct = res.headers.get("content-type") || "";
       expect(ct).toContain("application/json");
     });
@@ -431,8 +438,7 @@ test.describe("POST /api/ceo/command", () => {
     expect(typeof body.id).toBe("number");
     expect(body.title).toBe(title);
     // Cleanup
-    const { fetch: f } = await import("node:fetch").catch(() => ({ fetch: globalThis.fetch }));
-    await fetch(`${BASE}/api/tasks/${body.id}`, { method: "DELETE" }).catch(() => {});
+    await apiDelete(`/api/tasks/${body.id}`).catch(() => {});
   });
 
   test("routes plain text to alice inbox", async () => {

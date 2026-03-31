@@ -226,3 +226,243 @@ The following endpoints existed in `server.js` but were missing from `api_refere
 
 ### No Breaking Changes
 All additions are net-new documentation. No endpoint behavior has changed.
+
+---
+
+## v1.5 — 2026-03-30 (Session 14)
+
+### Updated: Message Bus Endpoints (openapi_spec.yaml)
+
+Corrected and expanded documentation for the SQLite message bus (Task #102, `backend/message_bus.js`).
+
+#### Removed (incorrect)
+- `POST /api/messages/{agent}` — was incorrectly documented; that path does not exist
+
+#### Added (correct message bus endpoints)
+- `POST /api/messages` — send DM; body: `{from, to, body, priority?}`; rate limited 60/min per sender
+- `POST /api/messages/broadcast` — fan-out to all active agents; body: `{from, body, priority?}`; rate limited 5/min per sender
+- `GET /api/messages/queue-depth` — unread count per agent; returns `{total_unread, by_agent[]}`
+- `GET /api/inbox/{agent}` — list up to 50 unread messages (priority+FIFO); does NOT auto-ack
+- `POST /api/inbox/{agent}/{id}/ack` — mark message as read; 404 if already acked
+
+#### Added Schema
+- `BusMessage` — SQLite message row: `{id, from_agent, to_agent, body, priority, created_at, read_at}`
+
+### No Breaking Changes
+Removal of the incorrect `/api/messages/{agent}` path only; no real endpoint was removed.
+
+---
+
+## v1.6 — 2026-03-30 (Session 14, Cycle 2)
+
+### Fix: Restored Missing File-Based Inbox Endpoint
+
+The v1.5 changelog incorrectly stated that `POST /api/messages/{agent}` does not exist.
+It **does** exist in `backend/api.js` and is a separate system from the SQLite message bus.
+
+#### Added Back (corrected)
+- `POST /api/messages/{agent}` — file-based message write to `agents/{name}/chat_inbox/`
+  - Required field: **`content`** (was incorrectly documented as `message` in earlier sessions)
+  - Optional field: `from` (sender name, defaults to "api")
+  - Returns 201 on success; 404 if agent not found
+  - Distinct from `POST /api/messages` (SQLite bus) — writes a `.md` file to disk
+
+### Two Messaging Systems Clarified
+
+| Endpoint | Backend | Storage | Use Case |
+|----------|---------|---------|----------|
+| `POST /api/messages/{agent}` | `backend/api.js` | File (chat_inbox/) | Legacy file-based inbox |
+| `POST /api/messages` | `backend/message_bus.js` | SQLite (messages.db) | New SQLite message bus |
+| `GET /api/inbox/{agent}` | `backend/message_bus.js` | SQLite | Read SQLite messages |
+
+### Schema Fix
+- Updated `POST /api/messages/{agent}` requestBody: `required: [content]` (not `message`)
+
+---
+
+## v1.7 — 2026-03-30 (Session 14, Cycle 3)
+
+### Added: SQLite Message Bus Section to api_reference.md
+
+Completed documentation for all 6 SQLite message bus endpoints in the human-readable API reference. Previously these were only in `openapi_spec.yaml`.
+
+#### Endpoints Documented
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/messages` | Send DM; `{from, to, body, priority?}` → 201 `{id, from, to, priority}` |
+| `GET /api/inbox/:agent` | List up to 50 unread messages (priority+FIFO order) |
+| `POST /api/inbox/:agent/:id/ack` | Acknowledge message; 404 if already acked |
+| `POST /api/messages/broadcast` | Fan-out to all active agents; 201 or 200 if none |
+| `GET /api/messages/queue-depth` | Unread counts per agent: `{total_unread, by_agent[]}` |
+| `DELETE /api/messages/purge` | Delete old read messages; `?days=N&unread=bool` |
+
+#### Also Added
+- Two Messaging Systems Comparison table (file-based vs SQLite bus)
+- Rate limit documentation: 60 msg/min DM, 5 broadcast/min per sender
+- BusMessage schema with all fields including `read_at`
+
+### Source
+- `backend/message_bus.js` — full implementation
+- `e2e/coverage.spec.js` — 12 tests added in commit 45c774d
+
+---
+
+## v1.7 — 2026-03-30 (Session 14, Cycle 3)
+
+### Added: API Key Authentication (Task #103)
+
+Quinn's `isAuthorized()` middleware was added in Task #103 but was never reflected in the spec.
+
+#### Security Schemes Added
+- `BearerAuth` — `Authorization: Bearer <API_KEY>` header
+- `ApiKeyHeader` — `X-API-Key: <API_KEY>` header
+- Both schemes are equivalent; only one is required per request
+- Auth only enforced when `API_KEY` env var is set on the server
+- Dev mode (no `API_KEY`): all requests pass without credentials
+- Unauthorized response: HTTP 401 with `WWW-Authenticate: Bearer`
+
+#### Spec Changes
+- Added `security:` global block (both schemes listed as alternatives)
+- Added `components/securitySchemes`: `BearerAuth` (http/bearer), `ApiKeyHeader` (apiKey/header)
+- Added `components/responses/Unauthorized` — reusable 401 response
+- Added `components/responses/BadRequest` — reusable 400 response
+- Updated `info.description` with authentication section
+- Version bumped to `1.7`
+
+### No Breaking Changes
+Authentication was already implemented — this is documentation only.
+
+---
+
+## v1.7 — 2026-03-30 (Session 14, Cycle 3)
+
+### Fix: Inbox/Message Response Schema + 400 Error Codes
+
+Corrected response schemas for the two file-based inbox endpoints after reviewing
+Heidi's e2e coverage gaps report (Task #123, agents/heidi/output/e2e_coverage_gaps.md).
+
+#### Fixed: POST /api/agents/{name}/message
+- Response schema was `OkResponse` — actual response is `{ok, filename}`
+- Added `filename` field to response schema (e.g. "2026_03_30_12_00_00_from_dashboard.md")
+- Added missing `400` response code (triggered on missing/invalid `message` field)
+- Improved descriptions: `message` = "Message content (markdown)", `from` sanitized
+
+#### Fixed: POST /api/agents/{name}/inbox
+- Same response shape fix: `{ok, filename}` not just `{ok}`
+- Added `400` + `404` response codes
+- Note added: alias for `/message` endpoint
+
+### Source
+Heidi's GAP-007 analysis cross-referenced with server.js:1126-1139 (agentMsgMatch) 
+and server.js:1373-1386 (agentInboxPostMatch).
+
+---
+
+## v1.8 — 2026-03-30 (Task #143)
+
+### New: Endpoints Added Since Task #107 (OpenAPI Spec Catch-Up)
+
+Audited server.js and backend/api.js against the spec. Added five previously
+undocumented or under-documented endpoints.
+
+#### Added: GET /api/agents/{name}/health
+- Ivan's v2 agent health model (Charlie #108)
+- Returns `AgentHealthScore` object: `{name, score, grade, dimensions}`
+- Score 0–100 across five weighted dimensions: heartbeat (25), inbox backlog (25),
+  current status (20), velocity (20), recency (10)
+- Added `AgentHealthScore` and `HealthDimension` component schemas
+
+#### Added: GET /api/ws (WebSocket upgrade)
+- Nick's real-time event stream (Task #113)
+- Handles HTTP Upgrade to WebSocket on `/api/ws` (RFC 6455)
+- Server pushes `hello` on connect, `heartbeat_update` on any agent heartbeat change
+- Supports ping/pong and close frames from client
+
+#### Confirmed Already Documented: GET /api/tasks (filters)
+- `?priority=`, `?q=`, `?assignee=`, `?status=` query params were already in spec
+- Dave's filter API (full-text search on title + description) ✓
+
+#### Confirmed Already Documented: GET /api/agents/{name}/cycles
+- Already documented in prior sessions ✓
+
+#### Updated: POST /api/ceo/command — Validation Rules (SEC-006)
+- Added `maxLength: 1000` to `command` field schema
+- Documented input sanitization: ASCII control chars U+0000–U+001F/U+007F stripped
+- Documented all routing modes with clearer descriptions
+
+### No Breaking Changes
+Documentation-only additions. All existing response shapes unchanged.
+
+---
+
+## v1.8 — 2026-03-30 (Task #143)
+
+### Added: New Endpoints Since Task #107
+
+Documented five endpoint categories added by other agents after the Task #107 spec delivery.
+
+#### Added: GET /api/agents/{name}/health
+- New endpoint: agent health score (0–100) from Ivan's v2 model (Charlie #108)
+- Response: `AgentHealthScore` — `{name, score, grade, dimensions}`
+- Five dimensions: heartbeat (25pts), activity/inbox (25pts), status (20pts), velocity (20pts), recency (10pts)
+- Grade: A≥90, B≥75, C≥55, D<55
+- New schemas: `AgentHealthScore`, `HealthDimension`
+
+#### Added: GET /api/ws (WebSocket)
+- New endpoint: `ws://host/api/ws` — real-time typed event stream (Nick #113)
+- RFC 6455 upgrade handshake; server sends `hello` frame on connect
+- Server-pushed events: `hello`, `heartbeat_update`
+- Client→server: close (0x8) and ping/pong (0x9) supported
+- Note in spec: OpenAPI 3.0 limitation around WS documented
+
+#### Confirmed already documented (no changes needed)
+- `GET /api/tasks` — `?priority=`, `?q=`, `?assignee=`, `?status=` filters all present
+- `GET /api/agents/{name}/cycles` — already in spec from Task #107
+- `GET /api/agents/{name}/cycles/{n}` — already in spec from Task #107
+
+#### Updated: POST /api/ceo/command
+- Added SEC-006 input validation documentation:
+  - `command` max length: 1000 characters
+  - ASCII control characters (U+0000–U+001F, U+007F) stripped server-side
+  - Added `maxLength: 1000` constraint to schema
+  - Extended routing rule descriptions (also supports `todo:` / `create task:` prefix variants)
+
+### No Breaking Changes
+All additions are new paths or documentation improvements only.
+
+---
+
+## v1.8 — 2026-03-30 (Task #143)
+
+### New: Missing Endpoints Documented
+
+Audited `server.js` against `openapi_spec.yaml` following Task #143 (Sam TPM review).
+Added three missing paths and updated one endpoint's validation details.
+
+#### Added: GET /api/agents/{name}/health
+- Returns `AgentHealthScore` object with score (0–100), letter grade (A/B/C/D), and five dimensions
+- Dimensions: `heartbeat` (25pts), `activity` (25pts), `status` (20pts), `velocity` (20pts), `recency` (10pts)
+- Added `AgentHealthScore` and `HealthDimension` schemas to `components/schemas`
+- Source: `server.js:1489` (Ivan's v2 health model, Charlie Task #108)
+
+#### Added: GET /api/ws (WebSocket)
+- WebSocket real-time event stream (Task #113, Nick)
+- RFC 6455 upgrade handshake on `/api/ws`
+- Server pushes `hello` on connect, `heartbeat_update` on agent heartbeat changes
+- Client ping/pong and graceful close handled
+- Note included: OpenAPI 3.0 doesn't natively model WS upgrades; entry is for reference
+
+#### Updated: POST /api/ceo/command — Validation Details
+- Added SEC-006 input validation documentation:
+  - `command` is required and non-empty
+  - Maximum length: **1000 characters**
+  - ASCII control characters (U+0000–U+001F, U+007F) stripped (except tab/LF/CR)
+- Added `maxLength: 1000` to request schema
+- Routing: also matches `todo:` and `create task:` prefixes (not just `task:`)
+
+#### Already Documented (confirmed correct)
+- `GET /api/tasks?priority=&q=&assignee=&status=` — all four filters already in spec ✓
+- `GET /api/agents/{name}/cycles` and `GET /api/agents/{name}/cycles/{n}` — already in spec ✓
+
+### No Breaking Changes
+Documentation-only additions and corrections.

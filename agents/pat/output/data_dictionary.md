@@ -3,7 +3,8 @@
 **Designer**: Pat (Database Engineer)
 **Date**: 2026-03-29
 **DB**: PostgreSQL 15+
-**Schema version**: migration_002 (latest applied)
+**Schema version**: migration_005 (messages SQLite — pending apply); migration_002 (PostgreSQL — latest applied)
+**Last updated**: 2026-03-30 Session 10
 
 ---
 
@@ -152,36 +153,37 @@ Each agent invocation / work cycle. One row per Claude Code session.
 
 ## messages
 
-All inter-agent messages and CEO→agent communications.
+All inter-agent messages and CEO→agent communications. **Implementation: SQLite** (`backend/messages.db` via `better-sqlite3`). See `backend/message_bus.js` for schema and endpoints.
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
-| `id` | BIGSERIAL | NOT NULL | auto | Primary key. |
-| `from_agent_id` | UUID | NULL | — | FK → `agents.id`. Sender agent. NULL if sender deleted or system. `ON DELETE SET NULL`. |
-| `from_type` | message_sender_type | NOT NULL | `'agent'` | Sender type: agent, CEO, or system. |
-| `to_agent_id` | UUID | NOT NULL | — | FK → `agents.id`. Recipient. `ON DELETE CASCADE`. |
-| `subject` | TEXT | NULL | — | Optional message subject line. |
-| `body` | TEXT | NOT NULL | — | Message body. |
-| `is_broadcast` | BOOLEAN | NOT NULL | `FALSE` | TRUE = sent to all agents simultaneously. |
-| `read_at` | TIMESTAMPTZ | NULL | — | When the recipient read this message. NULL = unread. |
-| `archived_at` | TIMESTAMPTZ | NULL | — | When the message was archived. NULL = in inbox. |
-| `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Send time. |
+| `id` | INTEGER | NOT NULL | AUTOINCREMENT | Primary key. |
+| `from_agent` | TEXT | NOT NULL | — | Sender agent name (e.g. `"ceo"`, `"alice"`). |
+| `to_agent` | TEXT | NOT NULL | — | Recipient agent name. |
+| `body` | TEXT | NOT NULL | — | Message body. Max 64 KB (CHECK enforced after migration_005). |
+| `priority` | INTEGER | NOT NULL | `5` | 1=highest (CEO), 5=normal, 9=lowest. Range 1–9 (CHECK enforced after migration_005). |
+| `created_at` | TEXT | NOT NULL | `strftime('%Y-%m-%dT%H:%M:%fZ','now')` | ISO-8601 send time (UTC). |
+| `read_at` | TEXT | NULL | `NULL` | ISO-8601 ack time. NULL = unread. |
 
-**Constraints**:
-- `messages_body_nonempty` — CHECK `char_length(trim(body)) > 0`
-- `messages_read_after_created` — CHECK `read_at IS NULL OR read_at >= created_at`
+**Constraints** (enforced at DB level after migration_005; currently enforced by application code only):
+- `CHECK(priority BETWEEN 1 AND 9)` — app code also clamps via `Math.min/max`
+- `CHECK(length(body) <= 65536)` — app code also enforces via `parseBody()` 64 KB limit
 
-**Indexes**:
-- `idx_messages_inbox` — `(to_agent_id, created_at DESC)` WHERE `read_at IS NULL AND archived_at IS NULL` — unread inbox
-- `idx_messages_from_ceo` — `(to_agent_id, created_at DESC)` WHERE `from_type = 'ceo' AND read_at IS NULL` — CEO messages
-- `idx_messages_broadcast` — `(created_at DESC)` WHERE `is_broadcast = TRUE` — broadcast history
+**Indexes** (current schema, as of 2026-03-30):
+- `idx_messages_inbox` — `(to_agent, priority, id)` WHERE `read_at IS NULL` — unread inbox in priority+FIFO order
+- `idx_messages_from` — `(from_agent, created_at)` — present in current schema; no current query uses `from_agent` as filter (candidate for removal in migration_005)
+- `idx_messages_read_at` — `(read_at)` WHERE `read_at IS NOT NULL` — supports auto-vacuum DELETE and `DELETE /api/messages/purge` endpoint
+
+**Retention / Purge**:
+- Auto-vacuum at startup: deletes read messages older than `MB_RETENTION_DAYS` (default 7) days.
+- Manual purge: `DELETE /api/messages/purge?days=N[&unread=true]` — deletes read (or all) messages older than N days.
 
 **Notes**:
-- The current file-based system stores messages as `.md` files in `agents/{name}/chat_inbox/`.
-  When migrating to the DB, filenames encode sender and timestamp; map to `from_agent_id` and `created_at`.
-- Broadcast messages appear once in the `messages` table per recipient (fan-out at write time).
-  `is_broadcast = TRUE` marks them for display grouping.
-- Archiving a message sets `archived_at`; the partial index excludes archived messages from inbox queries.
+- Broadcast messages are fan-out at write time: `POST /api/messages/broadcast` inserts one row per active agent.
+- Delivery is at-least-once. Ack via `POST /api/inbox/:agent/:id/ack` sets `read_at`.
+- Rate limits (in-memory, per sender): 60 DMs/min, 5 broadcasts/min (env: `MB_MSG_RATE_LIMIT`, `MB_BROADCAST_RATE_LIMIT`).
+- PostgreSQL migration design (for future migration): `agents/pat/output/migration_004_message_bus.sql`.
+- migration_005 (`agents/pat/output/migration_005_messages_constraints.sql`) adds CHECK constraints and drops `idx_messages_from` — pending Bob's apply.
 
 ---
 
@@ -351,9 +353,9 @@ Valid values: `agent`, `ceo`, `system`
 | `idx_task_comments_task` | task_comments | btree | `(task_id, created_at DESC)` |
 | `idx_sessions_agent` | sessions | btree | `(agent_id, started_at DESC)` |
 | `idx_sessions_active` | sessions | btree | `(agent_id)` WHERE active |
-| `idx_messages_inbox` | messages | btree | `(to_agent_id, created_at DESC)` WHERE unread |
-| `idx_messages_from_ceo` | messages | btree | `(to_agent_id, created_at DESC)` WHERE CEO unread |
-| `idx_messages_broadcast` | messages | btree | `(created_at DESC)` WHERE broadcast |
+| `idx_messages_inbox` | messages | SQLite partial | `(to_agent, priority, id)` WHERE `read_at IS NULL` |
+| `idx_messages_from` | messages | SQLite | `(from_agent, created_at)` — currently unused; to be dropped in migration_005 |
+| `idx_messages_read_at` | messages | SQLite partial | `(read_at)` WHERE `read_at IS NOT NULL` — supports retention purge |
 | `idx_announcements_recent` | announcements | btree | `(created_at DESC)` |
 | `idx_announcements_pinned` | announcements | btree | `(pinned, created_at DESC)` WHERE pinned |
 | `idx_company_mode_log_recent` | company_mode_log | btree | `(effective_at DESC)` |

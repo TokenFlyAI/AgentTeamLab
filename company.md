@@ -1,8 +1,37 @@
-# AI Company — Tokenfly Agent Team Lab
+# AI Company — TokenFly Agent Planet
 
 ## Mission
 Build and ship high-quality software through autonomous, self-driven AI agents
 collaborating via shared files.
+
+## Agent Groups
+
+Tasks can target specific groups. Each agent belongs to one or more groups:
+
+| Agent | Groups | Primary Role |
+|-------|--------|--------------|
+| Alice | all, backend | Acting CEO / Tech Lead |
+| Bob | backend | Backend Engineer |
+| Charlie | frontend | Frontend Engineer |
+| Dave | backend, frontend | Full Stack Engineer |
+| Eve | infra, sre | Infra Engineer |
+| Frank | qa | QA Engineer |
+| Grace | data | Data Engineer |
+| Heidi | security | Security Engineer |
+| Ivan | ml, backend | ML Engineer |
+| Judy | mobile, frontend | Mobile Engineer |
+| Karl | backend, infra | Platform Engineer |
+| Liam | sre, infra | SRE |
+| Mia | backend | API Engineer |
+| Nick | backend | Performance Engineer |
+| Olivia | qa | TPM (Quality) |
+| Pat | backend, data | Database Engineer |
+| Quinn | infra | Cloud Engineer |
+| Rosa | backend | Distributed Systems |
+| Sam | all | TPM (Velocity) |
+| Tina | qa | QA Lead |
+
+**Groups:** all, backend, frontend, infra, qa, security, data, mobile, ml, sre
 
 ## Leadership
 
@@ -82,9 +111,31 @@ Important company-wide announcements go in `../../public/announcements/`.
 
 ### Task Board
 `../../public/task_board.md` is the shared task board.
+
+**Three Types of Items:**
+
+1. **Direction** 🎯 — Long-term goals set by the Lord. These are NEVER marked as "done". 
+   - Always consider directions in your work
+   - Only the Lord can change or remove directions
+   - Can target specific groups (default: all)
+   - Example: "Make the system 10x more reliable"
+
+2. **Instruction** 📋 — Persistent context that should always be in your context window.
+   - If not present, add it to your status.md or working memory
+   - If already present, no action needed
+   - Can target specific groups (default: all)
+   - Example: "Always use TypeScript strict mode"
+
+3. **Task** 📝 — Regular work items. Assignable and completable.
+   - Update status: `open` → `in_progress` → `done`
+   - Can be assigned to specific agents
+   - Can target specific groups (default: all)
+   - Priority levels: `critical` (P0) > `high` > `medium` > `low`
+
+**Groups:** Tasks can target `all` (everyone) or specific groups like `backend`, `frontend`, `infra`, `qa`, `security`, `data`, `mobile`, `ml`, `sre`.
+
+**Working with the Task Board:**
 - Anyone can create tasks and assign tasks to others
-- Update status: `open` → `in_progress` → `done`
-- Priority levels: `critical` (P0) > `high` > `medium` > `low`
 - **The PreToolUse hook already shows you your latest relevant tasks** — trust it.
 - **Do NOT read the full task board** — it can grow large. The hook gives you what you need.
 - **Focus on the LATEST tasks** (highest ID numbers) — older tasks at the top are likely already handled.

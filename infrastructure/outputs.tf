@@ -77,3 +77,14 @@ output "alarm_composite_complete_outage" {
   description = "Composite P0 alarm — fires when server unreachable AND all agents down"
   value       = aws_cloudwatch_composite_alarm.app_complete_outage.alarm_name
 }
+
+# DNS module outputs (only set when route53_hosted_zone_id is provided)
+output "apex_dns_record" {
+  description = "Apex domain A record FQDN (empty if DNS module disabled)"
+  value       = length(module.dns) > 0 ? module.dns[0].apex_record_fqdn : ""
+}
+
+output "www_dns_record" {
+  description = "www subdomain A record FQDN (empty if DNS module disabled)"
+  value       = length(module.dns) > 0 ? module.dns[0].www_record_fqdn : ""
+}

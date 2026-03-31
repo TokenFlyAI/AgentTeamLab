@@ -4,107 +4,103 @@
 Olivia — TPM 2 (Quality)
 
 ## Date
-2026-03-29 23:45
+2026-03-30 (Cycle 12)
 
 ## Summary
-Strong cycle. Task 44 (QA smoke test) complete, all enum/schema alignment done (Task 55), Docker/container setup passes quality bar. Grace/Ivan/Karl outputs still pending. New pre-existing bug identified: POST /api/mode 500 with valid args.
+System quality is stable. Multiple open tasks have stalled due to agents not picking up assigned work — unblocking DMs sent to Eve, Nick, Heidi, Charlie, Dave. Critical new finding: e2e test suite is polluting agents/alice/persona.md with unbounded test artifacts (197→1076 lines).
 
----
-
-## Reviews Completed This Cycle
+## Reviews Completed
 | Agent | Task/Output | Rating | Issues | Action Required |
 |-------|------------|--------|--------|----------------|
-| Bob | Task #55 — Enum/schema alignment verification | PASS | None | None — all gaps from Pat's data dictionary confirmed fixed |
-| Quinn | Task #49 — Dockerfile, docker-compose, .dockerignore, README | PASS | Minor: public/ not excluded from build context (volume-mounted at runtime) | Document-only note; no fix required |
-| Quinn | infrastructure/ — Terraform IaC (bonus) | PASS | Blocked on AWS credentials, Heidi security review, Liam SNS topics | Review SGs + IAM before cloud deploy |
-| Pat | data_dictionary.md — full schema reference | PASS | Known Gaps section now partially stale (Bob fixed several issues) | Pat should update Known Gaps |
-| Tina | Task #44 — QA smoke test of Dave's integration | PASS | New bug: POST /api/mode 500 with valid args (switch_mode.sh issue) | Bug tracked as QI-010 |
-
----
-
-## Cumulative Reviews (All Cycles)
-
-| Agent | Last Output Reviewed | Quality Rating | Notes |
-|-------|---------------------|----------------|-------|
-| Bob | Task #55 (enum alignment) | PASS | Sessions 1-10: zero regressions, 32 tests passing |
-| Dave | Task 4 (server.js integration) + BUG-5 | PASS | 22/22 e2e tests; Task #56 middleware tests in progress |
-| Charlie | BUG-4/BUG-6 + dashboard | PASS | 25/25 api.spec.js; Task #54 enhancements in progress |
-| Tina | Task #44 completed | PASS | Dave's integration APPROVED; QI-010 flagged |
-| Alice | Architecture Review (Task 1) | PASS | Thorough |
-| Mia | OpenAPI 3.1.0 spec (Task 18) | PASS | Excellent spec |
-| Pat | data_dictionary.md + schema files | PASS | Outstanding DB design; Known Gaps needs minor update |
-| Quinn | Docker + Terraform IaC | PASS | Strong quality; awaiting Heidi security review |
-| Frank | Task #20 (Run test suites) | NOT STARTED | Low urgency now that Bob has 32 tests |
-| Karl | Task #47 (CLI tooling) | IN PROGRESS | in_progress on task board; no output yet |
-| Grace | Task #45 (Metrics analytics) | NOT REVIEWED | open, no output |
-| Ivan | Task #46 (Agent health scoring) | NOT REVIEWED | open, no output |
-| Nick | Task #48 (Load test) | NOT REVIEWED | open, no output |
-| Rosa | Task #50 (Message bus design) | NOT REVIEWED | open, no output |
-| Judy | Task #51 (Mobile dashboard) | NOT REVIEWED | open, no output |
-| Heidi | Task #17 (Security audit) | NOT REVIEWED | High priority; blocks cloud deploy |
-| Eve | Task #53 (PostgreSQL provision) | NOT REVIEWED | Blocks Pat migration |
-| Liam | Task #19 (SRE plan) | PASS (prior) | SNS topics needed for Quinn's CW alarms |
-
----
+| Bob | Task #117 (SEC-003 pipe injection) | PASS | None | None — sanitizeTaskField() correct, 41 tests pass |
+| Charlie | Task #108 (health badge + /api/agents/:name/health) | PASS | None | None — endpoint + dashboard badge working, 70 tests pass |
+| Quinn | Task #103 (SEC-001 auth) | PASS | None | Done and merged |
+| api.js | Agent name validation AGENT_NAME_RE | PASS | None | Good security improvement |
+| api.js | statusMd → status_md rename | PASS | None | Correct deprecation |
+| coverage.spec.js | New tests: smart-start, output/:file | PASS | Test pollution side effect | See QI-014 below |
 
 ## Quality Issues
 | ID | Agent | Severity | Description | Status |
 |----|-------|----------|-------------|--------|
-| QI-010 | server.js | Minor | POST /api/mode returns 500 when switch_mode.sh called without who/reason args. Pre-existing. | OPEN — suggest 400 + helpful error message |
-| QI-001 | Bob/server | Minor | CORS wildcard — acceptable for internal dev tool | ACKNOWLEDGED, no fix needed |
-| QI-006 | Bob | Closed | No middleware unit tests | FIXED — 5 tests added Session 9 |
-| QI-007 | Bob | Closed | No HTTP handler tests | FIXED — 14 tests added Session 9 |
-| QI-002 through QI-009 | various | Closed | All prior quality issues | FIXED |
-| BUG-1 through BUG-6 | various | Closed | All prior bugs | FIXED |
-
----
+| QI-010 | Dave | resolved | POST /api/mode 500 fix (Task #81, verified) | CLOSED |
+| QI-011 | (system) | resolved | SEC-001 zero-auth CRITICAL (Quinn Task #103) | CLOSED |
+| QI-012 | Bob | resolved | SEC-003 pipe injection (Task #117, Bob) | CLOSED |
+| QI-013 | Dave | open | SEC-005 path disclosure in errors (Task #118) | OPEN — DM sent |
+| QI-014 | Tina/Charlie | HIGH | E2E persona tests pollute alice/persona.md every run — grew 197→1076 lines | NEW — Alice+Tina alerted |
+| QI-015 | (system) | medium | 4 agents idle with assigned open tasks (#121 Eve, #113 Nick, #123 Heidi, #119 Charlie) | NEW — DMs sent to all |
+| QI-016 | Bob | WARN | api.js isAuthorized: uses `padEnd()` (space chars) — key + trailing spaces bypasses auth. e.g., "abc123   " passes when API_KEY="abc123". server.js uses correct Buffer.alloc/null-padding. | NEW — Bob DM'd with fix |
 
 ## Risks
 | Risk | Severity | Affected | Mitigation |
 |------|----------|----------|------------|
-| Heidi Task #17 not started | HIGH | Cloud deploy blocked; security posture unknown | Escalate — security audit needed before production |
-| Eve Task #53 not started | HIGH | Pat migration blocked; no PostgreSQL | Escalate if Eve doesn't deliver soon |
-| No dashboard auth | HIGH | Pre-production deployment risk | Heidi must review before any public deployment |
-| Grace/Ivan/Karl/Nick/Rosa/Judy no output | MEDIUM | Multiple open tasks with no visible progress | Alice/Sam should verify agents are active |
-| QI-010 switch_mode.sh 500 | LOW | Mode changes may silently fail | Fix POST /api/mode to return 400 with message |
-
----
+| alice/persona.md unbounded growth | HIGH | Alice context, token waste | Tina must fix persona tests; truncate file |
+| SEC-010+012 unimplemented (metrics auth + CORS) | MEDIUM | /api/metrics/*, mutation CORS | Eve DM'd, Task #121 |
+| SEC-005 unimplemented (path disclosure) | MEDIUM | All error responses | Dave DM'd, Task #118 |
+| BUG-003 e2e flakiness | MEDIUM | CI reliability, 6 tests | Charlie DM'd, Task #119 |
+| Task #114 DB migration needs human | HIGH (external) | PostgreSQL schema | Blocked on human with Docker/psql |
 
 ## QA Coverage
-- Tasks with QA: 5 (Tasks 2, 3, 4, 15, 44)
-- Tasks without QA: 12+ open (45-56 range)
-- Coverage gaps:
-  - Task #47 (Karl CLI) — no QA plan
-  - Task #49 (Quinn Docker) — reviewed by Olivia, no formal test execution
-  - Task #17 (Heidi security) — needs independent review when delivered
-
----
-
-## Test Suite Summary
-| Suite | Owner | Count | Status |
-|-------|-------|-------|--------|
-| backend/api.test.js | Bob | 32 tests | All passing |
-| e2e/metrics.spec.js | Tina | 30 tests | All passing |
-| e2e/api.spec.js | Charlie | 25 tests | All passing |
-| **Total** | | **87 tests** | **All passing** |
-
----
+- Tasks with active QA: #109 (Tina — auth tests), #110 (Frank — message bus tests) — in_progress
+- Pending QA: #113 (WebSocket, when Nick completes), #118, #119, #121
+- Coverage gaps: WebSocket endpoints will need e2e tests after Nick implements
+- E2E suite: 121 tests passing (api+dashboard+metrics). coverage.spec.js growing with new coverage.
 
 ## Trends
-**Improving** vs. prior cycles:
-- All previously identified QI/BUG issues resolved. Clean slate on tracked defects.
-- Test coverage expanded significantly: 87 automated tests across unit + e2e layers.
-- New agents (Quinn) delivering quality work with strong engineering practices.
-- Pat's schema is a quality asset — well-documented, constraint-enforced.
-- **Risk**: Grace, Ivan, Nick, Rosa, Judy have open tasks with no visible output. If blocked or idle, velocity and quality both suffer.
+**Improving**: Security posture — SEC-001, SEC-002, SEC-003 all resolved. Auth middleware live. Task board cleaned up (many done tasks removed).
+**Stable**: Core API quality. Recent commits show good validation (agent name regex, input sanitization).
+**Degrading**: Test hygiene — persona.md pollution is a new systemic problem. Agent task pickup rate dropped.
+
+## Recommendations
+1. **URGENT**: Fix coverage.spec.js persona tests — use test agent or add cleanup. Truncate alice/persona.md to line 197.
+2. **HIGH**: Eve claim Task #121 (SEC-010+012) — DM sent.
+3. **HIGH**: Nick progress Task #113 (WebSocket) — DM sent, Heidi's security brief ready.
+4. **MEDIUM**: Charlie fix BUG-003 (Task #119) — DM sent.
+5. **MEDIUM**: Dave complete Task #118 (SEC-005) — DM sent.
+6. **MEDIUM**: Heidi complete Task #123 (coverage gap report) — DM sent, she's unblocked.
 
 ---
 
-## Recommendations
-1. **Escalate Task #17 (Heidi)** — security audit blocks cloud deployment. Alice should ping Heidi.
-2. **Escalate Task #53 (Eve)** — PostgreSQL provisioning blocks Pat's migration. Pat's work is done; stalled on Eve.
-3. **Fix QI-010** — POST /api/mode should return 400 with helpful message when args missing, not 500. Assign to Dave or Bob as micro-task.
-4. **Pat data dictionary** — Update Known Gaps to reflect Bob's fixes (completed_at, byStatus enum, in_review/cancelled). Cosmetic.
-5. **Check Grace, Ivan, Nick, Rosa, Judy** — Alice/Sam should verify agents are active and not silently blocked.
-6. **Karl Task #47** — In progress on task board but no output. Check Karl's status.
-7. **Charlie Task #54 + Dave Task #56** — When delivered, loop in Tina for QA.
+## Cycle 13 Update — 2026-03-30
+
+### Reviews Completed
+| Agent | Task/Output | Rating | Issues | Action Required |
+|-------|------------|--------|--------|----------------|
+| Heidi | Task #123 — E2E Coverage Gap Report | PASS | 8 untested HIGH/MEDIUM endpoints; SEC-013 already fixed | File new tasks for gap coverage |
+| Frank | Task #110 — message_bus.spec.js (39 tests) | PASS | No auth headers (safe now; needs update for Task #109) | Update board to "done"; add auth headers when #109 lands |
+
+### New Findings
+- **SEC-013 (CLOSED)**: timingSafeEqual padding bypass in isAuthorized() via padEnd — fixed before report published. Buffer.alloc pattern now in use.
+- **Coverage gaps identified**: 8 untested HIGH/MEDIUM endpoints in server.js (start/stop agents, SSE streams, research/:file, knowledge/:file, CEO inbox success path)
+- **backend/api.js isolation**: 8 endpoints not covered by any e2e suite — architectural gap
+
+### Security Track — Cycle 13
+- SEC-001: DONE ✅ | SEC-013: CLOSED ✅ | SEC-002: DONE ✅
+- SEC-003 (#117), SEC-005 (#118), SEC-010/012 (#121): Open
+
+---
+
+## Cycle 14 Update — 2026-03-30
+
+### Reviews Completed
+| Agent | Task/Output | Rating | Issues | Action Required |
+|-------|------------|--------|--------|----------------|
+| Tina/Quinn | Task #109 — E2E Auth Test Suite Update | PASS | None | Board updated to done |
+| Frank/Charlie | Task #119 — BUG-003 reuseExistingServer fix | PASS | None | Board updated to done |
+| Eve/Karl | Task #121 — SEC-010+012 Metrics Auth + CORS | PASS | None | SEC-010: Buffer.alloc+timingSafeEqual correct in agent_metrics_api.js; SEC-012: corsOrigin()+ALLOWED_ORIGINS in server.js |
+
+### Test Suite Status
+- **281/281 e2e tests passing** (up from 205 baseline)
+- Auth headers working: `API_KEY=test` in webServer + `Bearer test` in extraHTTPHeaders
+- `reuseExistingServer: false` prevents rate limit flakiness (BUG-003 CLOSED)
+
+### Security Track — Cycle 14
+- SEC-001: DONE ✅ | SEC-002: DONE ✅ | SEC-003: DONE ✅ | SEC-013: CLOSED ✅
+- SEC-010: DONE ✅ (agent_metrics_api.js — isAuthorized with timingSafeEqual)
+- SEC-012: DONE ✅ (corsOrigin()+ALLOWED_ORIGINS env var in server.js)
+- SEC-005 (#118 Dave): in_progress — last open security finding
+
+### Open Items
+- Task #113 (Nick — WebSocket): in_progress — HIGH priority
+- Task #118 (Dave — SEC-005 path disclosure): in_progress — last open security task
+- Task #110 (Frank): DONE (39 tests) — board already updated
+- Coverage gaps (8 endpoints): Heidi's report filed; tasks needed for agent start/stop and SSE tests

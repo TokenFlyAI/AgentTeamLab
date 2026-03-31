@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tokenfly Agent Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Agent Planet</title>
 <!-- PWA / Mobile -->
 <link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#7c3aed">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Tokenfly">
+<meta name="apple-mobile-web-app-title" content="Agent Planet">
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,17 +31,17 @@ body {
 /* ===== TOP BAR ===== */
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px;
-  background: #0e0e1a;
-  border-bottom: 1px solid #0f3460;
+  padding: 24px 48px;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
   position: sticky; top: 0; z-index: 100;
+  min-height: 80px;
 }
 .topbar-left { display: flex; align-items: center; gap: 16px; }
 .company-name {
-  font-size: 1.3rem; font-weight: 700;
-  background: linear-gradient(135deg, #00ff88, #0f3460);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 2.4rem; font-weight: 700;
+  color: #f0f6fc;
+  letter-spacing: -1px;
 }
 .connection-status {
   display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #888;
@@ -54,14 +55,15 @@ body {
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .uptime { font-size: 0.8rem; color: #888; font-family: 'Courier New', monospace; }
 .mode-badge {
-  padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
-  background: #0f3460; color: #00ff88; text-transform: uppercase;
+  padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 600;
+  background: #238636; color: #fff;
 }
 .topbar-btn {
-  background: none; border: 1px solid #333; color: #ccc; padding: 4px 10px;
-  border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s;
+  background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+  padding: 10px 20px; border-radius: 6px; cursor: pointer;
+  font-size: 0.95rem; transition: all 0.15s; font-weight: 500;
 }
-.topbar-btn:hover { border-color: #00ff88; color: #00ff88; }
+.topbar-btn:hover { background: #30363d; border-color: #8b949e; color: #f0f6fc; }
 .topbar-btn.active-toggle { border-color: #00ff88; color: #00ff88; }
 
 /* ===== RECONNECT BANNER ===== */
@@ -73,26 +75,28 @@ body {
 
 /* ===== TAB BAR ===== */
 .tab-bar {
-  display: flex; gap: 2px; padding: 0 16px;
-  background: #0e0e1a; border-bottom: 1px solid #0f3460;
+  display: flex; gap: 8px; padding: 0 48px;
+  background: #0d1117; border-bottom: 1px solid #21262d;
   overflow-x: auto; flex-wrap: nowrap;
+  min-height: 64px;
 }
 .tab-btn {
-  padding: 10px 18px; background: none; border: none; border-bottom: 3px solid transparent;
-  color: #888; cursor: pointer; font-size: 0.85rem; white-space: nowrap;
-  transition: all 0.2s; font-weight: 500;
+  padding: 18px 32px; background: none; border: none;
+  color: #8b949e; cursor: pointer; font-size: 1.15rem;
+  white-space: nowrap; transition: all 0.15s; font-weight: 600;
+  border-bottom: 2px solid transparent;
 }
-.tab-btn:hover { color: #ccc; background: rgba(15, 52, 96, 0.3); }
-.tab-btn.active { color: #00ff88; border-bottom-color: #00ff88; }
+.tab-btn:hover { color: #c9d1d9; }
+.tab-btn.active { color: #58a6ff; border-bottom-color: #58a6ff; }
 .tab-badge {
-  display: inline-block; background: #00ff88; color: #000; border-radius: 10px;
-  font-size: 0.65rem; padding: 1px 5px; margin-left: 4px; font-weight: 700;
-  vertical-align: middle; min-width: 16px; text-align: center;
+  display: inline-block; background: #58a6ff; color: #fff; border-radius: 12px;
+  font-size: 0.75rem; padding: 2px 8px; margin-left: 6px; font-weight: 700;
+  vertical-align: middle; min-width: 20px; text-align: center;
 }
 .tab-badge:empty { display: none; }
 
 /* ===== MAIN CONTENT ===== */
-.main-content { padding: 20px; max-width: 1600px; margin: 0 auto; }
+.main-content { padding: 32px 48px; max-width: 1600px; margin: 0 auto; }
 .tab-content { display: none; animation: fadeIn 0.25s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -109,51 +113,106 @@ body {
 
 /* ===== CARDS ===== */
 .card {
-  background: #16213e; border: 1px solid #0f3460; border-radius: 10px;
-  padding: 16px; transition: all 0.25s;
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 16px; transition: all 0.15s;
 }
-.card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+.card:hover { border-color: #484f58; }
 
 /* ===== AGENT GRID ===== */
 .agent-filter-bar {
-  display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
 }
 .filter-btn {
-  padding: 6px 14px; border-radius: 20px; border: 1px solid #0f3460;
-  background: none; color: #888; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+  padding: 6px 14px; border-radius: 6px; border: 1px solid #30363d;
+  background: #21262d; color: #8b949e; cursor: pointer;
+  font-size: 0.85rem; transition: all 0.15s;
 }
-.filter-btn.active, .filter-btn:hover { background: #0f3460; color: #00ff88; border-color: #00ff88; }
+.filter-btn:hover { border-color: #484f58; color: #c9d1d9; }
+.filter-btn.active { background: #388bfd; color: #fff; border-color: #388bfd; }
 .bulk-btn {
-  padding: 6px 12px; border-radius: 6px; border: 1px solid #0f3460;
-  background: rgba(15, 52, 96, 0.4); color: #ccc; cursor: pointer; font-size: 0.78rem;
-  transition: all 0.2s; margin-left: auto;
+  padding: 6px 12px; border-radius: 6px; border: 1px solid #30363d;
+  background: #21262d; color: #c9d1d9; cursor: pointer;
+  font-size: 0.8rem; transition: all 0.15s;
 }
-.bulk-btn:hover { background: #0f3460; color: #fff; }
+.bulk-btn:hover { background: #30363d; color: #f0f6fc; }
 .agent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
-.agent-card { cursor: pointer; position: relative; overflow: hidden; }
-.agent-card .card-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+.agent-card { 
+  cursor: pointer; 
+  position: relative; 
+  padding: 16px;
 }
-.agent-card .agent-name { font-weight: 700; font-size: 1rem; }
-.agent-card .agent-role { font-size: 0.75rem; color: #888; margin-top: 2px; }
-.agent-card .agent-status { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
+.agent-card .card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px; gap: 12px;
+}
+.agent-card .agent-name { 
+  font-weight: 600; 
+  font-size: 1rem;
+  color: #f0f6fc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.agent-card .agent-role { 
+  font-size: 0.8rem; 
+  color: #8b949e; 
+  margin-top: 4px; 
+}
+.agent-card .agent-status { 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #c9d1d9;
+  white-space: nowrap;
+}
 .agent-card .agent-task {
-  font-size: 0.8rem; color: #aaa; margin-top: 8px;
+  font-size: 0.85rem; color: #8b949e; margin-top: 8px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .agent-card .agent-meta {
-  display: flex; justify-content: space-between; margin-top: 10px;
-  font-size: 0.7rem; color: #666;
+  display: flex; justify-content: space-between; margin-top: 12px;
+  font-size: 0.75rem; color: #6e7681;
+}
+.agent-card .executor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+.agent-card .executor-badge.claude {
+  background: rgba(0, 136, 255, 0.15);
+  color: #0088ff;
+  border: 1px solid rgba(0, 136, 255, 0.3);
+}
+.agent-card .executor-badge.kimi {
+  background: rgba(147, 51, 234, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(147, 51, 234, 0.3);
 }
 .agent-card .stuck-icon {
-  position: absolute; top: 10px; right: 10px; font-size: 1.1rem;
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 0.9rem;
+  color: #ff6b35;
+  margin-left: 4px;
+  visibility: hidden;
 }
-.agent-card .stuck-icon.visible { display: block; }
+.agent-card .stuck-icon.visible { visibility: visible; }
 .agent-card .agent-actions {
   display: flex; gap: 6px; margin-top: 10px; opacity: 0; transition: opacity 0.15s;
 }
@@ -182,19 +241,20 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
 }
 
-/* status dot colors */
-.dot-active { background: #00ff88; box-shadow: 0 0 4px #00ff88; }
-.dot-idle { background: #ffaa00; box-shadow: 0 0 4px #ffaa00; }
-.dot-offline { background: #ff4444; box-shadow: 0 0 4px #ff4444; }
+/* status dot colors - RUNNING/IDLE/DREAMING system */
+.dot-running { background: #238636; }
+.dot-idle { background: #d29922; }
+.dot-dreaming { background: #1f6feb; }
 
 /* Heartbeat indicator dot */
 .hb-dot {
   width: 8px; height: 8px; border-radius: 50%;
   display: inline-block; flex-shrink: 0; vertical-align: middle;
 }
-.hb-dot-green { background: #00ff88; box-shadow: 0 0 5px #00ff88; animation: hbPulse 2s ease-in-out infinite; }
-.hb-dot-yellow { background: #ffaa00; box-shadow: 0 0 5px #ffaa00; }
-.hb-dot-red { background: #ff4444; box-shadow: 0 0 5px #ff4444; }
+.hb-dot-green { background: #238636; }
+.hb-dot-yellow { background: #d29922; }
+.hb-dot-blue { background: #1f6feb; }
+.hb-dot-red { background: #da3633; }
 @keyframes hbPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
@@ -203,10 +263,9 @@ body {
   font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
   border-radius: 4px; letter-spacing: 0.03em; white-space: nowrap;
 }
-.health-A { background: #003d1f; color: #00ff88; border: 1px solid #00cc66; }
-.health-B { background: #002244; color: #4da8da; border: 1px solid #0f5fa8; }
-.health-C { background: #3d2e00; color: #ffcc44; border: 1px solid #b38a00; }
-.health-D { background: #3d0000; color: #ff6666; border: 1px solid #990000; }
+.health-green  { background: #003d1f; color: #00ff88; border: 1px solid #00cc66; }
+.health-yellow { background: #3d2e00; color: #ffcc44; border: 1px solid #b38a00; }
+.health-red    { background: #3d0000; color: #ff6666; border: 1px solid #990000; }
 
 /* ===== TASKS ===== */
 .task-controls {
@@ -229,7 +288,7 @@ body {
 .task-table tr:hover { background: rgba(15,52,96,0.3); }
 .task-status-select {
   padding: 4px 8px; border-radius: 12px; border: none; cursor: pointer;
-  font-size: 0.75rem; font-weight: 600;
+  font-size: 0.75rem; font-weight: 600; min-height: 44px;
 }
 .task-status-select.status-open { background: #0f3460; color: #4da8da; }
 .task-status-select.status-in_progress { background: #3d2e0f; color: #ffaa00; }
@@ -252,6 +311,7 @@ body {
 .priority-low { color: #00ff88; }
 
 /* ===== TASK SECTION HEADERS (collapsible) ===== */
+.task-section-header { height: 44px; } /* min-height for touch targets (table rows use height as min-height) */
 .task-section-header td {
   background: rgba(15,52,96,0.25); color: #aaa; font-size: 0.78rem;
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
@@ -616,18 +676,23 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-  .agent-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .agent-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .main-content { padding: 24px 32px; }
+  .company-name { font-size: 2rem; }
+  .tab-btn { padding: 14px 24px; font-size: 1rem; }
+  .topbar-btn { font-size: 0.85rem; padding: 8px 16px; }
 }
 @media (max-width: 640px) {
-  .agent-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-  .topbar { flex-wrap: wrap; gap: 8px; }
-  .topbar-right { flex-wrap: wrap; }
-  .tab-btn { padding: 8px 10px; font-size: 0.75rem; }
-  .main-content { padding: 12px; }
+  .agent-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 16px 24px; min-height: auto; }
+  .company-name { font-size: 1.6rem; }
+  .tab-btn { padding: 12px 18px; font-size: 0.95rem; }
+  .main-content { padding: 20px 24px; }
+  #ceo-cmd-bar { padding: 12px 24px; }
   .task-col-created { display: none; }
   /* Task table: tighten padding and font on small screens */
   .task-table th, .task-table td { padding: 7px 7px; font-size: 0.78rem; }
-  .task-status-select { font-size: 0.72rem; padding: 3px 4px; }
+  .task-status-select { font-size: 0.72rem; padding: 3px 4px; min-height: 44px; }
   /* Agent card meta wraps on narrow cards */
   .agent-card .agent-meta { flex-wrap: wrap; gap: 4px; }
   /* Task controls stack vertically */
@@ -638,7 +703,7 @@ body {
 @media (max-width: 480px) {
   .agent-grid { grid-template-columns: 1fr; }
   .topbar-tagline { display: none; }
-  .tab-btn { padding: 6px 8px; font-size: 0.72rem; }
+  .tab-btn { padding: 6px 8px; font-size: 0.72rem; min-height: 44px; }
   .modal-body { padding: 12px; }
   /* Hide assignee column on very small screens to prevent overflow */
   .task-col-assignee { display: none; }
@@ -1088,8 +1153,8 @@ body {
 <!-- ===== TOP BAR ===== -->
 <div class="topbar">
   <div class="topbar-left">
-    <span class="company-name">Tokenfly Agent Lab</span>
-    <span class="topbar-tagline" style="font-size:0.65rem;color:#888;margin-left:10px;font-style:italic;">all agents are created equal</span>
+    <span class="company-name">🪐 Agent Planet</span>
+    <span class="topbar-tagline" style="font-size:0.8rem;color:#666;margin-left:12px;font-weight:400;">all agents are created equal</span>
     <span id="cost-today" title="Today's token spend (click for 7-day)" onclick="showCostDetails()" style="cursor:pointer;margin-left:14px;font-size:0.72rem;color:#ffaa00;font-family:monospace;background:#1a1200;padding:2px 7px;border-radius:10px;border:1px solid #3a2800;">$-.-- today</span>
     <div class="connection-status">
       <span class="status-dot disconnected" id="conn-dot"></span>
@@ -1098,40 +1163,45 @@ body {
   </div>
   <div class="topbar-right">
     <span class="uptime" id="uptime">00:00:00</span>
-    <button class="topbar-btn" id="sound-toggle" title="Toggle notification sound">Sound: OFF</button>
-    <button class="topbar-btn" id="digest-btn" title="Daily Digest">Digest</button>
-    <button class="topbar-btn" id="copy-status-btn" title="Copy Status Report">Copy Report</button>
-    <button class="topbar-btn" id="cmd-palette-btn" title="Command Palette (Ctrl+K)">Ctrl+K</button>
-    <button class="topbar-btn" id="watchdog-btn" title="Restart any agents whose loop is stuck (no heartbeat 15+ min)" onclick="runWatchdog()">🐕 Watchdog</button>
-    <button class="topbar-btn" id="broadcast-btn" title="Broadcast CEO message to all agents" onclick="openBroadcastModal()" style="color:#ffaa00;">📢 Broadcast</button>
-    <button class="topbar-btn" id="mode-switch-btn" title="Switch operating mode" onclick="openModeSwitchModal()">⚙ Switch Mode</button>
-    <span class="mode-badge" id="mode-badge">autonomous</span>
+    <button class="topbar-btn" id="broadcast-btn" title="Broadcast Lord's message to all agents" onclick="openBroadcastModal()" style="color:#ffaa00;font-weight:600;">📢 Broadcast</button>
+    <button class="topbar-btn" id="cmd-palette-btn" title="Command Palette (Ctrl+K)">⌘K</button>
+    <span class="mode-badge" id="mode-badge" style="cursor:pointer;" onclick="openModeSwitchModal()" title="Click to switch mode">autonomous</span>
+    
+    <!-- More Actions Dropdown -->
+    <div style="position:relative;" id="more-actions-menu">
+      <button class="topbar-btn" onclick="toggleMoreActions()" style="display:flex;align-items:center;gap:4px;">⚙ More ▾</button>
+      <div id="more-actions-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:8px;background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:8px 0;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;">
+        <button class="topbar-btn" id="sound-toggle" title="Toggle notification sound" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;">🔔 Sound: OFF</button>
+        <button class="topbar-btn" id="digest-btn" title="Daily Digest" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;">📊 Digest</button>
+        <button class="topbar-btn" id="copy-status-btn" title="Copy Status Report" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;">📋 Copy Report</button>
+        <button class="topbar-btn" id="watchdog-btn" title="Restart stuck agents" onclick="runWatchdog();toggleMoreActions();" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;">🐕 Watchdog</button>
+        <div style="border-top:1px solid #0f3460;margin:8px 0;"></div>
+        <button class="topbar-btn" onclick="openModeSwitchModal();toggleMoreActions();" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;">⚙ Switch Mode</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ===== CEO COMMAND BAR ===== -->
-<div id="ceo-cmd-bar" style="background:#0a0f1a;border-bottom:1px solid #0f3460;padding:5px 16px;display:flex;align-items:center;gap:8px;">
-  <span style="color:#ffaa00;font-size:0.75rem;white-space:nowrap;font-weight:600;">⌘ CEO:</span>
-  <input id="ceo-cmd-input" type="text" placeholder='@bob fix the bug | task: implement X | switch to crazy mode | or just tell alice anything…'
-    style="flex:1;background:#0f1a2e;border:1px solid #1a3a5c;color:#e0e0e0;padding:5px 10px;border-radius:6px;font-size:0.78rem;outline:none;"
+<!-- ===== LORD'S COMMAND BAR ===== -->
+<div id="ceo-cmd-bar" style="background:#0d1117;border-bottom:2px solid #30363d;padding:20px 48px;display:flex;align-items:center;gap:20px;">
+  <span style="color:#58a6ff;font-size:1.3rem;white-space:nowrap;font-weight:700;">Command</span>
+  <input id="ceo-cmd-input" type="text" placeholder='@bob fix the bug  ·  task: title  ·  /mode plan'
+    style="flex:1;background:#161b22;border:2px solid #30363d;color:#c9d1d9;padding:14px 20px;border-radius:8px;font-size:1.1rem;outline:none;"
     onkeydown="if(event.key==='Enter')sendCeoCommand()">
-  <button onclick="sendCeoCommand()" style="background:#0f3460;color:#e0e0e0;border:none;padding:5px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;">Send</button>
-  <span id="ceo-cmd-hint" style="color:#555;font-size:0.7rem;white-space:nowrap;">@agent msg | task: title | /mode name</span>
+  <button onclick="sendCeoCommand()" style="background:#238636;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:1.05rem;font-weight:600;cursor:pointer;">Send</button>
 </div>
 
 <!-- ===== TAB BAR ===== -->
 <div class="tab-bar-wrap">
 <div class="tab-bar" id="tab-bar">
   <button class="tab-btn active" data-tab="agents">Agents <span class="tab-badge" id="badge-agents"></span></button>
-  <button class="tab-btn" data-tab="tasks">Tasks <span class="tab-badge" id="badge-tasks"></span></button>
-  <button class="tab-btn" data-tab="chat">Team Chat <span class="tab-badge" id="badge-chat"></span></button>
-  <button class="tab-btn" data-tab="announcements">Announcements <span class="tab-badge" id="badge-announcements"></span></button>
-  <button class="tab-btn" data-tab="research">Research</button>
-  <button class="tab-btn" data-tab="knowledge">Knowledge</button>
-  <button class="tab-btn" data-tab="consensus">Consensus</button>
+  <button class="tab-btn" data-tab="tasks">Missions <span class="tab-badge" id="badge-tasks"></span></button>
+  <button class="tab-btn" data-tab="chat">Chat <span class="tab-badge" id="badge-chat"></span></button>
+  <button class="tab-btn" data-tab="announcements">News <span class="tab-badge" id="badge-announcements"></span></button>
+  <button class="tab-btn" data-tab="research">Facts</button>
   <button class="tab-btn" data-tab="stats">Stats</button>
   <button class="tab-btn" data-tab="livetail">Live Tail</button>
-  <button class="tab-btn" data-tab="ceo-inbox">CEO Inbox <span class="tab-badge" id="badge-ceo-inbox" style="background:#ff6b35;"></span></button>
+  <button class="tab-btn" data-tab="ceo-inbox">Lord's Inbox <span class="tab-badge" id="badge-ceo-inbox" style="background:#ff6b35;"></span></button>
 </div>
 </div>
 
@@ -1145,21 +1215,33 @@ body {
 
   <!-- TAB: Agents -->
   <div class="tab-content" id="tab-agents" style="display:block;">
-    <div class="agent-filter-bar">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="active" title="Heartbeat &lt; 2 min">Active <span class="hb-dot hb-dot-green" style="width:6px;height:6px;"></span></button>
-      <button class="filter-btn" data-filter="idle" title="Heartbeat 2–10 min">Idle <span class="hb-dot hb-dot-yellow" style="width:6px;height:6px;"></span></button>
-      <button class="filter-btn" data-filter="unknown" title="Heartbeat &gt; 10 min or missing">Unknown <span class="hb-dot hb-dot-red" style="width:6px;height:6px;"></span></button>
-      <button class="filter-btn" data-filter="offline" title="No heartbeat / process not running">Offline <span class="hb-dot hb-dot-red" style="width:6px;height:6px;background:#333;"></span></button>
-      <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:40px;padding:4px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.8rem;text-align:center;">
-      <button class="bulk-btn" style="background:rgba(0,200,100,0.12);border-color:rgba(0,200,100,0.4);color:#00ff88;" onclick="smartStart()" title="Start up to N task-assigned agents (set number on left). Token-conservative.">⚡ Smart Start</button>
-      <button class="bulk-btn" onclick="bulkAction('start')" title="Starts all 20 agents — high token cost">Start All ⚠</button>
-      <button class="bulk-btn" onclick="bulkAction('stop')">Stop All</button>
-      <button class="bulk-btn" onclick="bulkAction('dm')">DM All</button>
-      <span style="font-size:0.72rem;color:#555;margin-left:4px;white-space:nowrap;" title="Check boxes on cards to select">☑ tick cards to select →</span>
-      <button class="bulk-btn" id="start-selected-btn" style="display:none;background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.4);color:#00ff88;" onclick="bulkActionSelected('start')">▶ Start Selected</button>
-      <button class="bulk-btn" id="stop-selected-btn" style="display:none;background:rgba(255,68,68,0.08);border-color:rgba(255,68,68,0.3);color:#ff6b6b;" onclick="bulkActionSelected('stop')">■ Stop Selected</button>
-      <span id="selected-count" style="display:none;font-size:0.8rem;color:#aaa;margin-left:6px;"></span>
+    <!-- Agent Filters -->
+    <div class="agent-filter-bar" style="margin-bottom:16px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span style="color:#666;font-size:0.85rem;font-weight:500;">Filter:</span>
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="running" title="Actively working on task">Running <span class="hb-dot hb-dot-green" style="width:6px;height:6px;"></span></button>
+        <button class="filter-btn" data-filter="idle" title="Available for assignment">Idle <span class="hb-dot hb-dot-yellow" style="width:6px;height:6px;"></span></button>
+        <button class="filter-btn" data-filter="dreaming" title="Doing system/maintenance work">Dreaming <span class="hb-dot hb-dot-blue" style="width:6px;height:6px;background:#4488ff;"></span></button>
+      </div>
+    </div>
+    
+    <!-- Agent Actions -->
+    <div class="agent-filter-bar" style="background:rgba(15,52,96,0.15);padding:12px 16px;border-radius:10px;border:1px solid rgba(15,52,96,0.3);margin-bottom:24px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex:1;">
+        <span style="color:#666;font-size:0.85rem;font-weight:500;">Actions:</span>
+        <input id="smart-start-max" type="number" min="1" max="20" value="3" title="Max agents to start" style="width:44px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:0.85rem;text-align:center;">
+        <button class="bulk-btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.5);color:#00ff88;" onclick="smartStart()" title="Start up to N task-assigned agents">⚡ Smart Start</button>
+        <button class="bulk-btn" onclick="bulkAction('start')" title="Starts all 20 agents">▶ Start All</button>
+        <button class="bulk-btn" onclick="bulkAction('stop')" style="border-color:rgba(255,100,100,0.3);color:#ff8888;">■ Stop All</button>
+        <button class="bulk-btn" onclick="bulkAction('dm')">✉ DM All</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:0.75rem;color:#666;">Select agents to enable actions →</span>
+        <button class="bulk-btn" id="start-selected-btn" style="display:none;background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);color:#00ff88;" onclick="bulkActionSelected('start')">▶ Selected</button>
+        <button class="bulk-btn" id="stop-selected-btn" style="display:none;background:rgba(255,68,68,0.15);border-color:rgba(255,68,68,0.5);color:#ff6b6b;" onclick="bulkActionSelected('stop')">■ Selected</button>
+        <span id="selected-count" style="display:none;font-size:0.85rem;color:#00ff88;font-weight:600;"></span>
+      </div>
     </div>
     <div class="agent-grid" id="agent-grid"></div>
   </div>
@@ -1167,8 +1249,13 @@ body {
   <!-- TAB: Tasks -->
   <div class="tab-content" id="tab-tasks">
     <div class="create-form" id="task-create-form">
-      <h3>Create Task</h3>
+      <h3>Create Mission</h3>
       <div class="form-row">
+        <select id="task-type" style="width:120px;" onchange="onTaskTypeChange()">
+          <option value="task" selected>📝 Task</option>
+          <option value="direction">🎯 Direction</option>
+          <option value="instruction">📋 Instruction</option>
+        </select>
         <input type="text" id="task-title" placeholder="Task title">
         <select id="task-priority">
           <option value="critical">Critical</option>
@@ -1176,17 +1263,43 @@ body {
           <option value="medium" selected>Medium</option>
           <option value="low">Low</option>
         </select>
+        <select id="task-group">
+          <option value="all" selected>📢 All Groups</option>
+          <option value="backend">⚙️ Backend</option>
+          <option value="frontend">🎨 Frontend</option>
+          <option value="infra">🔧 Infra</option>
+          <option value="qa">🧪 QA</option>
+          <option value="security">🔒 Security</option>
+          <option value="data">📊 Data</option>
+          <option value="mobile">📱 Mobile</option>
+          <option value="ml">🤖 ML</option>
+          <option value="sre">📈 SRE</option>
+        </select>
         <select id="task-assignee"><option value="">Assignee...</option></select>
       </div>
       <div class="form-row">
         <textarea id="task-desc" placeholder="Description (optional)"></textarea>
       </div>
       <div class="form-row">
-        <button class="submit-btn" onclick="createTask()">Create Task</button>
+        <button class="submit-btn" onclick="createTask()">Create</button>
+        <span id="task-type-hint" style="color:#666;font-size:0.75rem;margin-left:10px;">Regular work item - can be assigned and completed</span>
       </div>
     </div>
     <div class="task-controls">
       <input type="text" id="task-search" placeholder="Search tasks...">
+      <select id="task-filter-group">
+        <option value="">All Groups</option>
+        <option value="all">📢 All Groups</option>
+        <option value="backend">⚙️ Backend</option>
+        <option value="frontend">🎨 Frontend</option>
+        <option value="infra">🔧 Infra</option>
+        <option value="qa">🧪 QA</option>
+        <option value="security">🔒 Security</option>
+        <option value="data">📊 Data</option>
+        <option value="mobile">📱 Mobile</option>
+        <option value="ml">🤖 ML</option>
+        <option value="sre">📈 SRE</option>
+      </select>
       <select id="task-filter-status">
         <option value="">All Statuses</option>
         <option value="open">Open</option>
@@ -1211,8 +1324,10 @@ body {
       <table class="task-table">
         <thead>
           <tr>
+            <th style="width:90px;">Type</th>
             <th onclick="sortTasks('title')" style="cursor:pointer;user-select:none;">Title <span id="sort-title"></span></th>
             <th onclick="sortTasks('priority')" style="cursor:pointer;user-select:none;">Priority <span id="sort-priority"></span></th>
+            <th style="width:80px;">Group</th>
             <th class="task-col-assignee" onclick="sortTasks('assignee')" style="cursor:pointer;user-select:none;">Assignee <span id="sort-assignee"></span></th>
             <th onclick="sortTasks('status')" style="cursor:pointer;user-select:none;">Status <span id="sort-status"></span></th>
             <th class="task-col-created" onclick="sortTasks('created')" style="cursor:pointer;user-select:none;">Created <span id="sort-created"></span></th>
@@ -1230,7 +1345,7 @@ body {
     <!-- Archive section (hidden by default) -->
     <div id="task-archive-section" style="display:none;margin-top:24px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <h3 style="margin:0;font-size:1rem;color:#888;">Archived Tasks</h3>
+        <h3 style="margin:0;font-size:1rem;color:#888;">Archived Missions</h3>
         <button onclick="archiveDone()" title="Move all done tasks to archive" style="padding:4px 10px;background:rgba(255,165,0,0.1);border:1px solid rgba(255,165,0,0.3);color:#ffa500;border-radius:6px;cursor:pointer;font-size:0.78rem;">Archive Done</button>
       </div>
       <div style="overflow-x:auto;">
@@ -1251,7 +1366,7 @@ body {
       <div class="chat-messages" id="chat-messages"></div>
       <div class="chat-input-area">
         <textarea id="chat-input" placeholder="Type a message..." rows="2"></textarea>
-        <input type="text" id="chat-from" placeholder="Your name" value="CEO">
+        <input type="text" id="chat-from" placeholder="Your name" value="Lord">
         <select id="chat-dm-target">
           <option value="">Broadcast</option>
         </select>
@@ -1271,32 +1386,83 @@ body {
         <textarea id="ann-body" placeholder="Announcement body..." rows="3"></textarea>
       </div>
       <div class="form-row">
-        <input type="text" id="ann-from" placeholder="From" value="CEO">
+        <input type="text" id="ann-from" placeholder="From" value="Lord">
         <button class="submit-btn" onclick="postAnnouncement()">Post</button>
       </div>
     </div>
     <div id="announcements-list"></div>
   </div>
 
-  <!-- TAB: Research -->
+  <!-- TAB: Research (includes Knowledge) -->
   <div class="tab-content" id="tab-research">
-    <div class="global-search" style="margin-bottom:12px;">
-      <input type="text" id="research-search" placeholder="Search research files...">
+    <div style="display:flex;gap:10px;margin-bottom:16px;border-bottom:1px solid #0f3460;padding-bottom:10px;">
+      <button class="filter-btn active" id="research-subtab-files" onclick="switchResearchTab('files')" style="padding:8px 20px;">📄 Agent Files</button>
+      <button class="filter-btn" id="research-subtab-knowledge" onclick="switchResearchTab('knowledge')" style="padding:8px 20px;">📚 Knowledge</button>
+      <button class="filter-btn" id="research-subtab-consensus" onclick="switchResearchTab('consensus')" style="padding:8px 20px;">🤝 Social Facts</button>
     </div>
-    <ul class="research-list" id="research-list"></ul>
-    <div class="research-content-viewer" id="research-viewer"></div>
+    
+    <!-- Research Files Sub-tab -->
+    <div id="research-files-panel">
+      <div class="global-search" style="margin-bottom:12px;">
+        <input type="text" id="research-search" placeholder="Search research files...">
+      </div>
+      <ul class="research-list" id="research-list"></ul>
+      <div class="research-content-viewer" id="research-viewer"></div>
+    </div>
+    
+    <!-- Knowledge Base Sub-tab -->
+    <div id="research-knowledge-panel" style="display:none;">
+      <div id="knowledge-tree"></div>
+      <div class="knowledge-viewer" id="knowledge-viewer"></div>
+    </div>
+    
+    <!-- Consensus Sub-tab -->
+    <div id="research-consensus-panel" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+        <h3 style="margin:0;color:#e0e0e0;font-size:1rem;">Social Facts — Shared Knowledge & Agreements</h3>
+        <button onclick="openAddConsensus()" style="margin-left:auto;background:#0f3460;border:none;color:#e0e0e0;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;">+ Add Entry</button>
+        <button onclick="loadConsensus()" style="background:#16213e;border:1px solid #0f3460;color:#888;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:0.8rem;">↻ Refresh</button>
+      </div>
+      <div id="consensus-filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:0.75rem;">
+        <button class="filter-btn active" data-cfilter="all" onclick="filterConsensus('all')">All</button>
+        <button class="filter-btn" data-cfilter="group" onclick="filterConsensus('group')">Groups</button>
+        <button class="filter-btn" data-cfilter="authority" onclick="filterConsensus('authority')">Authority</button>
+        <button class="filter-btn" data-cfilter="culture" onclick="filterConsensus('culture')">Culture</button>
+        <button class="filter-btn" data-cfilter="decision" onclick="filterConsensus('decision')">Decisions</button>
+        <button class="filter-btn" data-cfilter="relationship" onclick="filterConsensus('relationship')">Relationships</button>
+      </div>
+      <div id="consensus-list"></div>
+    </div>
+    
+    <!-- Add entry modal -->
+    <div id="consensus-add-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#0d1117;border:1px solid #1a3a5c;border-radius:10px;padding:24px;width:500px;max-width:90vw;">
+        <h4 style="margin:0 0 16px;color:#e0e0e0;">Add Consensus Entry</h4>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <select id="consensus-type" style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:7px;border-radius:6px;">
+            <option value="group">Group</option>
+            <option value="authority">Authority</option>
+            <option value="culture">Culture</option>
+            <option value="decision">Decision</option>
+            <option value="relationship">Relationship</option>
+          </select>
+          <textarea id="consensus-content" rows="3" placeholder="Describe the consensus fact…"
+            style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:8px;border-radius:6px;resize:vertical;font-size:0.85rem;"></textarea>
+          <input id="consensus-section" type="text" placeholder="Section (optional, e.g. 'Key Decisions')"
+            style="background:#16213e;border:1px solid #0f3460;color:#e0e0e0;padding:7px;border-radius:6px;font-size:0.85rem;">
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('consensus-add-modal').style.display='none'" style="background:#16213e;border:1px solid #444;color:#888;padding:6px 14px;border-radius:6px;cursor:pointer;">Cancel</button>
+            <button onclick="submitConsensusEntry()" style="background:#0f3460;border:none;color:#e0e0e0;padding:6px 14px;border-radius:6px;cursor:pointer;">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- TAB: Knowledge -->
-  <div class="tab-content" id="tab-knowledge">
-    <div id="knowledge-tree"></div>
-    <div class="knowledge-viewer" id="knowledge-viewer"></div>
-  </div>
-
-  <!-- TAB: Social Consensus Board -->
+  <!-- TAB: Social Facts Panel -->
   <div class="tab-content" id="tab-consensus">
     <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
-      <h3 style="margin:0;color:#e0e0e0;font-size:1rem;">Social Consensus Board — Team Knowledge & Relationships</h3>
+      <h3 style="margin:0;color:#e0e0e0;font-size:1rem;">Social Facts — Shared Knowledge & Agreements</h3>
       <button onclick="openAddConsensus()" style="margin-left:auto;background:#0f3460;border:none;color:#e0e0e0;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;">+ Add Entry</button>
       <button onclick="loadConsensus()" style="background:#16213e;border:1px solid #0f3460;color:#888;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:0.8rem;">↻ Refresh</button>
     </div>
@@ -1367,7 +1533,7 @@ body {
 
   <div class="tab-content" id="tab-ceo-inbox">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <h3 style="margin:0;">CEO Inbox — messages from agents</h3>
+      <h3 style="margin:0;">Lord's Inbox — messages from agents</h3>
       <button onclick="markAllCeoInboxRead()" style="font-size:0.8rem;padding:4px 10px;background:#333;border:1px solid #555;border-radius:4px;cursor:pointer;color:#eee;">Mark all read</button>
     </div>
     <div id="ceo-inbox-unread"></div>
@@ -1393,11 +1559,12 @@ body {
       <button class="modal-tab-btn" data-mtab="statusmd">Status.md</button>
       <button class="modal-tab-btn" data-mtab="todo">Todo</button>
       <button class="modal-tab-btn" data-mtab="persona">Persona</button>
-      <button class="modal-tab-btn" data-mtab="tasks">Tasks</button>
+      <button class="modal-tab-btn" data-mtab="tasks">Missions</button>
       <button class="modal-tab-btn" data-mtab="cycles">Cycles</button>
       <button class="modal-tab-btn" data-mtab="output">Output</button>
       <button class="modal-tab-btn" data-mtab="lastcontext">Last Context</button>
       <button class="modal-tab-btn" data-mtab="livelog">🔴 Live Log</button>
+      <button class="modal-tab-btn" data-mtab="settings">⚙️ Settings</button>
     </div>
     <div class="modal-body">
       <div class="modal-tab-content visible" id="mtab-overview"></div>
@@ -1411,6 +1578,42 @@ body {
       <div class="modal-tab-content" id="mtab-output"></div>
       <div class="modal-tab-content" id="mtab-lastcontext"></div>
       <div class="modal-tab-content" id="mtab-livelog">
+        <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
+          <label style="font-size:0.8rem;color:#888;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="modal-livelog-autoscroll" checked> Auto-scroll
+          </label>
+          <button onclick="clearModalLiveLog()" style="padding:4px 10px;background:#16213e;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;font-size:0.8rem;cursor:pointer;">Clear</button>
+          <span id="modal-livelog-status" style="font-size:0.75rem;color:#888;margin-left:auto;"></span>
+        </div>
+        <div class="log-viewer" id="modal-log-viewer" style="height:420px;"></div>
+      </div>
+      <div class="modal-tab-content" id="mtab-settings">
+        <div style="padding:20px;max-width:500px;">
+          <h3 style="margin:0 0 20px 0;color:#e0e0e0;">Agent Settings</h3>
+          
+          <div style="margin-bottom:24px;">
+            <label style="display:block;font-size:0.85rem;color:#888;margin-bottom:8px;">Executor (AI CLI)</label>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <select id="agent-settings-executor" style="flex:1;padding:10px 14px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.9rem;cursor:pointer;">
+                <option value="claude">🅒 Claude Code</option>
+                <option value="kimi">🅚 Kimi Code</option>
+              </select>
+              <button onclick="saveAgentExecutor()" style="padding:10px 20px;background:#0f3460;border:1px solid #1a5276;border-radius:6px;color:#00ff88;font-size:0.85rem;cursor:pointer;font-weight:600;">Save</button>
+            </div>
+            <p style="font-size:0.75rem;color:#666;margin-top:8px;">Changes take effect on next agent cycle. Session will reset.</p>
+          </div>
+          
+          <div style="padding:16px;background:rgba(0,136,255,0.05);border:1px solid rgba(0,136,255,0.15);border-radius:8px;">
+            <h4 style="margin:0 0 10px 0;font-size:0.85rem;color:#0088ff;">About Executors</h4>
+            <ul style="margin:0;padding-left:18px;font-size:0.8rem;color:#888;line-height:1.6;">
+              <li><strong>Claude Code</strong>: Anthropic's Claude Code CLI — default, stable</li>
+              <li><strong>Kimi Code</strong>: Moonshot AI's Kimi Code CLI — alternative</li>
+              <li>Each executor maintains separate session state</li>
+              <li>Switching executors resets the agent's session</li>
+            </ul>
+          </div>
+        </div>
+      </div>
         <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
           <label style="font-size:0.8rem;color:#888;display:flex;align-items:center;gap:4px;">
             <input type="checkbox" id="modal-livelog-autoscroll" checked> Auto-scroll
@@ -1447,7 +1650,7 @@ body {
 <div class="modal-overlay" id="broadcast-modal-overlay">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <h2>📢 CEO Broadcast</h2>
+      <h2>📢 Lord's Broadcast</h2>
       <button class="modal-close" onclick="closeBroadcastModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -1501,7 +1704,7 @@ body {
         <textarea id="dm-all-message" placeholder="Message to all agents..." rows="3" style="width:100%;padding:10px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-family:inherit;font-size:0.85rem;"></textarea>
       </div>
       <div class="form-row" style="margin-top:10px;">
-        <input type="text" id="dm-all-from" placeholder="From" value="CEO" style="padding:8px 12px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.85rem;">
+        <input type="text" id="dm-all-from" placeholder="From" value="Lord" style="padding:8px 12px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.85rem;">
         <button class="submit-btn" onclick="sendDMAll()">Send to All</button>
       </div>
     </div>
@@ -1592,6 +1795,7 @@ body {
 // ===== STATE =====
 let agents = [];
 let tasks = [];
+let agentHealthCache = {}; // name → {score, grade, dimensions} from /api/agents/:name/health
 let chatMessages = [];
 let selectedAgents = new Set();
 let announcements = [];
@@ -1616,6 +1820,9 @@ let pageLoadTime = Date.now();
 let cmdSelectedIndex = 0;
 let es = null;
 let sseReconnectTimer = null;
+let ws = null;
+let wsReconnectTimer = null;
+let wsConnected = false;
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -1625,8 +1832,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initGlobalSearch();
   restoreTab();
   connectSSE();
+  connectWS();
   refresh();
-  setInterval(refresh, 10000);
+  setInterval(refresh, 30000); // fallback poll — WS/SSE handle real-time updates
   setInterval(updateUptime, 1000);
   updateUptime();
 });
@@ -1687,6 +1895,95 @@ function setConnected(connected) {
   }
 }
 
+
+// ===== WEBSOCKET =====
+function scheduleReconnectWS() {
+  if (wsReconnectTimer !== null) return;
+  wsReconnectTimer = setTimeout(() => {
+    wsReconnectTimer = null;
+    connectWS();
+  }, 5000);
+}
+
+function connectWS() {
+  if (ws) {
+    try { ws.close(); } catch (_) {}
+    ws = null;
+  }
+  try {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}/api/ws`);
+    ws.onopen = () => { wsConnected = true; };
+    ws.onclose = () => { wsConnected = false; ws = null; scheduleReconnectWS(); };
+    ws.onerror = () => { wsConnected = false; };
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        handleWSEvent(msg);
+      } catch (_) {}
+    };
+  } catch (e) {
+    scheduleReconnectWS();
+  }
+}
+
+function handleWSEvent(msg) {
+  switch (msg.type) {
+    case 'task_claimed':
+    case 'task_updated':
+    case 'task_created':
+      // Refresh tasks and agent list (task status affects agent display)
+      safeFetch('/api/tasks').then(raw => {
+        if (!raw) return;
+        tasks = Array.isArray(raw) ? raw : (raw.tasks || []);
+        renderTasks();
+      }).catch(() => {});
+      safeFetch('/api/agents').then(raw => {
+        if (!raw) return;
+        const newAgents = Array.isArray(raw) ? raw : (raw.agents || []);
+        detectCycleCompletions(newAgents);
+        agents = newAgents;
+        newAgents.forEach(a => { if (a.name && a.health) agentHealthCache[a.name] = a.health; });
+        renderAgents();
+      }).catch(() => {});
+      break;
+    case 'mode_changed':
+      safeFetch('/api/mode').then(raw => {
+        if (!raw) return;
+        const badge = document.getElementById('mode-badge');
+        if (badge && raw.mode) badge.textContent = raw.mode;
+      }).catch(() => {});
+      break;
+    case 'heartbeat_update':
+    case 'agents_updated':
+      safeFetch('/api/agents').then(raw => {
+        if (!raw) return;
+        const newAgents = Array.isArray(raw) ? raw : (raw.agents || []);
+        detectCycleCompletions(newAgents);
+        agents = newAgents;
+        newAgents.forEach(a => { if (a.name && a.health) agentHealthCache[a.name] = a.health; });
+        renderAgents();
+      }).catch(() => {});
+      break;
+    default:
+      break;
+  }
+}
+
+
+// ===== AGENT HEALTH =====
+async function fetchAgentHealthScores(names) {
+  if (!names || names.length === 0) return;
+  const results = await Promise.allSettled(
+    names.map(n => safeFetch('/api/agents/' + encodeURIComponent(n) + '/health'))
+  );
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value && typeof r.value.score === 'number') {
+      agentHealthCache[names[i]] = r.value;
+    }
+  });
+}
+
 // ===== REFRESH =====
 async function refresh() {
   try {
@@ -1707,6 +2004,8 @@ async function refresh() {
       const newAgents = Array.isArray(raw0) ? raw0 : (raw0.agents || []);
       detectCycleCompletions(newAgents);
       agents = newAgents;
+      // Populate health cache from inline health data (included in /api/agents response)
+      newAgents.forEach(a => { if (a.name && a.health) agentHealthCache[a.name] = a.health; });
       renderAgents();
       populateAgentDropdowns();
     }
@@ -1896,9 +2195,24 @@ function initTopbar() {
 function toggleSound() {
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('sound-toggle');
-  btn.textContent = 'Sound: ' + (soundEnabled ? 'ON' : 'OFF');
+  btn.innerHTML = (soundEnabled ? '🔔' : '🔕') + ' Sound: ' + (soundEnabled ? 'ON' : 'OFF');
   btn.classList.toggle('active-toggle', soundEnabled);
 }
+
+function toggleMoreActions() {
+  const dropdown = document.getElementById('more-actions-dropdown');
+  const isVisible = dropdown.style.display === 'block';
+  dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('more-actions-menu');
+  const dropdown = document.getElementById('more-actions-dropdown');
+  if (menu && dropdown && !menu.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
 
 // ===== NOTIFICATION SOUND =====
 function playNotifySound() {
@@ -1947,14 +2261,12 @@ function renderAgents() {
   let filtered = Array.isArray(agents) ? [...agents] : [];
 
   if (currentAgentFilter !== 'all') {
-    if (currentAgentFilter === 'active') {
-      filtered = filtered.filter(a => getHeartbeatStatus(a) === 'green');
+    if (currentAgentFilter === 'running') {
+      filtered = filtered.filter(a => getAgentStatus(a) === 'running');
     } else if (currentAgentFilter === 'idle') {
-      filtered = filtered.filter(a => getHeartbeatStatus(a) === 'yellow');
-    } else if (currentAgentFilter === 'unknown') {
-      filtered = filtered.filter(a => getHeartbeatStatus(a) === 'red');
-    } else if (currentAgentFilter === 'offline') {
-      filtered = filtered.filter(a => !a.alive && getAgentStatus(a) !== 'running');
+      filtered = filtered.filter(a => getAgentStatus(a) === 'idle');
+    } else if (currentAgentFilter === 'dreaming') {
+      filtered = filtered.filter(a => getAgentStatus(a) === 'dreaming');
     } else {
       filtered = filtered.filter(a => getAgentStatus(a) === currentAgentFilter);
     }
@@ -1985,28 +2297,36 @@ function renderAgents() {
     const hbColor = getHeartbeatStatus(agent);
     const hbLbl = heartbeatLabel(agent);
     const authErr = agent.auth_error;
-    const health = computeHealthScore(agent);
+    // Use server-side health if cached, otherwise fall back to client-side
+    const serverHealth = agentHealthCache[name];
+    const health = serverHealth
+      ? { score: serverHealth.score, grade: serverHealth.grade,
+          tip: serverHealth.score + '/100 — ' + Object.entries(serverHealth.dimensions || {}).map(([k,v]) => k+':'+v).join(', ') }
+      : computeHealthScore(agent);
+    const healthColor = health.score > 80 ? 'green' : health.score >= 50 ? 'yellow' : 'red';
     const unreadCount = agent.unread_messages || 0;
     const agentTaskCount = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase() === name && (t.status !== 'done' && t.status !== 'cancelled')).length : 0;
+    const executor = agent.executor || 'claude';
+    const executorIcon = executor === 'claude' ? '🅒' : '🅚';
     return '<div class="card agent-card' + (isStaleHb ? ' stale-heartbeat' : '') + (authErr ? ' auth-error-card' : '') + '" data-agent="' + esc(name) + '" onclick="openAgentModal(\'' + esc(name) + '\')">' +
-      '<span class="stuck-icon ' + (isStuck ? 'visible' : '') + '" title="Stuck: idle >5min with task assigned">&#9888;</span>' +
-      (authErr ? '<span style="position:absolute;top:8px;right:10px;font-size:0.7rem;color:#ff4444;background:#1a0000;padding:2px 6px;border-radius:8px;border:1px solid #660000;">🔐 Not logged in</span>' : '') +
-      '<div class="card-header">' +
-        '<div style="display:flex;align-items:flex-start;gap:8px;">' +
-          '<input type="checkbox" class="agent-checkbox" data-agent="' + esc(name) + '" ' + (checked ? 'checked' : '') + ' onclick="toggleAgentSelect(event,\'' + esc(name) + '\')" style="margin-top:4px;cursor:pointer;">' +
-          '<div>' +
-            '<div class="agent-name" style="display:flex;align-items:center;gap:6px;">' +
+      (authErr ? '<div style="position:absolute;top:0;left:0;right:0;background:linear-gradient(90deg,#ff4444,#ff6b35);color:#fff;font-size:0.65rem;padding:2px 8px;text-align:center;font-weight:600;letter-spacing:0.5px;">🔐 AUTH REQUIRED</div>' : '') +
+      '<div class="card-header" style="' + (authErr ? 'margin-top:18px;' : '') + '">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;min-width:0;">' +
+          '<input type="checkbox" class="agent-checkbox" data-agent="' + esc(name) + '" ' + (checked ? 'checked' : '') + ' onclick="toggleAgentSelect(event,\'' + esc(name) + '\')" style="margin-top:6px;cursor:pointer;flex-shrink:0;">' +
+          '<div style="min-width:0;">' +
+            '<div class="agent-name">' +
               '<span class="hb-dot hb-dot-' + hbColor + '" title="' + esc(hbLbl) + '"></span>' +
               esc(name) +
-              (unreadCount > 0 ? '<span style="background:#e74c3c;color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:10px;font-weight:700;" title="Unread inbox messages">' + unreadCount + '</span>' : '') +
-              (agentTaskCount > 0 ? '<span style="background:rgba(0,200,255,0.15);color:#00c8ff;font-size:0.6rem;padding:1px 5px;border-radius:10px;border:1px solid rgba(0,200,255,0.3);" title="Open/in-progress tasks">' + agentTaskCount + ' task' + (agentTaskCount !== 1 ? 's' : '') + '</span>' : '') +
+              '<span class="executor-badge ' + executor + '" title="Executor: ' + executor + '">' + executorIcon + '</span>' +
+              (unreadCount > 0 ? '<span style="background:#e74c3c;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:10px;font-weight:700;flex-shrink:0;" title="Unread inbox messages">' + unreadCount + '</span>' : '') +
+              (agentTaskCount > 0 ? '<span style="background:rgba(0,200,255,0.15);color:#00c8ff;font-size:0.65rem;padding:2px 6px;border-radius:10px;border:1px solid rgba(0,200,255,0.3);flex-shrink:0;" title="Open/in-progress tasks">' + agentTaskCount + ' task' + (agentTaskCount !== 1 ? 's' : '') + '</span>' : '') +
             '</div>' +
             '<div class="agent-role">' + esc(role) + '</div>' +
           '</div>' +
         '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;">' +
-          '<span class="health-badge health-' + health.grade + '" title="' + esc(health.tip) + '">' + health.grade + ' ' + health.score + '</span>' +
-          '<div class="agent-status"><span class="status-dot dot-' + (/^[a-z_-]+$/.test(status) ? status : 'unknown') + '"></span>' + esc(status) + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+          '<span class="health-badge health-' + healthColor + '" title="' + esc(health.tip) + '">' + health.score + '</span>' +
+          '<div class="agent-status"><span class="status-dot dot-' + status + '"></span>' + esc(status.toUpperCase()) + '<span class="stuck-icon ' + (isStuck ? 'visible' : '') + '" title="Stuck: idle >5min with task assigned">⚠</span></div>' +
         '</div>' +
       '</div>' +
       '<div class="agent-task" title="' + esc(task) + '">' + esc(task) + '</div>' +
@@ -2021,10 +2341,13 @@ function renderAgents() {
   }).join('');
 }
 
+// 3-status system: RUNNING / IDLE / DREAMING (no OFFLINE)
+// Agents are either working (RUNNING/DREAMING) or waiting (IDLE)
 function getAgentStatus(agent) {
-  if (agent.status) return agent.status.toLowerCase();
-  if (agent.running === false || agent.pid === null) return 'offline';
-  return 'active';
+  const hbStatus = agent.status?.toLowerCase() || 'idle';
+  if (hbStatus === 'running') return 'running';
+  if (hbStatus === 'dreaming' || hbStatus === 'maintenance' || hbStatus === 'system') return 'dreaming';
+  return 'idle';
 }
 
 function isAgentStuck(agent) {
@@ -2038,13 +2361,13 @@ function isAgentStuck(agent) {
   return elapsed > 5 * 60 * 1000;
 }
 
-// Returns 'green' | 'yellow' | 'red' based on heartbeat_age_ms
+// Returns color based on semantic status
+// RUNNING=green, DREAMING=blue, IDLE=yellow
 function getHeartbeatStatus(agent) {
-  const ageMs = agent.heartbeat_age_ms;
-  if (ageMs == null) return 'red';
-  if (ageMs < 2 * 60 * 1000) return 'green';
-  if (ageMs < 10 * 60 * 1000) return 'yellow';
-  return 'red';
+  const status = getAgentStatus(agent);
+  if (status === 'running') return 'green';
+  if (status === 'dreaming') return 'blue';
+  return 'yellow';
 }
 
 // Returns human-readable heartbeat age label
@@ -2241,6 +2564,28 @@ function agentAction(name, action) {
     });
 }
 
+// Save agent executor setting
+function saveAgentExecutor() {
+  const name = document.getElementById('agent-modal-title').textContent;
+  const executor = document.getElementById('agent-settings-executor').value;
+  
+  fetch('/api/agents/' + encodeURIComponent(name) + '/executor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ executor })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.error) {
+      showToast('Error: ' + d.error);
+    } else {
+      showToast(name + ' executor set to ' + executor);
+      refresh();
+    }
+  })
+  .catch(() => showToast('Failed to save executor'));
+}
+
 function showToast(msg, duration) {
   duration = duration || 3000;
   let toast = document.getElementById('toast-msg');
@@ -2294,7 +2639,7 @@ function doSwitchMode(mode) {
   fetch('/api/mode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mode: mode, who: 'CEO', reason: reason })
+    body: JSON.stringify({ mode: mode, who: 'Lord', reason: reason })
   }).then(r => r.json()).then(d => {
     if (d.ok) {
       document.getElementById('mode-badge').textContent = mode;
@@ -2324,7 +2669,7 @@ function sendBroadcast() {
   fetch('/api/broadcast', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: msg, from: 'ceo' })
+    body: JSON.stringify({ message: msg, from: 'Lord' })
   }).then(r => r.json()).then(d => {
     if (d.ok) {
       closeBroadcastModal();
@@ -2505,6 +2850,7 @@ function sortTasks(field) {
 function renderTasks() {
   const tbody = document.getElementById('task-tbody');
   const search = document.getElementById('task-search').value.toLowerCase();
+  const groupFilter = document.getElementById('task-filter-group').value;
   const statusFilter = document.getElementById('task-filter-status').value;
   const priorityFilter = document.getElementById('task-filter-priority').value;
   const assigneeFilter = document.getElementById('task-filter-assignee').value;
@@ -2514,6 +2860,7 @@ function renderTasks() {
     (t.title || '').toLowerCase().includes(search) ||
     (t.description || '').toLowerCase().includes(search)
   );
+  if (groupFilter) filtered = filtered.filter(t => (t.group || 'all') === groupFilter);
   if (statusFilter) filtered = filtered.filter(t => (t.status || '') === statusFilter);
   if (priorityFilter) filtered = filtered.filter(t => (t.priority || '') === priorityFilter);
   if (assigneeFilter) filtered = filtered.filter(t => (t.assignee || '') === assigneeFilter);
@@ -2530,7 +2877,7 @@ function renderTasks() {
     return 0;
   });
 
-  // Group by status for collapsible sections (only when no status filter active)
+  // Group by type and status for collapsible sections
   function buildTaskRow(t, i) {
     // Ensure id is always a safe integer for inline onclick handlers
     const id = (Number.isInteger(t.id) && t.id > 0) ? t.id : (parseInt(t.id, 10) > 0 ? parseInt(t.id, 10) : i);
@@ -2540,7 +2887,38 @@ function renderTasks() {
     const assigneeOpts = ['', ...agentNames].map(n =>
       '<option value="' + esc(n) + '"' + ((t.assignee || '') === n ? ' selected' : '') + '>' + esc(n || '—') + '</option>'
     ).join('');
+    
+    // Type badge
+    const typeBadge = {
+      direction: '<span style="display:inline-block;padding:2px 6px;background:rgba(255,100,100,0.2);color:#ff6464;border-radius:3px;font-size:0.7rem;font-weight:600;">DIRECTION</span>',
+      instruction: '<span style="display:inline-block;padding:2px 6px;background:rgba(100,150,255,0.2);color:#6496ff;border-radius:3px;font-size:0.7rem;font-weight:600;">INSTRUCTION</span>',
+      task: '<span style="display:inline-block;padding:2px 6px;background:rgba(100,200,100,0.2);color:#64c864;border-radius:3px;font-size:0.7rem;font-weight:600;">TASK</span>'
+    }[t.task_type || 'task'] || '';
+    
+    // Group badge
+    const groupColors = {
+      all: '#888', backend: '#64c8c8', frontend: '#c864c8', infra: '#c8c864', 
+      qa: '#64ff64', security: '#ff6464', data: '#64a0ff', mobile: '#ffa064', 
+      ml: '#a064ff', sre: '#64ffc8'
+    };
+    const groupColor = groupColors[t.group || 'all'] || '#888';
+    const groupBadge = '<span style="display:inline-block;padding:2px 6px;background:' + groupColor + '20;color:' + groupColor + ';border:1px solid ' + groupColor + '40;border-radius:3px;font-size:0.7rem;font-weight:500;">' + (t.group || 'all').toUpperCase() + '</span>';
+    
+    // Direction/Instruction don't have status dropdown - they're persistent
+    const isPersistent = t.task_type === 'direction' || t.task_type === 'instruction';
+    const statusCell = isPersistent 
+      ? '<span style="color:#888;font-size:0.85rem;">—</span>'
+      : '<select class="task-status-select ' + statusClass + '" onchange="updateTaskStatus(' + id + ', this.value)">' +
+        '<option value="open"' + (t.status === 'open' ? ' selected' : '') + '>Open</option>' +
+        '<option value="in_progress"' + (t.status === 'in_progress' ? ' selected' : '') + '>In Progress</option>' +
+        '<option value="blocked"' + (t.status === 'blocked' ? ' selected' : '') + '>Blocked</option>' +
+        '<option value="in_review"' + (t.status === 'in_review' ? ' selected' : '') + '>In Review</option>' +
+        '<option value="done"' + (t.status === 'done' ? ' selected' : '') + '>Done</option>' +
+        '<option value="cancelled"' + (t.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option>' +
+        '</select>';
+    
     return '<tr data-task-id="' + id + '">' +
+      '<td>' + typeBadge + '</td>' +
       '<td style="cursor:pointer;" onclick="openTaskDetail(' + id + ')" title="Click for details">' + esc(t.title || 'Untitled') + (t.description ? ' <span style="color:#555;font-size:0.7rem;">…</span>' : '') + '</td>' +
       '<td><select class="task-status-select ' + prioClass + '" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:inherit;font-size:0.8rem;" onchange="updateTaskField(' + id + ', \'priority\', this.value)">' +
         '<option value="critical"' + (t.priority === 'critical' ? ' selected' : '') + '>critical</option>' +
@@ -2548,15 +2926,9 @@ function renderTasks() {
         '<option value="medium"' + (t.priority === 'medium' ? ' selected' : '') + '>medium</option>' +
         '<option value="low"' + (t.priority === 'low' ? ' selected' : '') + '>low</option>' +
       '</select></td>' +
+      '<td>' + groupBadge + '</td>' +
       '<td class="task-col-assignee"><select class="task-status-select" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;font-size:0.8rem;" onchange="updateTaskField(' + id + ', \'assignee\', this.value)">' + assigneeOpts + '</select></td>' +
-      '<td><select class="task-status-select ' + statusClass + '" onchange="updateTaskStatus(' + id + ', this.value)">' +
-        '<option value="open"' + (t.status === 'open' ? ' selected' : '') + '>Open</option>' +
-        '<option value="in_progress"' + (t.status === 'in_progress' ? ' selected' : '') + '>In Progress</option>' +
-        '<option value="blocked"' + (t.status === 'blocked' ? ' selected' : '') + '>Blocked</option>' +
-        '<option value="in_review"' + (t.status === 'in_review' ? ' selected' : '') + '>In Review</option>' +
-        '<option value="done"' + (t.status === 'done' ? ' selected' : '') + '>Done</option>' +
-        '<option value="cancelled"' + (t.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option>' +
-      '</select></td>' +
+      '<td>' + statusCell + '</td>' +
       '<td class="text-muted task-col-created">' + formatTime(t.created_at || t.created || '') + '</td>' +
       '<td style="white-space:nowrap;">' +
         (t.assignee && t.status === 'done' ?
@@ -2568,7 +2940,7 @@ function renderTasks() {
     '</tr>';
   }
 
-  const colCount = 6;
+  const colCount = 8;
   const SECTION_ORDER = ['in_progress', 'open', 'blocked', 'in_review', 'done', 'cancelled'];
   const SECTION_LABEL = { open: 'Open', in_progress: 'In Progress', blocked: 'Blocked', in_review: 'In Review', done: 'Done', cancelled: 'Cancelled' };
   const SECTION_COLOR = { open: '#4da8da', in_progress: '#ffaa00', blocked: '#ff4444', in_review: '#cc88ff', done: '#00ff88', cancelled: '#555' };
@@ -2605,15 +2977,37 @@ function renderTasks() {
   document.getElementById('task-progress-label').textContent = doneCount + ' / ' + total + ' tasks done (' + pct + '%)';
 }
 
+function onTaskTypeChange() {
+  const type = document.getElementById('task-type').value;
+  const hint = document.getElementById('task-type-hint');
+  const assigneeSelect = document.getElementById('task-assignee');
+  const hints = {
+    direction: '🎯 Long-term goal - Never completed, always consider. Only Lord can change.',
+    instruction: '📋 Persistent context - Always include in your context window.',
+    task: '📝 Regular work - Can be assigned, worked on, and completed.'
+  };
+  hint.textContent = hints[type];
+  // Directions don't need assignees
+  if (type === 'direction') {
+    assigneeSelect.disabled = true;
+    assigneeSelect.value = '';
+  } else {
+    assigneeSelect.disabled = false;
+  }
+}
+
 function createTask() {
   const title = document.getElementById('task-title').value.trim();
   if (!title) return alert('Title required');
+  const taskType = document.getElementById('task-type').value;
   const data = {
     title: title,
     description: document.getElementById('task-desc').value.trim(),
     priority: document.getElementById('task-priority').value,
+    group: document.getElementById('task-group').value,
     assignee: document.getElementById('task-assignee').value,
-    status: 'open'
+    status: 'open',
+    task_type: taskType
   };
   fetch('/api/tasks', {
     method: 'POST',
@@ -2943,7 +3337,7 @@ async function archiveDone() {
 }
 
 // Task filter listeners
-['task-search', 'task-filter-status', 'task-filter-priority', 'task-filter-assignee'].forEach(id => {
+['task-search', 'task-filter-group', 'task-filter-status', 'task-filter-priority', 'task-filter-assignee'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', renderTasks);
   if (el) el.addEventListener('change', renderTasks);
@@ -3168,6 +3562,47 @@ async function viewKnowledge(cat, name) {
   }
 }
 
+// ===== FACTS TAB SUB-NAVIGATION =====
+function switchResearchTab(tab) {
+  const panels = ['files', 'knowledge', 'consensus'];
+  
+  // Hide all panels, show selected
+  panels.forEach(p => {
+    const panel = document.getElementById('research-' + p + '-panel');
+    if (panel) panel.style.display = (p === tab) ? 'block' : 'none';
+  });
+  
+  // Update button states
+  panels.forEach(p => {
+    const btn = document.getElementById('research-subtab-' + p);
+    if (btn) btn.classList.toggle('active', p === tab);
+  });
+  
+  // Load data if needed
+  if (tab === 'consensus') loadConsensus();
+  if (tab === 'knowledge') loadKnowledgeTree();
+  if (tab === 'files') loadResearch();
+}
+
+// Stub functions for knowledge and research loading
+function loadKnowledgeTree() {
+  const tree = document.getElementById('knowledge-tree');
+  if (tree && !tree.dataset.loaded) {
+    tree.innerHTML = '<div style="color:#666;padding:20px;">Knowledge base loading...</div>';
+    tree.dataset.loaded = 'true';
+    // TODO: Implement actual knowledge tree loading
+  }
+}
+
+function loadResearch() {
+  const list = document.getElementById('research-list');
+  if (list && !list.dataset.loaded) {
+    list.innerHTML = '<div style="color:#666;padding:20px;">Research files loading...</div>';
+    list.dataset.loaded = 'true';
+    // TODO: Implement actual research files loading
+  }
+}
+
 // ===== SOCIAL CONSENSUS BOARD =====
 let consensusData = null;
 let consensusFilter = 'all';
@@ -3234,7 +3669,7 @@ async function submitConsensusEntry() {
     const res = await fetch('/api/consensus/entry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, content, section, author: 'ceo' })
+      body: JSON.stringify({ type, content, section, author: 'Lord' })
     });
     const data = await res.json();
     if (res.ok && data.ok) {
@@ -3595,14 +4030,25 @@ async function refreshAgentModal() {
     const progress = a.progress || a.progress_bullets || [];
     const blockers = a.blockers || [];
     const completed = a.completed_tasks || a.completed || [];
-    const safeStatus = /^[a-z_-]+$/.test(status) ? status : 'unknown';
+    const safeStatus = ['running', 'idle', 'dreaming'].includes(status) ? status : 'idle';
+    const executor = a.executor || 'claude';
+    const executorBadge = executor === 'claude' 
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(0,136,255,0.15);color:#0088ff;border:1px solid rgba(0,136,255,0.3);border-radius:4px;font-size:0.75rem;font-weight:600;">🅒 Claude</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(147,51,234,0.15);color:#a855f7;border:1px solid rgba(147,51,234,0.3);border-radius:4px;font-size:0.75rem;font-weight:600;">🅚 Kimi</span>';
     overview.innerHTML =
       '<div class="mb-16"><strong>Status:</strong> <span class="status-dot dot-' + safeStatus + '" style="display:inline-block;vertical-align:middle;"></span> ' + esc(status) + '</div>' +
+      '<div class="mb-16"><strong>Executor:</strong> ' + executorBadge + '</div>' +
       '<div class="mb-16"><strong>Current Task:</strong> ' + esc(task) + '</div>' +
       (progress.length ? '<div class="mb-16"><strong>Progress:</strong><ul style="margin-left:20px;margin-top:4px;">' + progress.map(p => '<li style="font-size:0.85rem;">' + esc(typeof p === 'string' ? p : p.text || JSON.stringify(p)) + '</li>').join('') + '</ul></div>' : '') +
       (blockers.length ? '<div class="mb-16"><strong>Blockers:</strong><ul style="margin-left:20px;margin-top:4px;color:#ff4444;">' + blockers.map(b => '<li style="font-size:0.85rem;">' + esc(typeof b === 'string' ? b : b.text || JSON.stringify(b)) + '</li>').join('') + '</ul></div>' : '') +
       (completed.length ? '<div class="mb-16"><strong>Completed:</strong><ul style="margin-left:20px;margin-top:4px;color:#00ff88;">' + completed.map(c => '<li style="font-size:0.85rem;">' + esc(typeof c === 'string' ? c : c.title || JSON.stringify(c)) + '</li>').join('') + '</ul></div>' : '') +
       '<div class="mb-8 text-muted" style="font-size:0.75rem;">Cycles: ' + (a.cycles || a.cycle_count || 0) + ' | Last update: ' + formatTime(a.last_update || a.updated_at || '') + '</div>';
+    
+    // Update settings tab executor dropdown
+    const executorSelect = document.getElementById('agent-settings-executor');
+    if (executorSelect) {
+      executorSelect.value = executor;
+    }
   }
 
   // Inbox — server returns {unread:[{filename,content,unread:true}], processed:[{filename,content,unread:false}]}
@@ -3634,7 +4080,7 @@ async function refreshAgentModal() {
       (processedMsgs.length ? processedMsgs.slice(-20).map(m => renderMsg(m, '')).join('') : '<p class="text-muted" style="font-size:0.85rem;">No processed messages</p>') +
       '<div style="margin-top:16px;border-top:1px solid #0f3460;padding-top:12px;">' +
         '<div class="form-row"><textarea id="modal-dm-input" placeholder="Send DM to ' + esc(name) + '..." rows="2" style="width:100%;padding:8px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-family:inherit;font-size:0.85rem;"></textarea></div>' +
-        '<div class="form-row" style="margin-top:8px;"><input id="modal-dm-from" value="CEO" style="padding:6px 10px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.85rem;"><button class="submit-btn" onclick="sendModalDM()">Send DM</button></div>' +
+        '<div class="form-row" style="margin-top:8px;"><input id="modal-dm-from" value="Lord" style="padding:6px 10px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.85rem;"><button class="submit-btn" onclick="sendModalDM()">Send DM</button></div>' +
       '</div>';
   }
 
@@ -3915,7 +4361,7 @@ document.getElementById('digest-modal-overlay').addEventListener('click', e => {
 
 // ===== COPY STATUS REPORT =====
 function copyStatusReport() {
-  let report = '# Tokenfly Agent Lab - Status Report\n';
+  let report = '# TokenFly Agent Planet - Status Report\n';
   report += '**Generated:** ' + new Date().toISOString() + '\n\n';
 
   report += '## Agents\n';
@@ -4019,10 +4465,10 @@ function getCommandItems() {
 
   // Tabs
   const tabNames = {
-    agents: 'Agents', tasks: 'Tasks', chat: 'Team Chat',
+    agents: 'Agents', tasks: 'Missions', chat: 'Chat', facts: 'Facts',
     announcements: 'Announcements', research: 'Research',
     knowledge: 'Knowledge', stats: 'Stats', livetail: 'Live Tail',
-    'ceo-inbox': 'CEO Inbox'
+    'ceo-inbox': "Lord's Inbox"
   };
   Object.entries(tabNames).forEach(([key, label]) => {
     items.push({ type: 'tab', label: 'Go to ' + label, action: () => { switchTab(key); closeCommandPalette(); } });

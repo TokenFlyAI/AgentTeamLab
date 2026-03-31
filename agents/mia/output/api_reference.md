@@ -1527,3 +1527,204 @@ Endpoints implemented in `backend/api.js`:
 | `GET /api/agents/:name` inbox | Returns full content (filename, from, timestamp, content) | Returns metadata only: `{ file, read }` — no content (QI-003) |
 | Message field name | `message` | `content` |
 | Endpoint coverage | Full (30+ endpoints) | Core 8 endpoints |
+
+---
+
+## SQLite Message Bus
+
+The SQLite message bus (`backend/message_bus.js`) is a durable queue separate from the file-based `chat_inbox/` system. Implemented as Task #102. All message data is stored in `backend/messages.db`.
+
+**Rate Limits** (in-memory, sliding 1-minute window):
+- `POST /api/messages`: 60 messages/min per sender (`MB_MSG_RATE_LIMIT`)
+- `POST /api/messages/broadcast`: 5 broadcasts/min per sender (`MB_BROADCAST_RATE_LIMIT`)
+- Exceeds limit → `429` with `{ error: "rate limit exceeded: max N messages/min per sender" }`
+
+**Message Schema** (SQLite row):
+```json
+{
+  "id": 42,
+  "from_agent": "alice",
+  "to_agent": "bob",
+  "body": "Message content",
+  "priority": 5,
+  "created_at": "2026-03-30T10:00:00.000Z",
+  "read_at": null
+}
+```
+
+Priority is `1` (highest) to `9` (lowest), default `5`.
+
+---
+
+#### `POST /api/messages`
+
+Send a direct message to one agent via the SQLite message bus.
+
+**Request Body**:
+```json
+{
+  "from": "alice",
+  "to": "bob",
+  "body": "Please review my PR.",
+  "priority": 3
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `from` | string | Yes | Sender agent name |
+| `to` | string | Yes | Recipient agent name |
+| `body` | string | Yes | Message content |
+| `priority` | integer | No | 1–9, default `5` |
+
+**Response** `201`:
+```json
+{ "id": 42, "from": "alice", "to": "bob", "priority": 3 }
+```
+
+**Errors**:
+- `400` — missing/invalid `from`, `to`, or `body`
+- `429` — rate limit exceeded
+
+---
+
+#### `GET /api/inbox/:agent`
+
+List up to 50 unread messages for an agent, ordered by priority ASC then id ASC (FIFO within priority).
+
+Does **not** auto-acknowledge — call `POST /api/inbox/:agent/:id/ack` to mark as read.
+
+**Path Parameters**:
+| Param | Description |
+|-------|-------------|
+| `agent` | Agent name |
+
+**Response** `200`:
+```json
+{
+  "agent": "bob",
+  "unread": 2,
+  "messages": [
+    {
+      "id": 42,
+      "from_agent": "alice",
+      "to_agent": "bob",
+      "body": "Please review my PR.",
+      "priority": 3,
+      "created_at": "2026-03-30T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Errors**:
+- `400` — invalid agent name (must match `[a-zA-Z0-9_-]+`, max 64 chars)
+
+---
+
+#### `POST /api/inbox/:agent/:id/ack`
+
+Acknowledge (mark as read) a specific message. Sets `read_at` timestamp.
+
+**Path Parameters**:
+| Param | Description |
+|-------|-------------|
+| `agent` | Agent name (must match message's `to_agent`) |
+| `id` | Message ID (integer) |
+
+**Response** `200`:
+```json
+{ "id": 42, "acked": true }
+```
+
+**Errors**:
+- `400` — invalid agent name or non-integer `id`
+- `404` — message not found or already acknowledged
+
+---
+
+#### `POST /api/messages/broadcast`
+
+Fan-out: inserts one message per active agent (all directories under `agents/`).
+
+**Request Body**:
+```json
+{
+  "from": "ceo",
+  "body": "Team meeting at 2pm today.",
+  "priority": 2
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `from` | string | Yes | Sender name |
+| `body` | string | Yes | Message content |
+| `priority` | integer | No | 1–9, default `5` |
+
+**Response**:
+- `201` — agents found, messages delivered:
+  ```json
+  { "delivered": 20, "agents": ["alice", "bob", "charlie", "..."] }
+  ```
+- `200` — no active agents found:
+  ```json
+  { "delivered": 0, "agents": [] }
+  ```
+
+**Errors**:
+- `400` — invalid/missing `from` or `body`
+- `429` — rate limit exceeded (5 broadcasts/min per sender)
+
+---
+
+#### `GET /api/messages/queue-depth`
+
+Returns unread message count for all agents, sorted descending.
+
+**Response** `200`:
+```json
+{
+  "total_unread": 47,
+  "by_agent": [
+    { "agent": "alice", "unread": 15 },
+    { "agent": "bob", "unread": 12 }
+  ]
+}
+```
+
+---
+
+#### `DELETE /api/messages/purge`
+
+Delete old messages from the SQLite database. Auto-vacuum also runs at startup (7-day retention by default).
+
+**Query Parameters**:
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `days` | integer | `7` | Delete messages older than N days |
+| `unread` | boolean | `false` | If `true`, also purge unread messages beyond the window |
+
+**Response** `200`:
+```json
+{ "deleted": 123, "retention_days": 7, "include_unread": false }
+```
+
+**Errors**:
+- `400` — `days` is not a valid non-negative integer
+
+---
+
+### Two Messaging Systems Comparison
+
+| Feature | File-Based (`backend/api.js`) | SQLite Bus (`backend/message_bus.js`) |
+|---------|-------------------------------|---------------------------------------|
+| Endpoint | `POST /api/messages/:agent` | `POST /api/messages` |
+| Storage | `agents/{name}/chat_inbox/*.md` | `backend/messages.db` |
+| Required field | `content` | `body` |
+| Read inbox | File listing | `GET /api/inbox/:agent` |
+| Acknowledge | Delete/rename file | `POST /api/inbox/:agent/:id/ack` |
+| Priority | No | Yes (1–9) |
+| Broadcast | No (separate `/api/broadcast` server.js endpoint) | `POST /api/messages/broadcast` |
+| Rate limiting | Server-level only | Per-sender, per-minute |
+| Durability | File system | WAL-mode SQLite |

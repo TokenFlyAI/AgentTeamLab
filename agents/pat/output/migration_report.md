@@ -97,15 +97,18 @@ docker exec tokenfly-postgres \
 
 ### request_metrics columns (migration_002)
 ```
-   Column    |            Type             |
--------------+-----------------------------+
- id          | bigint                      |
- ts          | timestamp with time zone    |
- endpoint    | text                        |
- method      | text                        |
- status_code | integer                     |
- duration_ms | integer                     |
+   Column     |            Type             |
+--------------+-----------------------------+
+ id           | bigint                      |
+ recorded_at  | timestamp with time zone    |
+ endpoint     | text                        |
+ method       | text                        |
+ status_code  | integer                     |
+ duration_ms  | integer                     |
+ agent_id     | uuid                        |
+ is_error     | boolean (generated)         |
 ```
+Note: column was renamed `ts → recorded_at` in a Pat/Bob coordination pass to match `db_sync.js` INSERT statement.
 
 ---
 
@@ -152,3 +155,58 @@ All SQL has been authored and validated for syntax. **Bob or Eve must execute**
 against Eve's provisioned `tokenfly-postgres` container.
 
 Connection: `postgresql://tokenfly:tokenfly_dev@localhost:5432/tokenfly`
+
+---
+
+## Update — Session 10 (2026-03-30)
+
+### New: migration_003_sqlite_message_constraints.sql (SQLite — no Docker needed)
+
+**File:** `backend/migration_003_sqlite_message_constraints.sql`
+**Target:** SQLite `backend/messages.db` (not PostgreSQL)
+**Apply immediately:**
+```bash
+sqlite3 backend/messages.db < backend/migration_003_sqlite_message_constraints.sql
+```
+Adds `CHECK(priority >= 1 AND priority <= 9)`, body/agent name length constraints. Uses table-recreation pattern. Tested — 161 rows migrated cleanly.
+
+### Grace's migration — PENDING GRACE UPDATES
+
+**File (after Grace renames):** `agents/grace/output/migration_005_metrics_integration.sql`
+**Status:** Grace notified (Session 11) — three changes required before applying:
+1. Remove `request_metrics` block (owned by migration_002; IF NOT EXISTS would silently skip it, then views fail)
+2. Update views: `WHERE ts > ...` → `WHERE recorded_at > ...` in `v_endpoint_errors_1h` and `v_endpoint_p95_24h`
+3. Rename file from `migration_003` → `migration_005`
+
+**Note on `output/migration_005_messages_constraints.sql`:** This is a SQLite migration
+(different database) written before `backend/migration_003_sqlite_message_constraints.sql`.
+It is **SUPERSEDED** by the backend/ version. Do not run both — run only:
+`backend/migration_003_sqlite_message_constraints.sql`
+
+---
+
+## Complete Migration Run Order (Updated Session 12)
+
+### PostgreSQL (Eve's docker-compose container)
+```
+1. backend/migration_001_task_board_schema.sql                    (core schema)
+2. backend/migration_002_add_request_metrics.sql                  (request_metrics + is_error + agent_id FK)
+3. agents/pat/output/migration_003_assignee_uuid_fk.sql           (tasks.assignee_id FK backfill)
+4. agents/pat/output/migration_004_message_bus.sql                (message bus priority + NOTIFY + v_inbox_health)
+5. agents/grace/output/migration_005_metrics_integration.sql      ✅ READY — views use recorded_at, no duplicate CREATE TABLE
+```
+
+### SQLite (backend/messages.db — apply independently, no Docker needed)
+```
+backend/migration_003_sqlite_message_constraints.sql
+  sqlite3 backend/messages.db < backend/migration_003_sqlite_message_constraints.sql
+```
+
+### message_bus.js improvements (applied by Bob, 2026-03-30)
+
+Bob implemented FINDING-2 from the db_health_report:
+- Added `idx_messages_read_at ON messages (read_at) WHERE read_at IS NOT NULL` (speeds up cleanup queries)
+- Auto-vacuum on init: deletes read messages older than `MB_RETENTION_DAYS` (default 7) at startup
+- `DELETE /api/messages/purge?days=N` endpoint for on-demand cleanup
+
+Findings FINDING-1 (SQLite CHECK constraints) and FINDING-2 (retention) from `db_health_report.md` are now both addressed.

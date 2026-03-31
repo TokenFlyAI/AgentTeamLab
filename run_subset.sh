@@ -55,7 +55,7 @@ for AGENT in "${AGENTS[@]}"; do
 
             echo "[$(date +%H:%M:%S)] ${AGENT} — cycle ${CYCLE} starting"
             START_TIME=$(date +%s)
-            bash "${COMPANY_DIR}/run_agent.sh" "$AGENT" 2>&1
+            EXECUTOR="${EXECUTOR:-}" bash "${COMPANY_DIR}/run_agent.sh" "$AGENT" 2>&1
             DURATION=$(( $(date +%s) - START_TIME ))
 
             # Fast failure = API error → exponential backoff (30s, 60s, ..., 300s max)

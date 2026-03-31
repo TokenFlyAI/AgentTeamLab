@@ -1,0 +1,231 @@
+{
+  "generated": "2026-03-30T16:08:39.758Z",
+  "observations": 159,
+  "latency_baselines": {
+    "medium": {
+      "mu": 7.2,
+      "sigma": 1.6,
+      "count": 5,
+      "q1": 7,
+      "q3": 7,
+      "lo": 7,
+      "hi": 7
+    },
+    "high": {
+      "mu": 619.5555555555555,
+      "sigma": 1188.8672739468143,
+      "count": 54,
+      "q1": 8,
+      "q3": 53,
+      "lo": -59.5,
+      "hi": 120.5
+    },
+    "low": {
+      "mu": 10,
+      "sigma": 0,
+      "count": 3,
+      "q1": 10,
+      "q3": 10,
+      "lo": 10,
+      "hi": 10
+    },
+    "idle": {
+      "mu": 11.954545454545455,
+      "sigma": 4.776621787673721,
+      "count": 88,
+      "q1": 9,
+      "q3": 12,
+      "lo": 4.5,
+      "hi": 16.5
+    },
+    "unknown": {
+      "mu": 603.5555555555555,
+      "sigma": 1101.495055833067,
+      "count": 9,
+      "q1": 138,
+      "q3": 314,
+      "lo": -126,
+      "hi": 578
+    }
+  },
+  "anomaly_summary": {
+    "total": 24,
+    "critical": 0,
+    "high": 0,
+    "medium": 24
+  },
+  "memory_leak": {
+    "overall": {
+      "slope_mb_per_min": 0.018,
+      "r2": 0.337,
+      "is_trending_up": true
+    },
+    "restarts_detected": 15,
+    "segments": [
+      {
+        "start": 1774851734110,
+        "end": 1774856213311,
+        "points": 6,
+        "slope_mb_per_cycle": 0.83,
+        "r2": 0.553,
+        "is_leak": true
+      },
+      {
+        "start": 1774856243307,
+        "end": 1774856393313,
+        "points": 6,
+        "slope_mb_per_cycle": 3.93,
+        "r2": 0.962,
+        "is_leak": true
+      },
+      {
+        "start": 1774856423314,
+        "end": 1774856603318,
+        "points": 7,
+        "slope_mb_per_cycle": -1.16,
+        "r2": 0.176,
+        "is_leak": false
+      },
+      {
+        "start": 1774856663324,
+        "end": 1774856843333,
+        "points": 7,
+        "slope_mb_per_cycle": -0.15,
+        "r2": 0.016,
+        "is_leak": false
+      },
+      {
+        "start": 1774856873348,
+        "end": 1774857143341,
+        "points": 10,
+        "slope_mb_per_cycle": 0.64,
+        "r2": 0.551,
+        "is_leak": true
+      },
+      {
+        "start": 1774857173338,
+        "end": 1774857263348,
+        "points": 4,
+        "slope_mb_per_cycle": 2,
+        "r2": 0.932,
+        "is_leak": true
+      },
+      {
+        "start": 1774857293342,
+        "end": 1774858493407,
+        "points": 41,
+        "slope_mb_per_cycle": 0.01,
+        "r2": 0.001,
+        "is_leak": false
+      },
+      {
+        "start": 1774858523406,
+        "end": 1774858613417,
+        "points": 4,
+        "slope_mb_per_cycle": 1.23,
+        "r2": 0.699,
+        "is_leak": true
+      },
+      {
+        "start": 1774858643409,
+        "end": 1774858763415,
+        "points": 5,
+        "slope_mb_per_cycle": 0.06,
+        "r2": 0.011,
+        "is_leak": false
+      },
+      {
+        "start": 1774858853416,
+        "end": 1774858913423,
+        "points": 3,
+        "slope_mb_per_cycle": 0.76,
+        "r2": 0.645,
+        "is_leak": true
+      },
+      {
+        "start": 1774858943419,
+        "end": 1774859453449,
+        "points": 18,
+        "slope_mb_per_cycle": -0.11,
+        "r2": 0.024,
+        "is_leak": false
+      },
+      {
+        "start": 1774876728204,
+        "end": 1774876876620,
+        "points": 6,
+        "slope_mb_per_cycle": -1.99,
+        "r2": 0.573,
+        "is_leak": false
+      },
+      {
+        "start": 1774876906818,
+        "end": 1774876996989,
+        "points": 3,
+        "slope_mb_per_cycle": 1.83,
+        "r2": 0.228,
+        "is_leak": false
+      },
+      {
+        "start": 1774877117090,
+        "end": 1774886917936,
+        "points": 26,
+        "slope_mb_per_cycle": 0.37,
+        "r2": 0.145,
+        "is_leak": false
+      }
+    ],
+    "leak_detected": true
+  },
+  "alert_patterns": [
+    {
+      "alert_id": "ALT-002",
+      "count": 13,
+      "rate": 8.2,
+      "first_seen": "2026-03-30T13:18:24.527Z",
+      "last_seen": "2026-03-30T13:25:17.090Z",
+      "verdict": "recurring"
+    },
+    {
+      "alert_id": "ALT-001",
+      "count": 9,
+      "rate": 5.7,
+      "first_seen": "2026-03-30T13:14:20.708Z",
+      "last_seen": "2026-03-30T13:18:24.527Z",
+      "verdict": "recurring"
+    },
+    {
+      "alert_id": "ALT-009",
+      "count": 1,
+      "rate": 0.6,
+      "first_seen": "2026-03-30T06:22:14.110Z",
+      "last_seen": "2026-03-30T06:22:14.110Z",
+      "verdict": "sporadic"
+    }
+  ],
+  "stats": {
+    "observations": 159,
+    "time_span_min": 586,
+    "p99": {
+      "min": 4,
+      "p50": 11,
+      "p95": 2504,
+      "max": 3699,
+      "mean": 251.6,
+      "std": 797.8
+    },
+    "heap_mb": {
+      "min": 0,
+      "p50": 11.1,
+      "p95": 24.9,
+      "max": 40.5,
+      "mean": 12.1
+    },
+    "load_distribution": {
+      "idle": 88,
+      "low": 3,
+      "medium": 5,
+      "high": 54
+    }
+  }
+}

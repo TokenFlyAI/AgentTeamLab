@@ -346,6 +346,10 @@ function stopServer(server) {
 function request(port, method, path, bodyObj) {
   return new Promise((resolve, reject) => {
     const payload = bodyObj !== undefined ? JSON.stringify(bodyObj) : undefined;
+    // Pass API key if the environment has one set (SEC-001 auth)
+    const authHeaders = process.env.API_KEY
+      ? { "Authorization": `Bearer ${process.env.API_KEY}` }
+      : {};
     const opts = {
       hostname: "127.0.0.1",
       port,
@@ -354,6 +358,7 @@ function request(port, method, path, bodyObj) {
       headers: {
         "Content-Type": "application/json",
         ...(payload ? { "Content-Length": Buffer.byteLength(payload) } : {}),
+        ...authHeaders,
       },
     };
     const req = http.request(opts, (res) => {
@@ -654,7 +659,8 @@ function request(port, method, path, bodyObj) {
           port,
           path: "/api/tasks",
           method: "POST",
-          headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(oversized) },
+          headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(oversized),
+            ...(process.env.API_KEY ? { "Authorization": `Bearer ${process.env.API_KEY}` } : {}) },
         };
         const req = http.request(opts, (res) => {
           let raw = "";
@@ -774,8 +780,9 @@ function request(port, method, path, bodyObj) {
 
     const doReq3 = (method, urlPath, body) => new Promise((resolve, reject) => {
       const buf = JSON.stringify(body);
+      const authHeaders = process.env.API_KEY ? { "authorization": `Bearer ${process.env.API_KEY}` } : {};
       const req2 = http.request({ host: "127.0.0.1", port: p3, method, path: urlPath,
-        headers: { "content-type": "application/json", "content-length": Buffer.byteLength(buf) } },
+        headers: { "content-type": "application/json", "content-length": Buffer.byteLength(buf), ...authHeaders } },
         (res2) => {
           let d = "";
           res2.on("data", (c) => d += c);
@@ -842,6 +849,160 @@ function request(port, method, path, bodyObj) {
     }
 
     await new Promise((r) => srv3.close(r));
+  })();
+
+  // ---------------------------------------------------------------------------
+  // Message Bus — integration tests (MB-001 / Task #102)
+  // ---------------------------------------------------------------------------
+  console.log("\nmessage_bus — handleMessageBus integration tests");
+
+  await (async () => {
+    const { initMessageBus, handleMessageBus } = require("./message_bus");
+
+    // Temp dir with agent subdirectories so broadcast can fan-out
+    const mbDir = fs.mkdtempSync(path.join(os.tmpdir(), "mb-test-"));
+    fs.mkdirSync(path.join(mbDir, "agents", "alice"), { recursive: true });
+    fs.mkdirSync(path.join(mbDir, "agents", "bob"),   { recursive: true });
+    fs.mkdirSync(path.join(mbDir, "backend"),          { recursive: true });
+
+    initMessageBus(mbDir);
+
+    /** Spin up a server that delegates to handleMessageBus only */
+    const mbServer = await new Promise((resolve) => {
+      const srv = http.createServer((req, res) => {
+        if (!handleMessageBus(req, res, mbDir)) {
+          res.writeHead(404, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "not found" }));
+        }
+      });
+      srv.listen(0, "127.0.0.1", () => resolve(srv));
+    });
+    const mbPort = mbServer.address().port;
+    const mbReq = (method, urlPath, body) => request(mbPort, method, urlPath, body);
+
+    // 1. POST /api/messages — happy path
+    try {
+      const r = await mbReq("POST", "/api/messages", { from: "alice", to: "bob", body: "hello" });
+      assert.strictEqual(r.status, 201);
+      assert.ok(r.body.id, "response should have id");
+      assert.strictEqual(r.body.from, "alice");
+      assert.strictEqual(r.body.to,   "bob");
+      console.log("  ✓  POST /api/messages: DM delivered");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/messages: DM delivered"); console.error(`     ${e.message}`); failed++; }
+
+    // 2. POST /api/messages — missing 'from'
+    try {
+      const r = await mbReq("POST", "/api/messages", { to: "bob", body: "oops" });
+      assert.strictEqual(r.status, 400);
+      assert.ok(r.body.error.includes("from"), `error should mention 'from': ${r.body.error}`);
+      console.log("  ✓  POST /api/messages: 400 on missing from");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/messages: 400 on missing from"); console.error(`     ${e.message}`); failed++; }
+
+    // 3. POST /api/messages — path-traversal agent name rejected
+    try {
+      const r = await mbReq("POST", "/api/messages", { from: "../evil", to: "bob", body: "pwn" });
+      assert.strictEqual(r.status, 400);
+      console.log("  ✓  POST /api/messages: 400 on path-traversal agent name");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/messages: 400 on path-traversal agent name"); console.error(`     ${e.message}`); failed++; }
+
+    // 4. GET /api/inbox/:agent — returns the DM we sent
+    try {
+      const r = await mbReq("GET", "/api/inbox/bob");
+      assert.strictEqual(r.status, 200);
+      assert.strictEqual(r.body.agent, "bob");
+      assert.ok(r.body.unread >= 1, `expected >=1 unread, got ${r.body.unread}`);
+      const msg = r.body.messages.find((m) => m.from_agent === "alice");
+      assert.ok(msg, "should find alice's message in bob's inbox");
+      assert.strictEqual(msg.body, "hello");
+      console.log("  ✓  GET /api/inbox/:agent: unread message visible");
+      passed++;
+    } catch (e) { console.error("  ✗  GET /api/inbox/:agent: unread message visible"); console.error(`     ${e.message}`); failed++; }
+
+    // 5. GET /api/inbox/:agent — invalid agent name rejected (dot chars fail validAgent regex)
+    try {
+      const r = await mbReq("GET", "/api/inbox/bad.agent.name");
+      assert.strictEqual(r.status, 400);
+      console.log("  ✓  GET /api/inbox/:agent: 400 on invalid agent name");
+      passed++;
+    } catch (e) { console.error("  ✗  GET /api/inbox/:agent: 400 on invalid agent name"); console.error(`     ${e.message}`); failed++; }
+
+    // 6. POST /api/inbox/:agent/:id/ack — ack the message
+    let ackedId;
+    try {
+      const inbox = await mbReq("GET", "/api/inbox/bob");
+      ackedId = inbox.body.messages[0].id;
+      const r = await mbReq("POST", `/api/inbox/bob/${ackedId}/ack`);
+      assert.strictEqual(r.status, 200);
+      assert.strictEqual(r.body.acked, true);
+      console.log("  ✓  POST /api/inbox/:agent/:id/ack: message acked");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/inbox/:agent/:id/ack: message acked"); console.error(`     ${e.message}`); failed++; }
+
+    // 7. GET /api/inbox/:agent — acked message no longer visible
+    try {
+      const r = await mbReq("GET", "/api/inbox/bob");
+      const still = r.body.messages.find((m) => m.id === ackedId);
+      assert.ok(!still, "acked message should not appear in inbox");
+      console.log("  ✓  GET /api/inbox/:agent: acked message no longer returned");
+      passed++;
+    } catch (e) { console.error("  ✗  GET /api/inbox/:agent: acked message no longer returned"); console.error(`     ${e.message}`); failed++; }
+
+    // 8. POST /api/inbox/:agent/:id/ack — double-ack returns 404
+    try {
+      const r = await mbReq("POST", `/api/inbox/bob/${ackedId}/ack`);
+      assert.strictEqual(r.status, 404);
+      console.log("  ✓  POST /api/inbox/:agent/:id/ack: 404 on double-ack");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/inbox/:agent/:id/ack: 404 on double-ack"); console.error(`     ${e.message}`); failed++; }
+
+    // 9. POST /api/messages/broadcast — fan-out to active agents
+    try {
+      const r = await mbReq("POST", "/api/messages/broadcast", { from: "alice", body: "team update" });
+      assert.strictEqual(r.status, 201);
+      assert.ok(r.body.delivered >= 2, `expected >=2 agents, got ${r.body.delivered}`);
+      assert.ok(Array.isArray(r.body.agents), "agents should be array");
+      console.log("  ✓  POST /api/messages/broadcast: fan-out delivered");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/messages/broadcast: fan-out delivered"); console.error(`     ${e.message}`); failed++; }
+
+    // 10. POST /api/messages/broadcast — missing body rejected
+    try {
+      const r = await mbReq("POST", "/api/messages/broadcast", { from: "alice" });
+      assert.strictEqual(r.status, 400);
+      console.log("  ✓  POST /api/messages/broadcast: 400 on missing body");
+      passed++;
+    } catch (e) { console.error("  ✗  POST /api/messages/broadcast: 400 on missing body"); console.error(`     ${e.message}`); failed++; }
+
+    // 11. GET /api/messages/queue-depth — reflects broadcast
+    try {
+      const r = await mbReq("GET", "/api/messages/queue-depth");
+      assert.strictEqual(r.status, 200);
+      assert.ok(typeof r.body.total_unread === "number", "total_unread should be number");
+      assert.ok(Array.isArray(r.body.by_agent), "by_agent should be array");
+      assert.ok(r.body.total_unread >= 2, `expected >=2 unread after broadcast, got ${r.body.total_unread}`);
+      console.log("  ✓  GET /api/messages/queue-depth: reflects broadcast unread count");
+      passed++;
+    } catch (e) { console.error("  ✗  GET /api/messages/queue-depth: reflects broadcast unread count"); console.error(`     ${e.message}`); failed++; }
+
+    // 12. Priority ordering — lower priority number appears first
+    try {
+      await mbReq("POST", "/api/messages", { from: "bob", to: "alice", body: "low-pri",  priority: 9 });
+      await mbReq("POST", "/api/messages", { from: "bob", to: "alice", body: "high-pri", priority: 1 });
+      const r = await mbReq("GET", "/api/inbox/alice");
+      assert.strictEqual(r.status, 200);
+      const msgs = r.body.messages;
+      const highIdx = msgs.findIndex((m) => m.body === "high-pri");
+      const lowIdx  = msgs.findIndex((m) => m.body === "low-pri");
+      assert.ok(highIdx < lowIdx, `high-pri (idx ${highIdx}) should appear before low-pri (idx ${lowIdx})`);
+      console.log("  ✓  GET /api/inbox/:agent: priority ordering respected");
+      passed++;
+    } catch (e) { console.error("  ✗  GET /api/inbox/:agent: priority ordering respected"); console.error(`     ${e.message}`); failed++; }
+
+    await new Promise((r) => mbServer.close(r));
+    fs.rmSync(mbDir, { recursive: true, force: true });
   })();
 
   // ---------------------------------------------------------------------------

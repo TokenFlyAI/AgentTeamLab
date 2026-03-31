@@ -9,7 +9,8 @@
 
 | Risk ID | Title | Severity | Owner | Status |
 |---------|-------|----------|-------|--------|
-| RR-001 | No auth on /api endpoints | P1-High | Quinn (Task #103) | In Progress |
+| RR-001 | No auth on /api endpoints (core) | P1-High | Quinn (Task #103) | Resolved 2026-03-30 |
+| RR-001b | No auth on /api/metrics/* endpoints (SEC-010) | P2-Medium | Eve (Task #121) | Open |
 | RR-002 | task_board.md parsed on every request (no cache) | P2-Medium | Bob | Open |
 | RR-003 | SSE clients have no timeout — connections leak | P1-High | Liam | Resolved 2026-03-30 |
 | RR-004 | server.js crash = total outage (no process supervisor) | P0-Critical | Eve | Resolved 2026-03-30 |
@@ -38,7 +39,9 @@ All `/api/*` endpoints are unauthenticated. Any client that can reach the server
 3. **Verification**: `curl -X POST http://localhost:3199/api/tasks -d '{"title":"test"}'` — should return 401
 
 ### Status
-In Progress — Quinn's Task #103 (SEC-001) implements API key auth. Tina's Task #109 will update e2e tests once auth ships.
+**RESOLVED 2026-03-30** — Quinn's Task #103 (SEC-001) shipped: `isAuthorized()` middleware added to server.js. Auth via `Authorization: Bearer <key>` or `X-API-Key` header; `API_KEY` env var configures the key. Tina's Task #109 (e2e auth test updates) is in progress.
+
+**Remaining gap**: `/api/metrics/*` endpoints (agent_metrics_api.js) are not yet covered — tracked as RR-001b, Eve's Task #121.
 
 ---
 
@@ -223,3 +226,24 @@ Open — Charlie assigned (Task #119).
 | Add local process supervisor (pm2) | P0 | Eve (Task #84) | Done |
 | Alert if sseClients > 50 | P2 | Liam | Open (enhancement) |
 | Rate limiter reset endpoint for tests | P2 | Charlie (Task #119) | Open |
+| Fix ALT-005 false positive (agents idle vs system down) | P2 | Liam | Done (cycle 6) |
+
+---
+
+## RR-007 — ALT-005 False Positive: "System Down" When Agents Idle
+
+### Observed Behavior
+ALT-005 fired P0-Critical "system may be down" whenever all agent heartbeats were stale — including the expected case of agents being intentionally stopped between work cycles. This caused alert fatigue and unnecessary P0 noise.
+
+### Root Cause
+`heartbeat_monitor.js` fired ALT-005 as P0 solely based on agent liveness without checking whether the dashboard/API itself was reachable. Agent idle state ≠ system outage.
+
+### Fix Applied (2026-03-30 Cycle 6)
+Added HTTP liveness check to `http://localhost:3199/api/health` before escalating ALT-005:
+- **Dashboard up + agents idle** → P2-Info "All agents idle — dashboard healthy"
+- **Dashboard unreachable + agents stale** → P0-Critical (true outage)
+
+Severity transitions handled idempotently — no re-notification to Alice on repeated idle cycles.
+
+### Status
+RESOLVED — heartbeat_monitor.js updated and restarted (PID 75247).

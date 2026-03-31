@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tokenfly Mobile Dashboard — Prototype</title>
 <style>
 /* ===== BASE ===== */
@@ -56,7 +56,8 @@ body {
   position: fixed;
   bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 430px;
-  height: 56px;
+  height: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: #0e0e1a;
   border-top: 1px solid #0f3460;
   z-index: 200;
@@ -81,14 +82,14 @@ body {
 .nav-badge:empty { display: none; }
 
 /* ===== MAIN CONTENT ===== */
-.main-content { padding: 12px 12px 72px; }
+.main-content { padding: 12px 12px calc(72px + env(safe-area-inset-bottom)); }
 .screen { display: none; }
 .screen.active { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
 
 /* ===== CEO FAB ===== */
 .ceo-fab {
-  position: fixed; bottom: 68px; right: 12px;
+  position: fixed; bottom: calc(68px + env(safe-area-inset-bottom)); right: 12px;
   width: 48px; height: 48px; border-radius: 50%;
   background: #ffaa00; color: #000; font-weight: 700; font-size: 1rem;
   border: none; cursor: pointer; z-index: 190;
@@ -106,7 +107,7 @@ body {
 .pill {
   padding: 5px 14px; border-radius: 20px; font-size: 0.75rem; white-space: nowrap;
   background: #16213e; border: 1px solid #0f3460; color: #888; cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s; min-height: 44px; display: inline-flex; align-items: center;
 }
 .pill.active { background: #0f3460; color: #00ff88; border-color: #00ff88; }
 
@@ -165,17 +166,17 @@ body {
 }
 .task-search-bar input {
   flex: 1; padding: 8px 12px; background: #16213e; border: 1px solid #0f3460;
-  border-radius: 8px; color: #e0e0e0; font-size: 0.85rem; outline: none;
+  border-radius: 8px; color: #e0e0e0; font-size: 1rem; outline: none;
 }
 .task-search-bar select {
   padding: 8px 8px; background: #16213e; border: 1px solid #0f3460;
-  border-radius: 8px; color: #e0e0e0; font-size: 0.78rem; outline: none;
+  border-radius: 8px; color: #e0e0e0; font-size: 1rem; outline: none; min-height: 44px;
 }
 .task-group-header {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 4px; font-size: 0.8rem; font-weight: 600;
   color: #888; cursor: pointer; user-select: none;
-  border-bottom: 1px solid #0f3460; margin-bottom: 8px;
+  border-bottom: 1px solid #0f3460; margin-bottom: 8px; min-height: 44px;
 }
 .task-group-header .count-badge {
   background: #0f3460; color: #888; padding: 1px 7px; border-radius: 10px;
@@ -212,7 +213,7 @@ body {
   display: flex; gap: 6px; margin-top: 8px;
 }
 .task-card-btn {
-  min-height: 36px; padding: 0 12px;
+  min-height: 44px; padding: 0 12px;
   background: #0f3460; color: #e0e0e0;
   border: none; border-radius: 6px; font-size: 0.72rem; cursor: pointer;
 }
@@ -234,18 +235,18 @@ body {
 /* ===== CHAT ===== */
 .chat-container { display: flex; flex-direction: column; height: calc(100vh - 120px); }
 .chat-messages { flex: 1; overflow-y: auto; padding: 8px 0; }
-.chat-msg { margin-bottom: 12px; }
+.chat-msg { margin-bottom: 12px; display: flex; flex-direction: column; align-items: flex-start; }
+.chat-msg.own { align-items: flex-end; }
 .chat-msg-header { font-size: 0.7rem; color: #888; margin-bottom: 2px; }
 .chat-msg-header .from { color: #00ff88; font-weight: 600; }
 .chat-msg-body {
   background: #16213e; border: 1px solid #0f3460;
   border-radius: 10px 10px 10px 2px; padding: 8px 12px;
-  font-size: 0.85rem; display: inline-block; max-width: 90%;
+  font-size: 1rem; max-width: 90%;
 }
 .chat-msg.own .chat-msg-body {
   background: #0f3460; border-color: #1a5276;
   border-radius: 10px 10px 2px 10px;
-  float: right;
 }
 .chat-input-area {
   border-top: 1px solid #0f3460; padding: 10px 0 0;
@@ -253,7 +254,7 @@ body {
 }
 .chat-input-area textarea {
   width: 100%; padding: 9px 12px; background: #16213e; border: 1px solid #0f3460;
-  border-radius: 8px; color: #e0e0e0; font-size: 0.85rem; outline: none;
+  border-radius: 8px; color: #e0e0e0; font-size: 1rem; outline: none;
   resize: none; font-family: inherit;
 }
 .chat-row {
@@ -261,7 +262,7 @@ body {
 }
 .chat-row input {
   flex: 1; padding: 9px 12px; background: #16213e; border: 1px solid #0f3460;
-  border-radius: 8px; color: #e0e0e0; font-size: 0.82rem; outline: none;
+  border-radius: 8px; color: #e0e0e0; font-size: 1rem; outline: none;
 }
 .send-btn {
   min-height: 44px; padding: 0 20px;
@@ -276,12 +277,13 @@ body {
 }
 .bottom-sheet-overlay.open { display: block; }
 .bottom-sheet {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
   width: 100%; max-width: 430px;
   background: #0e0e1a; border-top: 1px solid #0f3460; border-radius: 16px 16px 0 0;
-  padding: 16px; z-index: 301;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); z-index: 301;
   transition: transform 0.25s ease;
 }
+.bottom-sheet.open { transform: translateX(-50%) translateY(0); }
 .sheet-handle {
   width: 36px; height: 4px; background: #333; border-radius: 2px;
   margin: 0 auto 14px;
@@ -289,7 +291,7 @@ body {
 .sheet-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: #ccc; }
 .sheet-input {
   width: 100%; padding: 10px 14px; background: #16213e; border: 1px solid #0f3460;
-  border-radius: 8px; color: #e0e0e0; font-size: 0.9rem; outline: none;
+  border-radius: 8px; color: #e0e0e0; font-size: 1rem; outline: none;
   margin-bottom: 10px; font-family: inherit;
 }
 .sheet-hints { margin-bottom: 14px; }
@@ -730,11 +732,13 @@ function toggleGroup(id) {
 
 function openSheet() {
   document.getElementById('sheet-overlay').classList.add('open');
+  document.getElementById('ceo-sheet').classList.add('open');
   document.getElementById('ceo-input').focus();
 }
 
 function closeSheet() {
   document.getElementById('sheet-overlay').classList.remove('open');
+  document.getElementById('ceo-sheet').classList.remove('open');
 }
 
 // Close sheet on escape

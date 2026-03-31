@@ -46,6 +46,10 @@ const SCHEMA = `
 
   CREATE INDEX IF NOT EXISTS idx_messages_from
     ON messages (from_agent, created_at);
+
+  CREATE INDEX IF NOT EXISTS idx_messages_read_at
+    ON messages (read_at)
+    WHERE read_at IS NOT NULL;
 `;
 
 // ---------------------------------------------------------------------------
@@ -65,6 +69,16 @@ function initMessageBus(dir) {
   db.pragma("journal_mode = WAL");   // concurrent reads + writes
   db.pragma("synchronous = NORMAL"); // durable on crash, faster than FULL
   db.exec(SCHEMA);
+
+  // Auto-vacuum: delete read messages older than retention window at startup
+  const retentionDays = parseInt(process.env.MB_RETENTION_DAYS || "7", 10);
+  const vacuumed = db.prepare(
+    "DELETE FROM messages WHERE read_at IS NOT NULL AND julianday(read_at) < julianday('now', ?)"
+  ).run(`-${retentionDays} days`);
+  if (vacuumed.changes > 0) {
+    console.log(`[message_bus] Auto-vacuum removed ${vacuumed.changes} read messages older than ${retentionDays} days`);
+  }
+
   console.log(`[message_bus] SQLite ready at ${dbPath}`);
   return true;
 }
@@ -130,7 +144,9 @@ function parseBody(req) {
       });
     });
     req.on("error", (err) => settle(() => reject(err)));
-    req.on("close", () => settle(() => reject(new Error("request aborted"))));
+    // Only treat close as an abort if the request body wasn't fully received yet.
+    // On keep-alive connections, 'close' can fire after 'end' — don't double-reject.
+    req.on("close", () => { if (!req.complete) settle(() => reject(new Error("request aborted"))); });
   });
 }
 
@@ -156,9 +172,11 @@ function json(res, status, body) {
 function postMessage(req, res, dir) {
   parseBody(req).then((data) => {
     const { from, to, body, priority = 5 } = data || {};
+    const MAX_BODY_LEN = 4096;
     if (!from || !validAgent(String(from))) return json(res, 400, { error: "invalid 'from'" });
     if (!to   || !validAgent(String(to)))   return json(res, 400, { error: "invalid 'to'" });
     if (!body || !String(body).trim())       return json(res, 400, { error: "'body' required" });
+    if (String(body).length > MAX_BODY_LEN) return json(res, 400, { error: `'body' must be ≤${MAX_BODY_LEN} chars` });
     if (!checkRateLimit(_msgWindows, String(from), MSG_RATE_LIMIT)) {
       return json(res, 429, { error: `rate limit exceeded: max ${MSG_RATE_LIMIT} messages/min per sender` });
     }
@@ -169,26 +187,35 @@ function postMessage(req, res, dir) {
     );
     const info = stmt.run(String(from), String(to), String(body), pri);
     json(res, 201, { id: info.lastInsertRowid, from, to, priority: pri });
-  }).catch((err) => json(res, 400, { error: err.message }));
+  }).catch((err) => {
+    if (err.message === "invalid JSON") return json(res, 400, { error: "invalid JSON body" });
+    console.error("[postMessage] error:", err); json(res, 500, { error: "internal server error" });
+  });
 }
 
 /**
- * GET /api/inbox/:agent
- * Returns up to 50 unread messages in priority+FIFO order.
+ * GET /api/inbox/:agent[?limit=N&offset=N]
+ * Returns unread messages in priority+FIFO order.
+ * limit: max results (1-100, default 50). offset: skip N rows (default 0).
  * Does NOT auto-mark as read — call POST /api/inbox/:agent/:id/ack to ack.
  */
-function getInbox(req, res, agentName) {
+function getInbox(req, res, agentName, query) {
   if (!validAgent(agentName)) return json(res, 400, { error: "invalid agent name" });
+
+  const rawLimit = parseInt((query && query.get("limit")) || "50", 10);
+  const rawOffset = parseInt((query && query.get("offset")) || "0", 10);
+  const limit = (!isNaN(rawLimit) && rawLimit >= 1 && rawLimit <= 100) ? rawLimit : 50;
+  const offset = (!isNaN(rawOffset) && rawOffset >= 0) ? rawOffset : 0;
 
   const rows = db.prepare(`
     SELECT id, from_agent, to_agent, body, priority, created_at
     FROM messages
     WHERE to_agent = ? AND read_at IS NULL
     ORDER BY priority ASC, id ASC
-    LIMIT 50
-  `).all(agentName);
+    LIMIT ? OFFSET ?
+  `).all(agentName, limit, offset);
 
-  json(res, 200, { agent: agentName, unread: rows.length, messages: rows });
+  json(res, 200, { agent: agentName, unread: rows.length, limit, offset, messages: rows });
 }
 
 /**
@@ -220,8 +247,10 @@ function ackMessage(req, res, agentName, msgId) {
 function postBroadcast(req, res, dir) {
   parseBody(req).then((data) => {
     const { from, body, priority = 5 } = data || {};
+    const MAX_BODY_LEN = 4096;
     if (!from || !validAgent(String(from))) return json(res, 400, { error: "invalid 'from'" });
     if (!body || !String(body).trim())       return json(res, 400, { error: "'body' required" });
+    if (String(body).length > MAX_BODY_LEN) return json(res, 400, { error: `'body' must be ≤${MAX_BODY_LEN} chars` });
     if (!checkRateLimit(_bcastWindows, String(from), BROADCAST_RATE_LIMIT)) {
       return json(res, 429, { error: `rate limit exceeded: max ${BROADCAST_RATE_LIMIT} broadcasts/min per sender` });
     }
@@ -241,7 +270,10 @@ function postBroadcast(req, res, dir) {
     insert(agents);
 
     json(res, 201, { delivered: agents.length, agents });
-  }).catch((err) => json(res, 400, { error: err.message }));
+  }).catch((err) => {
+    if (err.message === "invalid JSON") return json(res, 400, { error: "invalid JSON body" });
+    console.error("[postBroadcast] error:", err); json(res, 500, { error: "internal server error" });
+  });
 }
 
 /**
@@ -261,6 +293,38 @@ function getQueueDepth(req, res) {
   json(res, 200, { total_unread: total, by_agent: rows });
 }
 
+/**
+ * DELETE /api/messages/purge
+ * Query params: ?days=N (default 7) — delete read messages older than N days.
+ * Also accepts ?unread=true to also purge unread messages beyond the window.
+ * Returns: { deleted: number, retention_days: number }
+ */
+function purgeMessages(req, res) {
+  let parsed;
+  try { parsed = new URL(req.url, "http://localhost"); } catch (_) {
+    return json(res, 400, { error: "invalid URL" });
+  }
+  const daysParam = parsed.searchParams.get("days");
+  const days = daysParam ? parseInt(daysParam, 10) : 7;
+  if (isNaN(days) || days < 0) return json(res, 400, { error: "'days' must be a non-negative integer" });
+
+  const includeUnread = parsed.searchParams.get("unread") === "true";
+  const offset = `-${days} days`;
+
+  let result;
+  if (includeUnread) {
+    result = db.prepare(
+      "DELETE FROM messages WHERE julianday(created_at) < julianday('now', ?)"
+    ).run(offset);
+  } else {
+    result = db.prepare(
+      "DELETE FROM messages WHERE read_at IS NOT NULL AND julianday(read_at) < julianday('now', ?)"
+    ).run(offset);
+  }
+
+  json(res, 200, { deleted: result.changes, retention_days: days, include_unread: includeUnread });
+}
+
 // ---------------------------------------------------------------------------
 // Router — returns true if request was handled
 // ---------------------------------------------------------------------------
@@ -271,6 +335,12 @@ function handleMessageBus(req, res, dir) {
   try { parsed = new URL(req.url, "http://localhost"); } catch (_) { return false; }
   const pathname = parsed.pathname;
   const method   = req.method.toUpperCase();
+
+  // DELETE /api/messages/purge
+  if (method === "DELETE" && pathname === "/api/messages/purge") {
+    purgeMessages(req, res);
+    return true;
+  }
 
   // POST /api/messages/broadcast
   if (method === "POST" && pathname === "/api/messages/broadcast") {
@@ -290,10 +360,10 @@ function handleMessageBus(req, res, dir) {
     return true;
   }
 
-  // GET /api/inbox/:agent
+  // GET /api/inbox/:agent[?limit=N&offset=N]
   const inboxMatch = pathname.match(/^\/api\/inbox\/([^/]+)$/);
   if (method === "GET" && inboxMatch) {
-    getInbox(req, res, inboxMatch[1]);
+    getInbox(req, res, inboxMatch[1], parsed.searchParams);
     return true;
   }
 

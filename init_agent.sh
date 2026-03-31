@@ -1,12 +1,22 @@
 #!/bin/bash
 # init_agent.sh — Scaffold a new agent from scratch
-# Usage: bash init_agent.sh <name> <role> [<specialty>]
-# Example: bash init_agent.sh vera "DevOps Engineer" "Kubernetes, Helm, GitOps"
+# Usage: bash init_agent.sh <name> <role> [<specialty>] [<executor>]
+# Example: bash init_agent.sh vera "DevOps Engineer" "Kubernetes, Helm, GitOps" "kimi"
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
 NAME="$1"
 ROLE="$2"
 SPECIALTY="${3:-General Engineering}"
+EXECUTOR="${4:-claude}"
+
+# Source executor config helper
+source "${COMPANY_DIR}/lib/executor_config.sh"
+
+# Validate executor
+if [ "$EXECUTOR" != "claude" ] && [ "$EXECUTOR" != "kimi" ]; then
+    echo "Warning: Invalid executor '$EXECUTOR', defaulting to 'claude'"
+    EXECUTOR="claude"
+fi
 
 usage() {
     echo "Usage: $0 <name> <role> [<specialty>]"
@@ -177,6 +187,9 @@ else
     echo "$NEW_ROW" >> "$TEAM_DIR"
 fi
 
+# Create executor.txt
+set_executor "$NAME" "$EXECUTOR" "$COMPANY_DIR"
+
 echo "Agent '${NAME}' created successfully!"
 echo ""
 echo "Files created:"
@@ -185,6 +198,7 @@ echo "  ${AGENT_DIR}/persona.md"
 echo "  ${AGENT_DIR}/heartbeat.md"
 echo "  ${AGENT_DIR}/status.md  (empty)"
 echo "  ${AGENT_DIR}/todo.md    (empty)"
+echo "  ${AGENT_DIR}/executor.txt → ${EXECUTOR}"
 echo "  ${AGENT_DIR}/chat_inbox/processed/"
 echo "  ${AGENT_DIR}/logs/"
 echo "  ${AGENT_DIR}/knowledge/"
@@ -192,4 +206,5 @@ echo ""
 echo "Added to: public/team_directory.md"
 echo ""
 echo "To start: bash run_subset.sh ${NAME}"
+echo "To switch executor: echo 'kimi' > ${AGENT_DIR}/executor.txt"
 echo "To add to run_all.sh: edit the AGENTS array"

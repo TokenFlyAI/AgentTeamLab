@@ -94,6 +94,35 @@ Key API endpoints:
 - `SESSION_MAX_CYCLES=5` — how many cycles per session before reset
 - `SESSION_FORCE_FRESH=1` — force a fresh start, ignoring saved session
 
+## Executors (Claude + Kimi)
+
+The platform supports both **Claude Code CLI** and **Kimi Code CLI** as agent executors:
+
+| Feature | Claude Code | Kimi Code |
+|---------|-------------|-----------|
+| **CLI** | `claude -p ...` | `kimi -p ...` |
+| **Session Resume** | `--resume <id>` | `--session <id>` |
+| **Badge** | 🅒 Blue | 🅚 Purple |
+
+### Configuration
+
+**Per-agent (highest priority):**
+```bash
+echo "kimi" > agents/bob/executor.txt
+```
+
+**Via Dashboard:**
+- Open agent modal → ⚙️ Settings tab → Select executor
+
+**Global default:** Edit `public/executor_config.md`
+
+### Switching Executors
+
+When you change an agent's executor:
+- Session resets (fresh start next cycle)
+- Separate session state maintained per executor
+- Works with session resume for each executor independently
+
 ## Team (20 agents)
 
 ### Leadership
@@ -124,7 +153,8 @@ bash status.sh
 # Smart start (token-conservative: only agents with actual work)
 bash smart_run.sh
 # Or via dashboard API:
-curl -X POST http://localhost:3199/api/agents/smart-start
+curl -X POST http://localhost:3199/api/agents/smart-start \
+  -H "Authorization: Bearer $API_KEY"
 
 # Start specific agents
 bash run_subset.sh alice bob charlie dave eve
@@ -143,21 +173,26 @@ done
 # CEO quick command (smart routing)
 curl -X POST http://localhost:3199/api/ceo/command \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_KEY" \
   -d '{"command":"@bob please fix the rate limiting bug"}'
 
 # Create a task via quick command
 curl -X POST http://localhost:3199/api/ceo/command \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_KEY" \
   -d '{"command":"task: Implement WebSocket support for real-time agent updates"}'
 
 # Check today's token spend
-curl http://localhost:3199/api/cost
+curl http://localhost:3199/api/cost \
+  -H "Authorization: Bearer $API_KEY"
 
 # View cycle history for alice
-curl http://localhost:3199/api/agents/alice/cycles
+curl http://localhost:3199/api/agents/alice/cycles \
+  -H "Authorization: Bearer $API_KEY"
 
 # Run watchdog (restart stuck agents)
-curl -X POST http://localhost:3199/api/agents/watchdog
+curl -X POST http://localhost:3199/api/agents/watchdog \
+  -H "Authorization: Bearer $API_KEY"
 
 # Switch to crazy mode
 bash switch_mode.sh crazy ceo "Plans ready, go fast"

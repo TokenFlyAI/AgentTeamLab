@@ -23,6 +23,7 @@
 'use strict';
 
 const fs = require('fs');
+const http = require('http');
 const path = require('path');
 
 // ── Configuration ──────────────────────────────────────────────────────────────
@@ -37,6 +38,10 @@ const BASE_DIR = path.resolve(__dirname, '..');
 const AGENTS_DIR = path.join(BASE_DIR, 'agents');
 const STATUS_FILE = path.join(BASE_DIR, 'public', 'reports', 'heartbeat_status.json');
 const ALERTS_FILE = path.join(BASE_DIR, 'public', 'reports', 'active_alerts.md');
+
+const DASHBOARD_URL = 'http://localhost:3199/api/health';
+const DASHBOARD_TIMEOUT_MS = 5000;
+const API_KEY = process.env.API_KEY || '';
 
 const THRESHOLDS = {
   alive_min_pct: 0.25,  // ALT-006: < 25% alive → P1
@@ -115,12 +120,21 @@ function loadExistingAlerts() {
 }
 
 function fireAlert(alertId, severity, message) {
-  if (!activeAlerts.has(alertId)) {
-    console.error(`[ALERT ${severity}] ${alertId}: ${message}`);
-    activeAlerts.set(alertId, { severity, message, triggeredAt: isoNow() });
-    writeAlertsFile();
-    notifyAlice(alertId, severity, message);
+  const existing = activeAlerts.get(alertId);
+  if (existing && existing.severity === severity) {
+    // Same severity already active — no change, no re-notification
+    return;
   }
+  // New alert or severity transition (e.g. P0→P2 or P2→P0)
+  if (existing) {
+    console.log(`[TRANSITION] ${alertId}: ${existing.severity} → ${severity}`);
+  } else {
+    console.error(`[ALERT ${severity}] ${alertId}: ${message}`);
+  }
+  activeAlerts.set(alertId, { severity, message, triggeredAt: existing ? existing.triggeredAt : isoNow() });
+  writeAlertsFile();
+  // Only page Alice on new P0/P1 alerts, not on severity downgrades or P2 info
+  if (!existing) notifyAlice(alertId, severity, message);
 }
 
 function clearAlert(alertId) {
@@ -161,6 +175,25 @@ function writeAlertsFile() {
   }
 }
 
+// ── Dashboard Liveness Check ───────────────────────────────────────────────────
+
+/**
+ * Returns a promise resolving to true if the dashboard API responds, false otherwise.
+ * Used to distinguish "agents idle" (system healthy) from "system down" (true P0).
+ */
+function isDashboardAlive() {
+  return new Promise((resolve) => {
+    const reqOpts = { timeout: DASHBOARD_TIMEOUT_MS };
+    if (API_KEY) reqOpts.headers = { Authorization: `Bearer ${API_KEY}` };
+    const req = http.get(DASHBOARD_URL, reqOpts, (res) => {
+      resolve(res.statusCode >= 200 && res.statusCode < 500);
+      res.resume(); // consume body
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => { req.destroy(); resolve(false); });
+  });
+}
+
 // ── Agent Discovery ────────────────────────────────────────────────────────────
 
 function discoverAgents() {
@@ -176,7 +209,7 @@ function discoverAgents() {
 
 // ── Heartbeat Check ────────────────────────────────────────────────────────────
 
-function checkHeartbeats() {
+async function checkHeartbeats() {
   const now = Date.now();
   const agents = discoverAgents();
 
@@ -225,9 +258,19 @@ function checkHeartbeats() {
   }
 
   // ── ALT-005: 0 agents alive ──
+  // Check dashboard liveness to distinguish "agents idle" from "system down"
   if (aliveCount === 0) {
-    fireAlert('ALT-005', 'P0-Critical',
-      `All ${totalCount} agents have stale heartbeats — system may be down`);
+    const dashboardUp = await isDashboardAlive();
+    if (dashboardUp) {
+      // Dashboard healthy — agents are idle/stopped, not a system failure
+      // Downgrade to P2-Info to reduce alert noise; transitions handled by fireAlert
+      fireAlert('ALT-005', 'P2-Info',
+        `All ${totalCount} agents idle — dashboard healthy, no agents running`);
+    } else {
+      // Dashboard unreachable AND no agent heartbeats — true outage
+      fireAlert('ALT-005', 'P0-Critical',
+        `All ${totalCount} agents have stale heartbeats and dashboard is unreachable — system may be down`);
+    }
     lowLivenessWindowCount++;
   } else {
     clearAlert('ALT-005');
@@ -285,8 +328,11 @@ console.log(`[heartbeat_monitor] Status → ${STATUS_FILE}`);
 console.log(`[heartbeat_monitor] Alive threshold: ${ALIVE_THRESHOLD_MS / 1000}s`);
 
 // Run immediately, then on interval
-checkHeartbeats();
+checkHeartbeats().catch((err) => console.error('[heartbeat_monitor] checkHeartbeats error:', err));
 
 if (!runOnce) {
-  setInterval(checkHeartbeats, INTERVAL_MS);
+  setInterval(
+    () => checkHeartbeats().catch((err) => console.error('[heartbeat_monitor] checkHeartbeats error:', err)),
+    INTERVAL_MS
+  );
 }

@@ -32,3 +32,13 @@ output "sg_rds_id" {
   description = "Security group ID for RDS"
   value       = aws_security_group.rds.id
 }
+
+output "sg_vpc_endpoints_id" {
+  description = "Security group ID for VPC interface endpoints (ECR, SSM, Secrets Manager, Logs)"
+  value       = aws_security_group.vpc_endpoints.id
+}
+
+output "vpc_endpoint_s3_id" {
+  description = "ID of the S3 gateway endpoint (free; routes ECR layer traffic through AWS network)"
+  value       = aws_vpc_endpoint.s3.id
+}

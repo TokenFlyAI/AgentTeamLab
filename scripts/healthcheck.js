@@ -10,7 +10,7 @@
  * Writes active alerts to public/reports/active_alerts.md
  *
  * Usage:
- *   node scripts/healthcheck.js [--port 3100] [--interval 30]
+ *   node scripts/healthcheck.js [--port 3199] [--interval 30]
  *   node scripts/healthcheck.js --once    # Run once and exit (useful for scripts)
  *
  * Alert thresholds (from sre_plan.md):
@@ -35,6 +35,7 @@ const runOnce = args.includes('--once');
 const PORT = portIdx >= 0 ? parseInt(args[portIdx + 1], 10) : 3100;
 const INTERVAL_MS = intervalIdx >= 0 ? parseInt(args[intervalIdx + 1], 10) * 1000 : 30_000;
 const BASE_DIR = path.resolve(__dirname, '..');
+const API_KEY = process.env.API_KEY || '';
 
 const HEALTH_URL = `http://localhost:${PORT}/api/health`;
 const LOG_FILE = path.join(BASE_DIR, 'public', 'reports', 'health_check_log.jsonl');
@@ -134,7 +135,10 @@ function writeAlertsFile() {
 function checkHealth() {
   const startMs = Date.now();
 
-  const req = http.get(HEALTH_URL, { timeout: THRESHOLDS.timeout_ms }, (res) => {
+  const reqOptions = { timeout: THRESHOLDS.timeout_ms };
+  if (API_KEY) reqOptions.headers = { Authorization: `Bearer ${API_KEY}` };
+
+  const req = http.get(HEALTH_URL, reqOptions, (res) => {
     let body = '';
     res.on('data', (chunk) => { body += chunk; });
     res.on('end', () => {

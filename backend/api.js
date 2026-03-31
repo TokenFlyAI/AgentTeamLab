@@ -37,10 +37,16 @@ function isAuthorized(req) {
   const xApiKey    = req.headers["x-api-key"] || "";
   const provided   = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : xApiKey;
   if (!provided) return false;
+  // SEC-013: use null-byte padding (Buffer.alloc) not space-padding (padEnd).
+  // padEnd makes "abc " === "abc" after padding — a trailing-space bypass.
   try {
-    const a = Buffer.from(provided.padEnd(API_KEY.length));
-    const b = Buffer.from(API_KEY.padEnd(provided.length));
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
+    const keyLen = Math.max(provided.length, API_KEY.length, 1);
+    const a = Buffer.alloc(keyLen);
+    const b = Buffer.alloc(keyLen);
+    Buffer.from(provided).copy(a);
+    Buffer.from(API_KEY).copy(b);
+    const lengthMatch = provided.length === API_KEY.length;
+    return lengthMatch && crypto.timingSafeEqual(a, b);
   } catch (_) {
     return false;
   }
@@ -50,9 +56,8 @@ function isAuthorized(req) {
 // Request metrics — file-based queue (zero-dep)
 // Written as JSONL; drained to PostgreSQL by backend/db_sync.js
 // ---------------------------------------------------------------------------
-const METRICS_QUEUE = path.resolve(__dirname, "metrics_queue.jsonl");
-
-function recordRequestMetric(endpoint, method, statusCode, durationMs) {
+function recordRequestMetric(endpoint, method, statusCode, durationMs, dir) {
+  const metricsQueue = path.join(dir || DEFAULT_DIR, "backend", "metrics_queue.jsonl");
   const row = JSON.stringify({
     endpoint,
     method,
@@ -60,7 +65,7 @@ function recordRequestMetric(endpoint, method, statusCode, durationMs) {
     duration_ms: Math.round(durationMs),
     recorded_at: new Date().toISOString(),
   });
-  try { fs.appendFileSync(METRICS_QUEUE, row + "\n"); } catch (_) { /* non-fatal */ }
+  try { fs.appendFileSync(metricsQueue, row + "\n"); } catch (_) { /* non-fatal */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -105,11 +110,14 @@ function sanitizeTaskField(value) {
 // Agents
 // ---------------------------------------------------------------------------
 
+const AGENT_NAME_RE = /^[a-zA-Z0-9_-]+$/;
+
 function listAgents(dir) {
   const agentsDir = path.join(dir, "agents");
-  const names = listDir(agentsDir).filter(
-    (n) => fs.statSync(path.join(agentsDir, n)).isDirectory()
-  );
+  const names = listDir(agentsDir).filter((n) => {
+    if (!AGENT_NAME_RE.test(n) || n.length > 64) return false;
+    try { return fs.statSync(path.join(agentsDir, n)).isDirectory(); } catch (_) { return false; }
+  });
 
   return names.map((name) => {
     const base = path.join(agentsDir, name);
@@ -135,6 +143,7 @@ function listAgents(dir) {
       heartbeat_at: heartbeatMtime ? new Date(heartbeatMtime).toISOString() : null,
       current_task: currentTask,
       unread_messages: inboxFiles.length,
+      executor: getExecutorForAgent(dir, name),
     };
   });
 }
@@ -161,9 +170,9 @@ function getAgent(dir, name) {
     name,
     alive: Boolean(isAlive),
     heartbeat_at: heartbeatMtime ? new Date(heartbeatMtime).toISOString() : null,
-    statusMd: statusRaw,
     status_md: statusRaw,
     inbox,
+    executor: getExecutorForAgent(dir, name),
   };
 }
 
@@ -247,11 +256,19 @@ function handleApiRequest(req, res, dir) {
   const parsed = new URL(req.url, `http://localhost`);
   const pathname = parsed.pathname;
 
+  // Health check must be reachable without auth (load balancers, monitoring probes)
+  if (req.method === "GET" && pathname === "/api/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", uptime_ms: Date.now() - SERVER_START }));
+    recordRequestMetric(pathname, "GET", 200, Date.now() - reqStart, dir);
+    return true;
+  }
+
   // SEC-001: require valid API key when API_KEY env var is set
   if (!isAuthorized(req)) {
     res.writeHead(401, { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" });
     res.end(JSON.stringify({ error: "Unauthorized" }));
-    recordRequestMetric(pathname, req.method.toUpperCase(), 401, Date.now() - reqStart);
+    recordRequestMetric(pathname, req.method.toUpperCase(), 401, Date.now() - reqStart, dir);
     return true;
   }
 
@@ -262,7 +279,7 @@ function handleApiRequest(req, res, dir) {
       "Access-Control-Allow-Origin": "*",
     });
     res.end(payload);
-    recordRequestMetric(pathname, req.method.toUpperCase(), status, Date.now() - reqStart);
+    recordRequestMetric(pathname, req.method.toUpperCase(), status, Date.now() - reqStart, dir);
     return true;
   }
 
@@ -299,11 +316,6 @@ function handleApiRequest(req, res, dir) {
     return true;
   }
 
-  // GET /api/health
-  if (method === "GET" && pathname === "/api/health") {
-    return json(200, { status: "ok", uptime_ms: Date.now() - SERVER_START });
-  }
-
   // GET /api/agents
   if (method === "GET" && pathname === "/api/agents") {
     return json(200, listAgents(dir));
@@ -336,10 +348,14 @@ function handleApiRequest(req, res, dir) {
   if (method === "POST" && pathname === "/api/tasks") {
     parseBody((body) => {
       const { title, description, priority, assignee } = body;
-      if (!title || !String(title).trim()) return err(400, "title is required");
+      if (!title || !String(title).trim()) {
+        console.warn("[POST /api/tasks] 400 missing/empty title:", JSON.stringify(body));
+        return err(400, "title is required");
+      }
       const VALID_PRIORITIES = ["low", "medium", "high", "critical"];
       const resolvedPriority = (priority || "medium").toLowerCase();
       if (!VALID_PRIORITIES.includes(resolvedPriority)) {
+        console.warn("[POST /api/tasks] 400 bad priority:", JSON.stringify(body));
         return err(400, `priority must be one of: ${VALID_PRIORITIES.join(", ")}`);
       }
       const tasks = parseTaskBoard(dir);
@@ -372,9 +388,11 @@ function handleApiRequest(req, res, dir) {
       const VALID_STATUSES   = ["open", "in_progress", "blocked", "in_review", "done", "cancelled"];
       const VALID_PRIORITIES = ["low", "medium", "high", "critical"];
       if (body.status   !== undefined && !VALID_STATUSES.includes(String(body.status).toLowerCase())) {
+        console.warn(`[PATCH /api/tasks/${id}] 400 bad status:`, JSON.stringify(body));
         return err(400, `status must be one of: ${VALID_STATUSES.join(", ")}`);
       }
       if (body.priority !== undefined && !VALID_PRIORITIES.includes(String(body.priority).toLowerCase())) {
+        console.warn(`[PATCH /api/tasks/${id}] 400 bad priority:`, JSON.stringify(body));
         return err(400, `priority must be one of: ${VALID_PRIORITIES.join(", ")}`);
       }
       const allowed = ["title", "description", "priority", "assignee", "status"];
@@ -424,8 +442,102 @@ function handleApiRequest(req, res, dir) {
     return true;
   }
 
+  // GET /api/executors — list supported executors
+  if (method === "GET" && pathname === "/api/executors") {
+    return json(200, { executors: VALID_EXECUTORS, default: "claude" });
+  }
+
+  // GET /api/agents/:name/executor — get executor for specific agent
+  const agentExecutorMatch = pathname.match(/^\/api\/agents\/([a-zA-Z0-9_-]+)\/executor$/);
+  if (method === "GET" && agentExecutorMatch) {
+    const name = agentExecutorMatch[1];
+    if (!getAgent(dir, name)) return err(404, `Agent '${name}' not found`);
+    return json(200, { name, executor: getExecutorForAgent(dir, name) });
+  }
+
+  // POST /api/agents/:name/executor — set executor for specific agent
+  if (method === "POST" && agentExecutorMatch) {
+    const name = agentExecutorMatch[1];
+    parseBody((body) => {
+      if (!body.executor) return err(400, "executor is required");
+      const result = setExecutorForAgent(dir, name, String(body.executor).toLowerCase());
+      if (!result.ok) return err(400, result.error);
+      json(200, { name, executor: result.executor });
+    });
+    return true;
+  }
+
+  // GET /api/config/executor — get all agent executors
+  if (method === "GET" && pathname === "/api/config/executor") {
+    return json(200, {
+      default: "claude",
+      agents: getAllExecutors(dir),
+    });
+  }
+
   // Not an API route
   return false;
 }
 
-module.exports = { handleApiRequest, parseTaskBoard, serializeTaskBoard, listAgents, getAgent, sendMessage };
+// ---------------------------------------------------------------------------
+// Executor Configuration
+// ---------------------------------------------------------------------------
+
+const EXECUTOR_CONFIG_PATH = path.join(DEFAULT_DIR, "public", "executor_config.md");
+const VALID_EXECUTORS = ["claude", "kimi"];
+
+function getExecutorForAgent(dir, name) {
+  // Priority 1: per-agent executor.txt
+  const agentExecutorPath = path.join(dir, "agents", name, "executor.txt");
+  try {
+    const content = fs.readFileSync(agentExecutorPath, "utf8").trim().toLowerCase();
+    if (VALID_EXECUTORS.includes(content)) return content;
+  } catch (_) {}
+
+  // Priority 2: global config file per-agent table
+  try {
+    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
+    const lines = config.split("\n");
+    for (const line of lines) {
+      const match = line.match(/^\|\s*(\w+)\s*\|\s*(claude|kimi)\s*\|/i);
+      if (match && match[1].toLowerCase() === name.toLowerCase()) {
+        return match[2].toLowerCase();
+      }
+    }
+  } catch (_) {}
+
+  // Priority 3: global default
+  try {
+    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
+    const defaultMatch = config.match(/## Global Default[\s\S]*?^executor:\s*(claude|kimi)/im);
+    if (defaultMatch) return defaultMatch[1].toLowerCase();
+  } catch (_) {}
+
+  // Fallback
+  return "claude";
+}
+
+function setExecutorForAgent(dir, name, executor) {
+  if (!VALID_EXECUTORS.includes(executor)) {
+    return { ok: false, error: `Invalid executor: ${executor}. Must be: ${VALID_EXECUTORS.join(", ")}` };
+  }
+  const agentDir = path.join(dir, "agents", name);
+  try {
+    fs.mkdirSync(agentDir, { recursive: true });
+    fs.writeFileSync(path.join(agentDir, "executor.txt"), executor, "utf8");
+    return { ok: true, executor };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+function getAllExecutors(dir) {
+  const agents = listAgents(dir);
+  const result = {};
+  for (const agent of agents) {
+    result[agent.name] = getExecutorForAgent(dir, agent.name);
+  }
+  return result;
+}
+
+module.exports = { handleApiRequest, parseTaskBoard, serializeTaskBoard, listAgents, getAgent, sendMessage, getExecutorForAgent };

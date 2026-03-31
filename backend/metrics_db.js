@@ -36,7 +36,7 @@ if (!DB_URL) {
 }
 
 const INSERT_SQL = `
-  INSERT INTO request_metrics (ts, endpoint, method, status_code, duration_ms)
+  INSERT INTO request_metrics (recorded_at, endpoint, method, status_code, duration_ms)
   VALUES ($1, $2, $3, $4, $5)
 `;
 

@@ -161,9 +161,9 @@ module "ecs" {
   alb_target_group_arn = module.alb.target_group_arn
 
   efs_file_system_id   = module.efs.file_system_id
-  efs_file_system_arn  = "arn:aws:elasticfilesystem:${var.aws_region}:${data.aws_caller_identity.current.account_id}:file-system/${module.efs.file_system_id}"
+  efs_file_system_arn  = "arn:aws:elasticfilesystem:${var.aws_region}:${var.aws_account_id}:file-system/${module.efs.file_system_id}"
   efs_access_point_id  = module.efs.access_point_id
-  efs_access_point_arn = "arn:aws:elasticfilesystem:${var.aws_region}:${data.aws_caller_identity.current.account_id}:access-point/${module.efs.access_point_id}"
+  efs_access_point_arn = "arn:aws:elasticfilesystem:${var.aws_region}:${var.aws_account_id}:access-point/${module.efs.access_point_id}"
 
   db_credentials_secret_arn = module.rds.db_credentials_secret_arn
 
@@ -225,4 +225,23 @@ module "github_oidc" {
   tags        = local.common_tags
 }
 
-data "aws_caller_identity" "current" {}
+# ---------------------------------------------------------------------------
+# DNS — ACM certificate validation + Route53 A/ALIAS records for ALB
+# Requires: a Route53 hosted zone for var.domain_name to already exist.
+# Set var.route53_hosted_zone_id in tfvars (prod only; skip for dev).
+# ---------------------------------------------------------------------------
+
+module "dns" {
+  source = "./modules/dns"
+
+  count = var.route53_hosted_zone_id != "" ? 1 : 0
+
+  hosted_zone_id                        = var.route53_hosted_zone_id
+  domain_name                           = var.domain_name
+  certificate_arn                       = module.alb.certificate_arn
+  certificate_domain_validation_options = module.alb.certificate_domain_validation_options
+  alb_dns_name                          = module.alb.alb_dns_name
+  alb_zone_id                           = module.alb.alb_zone_id
+
+  depends_on = [module.alb]
+}

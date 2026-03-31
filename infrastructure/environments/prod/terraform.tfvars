@@ -28,3 +28,9 @@ alert_emails_infra_ops   = []  # e.g. ["eve@tokenfly.ai", "quinn@tokenfly.ai"]
 
 # GitHub OIDC
 github_repo = "tokenfly/agent-lab"  # update to actual GitHub org/repo
+
+# Route53 — hosted zone ID for tokenfly.ai (required for ACM validation + ALB alias)
+route53_hosted_zone_id = ""  # REQUIRED for prod: set to Route53 hosted zone ID for domain_name
+
+# AWS Account ID — used in EFS ARN strings (avoids data.aws_caller_identity live lookup)
+aws_account_id = "123456789012"  # replace with actual AWS account ID

@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
-      image_uri: ${{ steps.build.outputs.image_uri }}
+      image_uri: ${{ steps.export.outputs.image_uri }}
 
     steps:
       - name: Checkout
@@ -181,7 +181,7 @@ jobs:
         with:
           task-definition: /tmp/task-def.json
           container-name: app
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:sha-${{ github.sha && github.sha || 'latest' }}
+          image: ${{ needs.push-to-ecr.outputs.image_uri }}
 
       - name: Deploy new task definition to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

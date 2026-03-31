@@ -21,7 +21,7 @@
  *   PG_PORT     — default: 5432
  *   PG_DATABASE — default: tokenfly
  *   PG_USER     — default: tokenfly
- *   PG_PASSWORD — default: tokenfly_dev
+ *   PG_PASSWORD — required for password auth; omit for trust/peer auth
  *   METRICS_BUFFER_SIZE — rows to buffer before auto-flush (default: 100)
  *   METRICS_FLUSH_INTERVAL_MS — auto-flush interval ms (default: 10000)
  */
@@ -39,12 +39,15 @@ try {
   pg = null;
 }
 
+if (!process.env.PG_PASSWORD) {
+  console.warn("[MetricsPgWriter] PG_PASSWORD not set — using trust/peer auth (MPW-001)");
+}
 const DEFAULT_PG = {
   host:     process.env.PG_HOST     || "localhost",
   port:     parseInt(process.env.PG_PORT || "5432", 10),
   database: process.env.PG_DATABASE || "tokenfly",
   user:     process.env.PG_USER     || "tokenfly",
-  password: process.env.PG_PASSWORD || "tokenfly_dev",
+  password: process.env.PG_PASSWORD, // undefined → pg uses trust/peer auth; no hardcoded fallback
 };
 
 const BUFFER_SIZE       = parseInt(process.env.METRICS_BUFFER_SIZE        || "100",   10);

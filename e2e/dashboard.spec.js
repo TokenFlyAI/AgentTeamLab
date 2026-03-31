@@ -8,13 +8,15 @@ const { test, expect } = require("@playwright/test");
  * Tests the index_lite.html dashboard served by server.js.
  */
 
+const AUTH_HEADERS = { "Authorization": "Bearer test" };
+
 // ---------------------------------------------------------------------------
 // Page load
 // ---------------------------------------------------------------------------
 test.describe("Dashboard loads", () => {
-  test("page title is Tokenfly Agent Lab", async ({ page }) => {
+  test("page title is TokenFly Agent Planet", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle("Tokenfly Agent Lab");
+    await expect(page).toHaveTitle("TokenFly Agent Planet");
   });
 
   test("company name is shown in topbar", async ({ page }) => {
@@ -32,7 +34,7 @@ test.describe("Dashboard loads", () => {
 
   test("tab bar is rendered with all expected tabs", async ({ page }) => {
     await page.goto("/");
-    const tabLabels = ["Agents", "Tasks", "Team Chat", "Announcements", "Research", "Knowledge", "Stats", "Live Tail", "CEO Inbox"];
+    const tabLabels = ["Agents", "Missions", "Chat", "News", "Facts", "Stats", "Live Tail", "Lord's Inbox"];
     for (const label of tabLabels) {
       const btn = page.locator(`button.tab-btn`, { hasText: label });
       await expect(btn).toBeVisible();
@@ -51,20 +53,20 @@ test.describe("Tab navigation", () => {
     await expect(page.locator("#tab-agents")).toBeVisible();
   });
 
-  test("clicking Tasks tab shows tasks panel", async ({ page }) => {
+  test("clicking Missions tab shows missions panel", async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="tasks"]');
     await expect(page.locator("#tab-tasks")).toBeVisible();
     await expect(page.locator("#tab-agents")).not.toBeVisible();
   });
 
-  test("clicking Team Chat tab shows chat panel", async ({ page }) => {
+  test("clicking Chat tab shows chat panel", async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="chat"]');
     await expect(page.locator("#tab-chat")).toBeVisible();
   });
 
-  test("clicking Announcements tab shows announcements panel", async ({ page }) => {
+  test("clicking News tab shows announcements panel", async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="announcements"]');
     await expect(page.locator("#tab-announcements")).toBeVisible();
@@ -83,7 +85,7 @@ test.describe("Tab navigation", () => {
     await expect(page.locator("#log-viewer")).toBeVisible();
   });
 
-  test("clicking CEO Inbox tab shows CEO inbox panel", async ({ page }) => {
+  test("clicking Lord's Inbox tab shows Lord's inbox panel", async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="ceo-inbox"]');
     await expect(page.locator("#tab-ceo-inbox")).toBeVisible();
@@ -203,10 +205,10 @@ test.describe("Tasks tab — UI", () => {
     await expect(page.locator("#task-tbody")).toContainText(testTitle);
 
     // Cleanup: delete the test task via API
-    const tasks = await fetch("http://localhost:3199/api/tasks").then((r) => r.json());
+    const tasks = await fetch("http://localhost:3199/api/tasks", { headers: AUTH_HEADERS }).then((r) => r.json());
     const task = tasks.find((t) => t.title === testTitle);
     if (task) {
-      await fetch(`http://localhost:3199/api/tasks/${task.id}`, { method: "DELETE" });
+      await fetch(`http://localhost:3199/api/tasks/${task.id}`, { method: "DELETE", headers: AUTH_HEADERS });
     }
   });
 });
@@ -214,7 +216,7 @@ test.describe("Tasks tab — UI", () => {
 // ---------------------------------------------------------------------------
 // Chat tab — UI
 // ---------------------------------------------------------------------------
-test.describe("Team Chat tab — UI", () => {
+test.describe("Chat tab — UI", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="chat"]');
@@ -228,9 +230,9 @@ test.describe("Team Chat tab — UI", () => {
     await expect(page.locator("#chat-input")).toBeVisible();
   });
 
-  test("from field defaults to CEO", async ({ page }) => {
+  test("from field defaults to Lord", async ({ page }) => {
     const fromInput = page.locator("#chat-from");
-    await expect(fromInput).toHaveValue("CEO");
+    await expect(fromInput).toHaveValue("Lord");
   });
 
   test("send button is visible", async ({ page }) => {
@@ -290,7 +292,7 @@ test.describe("Keyboard shortcuts", () => {
 // ---------------------------------------------------------------------------
 // Announcements tab
 // ---------------------------------------------------------------------------
-test.describe("Announcements tab — UI", () => {
+test.describe("News tab — UI", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.click('button.tab-btn[data-tab="announcements"]');
@@ -302,6 +304,6 @@ test.describe("Announcements tab — UI", () => {
   });
 
   test("from field defaults to CEO", async ({ page }) => {
-    await expect(page.locator("#ann-from")).toHaveValue("CEO");
+    await expect(page.locator("#ann-from")).toHaveValue("Lord");
   });
 });

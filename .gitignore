@@ -25,6 +25,14 @@ ceo_inbox/
 test-results/
 playwright-report/
 
+# Task outputs from e2e test runs
+public/task_outputs/
+
+# SQLite WAL journal files (ephemeral)
+backend/messages.db-shm
+backend/messages.db-wal
+backend/metrics_queue.jsonl
+
 # Temp config dirs
 /tmp/aicompany_config/
 

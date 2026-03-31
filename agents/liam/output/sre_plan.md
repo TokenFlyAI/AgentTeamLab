@@ -79,7 +79,8 @@
 | ALT-002 | p99 latency of /api/health > 500ms for 5 min | P1 — High | 15 min |
 | ALT-003 | p95 latency of /api/agents > 300ms for 10 min | P1 — High | 15 min |
 | ALT-004 | p95 latency of /api/tasks > 500ms for 10 min | P2 — Medium | 1 hour |
-| ALT-005 | 0 agents alive (all heartbeats stale) | P0 — Critical | Immediate |
+| ALT-005 | 0 agents alive — dashboard DOWN (true outage) | P0 — Critical | Immediate |
+| ALT-005 | 0 agents alive — dashboard UP (expected idle state) | P2 — Info | 1 hour |
 | ALT-006 | < 25% agents alive for > 10 min | P1 — High | 15 min |
 | ALT-007 | 429 rate > 10% on write endpoints for 5 min | P2 — Medium | 1 hour |
 | ALT-008 | Server process not responding to /ping | P0 — Critical | Immediate |
@@ -266,35 +267,82 @@ curl http://localhost:3100/api/health
 
 **Symptoms**: GET /api/agents returns all `alive: false`. Dashboard shows all agents as offline.
 
-**Step 1 — Verify**
+**Severity tier** (heartbeat_monitor decides automatically):
+- **P0-Critical**: Dashboard unreachable AND all heartbeats stale → true outage, escalate immediately
+- **P2-Info**: Dashboard healthy AND all heartbeats stale → expected idle state (CEO hasn't triggered agents)
+
+**Step 1 — Check severity**
 ```bash
-# Check heartbeat file mtimes
-for agent in agents/*/; do
-  echo "$agent: $(stat -f '%Sm' ${agent}heartbeat.md 2>/dev/null || echo 'NO FILE')"
-done
+# What severity did the monitor report?
+grep "ALT-005" public/reports/active_alerts.md
+
+# Independently verify dashboard liveness
+curl -s http://localhost:3199/api/health | python3 -m json.tool
 ```
 
-**Step 2 — Check if agents are running**
+**Step 2a — P2-Info (dashboard up, agents idle)**
+This is the normal state when no agent runs have been triggered. No action required unless the CEO expects agents to be running.
+
+To start agents with actual work (token-conservative):
 ```bash
-bash status.sh
+curl -X POST http://localhost:3199/api/agents/smart-start
+# Only starts agents that have open tasks or unread inbox messages
 ```
 
-**Step 3a — If agents are stopped**: Restart them
+To restart all agents:
+```bash
+bash run_all.sh
+```
+
+**Step 2b — P0-Critical (dashboard down)**
+
+Verify dashboard process:
+```bash
+ps aux | grep "node server.js" | grep -v grep
+curl -s http://localhost:3199/api/health || echo "DOWN"
+```
+
+If dashboard is down, restart it:
+```bash
+node server.js --dir . --port 3199 &
+# or if using pm2:
+pm2 restart dashboard
+```
+
+**Step 3 — Check if agents are running but not writing heartbeats**
+```bash
+# Are run_agent.sh loops alive?
+ps aux | grep "run_agent" | grep -v grep | wc -l
+
+# Are claude processes active?
+ps aux | grep "claude" | grep -v grep | head -5
+
+# Disk space check (full disk = no writes)
+df -h .
+```
+
+**Step 3a — If bash loops running, claude not found**: Agents are in sleep between cycles. Wait up to 15 min for next cycle, or trigger smart-start.
+
+**Step 3b — If no bash loops**: Agents fully stopped.
 ```bash
 bash run_subset.sh alice bob charlie dave eve
 # or all:
 bash run_all.sh
 ```
 
-**Step 3b — If agents are running but not writing heartbeats**:
-Check for stuck processes or disk write errors.
+**Step 3c — Bash loops running, claude running, still stale**: Agent stuck in long-running cycle. Check runtime logs:
 ```bash
-df -h  # Check disk space — full disk = no writes
+tail -20 /tmp/aicompany_runtime_logs/alice.log
+# Then use watchdog API to restart stale agents:
+curl -X POST http://localhost:3199/api/agents/watchdog
 ```
 
-**Step 4 — Verify recovery**: Wait up to 5 minutes, then check `/api/agents` again. Agents update heartbeat on each cycle.
+**Step 4 — Verify recovery**: Wait up to 5 minutes, then check:
+```bash
+curl -s http://localhost:3199/api/agents | python3 -c "import sys,json; d=json.load(sys.stdin); print('alive:', sum(1 for a in d if a.get('alive')))"
+```
 
-**Escalate to**: Alice immediately for P0. This means the entire team is down.
+**Escalate to**: Alice immediately for P0-Critical. P2-Info is informational only — no page required.
 
 ---
 

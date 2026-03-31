@@ -79,8 +79,8 @@ jobs:
     timeout-minutes: 20
 
     outputs:
-      image_uri: ${{ steps.build.outputs.image_uri }}
-      image_tag: ${{ steps.build.outputs.image_tag }}
+      image_uri: ${{ steps.build-export.outputs.image_uri }}
+      image_tag: ${{ steps.build-export.outputs.image_tag }}
 
     steps:
       - name: Checkout

@@ -1,8 +1,8 @@
 # Tokenfly Agent Team Lab — Cloud Architecture
 
 **Author**: Quinn (Cloud Engineer)
-**Date**: 2026-03-29
-**Status**: Draft — Proposal for Production Deployment
+**Date**: 2026-03-30
+**Status**: IaC Complete — Awaiting AWS Credentials to Apply
 
 ---
 
@@ -104,11 +104,27 @@ Private Subnets (ECS Fargate, EFS, RDS):
 | SG | Inbound | Outbound |
 |----|---------|----------|
 | `sg-alb` | 443 from 0.0.0.0/0 | 3100 to sg-app |
-| `sg-app` | 3100 from sg-alb | 2049 to sg-efs, 5432 to sg-rds, 443 to 0.0.0.0/0 |
+| `sg-app` | 3100 from sg-alb | 2049 to sg-efs, 5432 to sg-rds, 443 to sg-vpce |
 | `sg-efs` | 2049 from sg-app | — |
 | `sg-rds` | 5432 from sg-app | — |
+| `sg-vpce` | 443 from sg-app | — |
 
-Principle: least-privilege. No direct internet access to compute or storage.
+Principle: least-privilege. No direct internet access to compute or storage. With VPC endpoints, `sg-app` outbound 443 goes to `sg-vpce` (ECR, Secrets Manager, SSM, Logs) — not to the internet.
+
+### 3.3 VPC Endpoints
+
+Interface and gateway endpoints keep AWS API traffic inside the VPC — no NAT traversal for image pulls or secret fetches.
+
+| Endpoint | Type | Purpose |
+|----------|------|---------|
+| `com.amazonaws.*.ecr.api` | Interface | ECR control plane (DescribeImages, GetAuthorizationToken) |
+| `com.amazonaws.*.ecr.dkr` | Interface | ECR data plane (image layer downloads) |
+| `com.amazonaws.*.s3` | Gateway (free) | ECR stores layers in S3; gateway routes off NAT |
+| `com.amazonaws.*.secretsmanager` | Interface | DB credentials at container startup |
+| `com.amazonaws.*.ssm` | Interface | Parameter Store + SSM Session Manager |
+| `com.amazonaws.*.logs` | Interface | CloudWatch Logs (agent metrics, container stdout) |
+
+All interface endpoints use `private_dns_enabled = true` — AWS SDK calls resolve to private IPs automatically, no application changes required.
 
 ---
 
@@ -265,28 +281,38 @@ resource "aws_lb_target_group" "app" {
 | ECS Fargate | 1 task × 1 vCPU × 2 GB × 730h | ~$30 |
 | EFS | 5 GB active + bursting | ~$2 |
 | ALB | 1 ALB + 730h | ~$22 |
-| NAT Gateway | ~10 GB/mo data | ~$5 |
+| NAT Gateway | ~5 GB/mo (non-AWS traffic only) | ~$4 |
+| VPC Interface Endpoints | ECR×2 + SM + SSM + Logs (1 AZ) | ~$36 |
+| S3 Gateway Endpoint | Free — routes ECR layer traffic off NAT | $0 |
 | CloudWatch Logs | ~1 GB/mo | ~$0.50 |
-| **Dev Total** | | **~$60/mo** |
+| RDS PostgreSQL | db.t3.micro, single-AZ | ~$14 |
+| **Dev Total** | | **~$109/mo** |
+
+> Note: VPC endpoints add ~$36/mo in dev but reduce NAT data charges and improve security posture. Break-even on NAT savings at ~10 GB/mo ECR pull volume.
 
 ### Production Environment
 
 | Resource | Spec | Est. Cost/mo |
 |----------|------|-------------|
-| ECS Fargate | 2 tasks × 1 vCPU × 2 GB × 730h | ~$60 |
+| ECS Fargate | 2 tasks × 2 vCPU × 4 GB × 730h | ~$115 |
 | EFS | 20 GB + multi-AZ mount | ~$10 |
 | ALB | 1 ALB + moderate LCUs | ~$25 |
-| NAT Gateway | 2 AZs × 50 GB data | ~$20 |
+| NAT Gateway | 2 AZs × 20 GB data (non-AWS traffic) | ~$14 |
+| VPC Interface Endpoints | ECR×2 + SM + SSM + Logs (2 AZs) | ~$73 |
+| S3 Gateway Endpoint | Free | $0 |
 | CloudFront | 100 GB transfer | ~$9 |
 | CloudWatch Logs | 5 GB/mo + 30d retention | ~$5 |
-| RDS PostgreSQL | db.t4g.micro, single-AZ (dev), multi-AZ (prod) | ~$25 / ~$50 |
-| **Prod Total** | | **~$130–155/mo** |
+| RDS PostgreSQL | db.t3.small, Multi-AZ | ~$55 |
+| **Prod Total** | | **~$306/mo** |
+
+> Note: Prod VPC endpoints cost ~$73/mo across 2 AZs but save ~$30/mo in NAT bandwidth (ECR + Secrets Manager calls stay off internet). Net add: ~$43/mo for meaningfully improved security (secrets never traverse internet).
 
 **Cost optimization levers**:
 - Spot/Fargate Spot for non-critical agent tasks: up to 70% compute savings
 - EFS Intelligent Tiering: auto-moves cold data to IA storage (~$0.025/GB vs $0.08/GB)
 - CloudFront caches dashboard HTML/JS: reduces ALB + origin traffic by ~60%
-- Reserved capacity for ALB and NAT if usage is predictable: ~30% savings
+- Consolidate to 1 NAT GW in dev (already done); consider NAT instance (~$4/mo EC2 t4g.nano) vs managed NAT if budget-constrained
+- VPC endpoints optional in dev — remove to save $36/mo if cost > security tradeoff
 
 ---
 
@@ -348,16 +374,55 @@ CMD ["node", "server.js", "--port", "3100", "--dir", "/data"]
 
 ---
 
-## 9. Immediate Next Steps
+## 9. Deployment Status
 
-| Priority | Action | Owner | Status |
-|----------|--------|-------|--------|
-| 1 | Write `infrastructure/modules/networking/main.tf` | Quinn | planned |
-| 2 | Write ECS + EFS Terraform modules | Quinn | planned |
-| 3 | Write Dockerfile + ECR push pipeline | Quinn + Eve | planned |
-| 4 | Set up CloudWatch dashboards for `/api/health` | Quinn + Liam | blocked (need SRE plan from Liam) |
-| 5 | Heidi security review of SGs and IAM roles | Heidi | blocked (need Heidi) |
-| 6 | RDS provisioning | Quinn + Pat | blocked (need Pat's schema) |
+### IaC Modules (all complete)
+
+| Module | File | Status |
+|--------|------|--------|
+| Networking (VPC, subnets, NAT GW, VPC Endpoints) | `infrastructure/modules/networking/` | ✅ Done |
+| ECS (Fargate, task def, service, autoscaling, alarms) | `infrastructure/modules/ecs/` | ✅ Done |
+| EFS (encrypted, access points, mount targets) | `infrastructure/modules/efs/` | ✅ Done |
+| ALB (HTTPS listener, cert, WAF, alarms) | `infrastructure/modules/alb/` | ✅ Done |
+| RDS (PostgreSQL Multi-AZ, backup, alarms) | `infrastructure/modules/rds/` | ✅ Done |
+| SNS (5 topics: P0/P1/P2/RDS-ops/Infra-ops, KMS) | `infrastructure/modules/sns/` | ✅ Done |
+| GitHub OIDC (keyless deploy role, ECR/ECS perms) | `infrastructure/modules/github_oidc/` | ✅ Done |
+| App-level CloudWatch alarms (ALT-001..ALT-010) | `infrastructure/alarms.tf` | ✅ Done |
+| Root module wiring | `infrastructure/main.tf` | ✅ Done |
+| Dev + Prod tfvars | `infrastructure/environments/` | ✅ Done |
+
+### CI/CD Pipelines (all complete)
+
+| Pipeline | File | Status |
+|----------|------|--------|
+| CI (lint + test gate) | `.github/workflows/ci.yml` | ✅ Done (Eve) |
+| CD (ECR push + ECS rolling deploy + smoke) | `.github/workflows/cd.yml` | ✅ Done (Quinn) |
+| Terraform validate (fmt + validate per module) | `.github/workflows/terraform-validate.yml` | ✅ Done (Quinn) |
+
+### Monitoring Scripts (all complete)
+
+| Script | Purpose | Status |
+|--------|---------|--------|
+| `scripts/healthcheck.js` | Poll `/api/health` every 30s, fire ALT-001/002/009 | ✅ Done (Liam) |
+| `scripts/heartbeat_monitor.js` | Check agent heartbeats every 60s, fire ALT-005/006 | ✅ Done (Liam) |
+
+### Security Status
+
+| Finding | Fix | Status |
+|---------|-----|--------|
+| SEC-001: No API auth | `isAuthorized()` in server.js + api.js (API_KEY env var) | ✅ Done (Quinn) |
+| SEC-011: Hardcoded DB creds | Explicit DATABASE_URL required in metrics_db.js + db_sync.js | ✅ Done |
+| SEC-010/012: Metrics auth + CORS | Assigned to Eve (Task #121) | ⏳ In Progress |
+| SG/IAM review | Assigned to Heidi | ⏳ Pending |
+
+### Remaining Blockers for Production
+
+| Blocker | Owner | Notes |
+|---------|-------|-------|
+| AWS account credentials | CEO/Ops | Required for `terraform apply` |
+| GitHub repo name | Team | Required for OIDC trust policy (`github_repo` tfvars) |
+| Heidi SG/IAM sign-off | Heidi | Security audit of network layer |
+| Eve Task #121 (metrics auth + CORS) | Eve | Must merge before production |
 
 ---
 
@@ -368,8 +433,9 @@ CMD ["node", "server.js", "--port", "3100", "--dir", "/data"]
 | File-based state not suited for multi-task ECS | Medium — two Fargate tasks writing the same files causes race conditions | Single-task for now; migrate to RDS when Pat's schema is ready |
 | 20 Claude Code subprocesses per container — high CPU | Medium — may need larger Fargate task (2 vCPU) | Benchmark locally; adjust task CPU/memory accordingly |
 | EFS latency vs local disk | Low — file ops are metadata heavy (small files) | EFS General Purpose mode handles <7K ops/sec; should be fine for 20 agents |
-| No authentication on dashboard/API | High — open to internet without auth | Coordinate with Heidi; WAF + CloudFront geo-restriction short term |
+| Dashboard auth API_KEY not rotatable without restart | Low — env var requires ECS task restart to rotate | Add `/api/admin/rotate-key` endpoint or use Secrets Manager auto-rotation |
+| No staging environment | Medium — dev→prod gap increases deploy risk | Create `environments/staging/terraform.tfvars` when AWS creds available |
 
 ---
 
-*Last updated: 2026-03-29 by Quinn*
+*Last updated: 2026-03-30 by Quinn*

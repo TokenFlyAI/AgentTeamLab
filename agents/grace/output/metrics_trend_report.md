@@ -168,3 +168,101 @@
 - Delivered PostgreSQL schema (`metrics_pg_schema.sql`) for Task #83
 - Delivered Node.js writer module (`metrics_pg_writer.js`) for Bob
 - Schema supports raw event log + 5-min rollups + agent cycles + heartbeats
+
+---
+
+## Snapshot 4 — 2026-03-30T13:30Z (Self-Directed)
+
+**Data Sources:** `backend/metrics_queue.jsonl` (239 entries, 07:32–13:11Z), `public/reports/health_check_log.jsonl` (114 entries), `public/reports/active_alerts.md`
+
+### System Health Summary
+| Metric | Value |
+|--------|-------|
+| Active alerts | **0** — All systems nominal |
+| Server restarts (today) | **11** (development churn, expected) |
+| Peak concurrent agents | **20** (07:34–07:42Z, full team) |
+| Max SSE clients | 2 |
+| Alerts fired | ALT-009 (×1), ALT-001 (×1) |
+
+### Agent Activity Timeline
+- **06:22Z** — 11 agents active (partial team start)
+- **07:34Z** — 20 agents active (full team, all agents running)
+- **07:40Z** — Gradual wind-down begins (idle agents stopping)
+- **07:46Z** — 2 agents remaining
+- **08:00Z+** — 0 agents (all agents completed idle cycles, token-conserving shutdown)
+
+### API Metrics Analysis (239 total requests)
+| Endpoint | Requests | Error Rate | Notes |
+|----------|----------|-----------|-------|
+| POST /api/tasks | 101 | 44% (400+413) | Boundary tests: 36×400 bad payload, 12×413 oversized |
+| DELETE /api/tasks/2 | 11 | 0% | Clean |
+| DELETE /api/tasks/99999 | 11 | 100% | Expected: not-found test |
+| PATCH /api/tasks/1 | 44 | 50% | 24×400 — invalid payload validation tests |
+| PATCH /api/tasks/99999 | 11 | 100% | Expected: not-found test |
+| POST /api/messages/alice | 22 | 50% | 12×400 — validation boundary tests |
+| POST /api/messages/nobody_agent_xyz | 11 | 100% | Expected: unknown agent test |
+
+**All errors are intentional test boundary cases, not production failures.** Error pattern is 100% consistent with e2e test suites probing validation/404 boundaries.
+
+### Request Volume Gap
+- **07:xx** — 143 requests (agent team running)
+- **08:xx–12:xx** — 0 requests (server idle/down between sessions)  
+- **13:xx** — 120 requests (e2e test run)
+
+### Server Latency (last observed session)
+| Metric | Value |
+|--------|-------|
+| p50 | 7–8ms |
+| p99 | 11–12ms |
+| Heap used | 7–21MB (GC cycling normally) |
+
+**Assessment:** Server is healthy. No production errors. All 239 queued metrics are test artifacts. Latency well within SLA (p99 < 20ms target).
+
+
+---
+
+## Snapshot 5 — 2026-03-30T16:10Z
+
+*Period covered: 13:30Z – 16:05Z | Server status: OFFLINE at time of snapshot*
+
+### Traffic Summary
+| Metric | Value |
+|--------|-------|
+| New requests in period | 345 |
+| All-time queue total | 842 |
+| Queue time range | 07:32Z – 16:05Z |
+| Error rate (raw) | 60.9% |
+| Error rate (excl. boundary probes) | 55.0% |
+
+### Error Breakdown (real traffic only)
+| Code | Count | Cause |
+|------|-------|-------|
+| HTTP 401 | 75 | Task #109 — e2e auth boundary tests (expected, Tina in_progress) |
+| HTTP 400 | 90 | POST /api/tasks with invalid body — e2e validation probes |
+| Total errors | 165 | **ALL intentional e2e test activity** |
+
+### POST /api/tasks Detail
+| Status | Count | Meaning |
+|--------|-------|---------|
+| 201 Created | 45 | Successful task creation |
+| 400 Bad Request | 45 | Invalid body validation probes |
+| 401 Unauthorized | 75 | Auth header missing (Task #109 auth tests) |
+
+### Boundary Probes (e2e)
+- `PATCH /api/tasks/99999` — 15 runs, 100% 404 (correct behavior)
+- `DELETE /api/tasks/99999` — 15 runs, 100% 404 (correct behavior)
+- `POST /api/messages/nobody_agent_xyz` — 15 runs, 100% 404 (correct behavior)
+
+### Server Status
+- Last healthy ping: 2026-03-30T13:25:17Z (uptime 5.9s — fresh restart)
+- ALT-001 (server down) fired at: 13:24:46Z and 16:05:23Z
+- ALT-002 (active_agents=18, expected 20) persistent across all healthy pings
+- Active agents at last healthy ping: 18 of 20 (alice + 1 other not reporting)
+
+### Conclusion
+- **No production failures.** All errors are e2e boundary probes or intentional auth tests.
+- Server was offline from ~13:25Z onward (dev restart cycle or stopped by CEO).
+- Task #109 (e2e auth updates) continues generating expected 401s during test runs.
+- 3 agents still active: bob, dave, karl, liam, sam (active heartbeats at 16:10Z check).
+- Migration pipeline: migration_005 APPROVED by Pat, awaiting docker-compose execution by Bob/Eve.
+

@@ -13,6 +13,11 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "aws_account_id" {
+  description = "AWS account ID — used in ARN strings so terraform plan works without live credentials"
+  type        = string
+}
+
 variable "domain_name" {
   description = "Root domain for the application (e.g. tokenfly.ai)"
   type        = string
@@ -160,4 +165,10 @@ variable "github_repo" {
   description = "GitHub repository in owner/repo format (for OIDC role binding)"
   type        = string
   default     = "tokenfly/agent-lab"
+}
+
+variable "route53_hosted_zone_id" {
+  description = "Route53 hosted zone ID for domain_name. Required for ACM DNS validation and ALB alias records. Leave empty to skip DNS module (dev environments without a real domain)."
+  type        = string
+  default     = ""
 }

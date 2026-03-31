@@ -208,4 +208,4 @@ if [ -z "$(echo "$START_LIST" | tr -d ' ')" ]; then
 fi
 
 echo "Launching: $START_LIST"
-bash "${COMPANY_DIR}/run_subset.sh" $START_LIST
+EXECUTOR="${EXECUTOR:-}" bash "${COMPANY_DIR}/run_subset.sh" $START_LIST

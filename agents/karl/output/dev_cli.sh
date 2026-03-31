@@ -3,7 +3,7 @@
 # dev_cli.sh — Tokenfly Developer CLI
 # Author: Karl (Platform Engineer)
 # Task:   #47 — Developer CLI Tooling
-# Version: 1.2.0
+# Version: 1.4.0
 #
 # Usage: ./dev_cli.sh <command> [args...]
 #
@@ -20,9 +20,12 @@
 #   cost                       Show today's token spend per agent
 #   health                     Server health check
 #   logs <agent> [lines]       Tail agent runtime log (default: 50 lines)
-#   cycles <agent>             Show agent cycle history (cost, turns, duration)
+#   cycles <agent> [n]         Show cycle history; with [n], print full log for cycle N
 #   output <agent> [file]      List or view agent output files
 #   watchdog                   Trigger watchdog restart for stuck agents
+#   smart-start                Start only agents with actual work (token-conservative)
+#   metrics                    Show system-wide metrics
+#   cmd <command>              CEO quick command (routing by prefix)
 #   watch [interval]           Live status polling (default: 10s interval)
 #   help                       Show this help
 #
@@ -150,8 +153,10 @@ format_task_status() {
   case "$s" in
     done|completed)    echo -e "${GREEN}done${RESET}" ;;
     in_progress)       echo -e "${YELLOW}in_progress${RESET}" ;;
+    in_review)         echo -e "${BLUE}in_review${RESET}" ;;
     open)              echo -e "${CYAN}open${RESET}" ;;
     blocked)           echo -e "${RED}blocked${RESET}" ;;
+    cancelled)         echo -e "${DIM}cancelled${RESET}" ;;
     *)                 echo "$s" ;;
   esac
 }
@@ -161,7 +166,7 @@ format_task_status() {
 # ---------------------------------------------------------------------------
 
 cmd_help() {
-  echo -e "${BOLD}Tokenfly Developer CLI${RESET} v1.2.0"
+  echo -e "${BOLD}Tokenfly Developer CLI${RESET} v1.3.1"
   echo -e "${DIM}Platform Engineer: Karl | Server: ${BASE_URL}${RESET}"
   echo ""
   echo -e "${BOLD}USAGE${RESET}"
@@ -170,12 +175,15 @@ cmd_help() {
   echo -e "${BOLD}AGENT COMMANDS${RESET}"
   printf "  %-32s %s\n" "status [name]"                "Show agent status (all, or a specific agent)"
   printf "  %-32s %s\n" "logs <agent> [lines]"         "Tail agent runtime log (default: 50 lines)"
-  printf "  %-32s %s\n" "cycles <agent>"               "Show today's cycle history (cost, turns, duration)"
+  printf "  %-32s %s\n" "cycles <agent> [n]"            "Show cycle history; with [n], print full log for cycle N"
   printf "  %-32s %s\n" "output <agent> [file]"        "List or view agent output files"
   printf "  %-32s %s\n" "inbox <agent>"                "View unread inbox messages for an agent"
   printf "  %-32s %s\n" "send <agent> <message>"       "Send a message to an agent's inbox"
   printf "  %-32s %s\n" "broadcast <message>"          "Send a message to ALL agents' inboxes"
   printf "  %-32s %s\n" "watchdog"                     "Restart any stuck agents (stale heartbeat >15 min)"
+  printf "  %-32s %s\n" "smart-start"                  "Start only agents with actual work (token-conservative)"
+  printf "  %-32s %s\n" "metrics"                      "System-wide metrics"
+  printf "  %-32s %s\n" "cmd <command>"                "CEO quick command (@agent, task:, /mode, or alice DM)"
   printf "  %-32s %s\n" "watch [interval_sec]"         "Live status polling (default: 10s)"
   echo ""
   echo -e "${BOLD}TASK COMMANDS${RESET}"
@@ -212,6 +220,11 @@ cmd_help() {
   echo "  $SCRIPT_NAME broadcast 'Deploy in 5min' # DM everyone"
   echo "  $SCRIPT_NAME mode crazy                  # Switch to crazy mode"
   echo "  $SCRIPT_NAME watchdog                    # Restart stuck agents"
+  echo "  $SCRIPT_NAME smart-start                 # Start agents with work only"
+  echo "  $SCRIPT_NAME metrics                     # System-wide metrics"
+  echo "  $SCRIPT_NAME cmd '@bob fix the bug'      # DM bob directly"
+  echo "  $SCRIPT_NAME cmd 'task: Add rate limit'  # Create a task"
+  echo "  $SCRIPT_NAME cmd '/mode crazy'           # Switch company mode"
   echo "  $SCRIPT_NAME watch 5                     # Refresh status every 5s"
   echo "  $SCRIPT_NAME cost                        # Token spend today"
 }
@@ -226,8 +239,12 @@ cmd_status() {
     data=$(api_get "/api/agents/$target")
     local name status heartbeat
     name=$(echo "$data" | jq -r '.name // .agent // "unknown"')
-    status=$(echo "$data" | jq -r '.status // "unknown"')
-    heartbeat=$(echo "$data" | jq -r '.lastHeartbeat // .heartbeat // "—"')
+    # API v1.1: alive:boolean replaces status:string; fall back for older responses
+    status=$(echo "$data" | jq -r '
+      if .alive != null then (if .alive then "active" else "offline" end)
+      else (.status // "unknown")
+      end')
+    heartbeat=$(echo "$data" | jq -r '.heartbeat_at // .lastHeartbeat // .heartbeat // "—"')
     echo -e "  Name:       ${BOLD}$name${RESET}"
     echo -e "  Status:     $(format_status "$status")"
     echo -e "  Heartbeat:  $heartbeat"
@@ -244,7 +261,12 @@ cmd_status() {
       else to_entries | map(.value)
       end |
       .[] |
-      [.name // "?", .status // "unknown", .lastHeartbeat // "—", .currentTask // ""] |
+      [
+        .name // "?",
+        (if .alive != null then (if .alive then "active" else "offline" end) else (.status // "unknown") end),
+        (.heartbeat_at // .lastHeartbeat // "—"),
+        (.currentTask // "")
+      ] |
       @tsv
     ' | while IFS=$'\t' read -r name status heartbeat task; do
       printf "  %-12s  %s\n" "$name" "$(format_status "$status")"
@@ -277,8 +299,22 @@ cmd_logs() {
 
 cmd_cycles() {
   local agent="${1:-}"
-  [ -z "$agent" ] && die "Usage: $SCRIPT_NAME cycles <agent>"
+  local cycle_n="${2:-}"
+  [ -z "$agent" ] && die "Usage: $SCRIPT_NAME cycles <agent> [cycle_number]"
   require_jq
+
+  # If cycle number given, fetch full log for that cycle
+  if [ -n "$cycle_n" ]; then
+    [[ "$cycle_n" =~ ^[0-9]+$ ]] || die "Cycle number must be a positive integer"
+    header "Cycle $cycle_n log: $agent"
+    local log_data
+    log_data=$(curl -sf "${BASE_URL}/api/agents/${agent}/cycles/${cycle_n}" \
+      ${TOKENFLY_API_KEY:+-H "Authorization: Bearer ${TOKENFLY_API_KEY}"} 2>/dev/null) \
+      || die "Failed to fetch cycle $cycle_n for $agent"
+    # Try to print the log output field, fallback to raw JSON
+    echo "$log_data" | jq -r '.output // .log // .content // .' 2>/dev/null || echo "$log_data"
+    return
+  fi
 
   header "Cycles: $agent"
   local data
@@ -303,6 +339,7 @@ cmd_cycles() {
   local total_cost
   total_cost=$(echo "$data" | jq -r '.total_cost_usd // .totalCost // ""' 2>/dev/null)
   [ -n "$total_cost" ] && echo -e "\n  ${BOLD}Total cost: \$$total_cost${RESET}"
+  echo -e "\n  ${DIM}Tip: run 'cycles $agent <n>' to view full log for cycle N${RESET}"
 }
 
 cmd_output() {
@@ -367,21 +404,25 @@ cmd_tasks() {
   done
 
   header "Tasks"
+
+  # API v1.1: server-side filtering via query params
+  local api_url="/api/tasks"
+  local sep="?"
+  if [ -n "$filter_agent" ]; then
+    api_url+="${sep}assignee=${filter_agent}"; sep="&"
+  fi
+  if [ -n "$filter_status" ]; then
+    api_url+="${sep}status=${filter_status}"; sep="&"
+  fi
+
   local data
-  data=$(api_get "/api/tasks")
+  data=$(api_get "$api_url")
 
   local jq_filter
   jq_filter='
     if type == "array" then . else (.tasks // []) end |
     .[]
   '
-
-  if [ -n "$filter_agent" ]; then
-    jq_filter+=" | select(.assignee == \"$filter_agent\" or .assigned_to == \"$filter_agent\")"
-  fi
-  if [ -n "$filter_status" ]; then
-    jq_filter+=" | select(.status == \"$filter_status\")"
-  fi
 
   jq_filter+=' | [
     (.id | tostring),
@@ -427,10 +468,11 @@ cmd_inbox() {
     return
   fi
 
+  # API v1.1: inbox items are metadata-only { file, read } — no content field
   echo "$data" | jq -r '
     .messages // . |
     if type == "array" then .[] else empty end |
-    "\n  From:    " + (.from // .sender // "unknown") + "\n  File:    " + (.file // "") + "\n  Preview: " + (.preview // .content // "" | .[0:120]) + "\n  ---"
+    "  " + (if .read == false or .read == null then "[unread] " else "[read]   " end) + (.file // .filename // "unknown")
   ' 2>/dev/null || echo "$data" | jq .
 }
 
@@ -646,6 +688,76 @@ cmd_watchdog() {
   fi
 }
 
+cmd_smart_start() {
+  require_jq
+  header "Smart Start — launching agents with actual work"
+
+  local http_code
+  http_code=$(curl -s -o /tmp/_smartstart_result.json -w "%{http_code}" \
+    -X POST "${BASE_URL}/api/agents/smart-start" \
+    -H "Content-Type: application/json" \
+    ${TOKENFLY_API_KEY:+-H "Authorization: Bearer ${TOKENFLY_API_KEY}"} 2>/dev/null)
+
+  if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+    cat /tmp/_smartstart_result.json | jq -r '
+      (.started // .agents // []) as $started |
+      (.skipped // []) as $skipped |
+      (if ($started|length) == 0 then "  No agents needed starting."
+       else ($started[] | "  Started: " + .)
+       end),
+      (if ($skipped|length) > 0 then ($skipped[] | "  Skipped (idle): " + .) else empty end)
+    ' 2>/dev/null || cat /tmp/_smartstart_result.json
+    ok "Smart start complete"
+  else
+    die "Smart start API failed (HTTP $http_code)"
+  fi
+}
+
+cmd_metrics() {
+  require_jq
+  header "System Metrics"
+
+  local data
+  data=$(curl -sf "${BASE_URL}/api/metrics" \
+    ${TOKENFLY_API_KEY:+-H "Authorization: Bearer ${TOKENFLY_API_KEY}"} 2>/dev/null) \
+    || die "Failed to fetch metrics (server unreachable or auth required)"
+
+  echo "$data" | jq -r '
+    to_entries[] |
+    "  \(.key): \(.value)"
+  ' 2>/dev/null || echo "$data"
+}
+
+cmd_ceo() {
+  require_jq
+  local command="$*"
+  [ -z "$command" ] && die "Usage: $SCRIPT_NAME cmd <command>
+  Prefixes:
+    @agentname <msg>   DM directly to an agent
+    task: <title>      Create unassigned medium-priority task
+    /mode <name>       Switch company mode
+    (anything else)    Routes to alice as CEO priority"
+
+  header "CEO Quick Command"
+  printf "  Sending: %s\n" "$command"
+
+  local http_code
+  http_code=$(curl -s -o /tmp/_ceo_cmd_result.json -w "%{http_code}" \
+    -X POST "${BASE_URL}/api/ceo/command" \
+    -H "Content-Type: application/json" \
+    ${TOKENFLY_API_KEY:+-H "Authorization: Bearer ${TOKENFLY_API_KEY}"} \
+    -d "{\"command\": $(echo "$command" | jq -Rs .)}" 2>/dev/null)
+
+  if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+    cat /tmp/_ceo_cmd_result.json | jq -r '
+      .message // .result // .status // "Command sent."
+    ' 2>/dev/null || cat /tmp/_ceo_cmd_result.json
+    ok "Command dispatched"
+  else
+    die "CEO command API failed (HTTP $http_code)"
+  fi
+}
+
 cmd_watch() {
   local interval="${1:-10}"
   require_jq
@@ -675,7 +787,12 @@ cmd_watch() {
       else to_entries | map(.value)
       end |
       .[] |
-      [.name // "?", .status // "unknown", .lastHeartbeat // "—", .currentTask // ""] |
+      [
+        .name // "?",
+        (if .alive != null then (if .alive then "active" else "offline" end) else (.status // "unknown") end),
+        (.heartbeat_at // .lastHeartbeat // "—"),
+        (.currentTask // "")
+      ] |
       @tsv
     ' 2>/dev/null | while IFS=$'\t' read -r name status heartbeat task; do
       printf "  %-12s  " "$name"
@@ -737,8 +854,11 @@ main() {
     mode)      cmd_mode "$@" ;;
     cost)      cmd_cost "$@" ;;
     health)    cmd_health "$@" ;;
-    watchdog)  cmd_watchdog "$@" ;;
-    watch)     cmd_watch "$@" ;;
+    watchdog)    cmd_watchdog "$@" ;;
+    smart-start) cmd_smart_start "$@" ;;
+    metrics)     cmd_metrics "$@" ;;
+    cmd)         cmd_ceo "$@" ;;
+    watch)       cmd_watch "$@" ;;
     help|--help|-h) cmd_help ;;
     *)         die "Unknown command: '$cmd'. Run '$SCRIPT_NAME help' for usage." ;;
   esac
