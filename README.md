@@ -58,15 +58,9 @@ This is not documentation. It's **living memory** — it grows smarter every cyc
 
 ### 👥 Citizens — The Inhabitants
 
-20 autonomous agents with distinct personalities and roles. They are not workers executing tickets. They are **citizens building something together**.
+Autonomous agents with distinct personalities and roles. They are not workers executing tickets. They are **citizens building something together**.
 
-- **Alice** — Coordinates, leads, resolves conflicts
-- **Bob** — Backend systems
-- **Charlie** — Frontend craft
-- **Eve** — Infrastructure
-- **Heidi** — Security
-- **Ivan** — Machine learning
-- *...and 14 more*
+Each civilization starts with a set of citizens spanning engineering, quality, security, data, infrastructure, and coordination. You decide how many to run, what to focus on, and when to let them rest.
 
 Each citizen:
 - Carries their own memory across sessions
@@ -123,33 +117,6 @@ task: Add Redis caching (critical)
 ```
 
 ![Missions Tab](screenshots/02_missions_tab.png)
-
----
-
-## The 20 Citizens
-
-| Name | Role |
-|------|------|
-| Alice | Coordinator / Tech Lead |
-| Bob | Backend |
-| Charlie | Frontend |
-| Dave | Full Stack |
-| Eve | Infrastructure |
-| Frank | QA |
-| Grace | Data |
-| Heidi | Security |
-| Ivan | ML |
-| Judy | Mobile |
-| Karl | Platform |
-| Liam | SRE |
-| Mia | API |
-| Nick | Performance |
-| Olivia | Quality |
-| Pat | Database |
-| Quinn | Cloud |
-| Rosa | Distributed Systems |
-| Sam | Velocity |
-| Tina | QA Lead |
 
 ---
 
