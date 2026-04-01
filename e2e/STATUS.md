@@ -1,7 +1,7 @@
 # E2E Test Suite — Status & Resumption Guide
 
 Last updated: **2026-04-01**  
-Status: **561 passed / 17 skipped / 0 failed**
+Status: **569 passed / 17 skipped / 0 failed** (1 known flaky: smart_run button timing)
 
 ---
 
@@ -30,8 +30,8 @@ npx playwright test --grep "GET /api/agents/:name/health"
 | `api.spec.js` | 49 | Core CRUD: tasks, agents, broadcast, mode |
 | `dashboard.spec.js` | 44 | Browser UI: tab nav, modal, keyboard shortcuts |
 | `metrics.spec.js` | 59 | Metrics: /api/metrics, /api/stats, /api/cost |
-| `coverage.spec.js` | 354 | Full API surface: status codes + response shapes |
-| `smart_run.spec.js` | 7 | Smart Run button state, fleet panel UI |
+| `coverage.spec.js` | 358 | Full API surface: status codes + response shapes |
+| `smart_run.spec.js` | 12 | Smart Run button state, fleet panel UI, selection mode E2E |
 | `message_bus.spec.js` | 47 | SQLite message bus: send/receive/ack/pagination |
 
 ---
@@ -102,8 +102,8 @@ Every major endpoint in server.js is covered. Structure per endpoint:
 - `GET /api/config` — companyName/directory
 - `GET /api/executors` — list
 - `GET /api/config/executor` — default executor
-- `GET /api/smart-run/config` — config{max_agents/enabled/interval_seconds/dry_run/mode/force_alice/cycle_sleep_seconds/last_updated} + daemon{running/pid}
-- `POST /api/smart-run/config` — updates each field + validation (400 for out-of-range)
+- `GET /api/smart-run/config` — config{max_agents/enabled/interval_seconds/dry_run/mode/force_alice/cycle_sleep_seconds/selection_mode/last_updated} + daemon{running/pid}
+- `POST /api/smart-run/config` — updates each field + validation (400 for out-of-range); selection_mode: deterministic|random
 - `GET /api/smart-run/status` — daemon/agents{running/count/target}/config
 - `POST /api/smart-run/start` — ok/pid/message; with enabled guard
 - `POST /api/smart-run/stop` — ok/message/output
@@ -156,6 +156,11 @@ Every major endpoint in server.js is covered. Structure per endpoint:
 - `GET /api/agents/:name/log/stream` (SSE) — text/event-stream
 - `GET /manifest.json` — name/short_name/icons/start_url/theme_color/description/background_color/theme_color; icon type field
 
+**Additional coverage added 2026-04-01 (session 3):**
+- `GET /api/smart-run/config` — selection_mode field (string, deterministic|random)
+- `POST /api/smart-run/config` — selection_mode: random, deterministic; 400 for invalid
+- Fleet tab E2E (smart_run.spec.js): radio buttons visible, sync from API, Apply persists, reload reflects saved state
+
 **Additional coverage added 2026-04-01 (session 2):**
 - `POST /api/agents/smart-start` — `decision` object field + 403 when disabled
 - `POST /api/tasks` — full create response: description/status/created/updated/assignee/task_type/group
@@ -174,6 +179,7 @@ Every major endpoint in server.js is covered. Structure per endpoint:
 1. **Ack response shape**: `/api/inbox/:agent/:id/ack` only tested for `acked:true` — could add `id` field assertion
 2. **Search matches**: Currently only tested as `Array.isArray(r.matches)` + string elements — could test more search types
 3. **WebSocket**: `/api/ws` only tested for auth rejection (401 without key); no functional WS message flow tests (requires WS client)
+4. **Known flaky test**: `smart_run.spec.js:100` "button switches to 🟢 Stop after smart start" — timing-dependent, passes on retry; not related to selection_mode
 
 ---
 

@@ -57,6 +57,27 @@ All | Running 🟢 | Idle 🟡 | Dreaming 🔵
 
 ---
 
+## Agent Selection Mode
+
+Controls which eligible agents fill open pool slots when `needed > 0`.
+
+| Mode | Behavior |
+|------|----------|
+| `deterministic` | Fixed priority order: alice → task-assigned → unassigned → inbox-only (within tier, `ALL_AGENTS` list order) |
+| `random` | Same priority tiers collected, then final list shuffled (`shuf` / awk fallback) before capping to needed count |
+
+**Config**: `public/smart_run_config.json` → `"selection_mode": "deterministic"`
+
+**API**: `POST /api/smart-run/config { "selection_mode": "random" }`
+
+**CLI**: `bash smart_run.sh --dry-run --selection-mode random`
+
+**UI**: Fleet tab → Selection Mode radio buttons → Apply Settings
+
+Both one-shot Smart Run (Agents tab) and Fleet daemon (Fleet tab) use `build_selection_list()` from `smart_run.sh`, so this setting affects both.
+
+---
+
 ## Dry Run Mode
 
 **Always enabled during development.** No real API calls to Claude/Kimi.
@@ -187,15 +208,15 @@ Fleet tab manages the Smart Run daemon. Unlike the one-shot Smart Run on the Age
 
 ## E2E Test Status (2026-04-01)
 
-**561 passed / 17 skipped / 0 failed** across 6 test files:
+**569 passed / 17 skipped / 0 failed** across 6 test files:
 
 | File | Tests | Focus |
 |------|-------|-------|
 | `e2e/api.spec.js` | 49 | Core API endpoints |
 | `e2e/dashboard.spec.js` | 44 | Dashboard UI E2E |
 | `e2e/metrics.spec.js` | 59 | Metrics/stats |
-| `e2e/coverage.spec.js` | 354 | Full API coverage + response shapes |
-| `e2e/smart_run.spec.js` | 7 | Smart Run UI + button state |
+| `e2e/coverage.spec.js` | 358 | Full API coverage + response shapes |
+| `e2e/smart_run.spec.js` | 12 | Smart Run UI + button state + selection mode E2E |
 | `e2e/message_bus.spec.js` | 47 | SQLite message bus |
 
 The 17 skipped tests are auth enforcement tests (skip when `API_KEY` env var is not set in dev mode).
