@@ -441,6 +441,25 @@ test.describe("GET /api/stats", () => {
     expect(body.totals.totalCost).toBeGreaterThanOrEqual(0);
     expect(body.totals.totalCycles).toBeGreaterThanOrEqual(0);
   });
+
+  test("agent entries have dailyCosts and dailyCycles objects", async () => {
+    const { body } = await apiGet("/api/stats");
+    for (const a of body.agents || []) {
+      expect(typeof a.dailyCosts).toBe("object");
+      expect(a.dailyCosts).not.toBeNull();
+      expect(typeof a.dailyCycles).toBe("object");
+      expect(a.dailyCycles).not.toBeNull();
+      // Each key is a date string like "2026_04_01", each value is a number
+      for (const [k, v] of Object.entries(a.dailyCosts)) {
+        expect(typeof k).toBe("string");
+        expect(typeof v).toBe("number");
+      }
+      for (const [k, v] of Object.entries(a.dailyCycles)) {
+        expect(typeof k).toBe("string");
+        expect(typeof v).toBe("number");
+      }
+    }
+  });
 });
 
 // ── SOPs ──────────────────────────────────────────────────────────────────────
@@ -1456,6 +1475,18 @@ test.describe("GET /api/agents/:name/inbox", () => {
       expect(typeof item.filename).toBe("string");
       expect(typeof item.content).toBe("string");
       expect(item.unread).toBe(false);
+    }
+  });
+
+  test("inbox items have from and timestamp fields", async () => {
+    const { body } = await apiGet("/api/agents/alice/inbox");
+    const allItems = [...(body.unread || []), ...(body.processed || [])];
+    for (const item of allItems) {
+      expect(typeof item.filename).toBe("string");
+      expect(typeof item.content).toBe("string");
+      // from and timestamp are present on all inbox items
+      expect(item.from === null || item.from === undefined || typeof item.from === "string").toBe(true);
+      expect(item.timestamp === null || item.timestamp === undefined || typeof item.timestamp === "string").toBe(true);
     }
   });
 
