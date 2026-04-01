@@ -1,13 +1,13 @@
 {
   "max_agents": 3,
-  "enabled": true,
-  "dry_run": true,
-  "cycle_sleep_seconds": 2,
-  "session_max_cycles": 20,
+  "enabled": false,
   "interval_seconds": 30,
-  "last_updated": "2026-03-31T08:11:36.230Z",
+  "last_updated": "2026-04-01T23:37:33.364Z",
   "mode": "smart",
-  "force_alice": true,
-  "dry_run_sleep": 8,
-  "description": "Smart Run configuration - Controls how many agents run and selection strategy"
+  "force_alice": false,
+  "dry_run": true,
+  "dry_run_sleep": 120,
+  "description": "Smart Run configuration - Controls how many agents run and selection strategy",
+  "cycle_sleep_seconds": 100,
+  "selection_mode": "random"
 }

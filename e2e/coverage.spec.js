@@ -2888,6 +2888,29 @@ test.describe("GET & POST /api/smart-run/config", () => {
     expect(typeof body.config.last_updated).toBe("string");
     expect(new Date(body.config.last_updated).getTime()).toBeGreaterThan(0);
   });
+
+  test("GET config includes selection_mode field", async () => {
+    const { body } = await apiGet("/api/smart-run/config");
+    expect(typeof body.config.selection_mode).toBe("string");
+    expect(["deterministic", "random"]).toContain(body.config.selection_mode);
+  });
+
+  test("POST updates selection_mode to random", async () => {
+    const { status, body } = await apiPost("/api/smart-run/config", { selection_mode: "random" });
+    expect(status).toBe(200);
+    expect(body.config.selection_mode).toBe("random");
+  });
+
+  test("POST updates selection_mode to deterministic", async () => {
+    const { status, body } = await apiPost("/api/smart-run/config", { selection_mode: "deterministic" });
+    expect(status).toBe(200);
+    expect(body.config.selection_mode).toBe("deterministic");
+  });
+
+  test("POST returns 400 for invalid selection_mode", async () => {
+    const { status } = await apiPost("/api/smart-run/config", { selection_mode: "shuffle" });
+    expect(status).toBe(400);
+  });
 });
 
 // ── GET /api/smart-run/status ─────────────────────────────────────────────────

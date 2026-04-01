@@ -448,7 +448,9 @@ function getAgentStatus(name) {
     const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
     if (hbMtime) heartbeat_age_ms = Date.now() - hbMtime;
   }
-  if (status !== "running") {
+  // Log-file fallback: only when heartbeat is absent or "unknown" (not when
+  // explicitly "idle" — that means stop_all already ran and we should trust it).
+  if (status === "unknown") {
     const today = todayStr();
     const rawLog = path.join(d, "logs", `${today}_raw.log`);
     const mt = fileMtime(rawLog);
@@ -1001,8 +1003,11 @@ async function handleRequest(req, res) {
 
   // Serve index_lite.html for GET /
   if (method === "GET" && pathname === "/") {
-    const html = safeRead(path.join(DIR, "index_lite.html"));
+    let html = safeRead(path.join(DIR, "index_lite.html"));
     if (!html) return notFound(res, "dashboard not available");
+    // Inject API key so dashboard JS can include auth headers in API calls
+    const keyScript = `<script>window.__DASHBOARD_API_KEY=${JSON.stringify(API_KEY || "")};</script>`;
+    html = html.replace("</head>", keyScript + "\n</head>");
     res.writeHead(200, {
       "Content-Type": "text/html; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
@@ -1419,8 +1424,9 @@ async function handleRequest(req, res) {
     }
     const body = await parseBody(req);
     const parsedMax = parseInt(body.max, 10);
-    const configMax = parseInt(smartRunConfig.max_agents, 10) || 20;
-    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : String(configMax);
+    // If request provides a valid max, use it. Otherwise fall back to 20 (the hardcoded default),
+    // not the config value — config controls daemon mode, not one-shot smart-start calls.
+    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : "20";
     const extraArgs = ["--max", maxAgents];
     // Run smart_run.sh and capture its decision summary before it launches agents
     execFile("bash", [script, "--dry-run", ...extraArgs], { cwd: DIR }, (err, stdout, stderr) => {
@@ -1547,6 +1553,14 @@ async function handleRequest(req, res) {
         config.cycle_sleep_seconds = sleep;
       } else {
         return badRequest(res, "cycle_sleep_seconds must be between 0 and 300");
+      }
+    }
+
+    if (body.selection_mode !== undefined) {
+      if (["deterministic", "random"].includes(body.selection_mode)) {
+        config.selection_mode = body.selection_mode;
+      } else {
+        return badRequest(res, "selection_mode must be deterministic or random");
       }
     }
 
@@ -1871,6 +1885,100 @@ async function handleRequest(req, res) {
     return json(res, { name, content });
   }
 
+  // GET /api/agents/:name/context — aggregated live context snapshot for KV-cache priming
+  // Returns everything the agent needs to start a fresh session without file-discovery tool calls.
+  const agentContextMatch = pathname.match(/^\/api\/agents\/([^/]+)\/context$/);
+  if (method === "GET" && agentContextMatch) {
+    const name = agentName(agentContextMatch[1]);
+    if (!name) return badRequest(res, "invalid agent name");
+    const agentDir = path.join(EMPLOYEES_DIR, name);
+    if (!fs.existsSync(agentDir)) return notFound(res, "agent not found");
+
+    // Company mode
+    const modeRaw = safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "";
+    const modeMatch = modeRaw.match(/\*\*(\w+)\*\*/);
+    const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+
+    // Active SOP
+    const sopPath = path.join(PUBLIC_DIR, "sops", `${mode}_mode.md`);
+    const sop = safeRead(sopPath) || null;
+
+    // Culture / consensus
+    const culture = safeRead(path.join(PUBLIC_DIR, "consensus.md")) || null;
+
+    // Inbox — unread files (not in processed/)
+    const inboxDir = path.join(agentDir, "chat_inbox");
+    const inboxFiles = listDir(inboxDir)
+      .filter(f => f.endsWith(".md") && !f.startsWith("read_"))
+      .sort().reverse();
+    // Split into urgent (from_ceo / from_lord) and regular
+    const urgentFiles = inboxFiles.filter(f => f.includes("from_ceo") || f.includes("from_lord"));
+    const regularFiles = inboxFiles.filter(f => !f.includes("from_ceo") && !f.includes("from_lord"));
+    // Read full content of last 2 urgent messages
+    const urgentMessages = urgentFiles.slice(0, 2).map(f => ({
+      filename: f,
+      content: safeRead(path.join(inboxDir, f)) || "",
+    }));
+    // First-line preview of up to 15 regular DMs
+    const inboxPreviews = regularFiles.slice(0, 15).map(f => {
+      const firstLine = (safeRead(path.join(inboxDir, f)) || "").split("\n")[0].slice(0, 100);
+      return { filename: f, preview: firstLine };
+    });
+
+    // Open tasks for this agent
+    const tasks = parseTaskBoard()
+      .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
+               && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()));
+
+    // Recent team channel (last 3 messages)
+    const tcDir = path.join(PUBLIC_DIR, "team_channel");
+    const teamChannel = listDir(tcDir)
+      .filter(f => f.endsWith(".md"))
+      .sort().reverse().slice(0, 3)
+      .map(f => {
+        const raw = safeRead(path.join(tcDir, f)) || "";
+        const preview = raw.split("\n").filter(l => l.trim()).slice(0, 5).join(" ").slice(0, 200);
+        return { filename: f, preview };
+      });
+
+    // Recent announcements (last 2, skip mode-switch files)
+    const annDir = path.join(PUBLIC_DIR, "announcements");
+    const announcements = listDir(annDir)
+      .filter(f => f.endsWith(".md") && !f.includes("mode_switch"))
+      .sort().reverse().slice(0, 2)
+      .map(f => {
+        const raw = safeRead(path.join(annDir, f)) || "";
+        const preview = raw.split("\n").filter(l => l.trim()).slice(0, 3).join(" ").slice(0, 200);
+        return { filename: f, preview };
+      });
+
+    // Teammate statuses from heartbeats
+    const teammates = listAgentNames()
+      .filter(n => n !== name)
+      .map(n => {
+        const hb = safeRead(path.join(EMPLOYEES_DIR, n, "heartbeat.md")) || "";
+        const stMatch = hb.match(/^status:\s*(.+)$/m);
+        return { name: n, status: stMatch ? stMatch[1].trim() : "unknown" };
+      });
+
+    return json(res, {
+      agent: name,
+      mode,
+      sop,
+      culture,
+      inbox: {
+        total_unread: inboxFiles.length,
+        urgent: urgentMessages,
+        messages: inboxPreviews,
+        more: Math.max(0, regularFiles.length - 15),
+      },
+      tasks,
+      team_channel: teamChannel,
+      announcements,
+      teammates,
+    });
+  }
+
   // GET /api/agents/:name/cycles — list all cycles from today's log with metadata
   const agentCyclesMatch = pathname.match(/^\/api\/agents\/([^/]+)\/cycles$/);
   if (method === "GET" && agentCyclesMatch) {
@@ -2139,11 +2247,11 @@ async function handleRequest(req, res) {
         if (!lines[i].trim().startsWith("|")) continue;
         const cols = lines[i].split("|").slice(1, -1).map((c) => c.trim());
         if (cols.length < 2 || String(cols[0]) !== String(id)) continue;
-        // Pad to full 9-column schema so sparse writes don't produce undefined in joined output
-        while (cols.length < 9) cols.push("");
-        cols[4] = claimant;  // assignee
-        cols[5] = "in_progress";  // status
-        cols[7] = new Date().toISOString().slice(0, 10);  // updated
+        // Pad to full 10-column schema: ID|Title|Desc|Priority|Group|Assignee|Status|Created|Updated|Notes
+        while (cols.length < 10) cols.push("");
+        cols[5] = claimant;  // assignee
+        cols[6] = "in_progress";  // status
+        cols[8] = new Date().toISOString().slice(0, 10);  // updated
         lines[i] = "| " + cols.join(" | ") + " |";
         found = true;
         break;
@@ -2198,7 +2306,8 @@ async function handleRequest(req, res) {
       // Skip header row (contains "ID") and separator row (contains "---")
       if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
       const cols = line.split("|").slice(1, -1).map((c) => c.trim());
-      if (cols.length >= 6) tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], assignee: cols[4], status: cols[5], created: cols[6] || "", updated: cols[7] || "" });
+      // Column order: ID|Title|Desc|Priority|Group|Assignee|Status|Created|Updated|Notes
+      if (cols.length >= 7) tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], group: cols[4], assignee: cols[5], status: cols[6], created: cols[7] || "", updated: cols[8] || "" });
     }
     return json(res, tasks);
   }
@@ -2573,6 +2682,27 @@ async function handleRequest(req, res) {
       return json(res, { ok: true, id: newId }, 201);
     } catch (e) {
       console.error("[POST /api/consensus] error:", e);
+      return json(res, { error: "Internal server error" }, 500);
+    }
+  }
+
+  // DELETE /api/consensus/entry/:id — remove an entry by ID
+  const consensusDeleteMatch = pathname.match(/^\/api\/consensus\/entry\/(\d+)$/);
+  if (method === "DELETE" && consensusDeleteMatch) {
+    const targetId = parseInt(consensusDeleteMatch[1], 10);
+    const raw = safeRead(CONSENSUS_FILE) || "";
+    const lines = raw.split("\n");
+    const filtered = lines.filter(line => {
+      if (!line.startsWith("|")) return true;
+      const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+      const idNum = parseInt(cols[0], 10);
+      return isNaN(idNum) || idNum !== targetId;
+    });
+    if (filtered.length === lines.length) return notFound(res, "entry not found");
+    try {
+      fs.writeFileSync(CONSENSUS_FILE, filtered.join("\n"));
+      return json(res, { ok: true, deleted: targetId });
+    } catch (e) {
       return json(res, { error: "Internal server error" }, 500);
     }
   }
@@ -3039,7 +3169,10 @@ server.on("upgrade", (req, socket, head) => {
   if (API_KEY) {
     const authHeader = req.headers["authorization"] || "";
     const xApiKey = req.headers["x-api-key"] || "";
-    const provided = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : xApiKey;
+    // Also accept key via Sec-WebSocket-Protocol (browser WS can't set custom headers)
+    const wsProto = req.headers["sec-websocket-protocol"] || "";
+    const wsKey = wsProto.startsWith("key_") ? wsProto.slice(4) : "";
+    const provided = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : (xApiKey || wsKey);
     let authorized = false;
     if (provided) {
       try {

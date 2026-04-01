@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Agent Planet</title>
+<title>TokenFly Agent Planet</title>
 <!-- PWA / Mobile -->
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -561,12 +561,12 @@ body {
 .modal-overlay {
   display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.7); z-index: 200; justify-content: center;
-  align-items: flex-start; padding-top: 40px; overflow-y: auto;
+  align-items: flex-start; padding-top: 90px; overflow-y: auto;
 }
 .modal-overlay.visible { display: flex; }
 .modal {
   background: #1a1a2e; border: 1px solid #0f3460; border-radius: 14px;
-  width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto;
+  width: 90%; max-width: 1000px; max-height: 85vh; overflow-y: auto;
   position: relative; animation: modalIn 0.2s ease;
 }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -996,12 +996,15 @@ body {
 
 /* Company name */
 .company-name {
-  font-size: 1.15rem;
-  background: linear-gradient(135deg, #00ff88 0%, #7c3aed 100%);
+  font-size: 1.3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00ff88 0%, #58a6ff 50%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.02em;
+  text-shadow: none;
+  filter: drop-shadow(0 0 8px rgba(0,255,136,0.3));
 }
 
 /* Topbar buttons */
@@ -1365,6 +1368,7 @@ body {
     <span class="uptime" id="uptime">00:00:00</span>
     <button class="topbar-btn" id="broadcast-btn" title="Broadcast Lord's message to all agents" onclick="openBroadcastModal()" style="color:#ffaa00;font-weight:600;">📢 Broadcast</button>
     <button class="topbar-btn" id="cmd-palette-btn" title="Command Palette (Ctrl+K)">⌘K</button>
+    <button class="topbar-btn" id="mode-switch-btn" onclick="openModeSwitchModal()" title="Switch operating mode" style="padding:4px 10px;font-size:0.8rem;">⚙ Mode</button>
     <span class="mode-badge" id="mode-badge" style="cursor:pointer;" onclick="openModeSwitchModal()" title="Click to switch mode">autonomous</span>
     
     <!-- More Actions Dropdown -->
@@ -1421,8 +1425,8 @@ body {
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <span style="color:#666;font-size:0.85rem;font-weight:500;">Filter:</span>
         <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="running" title="Actively working on task">Running <span class="hb-dot hb-dot-green" style="width:6px;height:6px;"></span></button>
-        <button class="filter-btn" data-filter="idle" title="Available for assignment">Idle <span class="hb-dot hb-dot-yellow" style="width:6px;height:6px;"></span></button>
+        <button class="filter-btn" data-filter="running" title="Actively running">Running <span class="hb-dot hb-dot-green" style="width:6px;height:6px;"></span></button>
+        <button class="filter-btn" data-filter="idle" title="Not running">Idle <span class="hb-dot hb-dot-yellow" style="width:6px;height:6px;"></span></button>
         <button class="filter-btn" data-filter="dreaming" title="Doing system/maintenance work">Dreaming <span class="hb-dot hb-dot-blue" style="width:6px;height:6px;background:#4488ff;"></span></button>
       </div>
     </div>
@@ -1775,7 +1779,21 @@ body {
           <span class="fleet-slider-value" id="fleet-max-agents-value">3</span>
         </div>
         <p class="fleet-hint">Set to 0 to pause all agent launches. Daemon will keep running but won't start new agents.</p>
-        
+
+        <h3>Selection Mode</h3>
+        <div class="fleet-radio-group">
+          <label class="fleet-radio-label">
+            <input type="radio" name="fleet-selection-mode" value="deterministic" checked>
+            <span>Deterministic</span>
+            <small>Fixed priority order (alice → task-assigned → unassigned → inbox)</small>
+          </label>
+          <label class="fleet-radio-label">
+            <input type="radio" name="fleet-selection-mode" value="random">
+            <span>Random</span>
+            <small>Shuffle eligible agents for fair distribution</small>
+          </label>
+        </div>
+
         <h3>Actions</h3>
         <div class="fleet-actions">
           <button id="fleet-start-btn" class="fleet-btn fleet-btn-primary" onclick="startFleetDaemon()">Start Daemon</button>
@@ -1888,6 +1906,12 @@ body {
       color: #888;
       margin: 0 0 20px 0;
     }
+    .fleet-radio-group { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+    .fleet-radio-label { display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px 14px; border:1px solid #30363d; border-radius:6px; }
+    .fleet-radio-label:has(input:checked) { border-color:#58a6ff; background:#1c2333; }
+    .fleet-radio-label input { accent-color:#58a6ff; }
+    .fleet-radio-label span { font-weight:500; }
+    .fleet-radio-label small { color:#888; font-size:0.8rem; margin-left:auto; }
     .fleet-actions {
       display: flex;
       gap: 12px;
@@ -2230,6 +2254,18 @@ body {
 </div>
 
 <script>
+// ===== AUTH FETCH WRAPPER =====
+// When server is started with API_KEY, window.__DASHBOARD_API_KEY is injected.
+// All API calls should go through apiFetch() so auth headers are included automatically.
+function apiFetch(url, options) {
+  options = options || {};
+  const key = window.__DASHBOARD_API_KEY || '';
+  if (key) {
+    options.headers = Object.assign({ 'Authorization': 'Bearer ' + key }, options.headers || {});
+  }
+  return fetch(url, options);
+}
+
 // ===== STATE =====
 let agents = [];
 let tasks = [];
@@ -2350,7 +2386,9 @@ function connectWS() {
   }
   try {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${proto}//${location.host}/api/ws`);
+    const wsKey = window.__DASHBOARD_API_KEY;
+    const wsProtos = wsKey ? ['key_' + wsKey] : undefined;
+    ws = new WebSocket(`${proto}//${location.host}/api/ws`, wsProtos);
     ws.onopen = () => { wsConnected = true; };
     ws.onclose = () => { wsConnected = false; ws = null; scheduleReconnectWS(); };
     ws.onerror = () => { wsConnected = false; };
@@ -2577,7 +2615,7 @@ function renderCeoInbox() {
 
 async function markCeoInboxRead(filename) {
   try {
-    await fetch('/api/ceo-inbox/' + encodeURIComponent(filename) + '/read', { method: 'POST' });
+    await apiFetch('/api/ceo-inbox/' + encodeURIComponent(filename) + '/read', { method: 'POST' });
   } catch (e) { showToast('Mark-read error: ' + e.message, 3000); }
   refresh();
 }
@@ -2586,7 +2624,7 @@ async function markAllCeoInboxRead() {
   const unread = ceoInboxData.unread || [];
   try {
     await Promise.all(unread.map(m =>
-      fetch('/api/ceo-inbox/' + encodeURIComponent(m.filename) + '/read', { method: 'POST' })
+      apiFetch('/api/ceo-inbox/' + encodeURIComponent(m.filename) + '/read', { method: 'POST' })
     ));
   } catch (e) { showToast('Mark-read error: ' + e.message, 3000); }
   refresh();
@@ -2594,7 +2632,7 @@ async function markAllCeoInboxRead() {
 
 async function safeFetch(url) {
   try {
-    const res = await fetch(url);
+    const res = await apiFetch(url);
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
@@ -2642,15 +2680,18 @@ function stopFleetPolling() {
 
 async function loadFleetStatus() {
   try {
-    const [configRes, statusRes] = await Promise.all([
-      fetch('/api/smart-run/config'),
-      fetch('/api/smart-run/status')
+    const [configRes, statusRes, agentsRes] = await Promise.all([
+      apiFetch('/api/smart-run/config'),
+      apiFetch('/api/smart-run/status'),
+      apiFetch('/api/agents')
     ]);
-    
+
     const configData = await configRes.json();
     const statusData = await statusRes.json();
-    
-    updateFleetUI(configData, statusData);
+    const agentsRaw = await agentsRes.json();
+    const agentList = Array.isArray(agentsRaw) ? agentsRaw : (agentsRaw.agents || []);
+
+    updateFleetUI(configData, statusData, agentList);
   } catch (e) {
     console.error('[fleet] Error loading status:', e);
     document.getElementById('fleet-daemon-status').textContent = 'Error connecting';
@@ -2658,11 +2699,16 @@ async function loadFleetStatus() {
   }
 }
 
-function updateFleetUI(configData, statusData) {
+function updateFleetUI(configData, statusData, agentList) {
   const daemonRunning = statusData.daemon?.running || configData.daemon?.running || false;
   const maxAgents = configData.config?.max_agents ?? 3;
   const interval = configData.config?.interval_seconds ?? 30;
-  const runningAgents = statusData.agents?.running || [];
+  // Prefer daemon-tracked list; fall back to heartbeat-based list when no daemon
+  const daemonRunningAgents = statusData.agents?.running || [];
+  const heartbeatRunning = (agentList || [])
+    .filter(a => { const s = (a.status || a.heartbeat_status || '').toLowerCase(); return s === 'running' || s === 'active'; })
+    .map(a => a.name);
+  const runningAgents = daemonRunningAgents.length > 0 ? daemonRunningAgents : heartbeatRunning;
   
   // Update status indicator
   const indicator = document.getElementById('fleet-daemon-indicator');
@@ -2707,7 +2753,12 @@ function updateFleetUI(configData, statusData) {
     slider.value = maxAgents;
     sliderValue.textContent = maxAgents;
   }
-  
+
+  // Sync selection mode radio
+  const selMode = configData.config?.selection_mode || 'deterministic';
+  document.querySelectorAll('input[name="fleet-selection-mode"]')
+    .forEach(r => { r.checked = r.value === selMode; });
+
   // Update agents list
   const agentsContainer = document.getElementById('fleet-agents');
   if (runningAgents.length === 0) {
@@ -2739,7 +2790,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function startFleetDaemon() {
   try {
-    const res = await fetch('/api/smart-run/start', { method: 'POST' });
+    const res = await apiFetch('/api/smart-run/start', { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
       showToast('Daemon started');
@@ -2754,7 +2805,7 @@ async function startFleetDaemon() {
 
 async function stopFleetDaemon() {
   try {
-    const res = await fetch('/api/smart-run/stop', { method: 'POST' });
+    const res = await apiFetch('/api/smart-run/stop', { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
       showToast('Daemon stopped');
@@ -2769,12 +2820,13 @@ async function stopFleetDaemon() {
 
 async function applyFleetConfig() {
   const maxAgents = parseInt(document.getElementById('fleet-max-agents').value, 10);
-  
+  const selectionMode = document.querySelector('input[name="fleet-selection-mode"]:checked')?.value || 'deterministic';
+
   try {
-    const res = await fetch('/api/smart-run/config', {
+    const res = await apiFetch('/api/smart-run/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ max_agents: maxAgents })
+      body: JSON.stringify({ max_agents: maxAgents, selection_mode: selectionMode })
     });
     const data = await res.json();
     if (data.ok) {
@@ -2870,9 +2922,9 @@ function renderAgents() {
   let filtered = Array.isArray(agents) ? [...agents] : [];
 
   if (currentAgentFilter !== 'all') {
-    if (currentAgentFilter === 'running') {
+    if (currentAgentFilter === 'active' || currentAgentFilter === 'running') {
       filtered = filtered.filter(a => getAgentStatus(a) === 'running');
-    } else if (currentAgentFilter === 'idle') {
+    } else if (currentAgentFilter === 'offline' || currentAgentFilter === 'idle') {
       filtered = filtered.filter(a => getAgentStatus(a) === 'idle');
     } else if (currentAgentFilter === 'dreaming') {
       filtered = filtered.filter(a => getAgentStatus(a) === 'dreaming');
@@ -3121,7 +3173,7 @@ function bulkActionSelected(action) {
   if (names.length === 0) return;
   if (!confirm(action.charAt(0).toUpperCase() + action.slice(1) + ' ' + names.length + ' agent(s): ' + names.join(', ') + '?')) return;
   Promise.all(names.map(name =>
-    fetch('/api/agents/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
+    apiFetch('/api/agents/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
       .then(r => r.json().then(d => ({ name, ok: r.ok && (d.ok !== false), error: d.error })))
       .catch(e => ({ name, ok: false, error: e.message }))
   )).then(results => {
@@ -3147,7 +3199,7 @@ function agentAction(name, action) {
   const btn = card ? card.querySelector('[title="' + (action === 'start' ? 'Start agent' : 'Stop agent') + '"]') : null;
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
 
-  fetch('/api/agents/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
+  apiFetch('/api/agents/' + encodeURIComponent(name) + '/' + action, { method: 'POST' })
     .then(r => r.json())
     .then(d => {
       if (btn) { btn.textContent = action === 'start' ? '▶' : '■'; btn.disabled = false; }
@@ -3159,7 +3211,7 @@ function agentAction(name, action) {
           showToast('Starting ' + name + '…');
           // Poll ping after 3s to confirm process started
           setTimeout(() => {
-            fetch('/api/agents/' + encodeURIComponent(name) + '/ping')
+            apiFetch('/api/agents/' + encodeURIComponent(name) + '/ping')
               .then(r => r.json())
               .then(p => { if (p.running) showToast(name + ' is running ✓'); })
               .catch(() => {});
@@ -3178,7 +3230,7 @@ function saveAgentExecutor() {
   const name = document.getElementById('agent-modal-title').textContent;
   const executor = document.getElementById('agent-settings-executor').value;
   
-  fetch('/api/agents/' + encodeURIComponent(name) + '/executor', {
+  apiFetch('/api/agents/' + encodeURIComponent(name) + '/executor', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ executor })
@@ -3214,7 +3266,7 @@ function pingAgent(evt, name) {
   evt.stopPropagation();
   const btn = evt.target;
   btn.textContent = '⏳';
-  fetch('/api/agents/' + encodeURIComponent(name) + '/ping')
+  apiFetch('/api/agents/' + encodeURIComponent(name) + '/ping')
     .then(r => r.json())
     .then(d => {
       if (d.running && d.inCycle) {
@@ -3245,7 +3297,7 @@ function closeModeSwitchModal() {
 
 function doSwitchMode(mode) {
   const reason = document.getElementById('mode-switch-reason').value.trim() || 'via dashboard';
-  fetch('/api/mode', {
+  apiFetch('/api/mode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mode: mode, who: 'Lord', reason: reason })
@@ -3275,7 +3327,7 @@ function closeBroadcastModal() {
 function sendBroadcast() {
   const msg = document.getElementById('broadcast-message').value.trim();
   if (!msg) return;
-  fetch('/api/broadcast', {
+  apiFetch('/api/broadcast', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: msg, from: 'Lord' })
@@ -3300,7 +3352,7 @@ document.getElementById('broadcast-modal-overlay').addEventListener('click', e =
 function runWatchdog() {
   const btn = document.getElementById('watchdog-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
-  fetch('/api/agents/watchdog', { method: 'POST' })
+  apiFetch('/api/agents/watchdog', { method: 'POST' })
     .then(r => r.json())
     .then(data => {
       if (btn) { btn.disabled = false; btn.textContent = '🐕 Watchdog'; }
@@ -3330,7 +3382,7 @@ async function sendCeoCommand() {
   input.disabled = true;
   hint.textContent = 'Sending…';
   try {
-    const res = await fetch('/api/ceo/command', {
+    const res = await apiFetch('/api/ceo/command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command: cmd })
@@ -3383,11 +3435,13 @@ function smartStartToggle() {
 // Shared stop function — calls stop-all API, waits for completion, then polls
 // to verify agents are truly stopped (no background processes restarting them).
 function stopAllAgents() {
+  // Cancel watchdog — stop is explicit, no need to auto-detect idle
+  if (_smartRunWatchdog) { clearInterval(_smartRunWatchdog); _smartRunWatchdog = null; }
   const btn = document.getElementById('smart-start-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Stopping…'; }
   showToast('Sending stop signal…', 2000);
 
-  fetch('/api/agents/stop-all', { method: 'POST' })
+  apiFetch('/api/agents/stop-all', { method: 'POST' })
     .then(r => r.json())
     .then(() => {
       showToast('Kill signal sent — verifying…', 2000);
@@ -3395,7 +3449,7 @@ function stopAllAgents() {
       let polls = 0;
       const check = () => {
         polls++;
-        fetch('/api/smart-run/status')
+        apiFetch('/api/smart-run/status')
           .then(r => r.json())
           .then(data => {
             const running = data.agents?.running || [];
@@ -3408,7 +3462,7 @@ function stopAllAgents() {
               setTimeout(check, 1500);
             } else {
               // Gave up polling — force stop once more then accept
-              fetch('/api/agents/stop-all', { method: 'POST' }).finally(() => {
+              apiFetch('/api/agents/stop-all', { method: 'POST' }).finally(() => {
                 if (btn) setSmartStartIdle(btn);
                 showToast(`⚠ Stop sent twice. ${running.length} agent(s) may still be winding down.`, 5000);
                 refresh();
@@ -3459,11 +3513,33 @@ function syncSmartStartBtn(agentList) {
 function saveCycleSleep(val) {
   const secs = parseInt(val, 10);
   if (isNaN(secs) || secs < 0) return;
-  fetch('/api/smart-run/config', {
+  apiFetch('/api/smart-run/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cycle_sleep_seconds: secs })
   }).catch(() => {});
+}
+
+let _smartRunWatchdog = null;
+
+function startSmartRunWatchdog() {
+  if (_smartRunWatchdog) clearInterval(_smartRunWatchdog);
+  _smartRunWatchdog = setInterval(() => {
+    safeFetch('/api/agents').then(raw => {
+      if (!raw) return;
+      const list = Array.isArray(raw) ? raw : (raw.agents || []);
+      const anyRunning = list.some(a => (a.status || '').toLowerCase() === 'running');
+      if (!anyRunning) {
+        // All agents idle — revert button and stop watchdog
+        const btn = document.getElementById('smart-start-btn');
+        setSmartStartIdle(btn);
+        agents = list;
+        renderAgents();
+        clearInterval(_smartRunWatchdog);
+        _smartRunWatchdog = null;
+      }
+    }).catch(() => {});
+  }, 5000); // check every 5s
 }
 
 function smartStart(maxOverride) {
@@ -3471,7 +3547,7 @@ function smartStart(maxOverride) {
   const max = maxOverride || (maxInput ? parseInt(maxInput.value, 10) : 20) || 20;
   const btn = document.getElementById('smart-start-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Starting…'; }
-  fetch('/api/agents/smart-start', {
+  apiFetch('/api/agents/smart-start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ max })
@@ -3484,6 +3560,7 @@ function smartStart(maxOverride) {
         const starting = d['Starting now'] || 'none';
         showToast('⚡ Smart Start (max ' + max + '): ' + starting, 5000);
         setTimeout(refresh, 2000);
+        startSmartRunWatchdog(); // poll every 5s until all agents go idle
       } else {
         setSmartStartIdle(btn);
         showToast('Smart Start error: ' + (data.error || 'unknown'), 4000);
@@ -3498,7 +3575,7 @@ function smartStart(maxOverride) {
 function bulkAction(action) {
   if (action === 'start') {
     if (confirm('⚠ Start ALL 20 agents?\n\nThis burns significant tokens. Consider using "Start Selected" to start just 2–3 agents instead.\n\nClick OK to start all anyway.')) {
-      fetch('/api/agents/start-all', { method: 'POST' }).then(() => refresh()).catch(e => showToast('Error: ' + e.message, 4000));
+      apiFetch('/api/agents/start-all', { method: 'POST' }).then(() => refresh()).catch(e => showToast('Error: ' + e.message, 4000));
     }
   } else if (action === 'stop') {
     if (confirm('Stop all running agents?')) {
@@ -3515,7 +3592,7 @@ function sendDMAll() {
   if (!msg) return;
   const names = (Array.isArray(agents) ? agents : []).map(a => a.name || a.agent).filter(Boolean);
   Promise.all(names.map(name =>
-    fetch('/api/agents/' + encodeURIComponent(name) + '/inbox', {
+    apiFetch('/api/agents/' + encodeURIComponent(name) + '/inbox', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: from, message: msg })
@@ -3714,7 +3791,7 @@ function createTask() {
     status: 'open',
     task_type: taskType
   };
-  fetch('/api/tasks', {
+  apiFetch('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -3772,7 +3849,7 @@ function tdAddNote() {
   const note = input.value.trim();
   if (!note) return;
   if (note.length > 2000) { showToast('Note too long (max 2000 chars)', 3000); return; }
-  fetch('/api/tasks/' + currentTaskDetailId, {
+  apiFetch('/api/tasks/' + currentTaskDetailId, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes: note })
@@ -3824,7 +3901,7 @@ async function viewTaskResult(taskId, taskTitle) {
   overlay.classList.add('visible');
 
   try {
-    const r = await fetch('/api/tasks/' + taskId + '/result');
+    const r = await apiFetch('/api/tasks/' + taskId + '/result');
     loadingEl.style.display = 'none';
     if (!r.ok) {
       const err = await r.json().catch(() => ({ error: 'No result file found yet' }));
@@ -3860,7 +3937,7 @@ function tdUpdateStatus() {
   const newStatus = sel.value;
   sel.className = 'task-status-select status-' + newStatus;
   document.getElementById('td-status').textContent = newStatus.replace('_', ' ');
-  fetch('/api/tasks/' + currentTaskDetailId, {
+  apiFetch('/api/tasks/' + currentTaskDetailId, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: newStatus })
@@ -3906,7 +3983,7 @@ document.getElementById('task-detail-modal-overlay').addEventListener('click', e
 });
 
 function updateTaskStatus(id, status) {
-  fetch('/api/tasks/' + id, {
+  apiFetch('/api/tasks/' + id, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: status })
@@ -3917,7 +3994,7 @@ function updateTaskStatus(id, status) {
 }
 
 function updateTaskField(id, field, value) {
-  fetch('/api/tasks/' + id, {
+  apiFetch('/api/tasks/' + id, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ [field]: value })
@@ -3953,7 +4030,7 @@ function inlineEditTitle(id, cell) {
 
 function deleteTask(id) {
   if (!confirm('Delete task #' + id + '?')) return;
-  fetch('/api/tasks/' + id, { method: 'DELETE' })
+  apiFetch('/api/tasks/' + id, { method: 'DELETE' })
     .then(r => r.json().then(d => {
       if (!r.ok) { alert('Delete failed: ' + (d.error || r.status)); return; }
       refresh();
@@ -3965,7 +4042,7 @@ function quickAssignTask(agentName) {
   const title = prompt('Task title for ' + agentName + ':');
   if (!title) return;
   const priority = prompt('Priority (low/medium/high/critical):', 'medium') || 'medium';
-  fetch('/api/tasks', {
+  apiFetch('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, priority, assignee: agentName, status: 'open' })
@@ -4006,7 +4083,7 @@ async function loadArchive() {
   const emptyEl = document.getElementById('archive-empty');
   tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">Loading…</td></tr>';
   try {
-    const res = await fetch('/api/tasks/archive');
+    const res = await apiFetch('/api/tasks/archive');
     if (!res.ok) { tbody.innerHTML = '<tr><td colspan="5" style="color:#ff6b6b;text-align:center;">Failed to load archive (' + res.status + ')</td></tr>'; return; }
     const tasks = await res.json();
     if (!Array.isArray(tasks) || tasks.length === 0) {
@@ -4030,7 +4107,7 @@ async function loadArchive() {
 }
 
 async function archiveDone() {
-  const { ok, archived } = await fetch('/api/tasks/archive', { method: 'POST' })
+  const { ok, archived } = await apiFetch('/api/tasks/archive', { method: 'POST' })
     .then(r => r.json()).catch(() => ({ ok: false }));
   if (ok) {
     showToast(`Archived ${archived} done task${archived !== 1 ? 's' : ''}`, 3000);
@@ -4095,7 +4172,7 @@ function sendChatMessage() {
   const dmTarget = document.getElementById('chat-dm-target').value;
 
   if (dmTarget) {
-    fetch('/api/agents/' + encodeURIComponent(dmTarget) + '/inbox', {
+    apiFetch('/api/agents/' + encodeURIComponent(dmTarget) + '/inbox', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: from, message: msg })
@@ -4104,7 +4181,7 @@ function sendChatMessage() {
       else { document.getElementById('chat-input').value = ''; refresh(); }
     })).catch(e => showToast('DM error: ' + e.message, 3000));
   } else {
-    fetch('/api/team-channel', {
+    apiFetch('/api/team-channel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: from, message: msg })
@@ -4135,7 +4212,7 @@ function postAnnouncement() {
   const body = document.getElementById('ann-body').value.trim();
   const from = document.getElementById('ann-from').value.trim() || 'CEO';
   if (!title) return alert('Title required');
-  fetch('/api/announcements', {
+  apiFetch('/api/announcements', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, body, from, date: new Date().toISOString() })
@@ -4181,7 +4258,7 @@ async function viewResearch(name) {
   viewer.style.display = 'block';
   viewer.textContent = 'Loading...';
   try {
-    const res = await fetch('/api/research/' + encodeURIComponent(name));
+    const res = await apiFetch('/api/research/' + encodeURIComponent(name));
     if (!res.ok) throw new Error('Not found');
     const data = await res.json();
     const content = typeof data === 'string' ? data : (data.content || JSON.stringify(data, null, 2));
@@ -4250,7 +4327,7 @@ async function viewKnowledge(cat, name) {
   try {
     // name is already the full relative path from knowledge root (e.g. "standards/foo.md")
     // cat is a display category ("General"), not a directory prefix on disk
-    const res = await fetch('/api/knowledge/' + encodeURIComponent(name));
+    const res = await apiFetch('/api/knowledge/' + encodeURIComponent(name));
     if (!res.ok) throw new Error('Not found');
     const data = await res.json();
     const content = typeof data === 'string' ? data : (data.content || JSON.stringify(data, null, 2));
@@ -4371,7 +4448,7 @@ async function submitConsensusEntry() {
   const section = document.getElementById('consensus-section').value.trim();
   if (!content) { showToast('Content is required', 2500); return; }
   try {
-    const res = await fetch('/api/consensus/entry', {
+    const res = await apiFetch('/api/consensus/entry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, content, section, author: 'Lord' })
@@ -4400,7 +4477,7 @@ function renderStats() {
     '<div class="card stat-card"><div class="stat-value">' + totalCycles + '</div><div class="stat-label">Total Cycles (7d)</div></div>' +
     '<div class="card stat-card"><div class="stat-value">$' + Number(totalCost).toFixed(2) + '</div><div class="stat-label">Total Cost (7d)</div></div>' +
     '<div class="card stat-card"><div class="stat-value">$' + avgCost + '</div><div class="stat-label">Avg Cost / Cycle</div></div>' +
-    '<div class="card stat-card"><div class="stat-value">' + (Array.isArray(agents) ? agents.length : 0) + '</div><div class="stat-label">Active Agents</div></div>';
+    '<div class="card stat-card"><div class="stat-value">' + (Array.isArray(agents) ? agents.filter(a => (a.status||'').toLowerCase() === 'running').length : 0) + '</div><div class="stat-label">Running Agents</div></div>';
 
   // Cycles chart
   const cyclesChart = document.getElementById('chart-cycles');
@@ -4560,7 +4637,7 @@ async function fetchLiveTail() {
   const agentName = document.getElementById('livetail-agent').value;
   if (!agentName) return;
   try {
-    const res = await fetch('/api/agents/' + encodeURIComponent(agentName) + '/log');
+    const res = await apiFetch('/api/agents/' + encodeURIComponent(agentName) + '/log');
     if (!res.ok) return;
     const data = await res.json();
     const viewer = document.getElementById('log-viewer');
@@ -4984,7 +5061,7 @@ function sendModalDM() {
   const msg = document.getElementById('modal-dm-input').value.trim();
   const from = document.getElementById('modal-dm-from').value.trim() || 'CEO';
   if (!msg) return;
-  fetch('/api/agents/' + encodeURIComponent(currentModalAgent) + '/inbox', {
+  apiFetch('/api/agents/' + encodeURIComponent(currentModalAgent) + '/inbox', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: from, message: msg })
@@ -4999,7 +5076,7 @@ async function openDigest() {
   document.getElementById('digest-modal-overlay').classList.add('visible');
   document.getElementById('digest-content').textContent = 'Loading...';
   try {
-    const res = await fetch('/api/digest');
+    const res = await apiFetch('/api/digest');
     if (!res.ok) throw new Error('Failed to fetch digest');
     const data = await res.json();
     const content = document.getElementById('digest-content');
@@ -5614,7 +5691,7 @@ function updateMobileBadges() {
 // ===== MOBILE OFFLINE CACHE =====
 async function fetchDashboardWithCache() {
   try {
-    const res = await fetch('/api/dashboard');
+    const res = await apiFetch('/api/dashboard');
     const data = await res.json();
     localStorage.setItem('tf_dashboard_cache', JSON.stringify({ ts: Date.now(), data }));
     hideOfflineBanner();

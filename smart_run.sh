@@ -12,18 +12,401 @@
 #   5. Skip already-running agents
 #
 # Flags:
+#   --daemon       Run in continuous daemon mode (reads config file)
 #   --dry-run      Print decision and exit (no launch)
 #   --force-alice  Always include alice even if no work
 #   --max N        Hard cap on total agents to start (default: 20)
 #                  Use --max 3 for testing to save tokens
+#   --stop         Stop the daemon
+#   --status       Check daemon status
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="${COMPANY_DIR}/public/smart_run_config.json"
+PID_FILE="${COMPANY_DIR}/.smart_run_daemon.pid"
 TASK_BOARD="${COMPANY_DIR}/public/task_board.md"
 ALL_AGENTS="alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina"
 
+# ── Config Defaults ───────────────────────────────────────────────────────────
+MAX_AGENTS=3
+INTERVAL_SECONDS=30
+FORCE_ALICE=1
+MODE="smart"
+SELECTION_MODE="deterministic"
+
+# ── Parse Command Line Flags ──────────────────────────────────────────────────
+DAEMON_MODE=0
+DRY_RUN_FLAG=0
+STOP_DAEMON=0
+STATUS_CHECK=0
+CLI_MAX_AGENTS=""
+CLI_SELECTION_MODE=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --daemon) DAEMON_MODE=1 ;;
+        --dry-run) DRY_RUN_FLAG=1 ;;
+        --force-alice) FORCE_ALICE=1 ;;
+        --stop) STOP_DAEMON=1 ;;
+        --status) STATUS_CHECK=1 ;;
+    esac
+done
+
+# --max N: look for --max followed by a number
+PREV_ARG=""
+for i in "$@"; do
+    if [ "$PREV_ARG" = "--max" ]; then
+        if echo "$i" | grep -qE '^[0-9]+$'; then
+            CLI_MAX_AGENTS="$i"
+            MAX_AGENTS="$i"
+        fi
+        break
+    fi
+    PREV_ARG="$i"
+done
+
+# --selection-mode random|deterministic
+PREV_ARG=""
+for i in "$@"; do
+    if [ "$PREV_ARG" = "--selection-mode" ]; then
+        if [ "$i" = "random" ] || [ "$i" = "deterministic" ]; then
+            CLI_SELECTION_MODE="$i"
+            SELECTION_MODE="$i"
+        fi
+        break
+    fi
+    PREV_ARG="$i"
+done
+
+# ── Helper: Read Config File ──────────────────────────────────────────────────
+read_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        # Use jq if available, otherwise grep/sed
+        if command -v jq >/dev/null 2>&1; then
+            MAX_AGENTS=$(jq -r '.max_agents // 3' "$CONFIG_FILE")
+            INTERVAL_SECONDS=$(jq -r '.interval_seconds // 30' "$CONFIG_FILE")
+            MODE=$(jq -r '.mode // "smart"' "$CONFIG_FILE")
+            FORCE_ALICE=$(jq -r '.force_alice // true' "$CONFIG_FILE" | grep -qi "true" && echo 1 || echo 0)
+            SELECTION_MODE=$(jq -r '.selection_mode // "deterministic"' "$CONFIG_FILE")
+        else
+            # Fallback: simple grep/sed parsing
+            MAX_AGENTS=$(grep -o '"max_agents":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*' | head -1)
+            MAX_AGENTS="${MAX_AGENTS:-3}"
+            INTERVAL_SECONDS=$(grep -o '"interval_seconds":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*' | head -1)
+            INTERVAL_SECONDS="${INTERVAL_SECONDS:-30}"
+            SELECTION_MODE=$(grep -o '"selection_mode":[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*"selection_mode":[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
+            SELECTION_MODE="${SELECTION_MODE:-deterministic}"
+        fi
+    fi
+    # CLI override takes precedence
+    [ -n "$CLI_MAX_AGENTS" ] && MAX_AGENTS="$CLI_MAX_AGENTS"
+    [ -n "$CLI_SELECTION_MODE" ] && SELECTION_MODE="$CLI_SELECTION_MODE"
+}
+
+# ── Helper: Write Config File ─────────────────────────────────────────────────
+# Merges only the fields we own into the existing config; preserves all others
+# (e.g. dry_run, cycle_sleep_seconds) that we don't manage here.
+write_config() {
+    local enabled="$1"
+    local patch
+    patch=$(printf '{"max_agents":%s,"enabled":%s,"interval_seconds":%s,"last_updated":"%s","mode":"%s","force_alice":%s}' \
+        "${MAX_AGENTS}" "${enabled}" "${INTERVAL_SECONDS}" \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${MODE}" "${FORCE_ALICE:-true}")
+
+    if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_FILE" ]; then
+        # Merge: existing config wins for unknown keys; our patch wins for known keys
+        jq -s '.[0] * .[1]' "$CONFIG_FILE" <(echo "$patch") > "${CONFIG_FILE}.tmp" && \
+            mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+    else
+        echo "$patch" > "$CONFIG_FILE"
+    fi
+}
+
+# ── Helper: Check if agent is running ─────────────────────────────────────────
+# Fast path: check heartbeat.md (single file read, no process spawn)
+# Fall back to pgrep only if heartbeat is stale/missing.
+is_agent_running() {
+    local ag="$1"
+    local hb="${COMPANY_DIR}/agents/${ag}/heartbeat.md"
+    if [ -f "$hb" ]; then
+        local hb_status
+        hb_status=$(grep '^status:' "$hb" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//')
+        [ "$hb_status" = "running" ] && return 0
+    fi
+    # Heartbeat says idle/stopped — confirm with pgrep (catches cases where process
+    # is alive but hasn't written heartbeat yet, e.g. first few seconds of startup)
+    pgrep -f "run_agent.sh.*\b${ag}\b" > /dev/null 2>&1 || \
+    pgrep -f "run_subset.sh.*\b${ag}\b" > /dev/null 2>&1
+}
+
+# ── Helper: Get running agent count ───────────────────────────────────────────
+get_running_count() {
+    local count=0
+    for ag in $ALL_AGENTS; do
+        is_agent_running "$ag" && count=$((count + 1))
+    done
+    echo "$count"
+}
+
+# ── Helper: Get list of running agents ────────────────────────────────────────
+get_running_agents() {
+    local running=""
+    for ag in $ALL_AGENTS; do
+        is_agent_running "$ag" && running="$running $ag"
+    done
+    echo "$running" | sed 's/^ *//'
+}
+
+# ── Core Logic: Build agent selection list ────────────────────────────────────
+build_selection_list() {
+    # Parse task board
+    ASSIGNED_AGENTS=""
+    UNASSIGNED_COUNT=0
+    OPEN_TASK_COUNT=0
+    
+    if [ -f "$TASK_BOARD" ]; then
+        while IFS='|' read -r _ id title assignee status _; do
+            id_clean=$(echo "$id" | tr -d ' ')
+            echo "$id_clean" | grep -qE '^(-+|ID)$' && continue
+            [ -z "$id_clean" ] && continue
+            
+            status_clean=$(echo "$status" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+            [ "$status_clean" = "done" ] && continue
+            [ "$status_clean" = "cancelled" ] && continue
+            [ "$status_clean" = "closed" ] && continue
+            
+            OPEN_TASK_COUNT=$((OPEN_TASK_COUNT + 1))
+            assignee_clean=$(echo "$assignee" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+            if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "-" ]; then
+                echo "$ASSIGNED_AGENTS" | grep -qw "$assignee_clean" || ASSIGNED_AGENTS="$ASSIGNED_AGENTS $assignee_clean"
+            else
+                UNASSIGNED_COUNT=$((UNASSIGNED_COUNT + 1))
+            fi
+        done < <(grep '^|' "$TASK_BOARD" 2>/dev/null | tail -n +3)
+    fi
+    
+    # Check inbox
+    INBOX_AGENTS=""
+    for ag in $ALL_AGENTS; do
+        inbox_dir="${COMPANY_DIR}/agents/${ag}/chat_inbox"
+        if [ -d "$inbox_dir" ]; then
+            count=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | wc -l | tr -d ' ')
+            [ "${count:-0}" -gt 0 ] && INBOX_AGENTS="$INBOX_AGENTS $ag"
+        fi
+    done
+    
+    # Build list
+    TO_START=""
+    RUNNING_AGENTS=$(get_running_agents)
+    
+    add_agent() {
+        local ag="$1"
+        echo "$RUNNING_AGENTS" | grep -qw "$ag" && return
+        echo "$TO_START" | grep -qw "$ag" && return
+        [ ! -d "${COMPANY_DIR}/agents/${ag}" ] && return
+        TO_START="$TO_START $ag"
+    }
+    
+    under_max() {
+        local count=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+        local running_count=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+        count=${count:-0}
+        running_count=${running_count:-0}
+        local total=$((count + running_count))
+        [ "$total" -lt "$MAX_AGENTS" ]
+    }
+    
+    # Priority 1: Alice
+    if [ "$FORCE_ALICE" -eq 1 ] || [ "$OPEN_TASK_COUNT" -gt 0 ] || echo "$INBOX_AGENTS" | grep -qw "alice"; then
+        under_max && add_agent "alice"
+    fi
+    
+    # Priority 2: Task-assigned agents
+    for ag in $ALL_AGENTS; do
+        [ "$ag" = "alice" ] && continue
+        echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && under_max && add_agent "$ag"
+    done
+    
+    # Priority 3: Unassigned task claimers
+    if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
+        local queued; queued=$(echo "$TO_START" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null) || queued=0
+        local running_c; running_c=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null) || running_c=0
+        local total=$((queued + running_c))
+        local need=$((UNASSIGNED_COUNT < 3 ? UNASSIGNED_COUNT : 3))
+        local add_more=$((need - total))
+        
+        if [ "$add_more" -gt 0 ]; then
+            for ag in $ALL_AGENTS; do
+                [ "$add_more" -le 0 ] && break
+                [ "$ag" = "alice" ] && continue
+                echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue
+                echo "$RUNNING_AGENTS" | grep -qw "$ag" && continue
+                echo "$TO_START" | grep -qw "$ag" && continue
+                under_max && add_agent "$ag"
+                add_more=$((add_more - 1))
+            done
+        fi
+    fi
+    
+    # Priority 4: Inbox-only agents
+    for ag in $ALL_AGENTS; do
+        [ "$ag" = "alice" ] && continue
+        echo "$INBOX_AGENTS" | grep -qw "$ag" || continue
+        echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue
+        under_max && add_agent "$ag"
+    done
+    
+    # Apply selection mode shuffle if random
+    if [ "$SELECTION_MODE" = "random" ]; then
+        if command -v shuf >/dev/null 2>&1; then
+            TO_START=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | shuf | tr '\n' ' ')
+        else
+            TO_START=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | awk 'BEGIN{srand()} {lines[NR]=$0} END{for(i=NR;i>1;i--){j=int(rand()*i)+1; t=lines[i]; lines[i]=lines[j]; lines[j]=t} for(i=1;i<=NR;i++) print lines[i]}' | tr '\n' ' ')
+        fi
+    fi
+
+    echo "$TO_START" | sed 's/^ *//'
+}
+
+# ── Daemon Mode: Main Loop ───────────────────────────────────────────────────
+daemon_loop() {
+    echo "[daemon] Smart Run daemon started (PID: $$)"
+    echo "[daemon] Max agents: $MAX_AGENTS, Interval: ${INTERVAL_SECONDS}s"
+
+    # Write PID file
+    echo $$ > "$PID_FILE"
+
+    # Update config to enabled
+    write_config "true"
+
+    # Trap signals for graceful shutdown
+    trap 'write_config "false"; rm -f "$PID_FILE"; exit 0' SIGTERM
+    trap 'exit 0' SIGINT SIGHUP SIGQUIT
+
+    local cycle=0
+    while true; do
+        cycle=$((cycle + 1))
+        echo ""
+        echo "[daemon] === Cycle $cycle ==="
+
+        # Re-read config each cycle for live updates
+        read_config
+
+        # Check if daemon should stop
+        if [ -f "$CONFIG_FILE" ] && command -v jq >/dev/null 2>&1; then
+            local enabled
+            enabled=$(jq -r '.enabled // false' "$CONFIG_FILE")
+            if [ "$enabled" = "false" ] || [ "$enabled" = "False" ]; then
+                echo "[daemon] Config shows enabled=false, stopping..."
+                rm -f "$PID_FILE"
+                exit 0
+            fi
+        fi
+
+        local running_count
+        running_count=$(get_running_count)
+        local needed=$((MAX_AGENTS - running_count))
+
+        echo "[daemon] Running: $running_count/$MAX_AGENTS, Need to start: $needed"
+
+        if [ "$needed" -gt 0 ]; then
+            local to_start
+            to_start=$(build_selection_list)
+            to_start=$(echo "$to_start" | tr ' ' '\n' | grep -v '^$' | head -n "$needed" | tr '\n' ' ')
+
+            if [ -n "$to_start" ] && [ -n "$(echo "$to_start" | tr -d ' ')" ]; then
+                echo "[daemon] Starting agents: $to_start"
+                for ag in $to_start; do
+                    echo "[daemon] Launching $ag..."
+                    # Launch agent in background, detached from daemon's process group
+                    setsid bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
+                    disown $! 2>/dev/null || true
+                    sleep 1  # Small delay between launches
+                done
+            else
+                echo "[daemon] No eligible agents to start"
+            fi
+        else
+            echo "[daemon] At capacity ($running_count/$MAX_AGENTS)"
+        fi
+
+        echo "[daemon] Sleeping ${INTERVAL_SECONDS}s..."
+        sleep "$INTERVAL_SECONDS"
+    done
+}
+
+# ── Handle --status ───────────────────────────────────────────────────────────
+if [ $STATUS_CHECK -eq 1 ]; then
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if kill -0 "$PID" 2>/dev/null; then
+            echo "Smart Run daemon: RUNNING (PID: $PID)"
+            read_config
+            echo "Config: max_agents=$MAX_AGENTS, interval=${INTERVAL_SECONDS}s"
+            echo "Running agents: $(get_running_count)"
+            echo "Agent list: $(get_running_agents)"
+            exit 0
+        else
+            echo "Smart Run daemon: STOPPED (stale PID file)"
+            rm -f "$PID_FILE"
+            exit 1
+        fi
+    else
+        echo "Smart Run daemon: STOPPED"
+        exit 1
+    fi
+fi
+
+# ── Handle --stop ─────────────────────────────────────────────────────────────
+if [ $STOP_DAEMON -eq 1 ]; then
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if kill -0 "$PID" 2>/dev/null; then
+            echo "Stopping Smart Run daemon (PID: $PID)..."
+            # Update config first so daemon knows to stop gracefully
+            write_config "false"
+            kill "$PID" 2>/dev/null
+            sleep 1
+            if kill -0 "$PID" 2>/dev/null; then
+                echo "Daemon didn't stop, forcing..."
+                kill -9 "$PID" 2>/dev/null
+            fi
+            rm -f "$PID_FILE"
+            echo "Daemon stopped."
+            exit 0
+        else
+            echo "Daemon not running (stale PID file)"
+            rm -f "$PID_FILE"
+            exit 1
+        fi
+    else
+        echo "Daemon not running"
+        exit 1
+    fi
+fi
+
+# ── Handle --daemon ───────────────────────────────────────────────────────────
+if [ $DAEMON_MODE -eq 1 ]; then
+    # Check if already running
+    if [ -f "$PID_FILE" ]; then
+        OLD_PID=$(cat "$PID_FILE")
+        if kill -0 "$OLD_PID" 2>/dev/null; then
+            echo "Daemon already running (PID: $OLD_PID)"
+            echo "Use --stop to stop it first, or --status to check status"
+            exit 1
+        else
+            rm -f "$PID_FILE"
+        fi
+    fi
+
+    read_config
+    daemon_loop
+    exit 0
+fi
+
+# ── One-shot mode (original behavior) ─────────────────────────────────────────
+read_config
+
 # ── Health Trend Snapshot ─────────────────────────────────────────────────────
-# Take a health snapshot at the start of each run cycle.
-# Graceful: if tracker fails (e.g., dashboard not running), just warn and continue.
 TRACKER="${COMPANY_DIR}/agents/ivan/output/health_trend_tracker.js"
 if [ -f "$TRACKER" ] && command -v node >/dev/null 2>&1; then
     TRACKER_OUTPUT=$(timeout 30 node "$TRACKER" --no-report 2>/dev/null)
@@ -31,7 +414,6 @@ if [ -f "$TRACKER" ] && command -v node >/dev/null 2>&1; then
     if [ $TRACKER_EXIT -ne 0 ]; then
         echo "[smart_run] INFO: Health tracker skipped (dashboard may not be running)"
     else
-        # Extract and re-emit at-risk agents with WARN prefix
         AT_RISK_LINE=$(echo "$TRACKER_OUTPUT" | grep "At-risk:" | sed 's/^[[:space:]]*//')
         if [ -n "$AT_RISK_LINE" ]; then
             echo "[WARN] Agent health declining — $AT_RISK_LINE"
@@ -41,171 +423,46 @@ if [ -f "$TRACKER" ] && command -v node >/dev/null 2>&1; then
     fi
 fi
 
-# ── Parse task board ─────────────────────────────────────────────────────────
-ASSIGNED_AGENTS=""   # space-separated list of agents with open tasks
-UNASSIGNED_COUNT=0
-OPEN_TASK_COUNT=0
+# Build selection
+TO_START=$(build_selection_list)
+RUNNING_AGENTS=$(get_running_agents)
 
+# Parse counters for display
+OPEN_TASK_COUNT=0
 if [ -f "$TASK_BOARD" ]; then
-    while IFS='|' read -r _ id title desc priority assignee status rest; do
+    while IFS='|' read -r _ id _ _ _ status _; do
         id_clean=$(echo "$id" | tr -d ' ')
         echo "$id_clean" | grep -qE '^(-+|ID)$' && continue
         [ -z "$id_clean" ] && continue
-        echo "$id_clean" | grep -qE '^[0-9]+$' || continue
-
         status_clean=$(echo "$status" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
         [ "$status_clean" = "done" ] && continue
         [ "$status_clean" = "cancelled" ] && continue
-
+        [ "$status_clean" = "closed" ] && continue
         OPEN_TASK_COUNT=$((OPEN_TASK_COUNT + 1))
-        assignee_clean=$(echo "$assignee" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-        if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "-" ]; then
-            # Add to assigned list (dedup)
-            echo "$ASSIGNED_AGENTS" | grep -qw "$assignee_clean" || ASSIGNED_AGENTS="$ASSIGNED_AGENTS $assignee_clean"
-        else
-            UNASSIGNED_COUNT=$((UNASSIGNED_COUNT + 1))
-        fi
-    done < <(grep '|' "$TASK_BOARD" | grep -v '^#\|^|\s*-')
+    done < <(grep '^|' "$TASK_BOARD" 2>/dev/null | tail -n +3)
 fi
 
-# ── Check inbox for each agent ────────────────────────────────────────────────
-INBOX_AGENTS=""  # agents with unread inbox messages
-
-for ag in $ALL_AGENTS; do
-    inbox_dir="${COMPANY_DIR}/agents/${ag}/chat_inbox"
-    if [ -d "$inbox_dir" ]; then
-        # Only count UNREAD messages (not read_ prefixed files)
-        count=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | wc -l | tr -d ' ')
-        [ "${count:-0}" -gt 0 ] && INBOX_AGENTS="$INBOX_AGENTS $ag"
-    fi
-done
-
-# ── Which agents are already running ─────────────────────────────────────────
-RUNNING_AGENTS=""
-for ag in $ALL_AGENTS; do
-    if pgrep -f "run_subset.sh $ag" > /dev/null 2>&1; then
-        RUNNING_AGENTS="$RUNNING_AGENTS $ag"
-    fi
-done
-
-# ── Build TO_START list ───────────────────────────────────────────────────────
-TO_START=""
-
-add_agent() {
-    local ag="$1"
-    echo "$RUNNING_AGENTS" | grep -qw "$ag" && return  # already running
-    echo "$TO_START" | grep -qw "$ag" && return         # already queued
-    [ ! -d "${COMPANY_DIR}/agents/${ag}" ] && return    # doesn't exist
-    TO_START="$TO_START $ag"
-}
-
-has_work() {
-    local ag="$1"
-    echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && return 0
-    echo "$INBOX_AGENTS"    | grep -qw "$ag" && return 0
-    return 1
-}
-
-# ── Parse flags ─────────────────────────────────────────────────────────────
-FORCE_ALICE=0
-MAX_AGENTS=20   # default: no effective cap
-DRY_RUN_FLAG=0
-
-for arg in "$@"; do
-    case "$arg" in
-        --force-alice) FORCE_ALICE=1 ;;
-        --dry-run)     DRY_RUN_FLAG=1 ;;
-    esac
-done
-# --max N: look for --max followed by a number
-for i in "$@"; do
-    if [ "$PREV_ARG" = "--max" ]; then
-        # Validate: must be a positive integer between 1 and 100
-        if echo "$i" | grep -qE '^[1-9][0-9]?$|^100$'; then
-            MAX_AGENTS="$i"
-        else
-            echo "[smart_run] WARNING: invalid --max value '$i', using default $MAX_AGENTS" >&2
-        fi
-        break
-    fi
-    PREV_ARG="$i"
-done
-
-under_max() {
-    local count running_count total
-    count=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
-    running_count=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -v '^$' | wc -l | tr -d ' ')
-    count=${count:-0}; running_count=${running_count:-0}
-    total=$(( count + running_count ))
-    [ "$total" -lt "$MAX_AGENTS" ]
-}
-
-# 1. Alice: only if there's actual work or forced
-if [ $FORCE_ALICE -eq 1 ] || [ "$OPEN_TASK_COUNT" -gt 0 ] || echo "$INBOX_AGENTS" | grep -qw "alice"; then
-    under_max && add_agent "alice"
-fi
-
-# 2. Task-assigned agents (highest priority after alice)
-for ag in $ALL_AGENTS; do
-    [ "$ag" = "alice" ] && continue
-    echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && under_max && add_agent "$ag"
-done
-
-# 3. Unassigned tasks: add agents to claim them (max 3 extra)
-if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
-    queued=$(echo "$TO_START" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null || echo 0)
-    running_c=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null || echo 0)
-    total=$((queued + running_c))
-    need=$((UNASSIGNED_COUNT < 3 ? UNASSIGNED_COUNT : 3))
-    add_more=$((need - total))
-
-    if [ "$add_more" -gt 0 ]; then
-        for ag in $ALL_AGENTS; do
-            [ "$add_more" -le 0 ] && break
-            [ "$ag" = "alice" ] && continue
-            echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue
-            echo "$RUNNING_AGENTS" | grep -qw "$ag" && continue
-            echo "$TO_START" | grep -qw "$ag" && continue
-            under_max && add_agent "$ag"
-            add_more=$((add_more - 1))
-        done
-    fi
-fi
-
-# 4. Inbox-only agents — lowest priority, only added if under --max cap
-for ag in $ALL_AGENTS; do
-    [ "$ag" = "alice" ] && continue
-    echo "$INBOX_AGENTS" | grep -qw "$ag" || continue          # has inbox
-    echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue       # already handled above
-    under_max && add_agent "$ag"
-done
-
-START_LIST=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')
-
-# ── Summary ────────────────────────────────────────────────────────────────────
 echo "=== Smart Run Decision ==="
 echo "  Max agents cap:    $MAX_AGENTS"
-echo "  Open tasks:        $OPEN_TASK_COUNT (unassigned: $UNASSIGNED_COUNT)"
+echo "  Open tasks:        $OPEN_TASK_COUNT"
 echo "  Already running:   $(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
-echo "  Task-assigned:     $(echo "$ASSIGNED_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
-echo "  Has inbox:         $(echo "$INBOX_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
-echo "  Starting now:      ${START_LIST:-none}"
+echo "  Starting now:      ${TO_START:-none}"
 echo ""
 
-# Dry-run: structured output for server.js parsing
+# Dry-run
 if [ $DRY_RUN_FLAG -eq 1 ]; then
-    echo "  Always run: alice"
-    echo "  Task-assigned: $(echo "$ASSIGNED_AGENTS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')"
-    echo "  Unassigned tasks: $UNASSIGNED_COUNT"
-    echo "  Starting now: ${START_LIST:-none}"
     exit 0
 fi
 
-if [ -z "$(echo "$START_LIST" | tr -d ' ')" ]; then
+# Launch agents
+if [ -z "$(echo "$TO_START" | tr -d ' ')" ]; then
     echo "No agents need to start — all tasks covered or no work available."
-    echo "Token-conservative mode: 0 new agents launched."
     exit 0
 fi
 
-echo "Launching: $START_LIST"
-EXECUTOR="${EXECUTOR:-}" bash "${COMPANY_DIR}/run_subset.sh" $START_LIST
+echo "Launching: $TO_START"
+for ag in $TO_START; do
+    bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
+    disown $! 2>/dev/null || true
+    sleep 1
+done
