@@ -261,7 +261,7 @@ node server.js --dir . --port 3199
 ## E2E Tests
 
 ```bash
-# Run all 205 e2e tests
+# Run all e2e tests
 npx playwright test
 
 # Run specific test file
@@ -269,6 +269,10 @@ npx playwright test e2e/api.spec.js
 npx playwright test e2e/dashboard.spec.js
 npx playwright test e2e/metrics.spec.js
 npx playwright test e2e/coverage.spec.js
+npx playwright test e2e/smart_run.spec.js
+npx playwright test e2e/message_bus.spec.js
 ```
 
-Test files: `e2e/api.spec.js` (46 tests), `e2e/dashboard.spec.js` (35 tests), `e2e/metrics.spec.js` (53 tests), `e2e/coverage.spec.js` (71 tests)
+Test files: `e2e/api.spec.js` (49 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (59 tests), `e2e/coverage.spec.js` (354 tests), `e2e/smart_run.spec.js` (7 tests), `e2e/message_bus.spec.js` (47 tests)
+
+**Total: 561 passed / 17 skipped (auth) / 0 failed**
