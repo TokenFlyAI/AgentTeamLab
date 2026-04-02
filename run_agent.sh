@@ -194,6 +194,13 @@ if tm_changes:
     for name, old, new in tm_changes:
         changes.append("  {} : {} → {}".format(name, old, new))
 
+# Culture / consensus changes
+prev_culture = (prev.get("culture") or "").strip()
+curr_culture = (curr.get("culture") or "").strip()
+if curr_culture != prev_culture and curr_culture:
+    changes.append("**Team culture updated** (public/consensus.md):")
+    changes.append(curr_culture)
+
 if changes:
     print("## Context Delta (changes since last cycle)")
     print("\n".join(changes))
