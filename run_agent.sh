@@ -66,7 +66,7 @@ elif [ -n "$SAVED_SESSION_ID" ] && [ "$SAVED_CYCLE" -lt "$SESSION_MAX_CYCLES" ];
     else
         RESUME_FLAG="--resume $SAVED_SESSION_ID"
     fi
-    echo "[session:${AGENT_NAME}] Resuming ${SAVED_SESSION_ID:0:12}… (cycle $((SAVED_CYCLE+1))/${SESSION_MAX_CYCLES})"
+    echo "[session:${AGENT_NAME}] Resuming ${SAVED_SESSION_ID:0:12}… (cycle $((SAVED_CYCLE+1)))"
 else
     if [ -n "$SAVED_SESSION_ID" ]; then
         echo "[session:${AGENT_NAME}] Max cycles reached (${SAVED_CYCLE}/${SESSION_MAX_CYCLES}) — saving memory, starting fresh"
@@ -215,7 +215,7 @@ PYEOF
     CURRENT_CYCLE=$((SAVED_CYCLE + 1))
     _URGENT_NOTE=""
     [ "${CEO_COUNT}" -gt 0 ] && _URGENT_NOTE=" URGENT: ${CEO_COUNT} Founder/Lord message(s) — handle FIRST."
-    _CYCLE_NOTE="Next cycle (${CURRENT_CYCLE}/${SESSION_MAX_CYCLES}). Prior context is cached — trust it.${_URGENT_NOTE}"
+    _CYCLE_NOTE="Next cycle (${CURRENT_CYCLE}). Prior context is cached — trust it.${_URGENT_NOTE}"
     if [ -n "$DELTA_TEXT" ] && [ "$(echo "$DELTA_TEXT" | tr -d '[:space:]')" != "" ]; then
         PROMPT_TEXT="$(printf '%s\n\n%s' "$_CYCLE_NOTE" "$DELTA_TEXT")"
         echo "[session:${AGENT_NAME}] Resume: injecting context delta"
