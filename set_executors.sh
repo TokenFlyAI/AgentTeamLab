@@ -5,6 +5,7 @@
 set -e
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 
 echo "=========================================="
 echo "⚙️  Setting Agent Executors"
@@ -16,12 +17,12 @@ echo "  • Others → Kimi (cost efficient)"
 echo ""
 
 # Set Alice to Claude
-echo "claude" > "${COMPANY_DIR}/agents/alice/executor.txt"
+echo "claude" > "${AGENTS_DIR:-${COMPANY_DIR}/agents}/alice/executor.txt"
 echo "✅ Alice → Claude"
 
 # Set all others to Kimi
 for agent in bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina; do
-    echo "kimi" > "${COMPANY_DIR}/agents/${agent}/executor.txt"
+    echo "kimi" > "${AGENTS_DIR:-${COMPANY_DIR}/agents}/${agent}/executor.txt"
     echo "✅ ${agent} → Kimi"
 done
 
@@ -34,7 +35,7 @@ echo ""
 # Show current config
 echo "Current assignments:"
 for agent in alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina; do
-    EXECUTOR=$(cat "${COMPANY_DIR}/agents/${agent}/executor.txt" 2>/dev/null || echo "default")
+    EXECUTOR=$(cat "${AGENTS_DIR:-${COMPANY_DIR}/agents}/${agent}/executor.txt" 2>/dev/null || echo "default")
     printf "  %-8s → %s\n" "$agent" "$EXECUTOR"
 done
 

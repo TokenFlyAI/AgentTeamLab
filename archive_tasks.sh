@@ -4,8 +4,9 @@
 # Usage: bash archive_tasks.sh [--dry-run]
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
-BOARD="${COMPANY_DIR}/public/task_board.md"
-ARCHIVE="${COMPANY_DIR}/public/task_board_archive.md"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
+BOARD="${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md"
+ARCHIVE="${SHARED_DIR:-${COMPANY_DIR}/public}/task_board_archive.md"
 DRY_RUN=0
 [ "$1" = "--dry-run" ] && DRY_RUN=1
 

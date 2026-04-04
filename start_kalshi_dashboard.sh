@@ -4,14 +4,15 @@
 # Usage: bash start_kalshi_dashboard.sh
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 mkdir -p /tmp/aicompany_runtime_logs
 
 # Verify deliverables exist before starting
 missing=0
 for f in \
-  "${COMPANY_DIR}/agents/bob/backend/dashboard_api.js" \
-  "${COMPANY_DIR}/agents/bob/backend/dashboard/run_scheduler.sh" \
-  "${COMPANY_DIR}/agents/bob/backend/dashboard/monitor.js"; do
+  "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard_api.js" \
+  "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/run_scheduler.sh" \
+  "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/monitor.js"; do
   if [ ! -f "$f" ]; then
     echo "MISSING: $f"
     missing=1
@@ -33,7 +34,7 @@ else
   echo "Falling back to plain background processes..."
 
   if ! pgrep -f "agents/bob/backend/dashboard_api.js" > /dev/null 2>&1; then
-    nohup node "${COMPANY_DIR}/agents/bob/backend/dashboard_api.js" \
+    nohup node "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard_api.js" \
       >> /tmp/aicompany_runtime_logs/kalshi-dashboard.log 2>&1 &
     echo "  kalshi-dashboard started (pid $!) — no auto-restart on crash"
   else
@@ -41,7 +42,7 @@ else
   fi
 
   if ! pgrep -f "dashboard/run_scheduler.sh" > /dev/null 2>&1; then
-    nohup bash "${COMPANY_DIR}/agents/bob/backend/dashboard/run_scheduler.sh" \
+    nohup bash "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/run_scheduler.sh" \
       >> /tmp/aicompany_runtime_logs/kalshi-scheduler.log 2>&1 &
     echo "  kalshi-scheduler started (pid $!) — no auto-restart on crash"
   else
@@ -49,7 +50,7 @@ else
   fi
 
   if ! pgrep -f "dashboard/monitor.js" > /dev/null 2>&1; then
-    nohup node "${COMPANY_DIR}/agents/bob/backend/dashboard/monitor.js" \
+    nohup node "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/monitor.js" \
       >> /tmp/aicompany_runtime_logs/kalshi-monitor.log 2>&1 &
     echo "  kalshi-monitor started (pid $!) — no auto-restart on crash"
   else

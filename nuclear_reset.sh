@@ -5,6 +5,7 @@
 set -e
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 
 echo "=========================================="
 echo "☢️  NUCLEAR RESET — Complete System Clear"
@@ -66,7 +67,7 @@ fi
 echo ""
 echo "Step 3: Clearing agent state files..."
 
-for agent_dir in "${COMPANY_DIR}/agents"/*; do
+for agent_dir in "${AGENTS_DIR:-${COMPANY_DIR}/agents}"/*; do
     if [ -d "$agent_dir" ]; then
         AGENT_NAME=$(basename "$agent_dir")
         
@@ -95,7 +96,7 @@ echo ""
 echo "Step 4: Resetting config files..."
 
 # Reset smart_run_config
-cat > "${COMPANY_DIR}/public/smart_run_config.json" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" << 'EOF'
 {
   "max_agents": 3,
   "enabled": false,
@@ -108,7 +109,7 @@ cat > "${COMPANY_DIR}/public/smart_run_config.json" << 'EOF'
 EOF
 
 # Reset task board (keep structure, clear tasks)
-cat > "${COMPANY_DIR}/public/task_board.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" << 'EOF'
 # Task Board
 
 ## Legend
@@ -130,7 +131,7 @@ cat > "${COMPANY_DIR}/public/task_board.md" << 'EOF'
 EOF
 
 # Reset inbox
-cat > "${COMPANY_DIR}/public/chat_inbox.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/chat_inbox.md" << 'EOF'
 # Chat Inbox
 
 Messages between agents and system notifications.

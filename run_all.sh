@@ -1,6 +1,7 @@
 #!/bin/bash
 # run_all.sh — Launch dashboard via pm2, then all 20 agents
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 
 # --- Start dashboard + SRE monitoring scripts via pm2 ---
 if command -v pm2 &>/dev/null; then
@@ -31,9 +32,9 @@ else
 fi
 
 # --- Start Kalshi Alpha Dashboard (P0) ---
-KALSHI_API="${COMPANY_DIR}/agents/bob/backend/dashboard_api.js"
-KALSHI_SCHEDULER="${COMPANY_DIR}/agents/bob/backend/dashboard/run_scheduler.sh"
-KALSHI_MONITOR="${COMPANY_DIR}/agents/bob/backend/dashboard/monitor.js"
+KALSHI_API="${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard_api.js"
+KALSHI_SCHEDULER="${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/run_scheduler.sh"
+KALSHI_MONITOR="${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard/monitor.js"
 
 if [ -f "$KALSHI_API" ] && [ -f "$KALSHI_SCHEDULER" ] && [ -f "$KALSHI_MONITOR" ]; then
   echo "Starting Kalshi Alpha Dashboard..."

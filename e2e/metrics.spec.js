@@ -18,6 +18,8 @@ const path = require("path");
 const BASE = "http://localhost:3199";
 const AUTH_HEADERS = { "Authorization": "Bearer test" };
 const DIR = path.resolve(__dirname, "..");
+function _resolvePlanetDir(dir) { const pj = path.join(dir, "planet.json"); if (fs.existsSync(pj)) { try { const { active, planets_dir } = JSON.parse(fs.readFileSync(pj, "utf8")); const pd = path.join(dir, planets_dir || "planets", active); if (fs.existsSync(pd)) return pd; } catch (_) {} } return dir; }
+const AGENTS_DIR = path.join(_resolvePlanetDir(DIR), "agents");
 const ALL_AGENTS = ["alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy","karl","liam","mia","nick","olivia","pat","quinn","rosa","sam","tina"];
 
 async function apiGet(path) {
@@ -212,7 +214,7 @@ test.describe("POST /api/broadcast", () => {
   test.afterAll(async () => {
     for (const filename of _broadcastFiles) {
       for (const agent of ALL_AGENTS) {
-        try { fs.unlinkSync(path.join(DIR, "agents", agent, "chat_inbox", filename)); } catch (_) {}
+        try { fs.unlinkSync(path.join(AGENTS_DIR, agent, "chat_inbox", filename)); } catch (_) {}
       }
     }
     _broadcastFiles.length = 0;

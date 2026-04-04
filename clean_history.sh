@@ -4,6 +4,7 @@
 set -e
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 BACKUP_DIR="${COMPANY_DIR}/.backups/$(date +%Y%m%d_%H%M%S)"
 
 echo "=========================================="
@@ -16,10 +17,10 @@ echo "📦 Creating backup at: ${BACKUP_DIR}"
 mkdir -p "${BACKUP_DIR}"
 
 # Backup current task board and inbox if they exist
-cp "${COMPANY_DIR}/public/task_board.md" "${BACKUP_DIR}/" 2>/dev/null || true
-cp "${COMPANY_DIR}/public/chat_inbox.md" "${BACKUP_DIR}/" 2>/dev/null || true
-cp "${COMPANY_DIR}/public/mission_board.md" "${BACKUP_DIR}/" 2>/dev/null || true
-cp "${COMPANY_DIR}/public/journal.md" "${BACKUP_DIR}/" 2>/dev/null || true
+cp "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" "${BACKUP_DIR}/" 2>/dev/null || true
+cp "${SHARED_DIR:-${COMPANY_DIR}/public}/chat_inbox.md" "${BACKUP_DIR}/" 2>/dev/null || true
+cp "${SHARED_DIR:-${COMPANY_DIR}/public}/mission_board.md" "${BACKUP_DIR}/" 2>/dev/null || true
+cp "${SHARED_DIR:-${COMPANY_DIR}/public}/journal.md" "${BACKUP_DIR}/" 2>/dev/null || true
 
 echo "✅ Backup created"
 echo ""
@@ -27,7 +28,7 @@ echo ""
 # Clean each agent's history
 echo "🧹 Cleaning agent histories..."
 AGENT_COUNT=0
-for agent_dir in "${COMPANY_DIR}/agents"/*; do
+for agent_dir in "${AGENTS_DIR:-${COMPANY_DIR}/agents}"/*; do
     if [ -d "$agent_dir" ]; then
         AGENT_NAME=$(basename "$agent_dir")
         
@@ -57,7 +58,7 @@ echo ""
 echo "🧹 Resetting public state files..."
 
 # Reset task board (keep header, remove tasks)
-cat > "${COMPANY_DIR}/public/task_board.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" << 'EOF'
 # Task Board
 
 Global task tracking for Agent Planet.
@@ -81,7 +82,7 @@ Global task tracking for Agent Planet.
 EOF
 
 # Reset inbox (keep structure)
-cat > "${COMPANY_DIR}/public/chat_inbox.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/chat_inbox.md" << 'EOF'
 # Chat Inbox
 
 Messages between agents and system notifications.
@@ -95,7 +96,7 @@ Messages between agents and system notifications.
 EOF
 
 # Reset journal
-cat > "${COMPANY_DIR}/public/journal.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/journal.md" << 'EOF'
 # Agent Planet Journal
 
 Daily activities and milestones.
@@ -107,7 +108,7 @@ Daily activities and milestones.
 EOF
 
 # Reset mission board to initial state
-cat > "${COMPANY_DIR}/public/mission_board.md" << 'EOF'
+cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/mission_board.md" << 'EOF'
 # Mission Board
 
 Strategic missions for Agent Planet.

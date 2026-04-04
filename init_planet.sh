@@ -163,13 +163,17 @@ cat > "${PLANET_DIR}/planet_config.json" << EOF
 }
 EOF
 
-# Create git worktree for merged codebase (if in a git repo)
+# Create git worktree for merged codebase (orphan branch — agent code only, not platform)
 if git -C "${COMPANY_DIR}" rev-parse --git-dir >/dev/null 2>&1; then
   echo ""
-  echo "Setting up codebase worktree..."
-  git -C "${COMPANY_DIR}" branch "planet/${PLANET_NAME}/codebase" 2>/dev/null || true
+  echo "Setting up codebase worktree (orphan branch)..."
+  CURRENT_BRANCH=$(git -C "${COMPANY_DIR}" branch --show-current)
+  git -C "${COMPANY_DIR}" checkout --orphan "planet/${PLANET_NAME}/codebase" 2>/dev/null && \
+    git -C "${COMPANY_DIR}" rm -rf . >/dev/null 2>&1; \
+    git -C "${COMPANY_DIR}" commit --allow-empty -m "Initialize ${PLANET_NAME} codebase (empty)" 2>/dev/null; \
+    git -C "${COMPANY_DIR}" checkout "${CURRENT_BRANCH}" 2>/dev/null
   git -C "${COMPANY_DIR}" worktree add "${PLANET_DIR}/output/shared/codebase" "planet/${PLANET_NAME}/codebase" 2>/dev/null && \
-    echo "Codebase worktree on branch: planet/${PLANET_NAME}/codebase" || \
+    echo "Codebase worktree on branch: planet/${PLANET_NAME}/codebase (orphan — agent code only)" || \
     echo "Note: git worktree setup skipped (branch may already exist)"
 fi
 

@@ -2625,7 +2625,7 @@ async function handleRequest(req, res) {
   }
 
   // ---- Lord's Inbox ----
-  const CEO_INBOX = path.join(DIR, "ceo_inbox");
+  const CEO_INBOX = DATA_DIR ? path.join(DATA_DIR, "ceo_inbox") : path.join(DIR, "ceo_inbox");
   if (method === "GET" && pathname === "/api/ceo-inbox") {
     try { fs.mkdirSync(path.join(CEO_INBOX, "processed"), { recursive: true }); } catch (_) {}
     const unread = listDir(CEO_INBOX).filter((f) => f.endsWith(".md")).map((f) => {
@@ -3139,7 +3139,7 @@ async function handleRequest(req, res) {
 
   // Bob's agent metrics sub-routes: /api/metrics/agents, /api/metrics/tasks, /api/metrics/health
   if (pathname.startsWith("/api/metrics/")) {
-    if (handleAgentMetricsRequest(req, res, DIR)) return;
+    if (handleAgentMetricsRequest(req, res, PLANET_DIR)) return;
   }
 
   // Bob's SQLite message bus — Task #102

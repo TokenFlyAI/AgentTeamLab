@@ -30,6 +30,8 @@ async function apiGet(endpoint) {
  */
 
 const DIR = path.resolve(__dirname, "..");
+function _resolvePlanetDir(dir) { const pj = path.join(dir, "planet.json"); if (fs.existsSync(pj)) { try { const { active, planets_dir } = JSON.parse(fs.readFileSync(pj, "utf8")); const pd = path.join(dir, planets_dir || "planets", active); if (fs.existsSync(pd)) return pd; } catch (_) {} } return dir; }
+const AGENTS_DIR = path.join(_resolvePlanetDir(DIR), "agents");
 const ALL_AGENTS = ["alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy","karl","liam","mia","nick","olivia","pat","quinn","rosa","sam","tina"];
 
 function resetAllHeartbeats() {
@@ -37,7 +39,7 @@ function resetAllHeartbeats() {
 }
 
 function setHeartbeat(agentName, status) {
-  const hbPath = path.join(DIR, "agents", agentName, "heartbeat.md");
+  const hbPath = path.join(AGENTS_DIR, agentName, "heartbeat.md");
   fs.writeFileSync(
     hbPath,
     [
@@ -51,7 +53,7 @@ function setHeartbeat(agentName, status) {
 }
 
 function resetHeartbeat(agentName) {
-  const hbPath = path.join(DIR, "agents", agentName, "heartbeat.md");
+  const hbPath = path.join(AGENTS_DIR, agentName, "heartbeat.md");
   if (fs.existsSync(hbPath)) {
     fs.writeFileSync(
       hbPath,

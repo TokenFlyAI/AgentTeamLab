@@ -4,6 +4,7 @@
 # Example: bash init_agent.sh vera "DevOps Engineer" "Kubernetes, Helm, GitOps" "kimi"
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 NAME="$1"
 ROLE="$2"
 SPECIALTY="${3:-General Engineering}"
@@ -26,7 +27,7 @@ usage() {
 
 [ -z "$NAME" ] || [ -z "$ROLE" ] && usage
 
-AGENT_DIR="${COMPANY_DIR}/agents/${NAME}"
+AGENT_DIR="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${NAME}"
 
 if [ -d "$AGENT_DIR" ]; then
     echo "Error: Agent '$NAME' already exists at $AGENT_DIR"
@@ -173,7 +174,7 @@ Read \`../../company.md\` for the full priority system. Key rules:
 EOF
 
 # Insert into team_directory.md Engineering table (before "## Who to Contact")
-TEAM_DIR="${COMPANY_DIR}/public/team_directory.md"
+TEAM_DIR="${SHARED_DIR:-${COMPANY_DIR}/public}/team_directory.md"
 NEW_ROW="| ${NAME_UPPER} | ${ROLE} | ${SPECIALTY} | \`agents/${NAME}/\` |"
 # Insert the new row before the "## Who to Contact" line (python3 for macOS BSD sed compat)
 if grep -q "## Who to Contact" "$TEAM_DIR"; then

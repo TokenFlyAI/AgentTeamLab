@@ -3,6 +3,15 @@ const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
 const DIR = path.resolve(__dirname, "..");
+// Planet-aware paths
+function _resolvePlanetDir(dir) {
+  const pj = path.join(dir, "planet.json");
+  if (fs.existsSync(pj)) { try { const { active, planets_dir } = JSON.parse(fs.readFileSync(pj, "utf8")); const pd = path.join(dir, planets_dir || "planets", active); if (fs.existsSync(pd)) return pd; } catch (_) {} }
+  return dir;
+}
+const PLANET_DIR = _resolvePlanetDir(DIR);
+const AGENTS_DIR = path.join(PLANET_DIR, "agents");
+const SHARED_DIR = fs.existsSync(path.join(PLANET_DIR, "shared")) ? path.join(PLANET_DIR, "shared") : path.join(DIR, "public");
 
 /**
  * Tokenfly Agent Team Lab — Backend API E2E Tests
@@ -346,7 +355,7 @@ test.describe("POST /api/agents/:name/message", () => {
   const _msgFiles = [];
   test.afterAll(async () => {
     for (const { agent, filename } of _msgFiles) {
-      try { fs.unlinkSync(path.join(DIR, "agents", agent, "chat_inbox", filename)); } catch (_) {}
+      try { fs.unlinkSync(path.join(AGENTS_DIR, agent, "chat_inbox", filename)); } catch (_) {}
     }
     _msgFiles.length = 0;
   });
@@ -395,7 +404,7 @@ test.describe("GET /api/team-channel", () => {
   const _tcFiles = [];
   test.afterAll(async () => {
     for (const f of _tcFiles) {
-      try { fs.unlinkSync(path.join(DIR, "public/team_channel", f)); } catch (_) {}
+      try { fs.unlinkSync(path.join(SHARED_DIR, "team_channel", f)); } catch (_) {}
     }
     _tcFiles.length = 0;
   });

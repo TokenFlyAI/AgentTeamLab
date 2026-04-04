@@ -1,6 +1,7 @@
 #!/bin/bash
 # stop_all.sh — Hard stop ALL agent processes. Nothing keeps running after this.
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 
 echo "=== STOPPING ALL AGENTS ==="
 
@@ -38,7 +39,7 @@ rm -f /tmp/aicompany_settings_*.json  2>/dev/null || true
 
 # 7. Reset ALL heartbeats to idle so dashboard reflects true state immediately
 RESET_COUNT=0
-for hb in "${COMPANY_DIR}"/agents/*/heartbeat.md; do
+for hb in "${AGENTS_DIR:-${COMPANY_DIR}/agents}"/*/heartbeat.md; do
     [ -f "$hb" ] || continue
     printf 'status: idle\ntimestamp: %s\ntask: Stopped\n' "$(date +%Y_%m_%d_%H_%M_%S)" > "$hb"
     RESET_COUNT=$((RESET_COUNT + 1))

@@ -14,6 +14,23 @@ const BASE = "http://localhost:3199";
 const AUTH_HEADERS = { "Authorization": "Bearer test" };
 const DIR = path.resolve(__dirname, "..");
 
+// Planet-aware path resolution (mirrors server.js resolvePlanet)
+function resolvePlanetDir(dir) {
+  const pj = path.join(dir, "planet.json");
+  if (fs.existsSync(pj)) {
+    try {
+      const { active, planets_dir } = JSON.parse(fs.readFileSync(pj, "utf8"));
+      const pd = path.join(dir, planets_dir || "planets", active);
+      if (fs.existsSync(pd)) return pd;
+    } catch (_) {}
+  }
+  return dir;
+}
+const PLANET_DIR = resolvePlanetDir(DIR);
+const AGENTS_DIR = path.join(PLANET_DIR, "agents");
+const SHARED_DIR = fs.existsSync(path.join(PLANET_DIR, "shared")) ? path.join(PLANET_DIR, "shared") : path.join(DIR, "public");
+const DATA_DIR = fs.existsSync(path.join(PLANET_DIR, "data")) ? path.join(PLANET_DIR, "data") : DIR;
+
 // Track files created by tests so we can clean them up
 const _createdTeamChannelFiles = [];
 const _createdAnnouncementFiles = [];
@@ -103,7 +120,7 @@ test.describe("GET /api/team-channel", () => {
 test.describe("POST /api/team-channel", () => {
   test.afterAll(async () => {
     for (const f of _createdTeamChannelFiles) {
-      try { fs.unlinkSync(path.join(DIR, "public/team_channel", f)); } catch (_) {}
+      try { fs.unlinkSync(path.join(SHARED_DIR, "team_channel", f)); } catch (_) {}
     }
     _createdTeamChannelFiles.length = 0;
   });
@@ -171,7 +188,7 @@ test.describe("GET /api/announcements", () => {
 test.describe("POST /api/announcements", () => {
   test.afterAll(async () => {
     for (const f of _createdAnnouncementFiles) {
-      try { fs.unlinkSync(path.join(DIR, "public/announcements", f)); } catch (_) {}
+      try { fs.unlinkSync(path.join(SHARED_DIR, "announcements", f)); } catch (_) {}
     }
     _createdAnnouncementFiles.length = 0;
   });
@@ -217,7 +234,7 @@ test.describe("POST /api/announcements", () => {
 test.describe("POST /api/announce (alias for /api/announcements)", () => {
   test.afterAll(async () => {
     for (const f of _createdAnnouncementFiles) {
-      try { fs.unlinkSync(path.join(DIR, "public/announcements", f)); } catch (_) {}
+      try { fs.unlinkSync(path.join(SHARED_DIR, "announcements", f)); } catch (_) {}
     }
     _createdAnnouncementFiles.length = 0;
   });
@@ -933,11 +950,11 @@ test.describe("POST /api/tasks — full create response shape", () => {
 test.describe("POST /api/agents/:name/persona/note", () => {
   let _alicePersonaSnapshot = null;
   test.beforeAll(async () => {
-    try { _alicePersonaSnapshot = fs.readFileSync(path.join(DIR, "agents/alice/persona.md"), "utf8"); } catch (_) {}
+    try { _alicePersonaSnapshot = fs.readFileSync(path.join(AGENTS_DIR, "alice/persona.md"), "utf8"); } catch (_) {}
   });
   test.afterAll(async () => {
     if (_alicePersonaSnapshot !== null) {
-      try { fs.writeFileSync(path.join(DIR, "agents/alice/persona.md"), _alicePersonaSnapshot); } catch (_) {}
+      try { fs.writeFileSync(path.join(AGENTS_DIR, "alice/persona.md"), _alicePersonaSnapshot); } catch (_) {}
     }
   });
 
@@ -983,11 +1000,11 @@ test.describe("POST /api/agents/:name/persona/note", () => {
 test.describe("PATCH /api/agents/:name/persona", () => {
   let _personaPatchSnapshot = null;
   test.beforeAll(async () => {
-    try { _personaPatchSnapshot = fs.readFileSync(path.join(DIR, "agents/alice/persona.md"), "utf8"); } catch (_) {}
+    try { _personaPatchSnapshot = fs.readFileSync(path.join(AGENTS_DIR, "alice/persona.md"), "utf8"); } catch (_) {}
   });
   test.afterAll(async () => {
     if (_personaPatchSnapshot !== null) {
-      try { fs.writeFileSync(path.join(DIR, "agents/alice/persona.md"), _personaPatchSnapshot); } catch (_) {}
+      try { fs.writeFileSync(path.join(AGENTS_DIR, "alice/persona.md"), _personaPatchSnapshot); } catch (_) {}
     }
   });
 
@@ -1054,7 +1071,7 @@ test.describe("GET /api/agents/:name/lastcontext", () => {
 test.describe("POST /api/messages/:agent", () => {
   test.afterAll(async () => {
     for (const { agent, filename } of _createdInboxFiles) {
-      try { fs.unlinkSync(path.join(DIR, "agents", agent, "chat_inbox", filename)); } catch (_) {}
+      try { fs.unlinkSync(path.join(AGENTS_DIR, agent, "chat_inbox", filename)); } catch (_) {}
     }
     _createdInboxFiles.length = 0;
   });
@@ -1714,7 +1731,7 @@ test.describe("GET /api/agents/:name/log", () => {
 // ── CEO inbox mark-read ───────────────────────────────────────────────────────
 
 test.describe("POST /api/ceo-inbox/:filename/read", () => {
-  const CEO_INBOX_DIR = path.join(DIR, "ceo_inbox");
+  const CEO_INBOX_DIR = path.join(DATA_DIR, "ceo_inbox");
   const CEO_INBOX_PROCESSED = path.join(CEO_INBOX_DIR, "processed");
   let testFilename;
 
@@ -2390,7 +2407,7 @@ test.describe("POST /api/agents/:name/inbox", () => {
   const _inboxCleanup = [];
   test.afterAll(async () => {
     for (const { agent, filename } of _inboxCleanup) {
-      try { fs.unlinkSync(path.join(DIR, "agents", agent, "chat_inbox", filename)); } catch (_) {}
+      try { fs.unlinkSync(path.join(AGENTS_DIR, agent, "chat_inbox", filename)); } catch (_) {}
     }
     _inboxCleanup.length = 0;
   });
@@ -2650,7 +2667,7 @@ test.describe("Task #155 GAP-007: POST /api/agents/:name/inbox auth", () => {
   const _gap007Cleanup = [];
   test.afterAll(async () => {
     for (const filename of _gap007Cleanup) {
-      try { fs.unlinkSync(path.join(DIR, "agents/alice/chat_inbox", filename)); } catch (_) {}
+      try { fs.unlinkSync(path.join(AGENTS_DIR, "alice/chat_inbox", filename)); } catch (_) {}
     }
   });
 
@@ -3626,7 +3643,7 @@ test.describe("POST /api/broadcast", () => {
       const agentNames = ["alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy",
                           "karl","liam","mia","nick","olivia","pat","quinn","rosa","sam","tina"];
       for (const name of agentNames) {
-        const fpath = path.join(DIR, "agents", name, "chat_inbox", _broadcastFilename.value);
+        const fpath = path.join(AGENTS_DIR, name, "chat_inbox", _broadcastFilename.value);
         try { fs.unlinkSync(fpath); } catch (_) {}
       }
     }
@@ -3663,7 +3680,7 @@ test.describe("POST /api/broadcast", () => {
       const agentNames = ["alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy",
                           "karl","liam","mia","nick","olivia","pat","quinn","rosa","sam","tina"];
       for (const name of agentNames) {
-        const fpath = path.join(DIR, "agents", name, "chat_inbox", body.filename);
+        const fpath = path.join(AGENTS_DIR, name, "chat_inbox", body.filename);
         try { fs.unlinkSync(fpath); } catch (_) {}
       }
     }
@@ -3677,7 +3694,7 @@ test.describe("POST /api/agents/:name/message", () => {
 
   test.afterAll(async () => {
     for (const { agent, filename } of _agentMsgCleanup) {
-      try { fs.unlinkSync(path.join(DIR, "agents", agent, "chat_inbox", filename)); } catch (_) {}
+      try { fs.unlinkSync(path.join(AGENTS_DIR, agent, "chat_inbox", filename)); } catch (_) {}
     }
     _agentMsgCleanup.length = 0;
   });
