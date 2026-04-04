@@ -1,0 +1,1 @@
+{"max_agents":5,"enabled":true,"interval_seconds":30,"dry_run":true,"dry_run_sleep":120,"mode":"smart","selection_mode":"deterministic"}

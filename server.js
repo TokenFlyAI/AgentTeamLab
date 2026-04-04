@@ -95,7 +95,18 @@ function flag(name, def) {
 const PORT = parseInt(flag("--port", "3100"), 10);
 const DIR = path.resolve(flag("--dir", __dirname));
 
-const { EMPLOYEES_DIR, PUBLIC_DIR, OUTPUT_DIR, DATA_DIR, PLANET_DIR, PLANET_NAME } = resolvePlanet(DIR);
+let { EMPLOYEES_DIR, PUBLIC_DIR, OUTPUT_DIR, DATA_DIR, PLANET_DIR, PLANET_NAME } = resolvePlanet(DIR);
+
+function reloadPlanet() {
+  const resolved = resolvePlanet(DIR);
+  EMPLOYEES_DIR = resolved.EMPLOYEES_DIR;
+  PUBLIC_DIR = resolved.PUBLIC_DIR;
+  OUTPUT_DIR = resolved.OUTPUT_DIR;
+  DATA_DIR = resolved.DATA_DIR;
+  PLANET_DIR = resolved.PLANET_DIR;
+  PLANET_NAME = resolved.PLANET_NAME;
+  console.log(`Planet reloaded: ${PLANET_NAME} (${PLANET_DIR})`);
+}
 const startTime = Date.now();
 
 // ---------------------------------------------------------------------------
@@ -1162,8 +1173,8 @@ async function handleRequest(req, res) {
     return new Promise((resolve) => {
       ef("bash", [path.join(DIR, "switch_planet.sh"), target], { cwd: DIR, timeout: 30000 }, (err, stdout, stderr) => {
         if (err) return resolve(json(res, { error: "switch failed", details: (stderr || err.message).trim() }, 500));
-        // Server needs restart to pick up new paths — tell the client
-        resolve(json(res, { ok: true, planet: target, message: "Switched. Server restart required.", stdout: stdout.trim() }));
+        reloadPlanet();
+        resolve(json(res, { ok: true, planet: PLANET_NAME, message: "Switched and reloaded.", stdout: stdout.trim() }));
       });
     });
   }
@@ -3146,7 +3157,7 @@ async function handleRequest(req, res) {
   // Routes: POST /api/messages, GET /api/inbox/:agent, POST /api/inbox/:agent/:id/ack,
   //         POST /api/messages/broadcast, GET /api/messages/queue-depth
   if (pathname.startsWith("/api/messages") || pathname.startsWith("/api/inbox")) {
-    if (handleMessageBus(req, res, DIR)) return;
+    if (handleMessageBus(req, res, PLANET_DIR)) return;
   }
 
   // GET /api/agents/:name/output — list files in agent's output/ directory

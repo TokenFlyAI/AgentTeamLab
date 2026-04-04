@@ -14,7 +14,7 @@
     "start:kalshi": "bash start_kalshi_dashboard.sh"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "^1.59.1",
     "playwright": "^1.58.2"
   },
   "dependencies": {
