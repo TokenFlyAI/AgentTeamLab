@@ -99,12 +99,31 @@ Disabled strategies:
 - **Production gates:** Security audit PASS, Risk audit PASS, Ops readiness PASS (T354)
 - **Blocker:** T236 (Kalshi API credentials from Founder) — only remaining dependency for live trading
 
-## Agents' Sprint Assignments (D004 Pipeline)
+## Sprint 1 Results (2026-04-04) — COMPLETE
 
-| Agent | Phase | Task | Status |
-|-------|-------|------|--------|
-| Grace | 1 | Market Filtering | ✓ DONE |
-| Ivan | 2 | LLM Clustering | ✓ DONE |
-| Bob | 3 | Pearson Correlation | ✓ DONE |
-| Dave | 4 | C++ Execution Engine | ✓ DONE |
-| Alice | Integration | E2E Testing & Paper Trades | ✓ DONE |
+10/10 tasks done. Pipeline runs E2E. Quality + security audits PASS.
+
+| Task | Agent | Result |
+|------|-------|--------|
+| T540 | Dave | Phase 4 C++ engine integration — 42/42 tests pass |
+| T542 | Bob | E2E pipeline runner — `node run_pipeline.js` works |
+| T543 | Alice | Team persona evolution completed |
+| T545 | Grace | Pipeline data validation — all phases verified |
+| T546 | Ivan | Expanded clustering — 4 cross-category clusters |
+| T547 | Charlie | Pipeline status dashboard — HTML + server |
+| T548 | Frank | Pipeline test suite delivered |
+| T549 | Sam | Sprint velocity report |
+| T550 | Heidi | Security audit — PASS |
+| T551 | Olivia | Quality gate — PASS (with minor notes) |
+
+## Sprint 2 (Current) — Signal Generation & Backtesting
+
+| Task | Agent | Goal |
+|------|-------|------|
+| T555 | Bob | Generate paper trade signals from correlation pairs (CRITICAL) |
+| T556 | Dave | Pipeline metrics + monitoring endpoint |
+| T557 | Grace | 30-day synthetic price history for backtesting |
+| T558 | Ivan | TF-IDF + cosine similarity clustering upgrade |
+| T559 | Alice | Sprint 1 retrospective + Sprint 2 plan |
+| T560 | Frank | QA pipeline tests + new test cases |
+| T539 | Tina | QA pipeline data chain validation |
