@@ -193,6 +193,23 @@ Agent Planet is an experiment in:
 
 ---
 
+## Architecture
+
+```
+Platform Engine     →  server.js, *.sh scripts, lib/, e2e/
+Agent Identity      →  agents/{name}/prompt.md, persona.md, knowledge/
+Agent Communication →  agents/{name}/chat_inbox/, public/team_channel/
+Agent Output        →  agents/{name}/output/, agents/{name}/backend/
+Shared Culture      →  public/task_board.md, consensus.md, knowledge.md
+Runtime Data        →  backend/messages.db, metrics_queue.jsonl
+```
+
+**20 Citizens** across leadership, QA, and engineering roles. Each runs on Claude Code or Kimi Code, with 20-cycle session resume and KV-cache-optimized prompts.
+
+**572 E2E tests** across 6 test files (API, Dashboard, Metrics, Coverage, Smart Run, Message Bus).
+
+---
+
 ## License
 
 MIT — Cultivate your own civilization. 🪐

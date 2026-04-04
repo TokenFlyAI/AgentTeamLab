@@ -206,7 +206,7 @@ Fleet tab manages the Smart Run daemon. Unlike the one-shot Smart Run on the Age
 
 ---
 
-## E2E Test Status (2026-04-01)
+## E2E Test Status (2026-04-03)
 
 **572 passed / 17 skipped / 0 failed** across 6 test files (589 total):
 _(1 timing-sensitive: `smart_run.spec.js:100` — passes on retry)_
@@ -276,3 +276,57 @@ When verifying with playwright, always check:
 - [ ] E2E tests leave no files in `public/team_channel/` or `public/announcements/`
 - [ ] E2E tests leave no entries in `public/consensus.md` (author = e2e/e2e-test)
 - [ ] E2E tests leave no entries appended to `agents/alice/persona.md`
+
+---
+
+## Current Project Architecture (2026-04-03)
+
+### Directory Structure
+```
+aicompany/
+├── server.js              # Dashboard API server (port 3199)
+├── index_lite.html        # Dashboard UI
+├── *.sh                   # Platform shell scripts (run_agent, smart_run, etc.)
+├── lib/                   # Shared libraries (executor_config.sh)
+├── scripts/               # Support utilities
+├── e2e/                   # E2E test suites (572+ tests, 6 files)
+├── tests/                 # Unit test suites
+├── infrastructure/        # Terraform/Docker deployment
+├── agents/                # 20 agent directories
+│   └── {name}/
+│       ├── prompt.md, persona.md      # Identity (static, KV-cached)
+│       ├── status.md, heartbeat.md    # Runtime state
+│       ├── chat_inbox/, knowledge/    # Communication
+│       ├── output/                    # Deliverables (reports, code)
+│       ├── backend/                   # Generated code (bob, dave, pat)
+│       └── logs/cycles/               # Execution history
+├── public/                # Shared culture files
+│   ├── task_board.md, consensus.md    # Tasks + culture norms
+│   ├── knowledge.md                   # Shared technical knowledge
+│   ├── agent_instructions.md          # Agent behavior rules
+│   ├── task_outputs/                  # Shared task results
+│   └── reports/                       # System reports
+├── backend/               # Runtime services
+│   ├── message_bus.js                 # SQLite message bus
+│   ├── messages.db                    # Message DB
+│   └── api.js, agent_metrics_api.js   # API modules
+├── company.md             # Civilization policies
+├── CLAUDE.md              # Platform documentation
+└── DESIGN.md              # This file
+```
+
+### Agents (20 citizens)
+**Leadership:** Alice (Tech Lead), Sam (TPM 1), Olivia (TPM 2)
+**QA:** Tina (QA Lead), Frank (QA Engineer)
+**Engineering:** Bob (Backend), Charlie (Frontend), Dave (Full Stack), Eve (Infra), Grace (Data), Heidi (Security), Ivan (ML), Judy (Mobile), Karl (Platform), Liam (SRE), Mia (API), Nick (Performance), Pat (Database), Quinn (Cloud), Rosa (Distributed Systems)
+
+### Active Work: D004 Kalshi Arbitrage Engine
+4-phase pipeline: Market Filtering -> LLM Clustering -> Pearson Correlation -> C++ Execution
+- All 4 phases operational (verified via E2E integration test)
+- Paper trading: 44% WR on corrected mock data (expected below-breakeven behavior)
+- Latency: avg 0.294us, p99 0.333us (target <1ms met)
+- Blocker: T236 (Kalshi API credentials) for production go-live
+
+### Upcoming: Multi-Planet Restructuring
+Planned separation into Platform / Agent Files / Output with multi-planet support.
+See plan file for details.
