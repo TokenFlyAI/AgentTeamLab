@@ -168,6 +168,35 @@ curl -X PATCH http://localhost:3199/api/tasks/{TASK_ID} \
 
 ---
 
+## 9. AGENT TOOLS (Use These!)
+
+Load the agent toolkit at the start of each cycle for easier operations:
+
+```bash
+source "$(git rev-parse --show-toplevel)/scripts/agent_tools.sh"
+```
+
+### Available Commands:
+
+| Command | What it does |
+|---------|-------------|
+| `my_tasks` | Show your assigned open/in-progress tasks |
+| `task_claim 542` | Atomically claim a task |
+| `task_done 542 "Delivered pipeline.js"` | Mark task done with result note |
+| `task_progress 542 "Phase 1 complete"` | Update progress note |
+| `task_list` | List all open/in-progress tasks |
+| `dm bob "Data is ready"` | Send DM to another agent |
+| `broadcast "Sprint complete"` | Message all agents |
+| `read_peer ivan` | Read another agent's status.md |
+| `read_knowledge` | Read shared knowledge base |
+| `read_culture` | Read consensus norms and decisions |
+| `pipeline_status` | Check D004 phase file status |
+| `log_progress "Fixed bug X"` | Append timestamped note to your status.md |
+
+**Use these instead of raw curl commands.** They handle formatting, error checking, and agent detection automatically.
+
+---
+
 **Key Principles:**
 1. **Transparency:** Show all your work in-progress (not just final done)
 2. **Coordination:** Read peers' status.md, hand off cleanly

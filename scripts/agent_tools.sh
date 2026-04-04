@@ -1,0 +1,189 @@
+#!/bin/bash
+# agent_tools.sh — Helper functions for agents to use during their work cycles
+# Source this in your work: source ../../scripts/agent_tools.sh
+#
+# Provides simple one-liner tools for common agent operations:
+#   task_claim <id>              — Atomically claim a task
+#   task_done <id> "result"      — Mark task done with result note
+#   task_progress <id> "update"  — Update task progress note
+#   task_list [assignee]         — List open/in-progress tasks
+#   dm <agent> "message"         — Send a DM to another agent
+#   broadcast "message"          — Send message to all agents
+#   read_peer <agent>            — Read another agent's status.md
+#   read_knowledge               — Read shared knowledge base
+#   read_culture                 — Read consensus norms and decisions
+#   my_tasks                     — Show tasks assigned to me
+#   pipeline_status              — Show D004 pipeline phase status
+#   log_progress "message"       — Append progress to status.md with timestamp
+
+# Handle both bash and zsh
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [ -n "${(%):-%x}" 2>/dev/null ]; then
+  SCRIPTS_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
+else
+  SCRIPTS_DIR="$(cd "$(dirname "$(git rev-parse --show-toplevel 2>/dev/null)/scripts/agent_tools.sh")" && pwd)"
+fi
+# Override COMPANY_DIR to ensure paths.sh resolves correctly
+COMPANY_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+unset AGENTS_DIR SHARED_DIR PLANET_DIR  # Clear stale values before re-resolving
+# Source paths.sh to get planet-aware directories
+if [ -f "${COMPANY_DIR}/lib/paths.sh" ]; then
+  . "${COMPANY_DIR}/lib/paths.sh"
+fi
+_AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
+_SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
+_API="http://localhost:3199"
+
+# Detect current agent name from working directory
+_SELF=$(pwd | grep -oE 'agents/([^/]+)' | head -1 | cut -d/ -f2)
+_SELF="${_SELF:-}"
+
+# ── Task Operations ──────────────────────────────────────────────────────────
+
+task_claim() {
+  local id="$1"
+  [ -z "$id" ] && echo "Usage: task_claim <task-id>" && return 1
+  local agent="${_SELF:-unknown}"
+  curl -s -X POST "${_API}/api/tasks/${id}/claim" \
+    -H "Content-Type: application/json" \
+    -d "{\"agent\":\"${agent}\"}" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print(f'Claimed T{d.get(\"id\",\"?\")} for ${agent}')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+task_done() {
+  local id="$1" note="$2"
+  [ -z "$id" ] && echo "Usage: task_done <task-id> [\"result note\"]" && return 1
+  local body="{\"status\":\"done\"}"
+  [ -n "$note" ] && body="{\"status\":\"done\",\"notes\":\"${note}\"}"
+  curl -s -X PATCH "${_API}/api/tasks/${id}" \
+    -H "Content-Type: application/json" \
+    -d "$body" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} marked DONE')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+task_progress() {
+  local id="$1" note="$2"
+  [ -z "$id" ] || [ -z "$note" ] && echo "Usage: task_progress <task-id> \"progress note\"" && return 1
+  curl -s -X PATCH "${_API}/api/tasks/${id}" \
+    -H "Content-Type: application/json" \
+    -d "{\"status\":\"in_progress\",\"notes\":\"${note}\"}" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} updated')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+task_list() {
+  local assignee="$1"
+  curl -s "${_API}/api/tasks" 2>/dev/null | python3 -c "
+import sys,json
+tasks=json.load(sys.stdin)
+assignee='${assignee}'.lower() if '${assignee}' else None
+active=[t for t in tasks if t.get('status') in ('open','in_progress')]
+if assignee: active=[t for t in active if (t.get('assignee','') or '').lower()==assignee]
+if not active: print('No active tasks' + (f' for {assignee}' if assignee else '')); sys.exit()
+for t in active:
+  print(f'[{t[\"id\"]}] {t[\"status\"]:12s} P:{t.get(\"priority\",\"?\"):8s} {t.get(\"assignee\",\"unassigned\"):10s} {t[\"title\"][:60]}')
+" 2>/dev/null
+}
+
+my_tasks() {
+  [ -z "$_SELF" ] && echo "Cannot detect agent name from working directory" && return 1
+  echo "Tasks for ${_SELF}:"
+  task_list "$_SELF"
+}
+
+# ── Communication ────────────────────────────────────────────────────────────
+
+dm() {
+  local to="$1" msg="$2"
+  [ -z "$to" ] || [ -z "$msg" ] && echo "Usage: dm <agent> \"message\"" && return 1
+  local from="${_SELF:-system}"
+  local ts=$(date +%Y_%m_%d_%H_%M_%S)
+  local inbox="${_AGENTS}/${to}/chat_inbox"
+  [ ! -d "$inbox" ] && echo "Agent '${to}' not found" && return 1
+  echo "$msg" > "${inbox}/${ts}_from_${from}.md"
+  echo "DM sent to ${to}"
+}
+
+broadcast() {
+  local msg="$1"
+  [ -z "$msg" ] && echo "Usage: broadcast \"message\"" && return 1
+  local from="${_SELF:-system}"
+  local ts=$(date +%Y_%m_%d_%H_%M_%S)
+  local count=0
+  for agent_dir in "${_AGENTS}"/*/; do
+    local agent=$(basename "$agent_dir")
+    [ "$agent" = "$from" ] && continue
+    local inbox="${agent_dir}chat_inbox"
+    [ -d "$inbox" ] && echo "$msg" > "${inbox}/${ts}_from_${from}.md" && count=$((count+1))
+  done
+  echo "Broadcast sent to ${count} agents"
+}
+
+# ── Information ──────────────────────────────────────────────────────────────
+
+read_peer() {
+  local agent="$1"
+  [ -z "$agent" ] && echo "Usage: read_peer <agent-name>" && return 1
+  local status_file="${_AGENTS}/${agent}/status.md"
+  [ ! -f "$status_file" ] && echo "Agent '${agent}' status.md not found" && return 1
+  echo "=== ${agent} status ==="
+  tail -30 "$status_file"
+}
+
+read_knowledge() {
+  cat "${_SHARED}/knowledge.md" 2>/dev/null || echo "knowledge.md not found"
+}
+
+read_culture() {
+  cat "${_SHARED}/consensus.md" 2>/dev/null || echo "consensus.md not found"
+}
+
+pipeline_status() {
+  echo "=== D004 Pipeline Status ==="
+  echo ""
+  echo "Phase 1 (Market Filter):"
+  [ -f "${_SHARED}/markets_filtered.json" ] && echo "  markets_filtered.json exists ($(wc -c < "${_SHARED}/markets_filtered.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  echo ""
+  echo "Phase 2 (Clustering):"
+  [ -f "${_SHARED}/market_clusters.json" ] && echo "  market_clusters.json exists ($(wc -c < "${_SHARED}/market_clusters.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  echo ""
+  echo "Phase 3 (Correlation):"
+  [ -f "${_SHARED}/correlation_pairs.json" ] && echo "  correlation_pairs.json exists ($(wc -c < "${_SHARED}/correlation_pairs.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  echo ""
+  echo "Phase 4 (C++ Engine):"
+  local engine_files=$(find "${_AGENTS}/../output" -name "*.cpp" 2>/dev/null | wc -l | tr -d ' ')
+  echo "  C++ files: ${engine_files}"
+}
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+
+log_progress() {
+  local msg="$1"
+  [ -z "$msg" ] && echo "Usage: log_progress \"what you did\"" && return 1
+  [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
+  local status_file="${_AGENTS}/${_SELF}/status.md"
+  echo "" >> "$status_file"
+  echo "### $(date +%Y-%m-%d\ %H:%M) — Progress" >> "$status_file"
+  echo "$msg" >> "$status_file"
+  echo "Progress logged to status.md"
+}
+
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_progress, task_list, my_tasks, dm, broadcast, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
