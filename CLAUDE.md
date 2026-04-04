@@ -52,6 +52,9 @@ Key API endpoints:
 | `/api/tasks` | GET/POST | Task list / create task |
 | `/api/tasks/:id` | PATCH/DELETE | Update or delete task |
 | `/api/tasks/:id/claim` | POST | Atomically claim a task (409 if already claimed) |
+| `/api/tasks/:id/review` | POST | Reviewer gate: approve (→done) or reject (→in_progress) |
+| `/api/tasks/:id/result` | GET/POST | Read/write task deliverable files |
+| `/api/tasks/archive` | GET | List archived done tasks |
 | `/api/cost` | GET | Today's + 7-day token spend per agent |
 | `/api/agents/smart-start` | POST | Start only agents with actual work |
 | `/api/agents/watchdog` | POST | Restart stuck agents (stale heartbeat >15 min) |
@@ -248,8 +251,11 @@ bash merge_codebase.sh                                # Merge agent code → sha
 ```
 
 **API:**
-- `GET /api/planets` — list all planets
+- `GET /api/planets` — list all planets (only dirs with `planet_config.json`)
 - `GET /api/planets/active` — current planet
+- `POST /api/planets/switch` — switch active planet (updates symlinks + planet.json)
+
+**Important:** Root symlinks (`agents/`, `public/`, `output/`) MUST exist and point to the active planet. Agent prompts use `../../public/` relative paths that depend on these symlinks. `switch_planet.sh` handles this automatically.
 
 ## Common Operations
 
@@ -314,6 +320,51 @@ bash stop_all.sh
 node server.js --dir . --port 3199
 ```
 
+## Task Review Workflow
+
+Agents mark tasks `in_review` when done. Reviewers (olivia, tina, alice) verify deliverables exist and approve or reject:
+
+```bash
+# Approve — verifies deliverable exists, marks done
+curl -X POST http://localhost:3199/api/tasks/555/review \
+  -H "Content-Type: application/json" \
+  -d '{"verdict":"approve","reviewer":"olivia","comment":"Verified"}'
+
+# Reject — sends feedback to assignee, sets back to in_progress
+curl -X POST http://localhost:3199/api/tasks/555/review \
+  -H "Content-Type: application/json" \
+  -d '{"verdict":"reject","reviewer":"tina","comment":"Missing tests"}'
+```
+
+Task flow: `open` → `in_progress` → `in_review` → `done` (approved) or back to `in_progress` (rejected)
+
+## Visual Validation (IMPORTANT)
+
+**Always verify changes by taking screenshots and clicking through the UI** — not just running unit tests. Unit tests only check what you expect; screenshots reveal what's actually broken.
+
+```bash
+# Quick visual check with Playwright
+node -e "
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  await page.goto('http://localhost:3199');
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: '/tmp/dashboard_check.png' });
+  // Click through tabs, dropdowns, modals...
+  await browser.close();
+})();
+"
+```
+
+**Checklist after any UI/API change:**
+1. Screenshot every tab (Agents, Missions, Chat, News, Culture, Stats, Fleet, Live Tail, Lord's Inbox)
+2. Open the planet dropdown — verify only real planets show
+3. Open an agent modal — click through all 12 sub-tabs
+4. Check page height isn't exploding (News had 60K px bug from unbounded rendering)
+5. Check browser console for JS errors via `page.on('pageerror', ...)`
+
 ## E2E Tests
 
 ```bash
@@ -329,7 +380,8 @@ npx playwright test e2e/smart_run.spec.js
 npx playwright test e2e/message_bus.spec.js
 ```
 
-Test files: `e2e/api.spec.js` (49 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (59 tests), `e2e/coverage.spec.js` (360 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests)
+Test files: `e2e/api.spec.js` (55 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (59 tests), `e2e/coverage.spec.js` (360 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests)
 
-**Total: 572 passed / 17 skipped (auth) / 0 failed** (589 total)
-_(1 timing-sensitive test in smart_run.spec.js — passes on retry)_
+**Total: 578 passed / 17 skipped (auth) / 0 failed** (595 total)
+
+**Remember:** E2E tests verify known scenarios. Visual validation (screenshots + clicks) catches the unknowns. Always do both.
