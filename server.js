@@ -804,8 +804,8 @@ function archiveDoneTasks() {
   const tbPath = path.join(PUBLIC_DIR, "task_board.md");
   const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
   const tasks = parseTaskBoard();
-  // Only archive regular tasks (not directions or instructions)
-  const doneTasks = tasks.filter((t) => (t.status || "").toLowerCase() === "done" && t.task_type === "task");
+  // Archive completed and cancelled regular tasks (not directions or instructions)
+  const doneTasks = tasks.filter((t) => ["done", "cancelled"].includes((t.status || "").toLowerCase()) && t.task_type === "task");
   if (!doneTasks.length) return 0;
   
   // Append done rows to archive
