@@ -132,3 +132,35 @@ Task 241: Set up pipeline scheduler for live trading — COMPLETE
 
 ### Caveat
 100% win rate is artifact of synthetic seeded data per consensus decision #2. Real validation requires T236 (Kalshi API credentials).
+
+---
+
+## T569 IN_REVIEW — Validate Data Chain: Markets -> Clusters -> Correlations -> Signals
+
+**Time:** 2026-04-04
+**Following C3 (cite decisions):** D004 pipeline traceability validation per Sprint 3 requirements.
+**Following C5 (show in_progress):** T569 claimed -> in_progress -> in_review.
+**Following C6 (reference knowledge):** Phase 1-3 specs from knowledge.md.
+**Following C9 (DM on completion):** DM sent to alice with findings.
+**Following C10 (team broadcast):** Posted summary to team_channel.
+**Following C11 (review before done):** Marked in_review, DM sent to olivia.
+
+### Verdict: PASS — All signals trace back to filtered markets
+
+### Chain Summary
+| Phase | Count |
+|-------|-------|
+| Phase 1 (Filtering) | 15 markets |
+| Phase 2 (Clustering) | 11 in 3 clusters |
+| Phase 3 (Correlation) | 105 pairs, 30 arb opportunities |
+| Signals (Bob T567) | 47 signals (25 entries), 6 markets |
+
+### Findings
+- 4 Phase 1 markets not clustered (FEDW, TEMPW, CHIPT, OILW) — singleton behavior, not an issue
+- Phase 3 correctly correlates ALL 15 Phase 1 markets
+- All signal pairs exist in Phase 3 correlation data
+- No orphan signals, no untraced pairs
+
+### Deliverables
+- `output/data_chain_audit.js` — runnable audit script
+- `output/data_chain_audit.md` — full report

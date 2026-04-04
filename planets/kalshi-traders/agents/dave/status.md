@@ -42,3 +42,6 @@ T354: Production Readiness Code Review — COMPLETE
 
 ### 2026-04-03 22:39 — Progress
 T540 COMPLETE. Integration tested C++ engine with corrected correlation_pairs.json: updated parser for new field names (pearson_r→pearson_correlation, spread_zscore→expected_spread, estimated_edge_cents→arbitrage_confidence/100). 13/13 integration tests pass, 29/29 unit tests pass. Engine loads all 105 pairs (30 arb opportunities). Files modified: engine.cpp (parser), test_suite.cpp (paths). Deliverable: output/integration_test_t540.js
+
+### 2026-04-04 00:42 — Progress
+T568 COMPLETE (in_review). Backtest: 38 signals → 18 trades, 61.1% win, +$14.26 P&L (14.14%), Sharpe 9.90, DD 1.92%. DM'd tina (QA) + grace (data check). Following C9, C11, D6.

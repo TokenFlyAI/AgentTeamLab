@@ -1,0 +1,947 @@
+{
+  "generated_at": "2026-04-04T07:25:29.101Z",
+  "task": "T568",
+  "sweep_config": {
+    "zEntry": [
+      1,
+      1.5,
+      2,
+      2.5,
+      3
+    ],
+    "zExit": [
+      0.3,
+      0.5,
+      0.7,
+      1
+    ],
+    "zStop": [
+      2.5,
+      3,
+      3.5,
+      4
+    ],
+    "priceHistoryLength": 100,
+    "trainPct": 0.7,
+    "initialCapital": 100,
+    "tradingFee": 0.01,
+    "basePositionSize": 2,
+    "maxPositionSize": 5
+  },
+  "total_combinations": 80,
+  "valid_combinations": 64,
+  "with_trades": 48,
+  "profitable": 3,
+  "best_params": {
+    "params": {
+      "z_entry": 1,
+      "z_exit": 0.3,
+      "z_stop": 4
+    },
+    "total_trades": 2,
+    "wins": 2,
+    "losses": 0,
+    "win_rate": 1,
+    "total_pnl": 0.2013186813186813,
+    "avg_pnl": 0.10065934065934065,
+    "sharpe": 2259.796593154899
+  },
+  "all_results": [
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.3,
+        "z_stop": 4
+      },
+      "total_trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 1,
+      "total_pnl": 0.2013,
+      "avg_pnl": 0.1007,
+      "sharpe": 2259.8
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.5,
+        "z_stop": 4
+      },
+      "total_trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 1,
+      "total_pnl": 0.1486,
+      "avg_pnl": 0.0743,
+      "sharpe": 1667.71
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.7,
+        "z_stop": 4
+      },
+      "total_trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 1,
+      "total_pnl": 0.1486,
+      "avg_pnl": 0.0743,
+      "sharpe": 1667.71
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.3,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.5,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.7,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 1,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.3,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.5,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.7,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 1,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.3,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.5,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.7,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 1,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.3,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.5,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.7,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 1,
+        "z_stop": 4
+      },
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "sharpe": 0
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.3,
+        "z_stop": 3
+      },
+      "total_trades": 8,
+      "wins": 4,
+      "losses": 4,
+      "win_rate": 0.5,
+      "total_pnl": -0.742,
+      "avg_pnl": -0.0927,
+      "sharpe": -9.37
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.3,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 0.5,
+      "total_pnl": -0.0545,
+      "avg_pnl": -0.0136,
+      "sharpe": -10.05
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.5,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 0.5,
+      "total_pnl": -0.0545,
+      "avg_pnl": -0.0136,
+      "sharpe": -10.05
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 0.7,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 0.5,
+      "total_pnl": -0.0545,
+      "avg_pnl": -0.0136,
+      "sharpe": -10.05
+    },
+    {
+      "params": {
+        "z_entry": 3,
+        "z_exit": 1,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 0.5,
+      "total_pnl": -0.0545,
+      "avg_pnl": -0.0136,
+      "sharpe": -10.05
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.5,
+        "z_stop": 3
+      },
+      "total_trades": 8,
+      "wins": 4,
+      "losses": 4,
+      "win_rate": 0.5,
+      "total_pnl": -0.7947,
+      "avg_pnl": -0.0993,
+      "sharpe": -10.32
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.7,
+        "z_stop": 3
+      },
+      "total_trades": 8,
+      "wins": 4,
+      "losses": 4,
+      "win_rate": 0.5,
+      "total_pnl": -0.7947,
+      "avg_pnl": -0.0993,
+      "sharpe": -10.32
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.3,
+        "z_stop": 2.5
+      },
+      "total_trades": 12,
+      "wins": 4,
+      "losses": 8,
+      "win_rate": 0.3333,
+      "total_pnl": -0.9635,
+      "avg_pnl": -0.0803,
+      "sharpe": -12.7
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.3,
+        "z_stop": 3.5
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.8466,
+      "avg_pnl": -0.1411,
+      "sharpe": -13.16
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.5,
+        "z_stop": 2.5
+      },
+      "total_trades": 12,
+      "wins": 4,
+      "losses": 8,
+      "win_rate": 0.3333,
+      "total_pnl": -1.0163,
+      "avg_pnl": -0.0847,
+      "sharpe": -13.98
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.7,
+        "z_stop": 2.5
+      },
+      "total_trades": 12,
+      "wins": 4,
+      "losses": 8,
+      "win_rate": 0.3333,
+      "total_pnl": -1.0163,
+      "avg_pnl": -0.0847,
+      "sharpe": -13.98
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.5,
+        "z_stop": 3.5
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.8993,
+      "avg_pnl": -0.1499,
+      "sharpe": -14.61
+    },
+    {
+      "params": {
+        "z_entry": 1,
+        "z_exit": 0.7,
+        "z_stop": 3.5
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.8993,
+      "avg_pnl": -0.1499,
+      "sharpe": -14.61
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.3,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.5477,
+      "avg_pnl": -0.0913,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.5,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.5477,
+      "avg_pnl": -0.0913,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.7,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.5477,
+      "avg_pnl": -0.0913,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 1,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.5477,
+      "avg_pnl": -0.0913,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.3,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.7675,
+      "avg_pnl": -0.1279,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.5,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.7675,
+      "avg_pnl": -0.1279,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.7,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.7675,
+      "avg_pnl": -0.1279,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 1,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.7675,
+      "avg_pnl": -0.1279,
+      "sharpe": -16.04
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.3,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.662,
+      "avg_pnl": -0.1103,
+      "sharpe": -16.09
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.5,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.662,
+      "avg_pnl": -0.1103,
+      "sharpe": -16.09
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.7,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.662,
+      "avg_pnl": -0.1103,
+      "sharpe": -16.09
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 1,
+        "z_stop": 3
+      },
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.3333,
+      "total_pnl": -0.662,
+      "avg_pnl": -0.1103,
+      "sharpe": -16.09
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.3,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.8835,
+      "avg_pnl": -0.0884,
+      "sharpe": -18.25
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.5,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.8835,
+      "avg_pnl": -0.0884,
+      "sharpe": -18.25
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.7,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.8835,
+      "avg_pnl": -0.0884,
+      "sharpe": -18.25
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 1,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.8835,
+      "avg_pnl": -0.0884,
+      "sharpe": -18.25
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.3,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.989,
+      "avg_pnl": -0.0989,
+      "sharpe": -19.85
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.5,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.989,
+      "avg_pnl": -0.0989,
+      "sharpe": -19.85
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.7,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.989,
+      "avg_pnl": -0.0989,
+      "sharpe": -19.85
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 1,
+        "z_stop": 2.5
+      },
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 0.2,
+      "total_pnl": -0.989,
+      "avg_pnl": -0.0989,
+      "sharpe": -19.85
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.3,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.8721,
+      "avg_pnl": -0.218,
+      "sharpe": -33.84
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.5,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.8721,
+      "avg_pnl": -0.218,
+      "sharpe": -33.84
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 0.7,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.8721,
+      "avg_pnl": -0.218,
+      "sharpe": -33.84
+    },
+    {
+      "params": {
+        "z_entry": 1.5,
+        "z_exit": 1,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.8721,
+      "avg_pnl": -0.218,
+      "sharpe": -33.84
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.3,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.7666,
+      "avg_pnl": -0.1916,
+      "sharpe": -37.67
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.5,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.7666,
+      "avg_pnl": -0.1916,
+      "sharpe": -37.67
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 0.7,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.7666,
+      "avg_pnl": -0.1916,
+      "sharpe": -37.67
+    },
+    {
+      "params": {
+        "z_entry": 2,
+        "z_exit": 1,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.7666,
+      "avg_pnl": -0.1916,
+      "sharpe": -37.67
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.3,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.6523,
+      "avg_pnl": -0.1631,
+      "sharpe": -45.08
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.5,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.6523,
+      "avg_pnl": -0.1631,
+      "sharpe": -45.08
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 0.7,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.6523,
+      "avg_pnl": -0.1631,
+      "sharpe": -45.08
+    },
+    {
+      "params": {
+        "z_entry": 2.5,
+        "z_exit": 1,
+        "z_stop": 3.5
+      },
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0,
+      "total_pnl": -0.6523,
+      "avg_pnl": -0.1631,
+      "sharpe": -45.08
+    }
+  ]
+}

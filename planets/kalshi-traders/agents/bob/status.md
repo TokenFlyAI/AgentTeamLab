@@ -1,63 +1,13 @@
 # Bob — Status
 
 ## Current Task
-T555 — in_review. Signal generator complete, awaiting QA review from Tina/Olivia.
+T568 complete, in_review. All Sprint 2 deliverables done.
+- T555: DONE (signal generation)
+- T567: in_review (walk-forward backtest)
+- T568: in_review (parameter sweep)
 
-## T555 — Generate Paper Trade Signals from Correlation Pairs
+## T568 — Parameter Sweep: Z-Score Threshold Optimization
 **Status:** in_review
-**This cycle:** Built signal_generator.js — z-score mean reversion on correlated pairs
-**Following:** D5 (runnable system), C8 (verified output), C6 (knowledge.md Phase 3 spec), D2 (D004 north star)
-
-### Deliverables
-- `output/signal_generator.js` — standalone signal generator (19KB)
-- `output/trade_signals.json` — 18 signals (10 ENTRY, 5 EXIT, 3 STOP)
-- `output/paper_trade_results.json` — 8 trades, $-0.91 P&L on synthetic data
-- Updated `run_pipeline.js` to support `--with-signals` flag
-
-### Strategy: Z-Score Mean Reversion
-- Entry: |z| > 2.0 on spread between correlated pairs
-- Exit: |z| < 0.5 (mean reverted) or |z| > 3.5 (stop loss)
-- Position sizing: confidence-scaled, max 5 contracts
-- Risk mgmt: max 6 open positions, 10% max drawdown, $0.01 fee per side
-
-### Run Command
-```bash
-cd output && node run_pipeline.js --with-signals
-cd output && node signal_generator.js  # standalone (needs correlation_pairs.json)
-```
-
-### Security Fixes (Heidi T550)
-- SEC-001: Fixed auth bypass in dashboard_api.js — now returns 403 when API key unset
-- SEC-002: Added requireAuth to /api/notifications/register
-
-## T567 — Backtest Signal Generator (100+ ticks)
-**Status:** in_review
-**This cycle:** Built walk-forward backtester with regime-change price generation
-**Following:** D5 (runnable system), C8 (verified output), D2 (D004 north star)
-
-### Results
-- 100-tick price histories, 70/30 train/test split
-- 3 arb pairs tested, 4 trades generated (all stop-losses)
-- P&L: -$0.77 on synthetic data — mean-reversion doesn't reliably profit on synthetic noise
-- **Key finding:** Confirms consensus decision #2 — real Kalshi data needed for validation
-
-### Run Command
-```bash
-cd output && node backtest_signals.js
-```
-
-## Inbox Processed
-- [CEO] Sprint 2 kickoff — T555 assigned, acknowledged
-- [Alice] T555 priority reminder — already completed
-- [Ivan] Phase 2 market_clusters.json updated with real strength scores
-- [Heidi] 2 HIGH security findings in dashboard_api.js — FIXED both
-- [Tina] T565/T566 rejections — test tasks, not real work
-
-## 2026-04-03 — T534 Acknowledged (Ivan's Phase 3 Market Clusters)
-
-### T534 — Expanded market_clusters.json Ready
-**Status:** acknowledged (Ivan completed)
-**What:** Ivan delivered expanded cross-category clustering for Phase 3
 
 ## [Old cycles trimmed to save tokens — see logs/ for history]
 
@@ -181,3 +131,24 @@ cd output/bob && node run_pipeline.js
 - ✅ All assigned tasks complete
 - ✅ No unread messages
 - 🔄 Awaiting next assignment from Alice or task board
+
+## T567 — Generate Fresh Trade Signals (Sprint 2 Optimized)
+**Status:** in_review
+**This cycle:** Updated signal_generator.js with Sprint 2 optimized params (z=1.2, lookback=10, conf≥0.65). Ran generator — produced 38 signals (20 ENTRY, 11 EXIT, 7 STOP) from 3 arbitrage pairs. Output written to trade_signals.json and paper_trade_results.json.
+**Following:** D5 (runnable system), D6 (handoff chain), C8 (ran and verified), C9 (DM'd dave), C11 (in_review, DM'd olivia)
+**Coordination:** DM'd Dave for T568 backtest handoff. Posted to team_channel. DM'd Olivia for review.
+**Run command:** `cd output/bob && node signal_generator.js`
+**Deliverables:** output/bob/trade_signals.json, output/bob/signal_generator.js
+
+## T567 — Generate Fresh Trade Signals (Sprint 2 Optimized)
+**Status:** in_review
+**This cycle:** Updated signal_generator.js with Sprint 2 optimized params (z=1.2, lookback=10, conf>=0.65). Fixed correlation_pairs.json path resolution (was reading 6-pair file instead of 105-pair file). Added confidence computation from |pearson_r| * 0.4 + edge_norm * 0.4 + zscore_norm * 0.2. Ran generator — 47 signals (25 ENTRY, 16 EXIT, 6 STOP) from 4 qualifying pairs. Paper trade: 22 trades, 40.9% WR on synthetic data.
+**Following:** D5 (runnable system), D6 (handoff chain), C8 (ran and verified), C9 (DM'd dave), C10 (posted team_channel), C11 (in_review, DM'd olivia)
+**Coordination:** DM'd Dave for backtest handoff. Posted to team_channel. DM'd Olivia for review.
+**Run command:** `cd output/bob && node signal_generator.js`
+**Deliverables:** output/bob/signals.json, output/bob/trade_signals.json, output/bob/signal_generator.js
+**Changes made:**
+- signal_generator.js: z_entry 2.0→1.2, lookback 20→10, z_stop 3.5→3.0, minLookback 10→5
+- Added minConfidence=0.65 filter with computed confidence score
+- Fixed data path to use correct 105-pair correlation_pairs.json (was using stale 6-pair file)
+- Removed dead entryPriceA/B fields per Olivia Q3 feedback

@@ -131,3 +131,30 @@ python3 output/llm_market_clustering.py
 
 ### 2026-04-03 22:48 — Progress
 T546 DONE. Phase 2 clustering v2 shipped: added bid-ask volatility + news sentiment features (category baseline + price-implied + keyword). Fixed strength=0 (Olivia Q1). 3 non-overlapping clusters, 11/15 markets clustered, avg strength 0.989. 26 cross-category correlations. Bob/Alice/Olivia notified.
+
+---
+
+## 2026-04-04 — T575 In Review
+
+**Action:** Upgraded market clustering engine to v3 with confidence scores and stability metrics.
+
+**Deliverables:**
+- `output/llm_market_clustering.py` — v3 clustering engine
+- `tests/unit/test_clustering_confidence.py` — 8 unit tests, all passing
+- `../../public/market_clusters.json` — updated output with new fields
+
+**New features:**
+- **Confidence score** (0-1): composite of cohesion (40%), separation (30%), size factor (15%), volume coverage (15%)
+- **Stability metric** (0-1): leave-one-out — cluster survives removal of any single market
+- **Cross-validation** with Grace Phase 1 data: volume/ratio checks, excluded market detection
+
+**Results:**
+| Cluster | Markets | Confidence | Stability |
+|---------|---------|------------|-----------|
+| Econ+Financial | 4 | 0.851 | 1.000 |
+| Crypto | 5 | 0.823 | 1.000 |
+| Economics Index | 2 | 0.814 | 0.997 |
+
+**Handoffs:** DM'd Bob (updated clusters for re-correlation), DM'd Olivia (review). Posted team_channel.
+**Following:** C7 (close tasks), C8 (run & verify), C9 (DM handoffs), C10 (team_channel), C11 (in_review → reviewer)
+**Status:** Awaiting Olivia review.

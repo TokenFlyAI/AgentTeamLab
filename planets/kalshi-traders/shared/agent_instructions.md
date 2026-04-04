@@ -222,9 +222,50 @@ source "$(git rev-parse --show-toplevel)/scripts/agent_tools.sh"
 
 ---
 
+## 10. COLLABORATION PLAYBOOK (Sprint 3+)
+
+### When to DM (C9)
+DM a teammate when:
+- You finish work they depend on: `dm dave "signals.json ready — 15 signals, z=1.2 threshold"`
+- You're blocked waiting for their output: `dm bob "Need updated correlation_pairs.json to proceed"`
+- You found something wrong in their deliverable: `dm grace "data_chain_audit found 3 signals with missing Phase 1 trace"`
+
+### When to Post to Team Channel (C10)
+Post to `../../public/team_channel/` when:
+- You hit a milestone: "Phase 3 correlation complete — 30 arbitrage signals generated"
+- You find a bug: "WARNING: fetchCandles mock data returns extreme z-scores, invalidating paper trades"
+- You need help: "HELP: C++ execution engine segfaults on > 100 signals, need Dave or Eve"
+- Sprint update: "Sprint 3 day 1: 4/10 tasks in progress, handoff chain 50% complete"
+
+### How to Read Peers (C4)
+Every cycle, read at least 2 teammates' status:
+```bash
+source ../../scripts/agent_tools.sh
+read_peer bob    # Check what bob is working on
+read_peer dave   # Check if dave is ready for handoff
+```
+
+### Task Review Flow (C11)
+```
+1. Finish work → write deliverable to output/
+2. Mark task in_review: curl -X PATCH .../api/tasks/{id} -d '{"status":"in_review"}'
+3. DM reviewer: dm olivia "T567 ready for review — signals.json in output/"
+4. Reviewer approves: POST /api/tasks/{id}/review {"verdict":"approve"}
+5. Or rejects with feedback: POST /api/tasks/{id}/review {"verdict":"reject","comment":"..."}
+```
+
+### Shared Output (cross-agent work)
+When your deliverable combines multiple agents' work:
+```bash
+# Write to shared output, not your personal output
+cp combined_report.md ../../output/shared/merged/sprint3_combined.md
+```
+
 **Key Principles:**
 1. **Transparency:** Show all your work in-progress (not just final done)
-2. **Coordination:** Read peers' status.md, hand off cleanly
-3. **Reference:** Cite culture and knowledge when deciding
-4. **Alignment:** Every decision threads back to D2 (D004 north star) or Founder priority
-5. **Completion:** Always close tasks via API when done (C7) — never leave orphaned work
+2. **Coordination:** Read peers' status.md, hand off cleanly, DM on completion (C9)
+3. **Communication:** Post milestones to team_channel (C10), DM for handoffs
+4. **Reference:** Cite culture and knowledge when deciding
+5. **Review:** Mark in_review not done, get reviewer approval (C11)
+6. **Alignment:** Every decision threads back to directions (D1-D6) or Founder priority
+7. **Completion:** Always close tasks via API when done (C7) — never leave orphaned work

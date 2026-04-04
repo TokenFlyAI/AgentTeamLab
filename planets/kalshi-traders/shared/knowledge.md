@@ -116,7 +116,7 @@ Disabled strategies:
 | T550 | Heidi | Security audit — PASS |
 | T551 | Olivia | Quality gate — PASS (with minor notes) |
 
-## Sprint 2 (Current) — Signal Generation & Backtesting
+## Sprint 2 (Completed) — Signal Generation & Backtesting
 
 | Task | Agent | Goal |
 |------|-------|------|
@@ -127,3 +127,29 @@ Disabled strategies:
 | T559 | Alice | Sprint 1 retrospective + Sprint 2 plan |
 | T560 | Frank | QA pipeline tests + new test cases |
 | T539 | Tina | QA pipeline data chain validation |
+
+## Sprint 3 (Current) — Production Quality via Collaboration
+
+**Theme:** Every task has explicit handoffs. Agents must DM each other, post to team_channel, and review each other's work.
+
+**Handoff Chain:** Bob (signals) → Dave (backtest) → Tina (QA) → Olivia (review)
+**Parallel:** Grace (data audit), Ivan (clustering upgrade), Charlie (tracker), Alice (coordination), Sam (metrics), Heidi (security)
+
+| Task | Agent | Depends On | Hands Off To |
+|------|-------|-----------|-------------|
+| T567 | Bob | — | Dave (signals.json) |
+| T568 | Dave | Bob T567 | Tina (backtest_results.json) |
+| T569 | Grace | Bob+Ivan+Dave output | Alice (data_chain_audit.md) |
+| T570 | Tina | Dave T568 | Olivia (qa_backtest_report.md) |
+| T571 | Alice | All agents | team_channel (sprint3_status.md) |
+| T572 | Olivia | Bob+Dave+Grace+Tina | All (approve/reject) |
+| T573 | Heidi | All Sprint 3 output | Alice (security_sprint3.md) |
+| T574 | Sam | All agents | team_channel (sprint3_velocity.md) |
+| T575 | Ivan | Grace data | Bob (updated clusters) |
+| T576 | Charlie | Task API | Alice (sprint3_tracker.html) |
+
+**New Culture Norms (Sprint 3):**
+- C9: DM teammates when your work affects theirs
+- C10: Post milestones to team_channel
+- C11: Mark tasks in_review, not done — reviewers approve/reject
+- D6: Sprint 3 is about collaboration quality, not just task completion

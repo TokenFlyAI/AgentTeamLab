@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Signal Generator — T555
+ * Signal Generator — T567
  * Generates paper trade signals from correlation pairs using z-score mean reversion.
  *
  * Strategy:
@@ -24,19 +24,22 @@ const path = require("path");
 // Configuration
 // ---------------------------------------------------------------------------
 const SIGNAL_CONFIG = {
-  // Z-score thresholds for signal generation
-  zScoreEntry: 2.0,       // |z| > 2.0 → generate signal
+  // Z-score thresholds — Sprint 2 optimized (T567: z=1.2, lookback=10, conf=0.65)
+  zScoreEntry: 1.2,       // |z| > 1.2 → generate signal (optimized from 2.0)
   zScoreExit: 0.5,        // |z| < 0.5 → close position (mean reverted)
-  zScoreStop: 3.5,        // |z| > 3.5 → stop loss (divergence, not convergence)
+  zScoreStop: 3.0,        // |z| > 3.0 → stop loss (tightened from 3.5)
 
   // Rolling window for z-score calculation
-  lookbackPeriod: 20,     // 20 price observations for mean/std
-  minLookback: 10,        // minimum observations before generating signals
+  lookbackPeriod: 10,     // 10 price observations (optimized from 20)
+  minLookback: 5,         // minimum observations before generating signals (halved with lookback)
 
   // Position sizing (fixed fractional)
   maxPositionSize: 5,     // max contracts per signal
   basePositionSize: 2,    // default contracts
   confidenceScaling: true, // scale position by arbitrage confidence
+
+  // Confidence filter (Sprint 2 optimized)
+  minConfidence: 0.65,    // only trade pairs with confidence >= 0.65
 
   // Risk management
   maxOpenPositions: 6,    // max simultaneous open positions
@@ -96,6 +99,17 @@ function generateSignals(correlationPairs, priceData) {
   for (const pair of pairs) {
     if (!pair.is_arbitrage_opportunity) continue;
 
+    // Compute confidence from available fields:
+    // - |pearson_r| strength (0-1) weighted 40%
+    // - edge size normalized to 0-1 (cap at 5 cents) weighted 40%
+    // - |spread_zscore| normalized (cap at 3) weighted 20%
+    const rStrength = Math.abs(pair.pearson_r || pair.pearson_correlation || 0);
+    const edgeNorm = Math.min(1, (pair.estimated_edge_cents || 0) / 5);
+    const zNorm = Math.min(1, Math.abs(pair.spread_zscore || 0) / 3);
+    const confidence = rStrength * 0.4 + edgeNorm * 0.4 + zNorm * 0.2;
+
+    if (confidence < SIGNAL_CONFIG.minConfidence) continue;
+
     const tickerA = pair.market_a;
     const tickerB = pair.market_b;
 
@@ -106,6 +120,9 @@ function generateSignals(correlationPairs, priceData) {
     const { spreads, zScores } = calculateSpreadZScores(
       pricesA, pricesB, SIGNAL_CONFIG.lookbackPeriod
     );
+
+    // Attach computed confidence to pair for downstream use
+    pair.arbitrage_confidence = parseFloat(confidence.toFixed(4));
 
     // Walk through z-scores and generate signals
     let inPosition = false;
@@ -248,15 +265,8 @@ function simulatePaperTrades(signals, priceData) {
       const drawdownPct = ((peakCapital - capital) / peakCapital) * 100;
       if (drawdownPct > SIGNAL_CONFIG.maxDrawdownPct) continue;
 
-      const pricesA = priceData[signal.market_a];
-      const pricesB = priceData[signal.market_b];
-      const entryPriceA = pricesA ? pricesA[pricesA.length - 1] : 50;
-      const entryPriceB = pricesB ? pricesB[pricesB.length - 1] : 50;
-
       openPositions[pairKey] = {
         signal,
-        entryPriceA,
-        entryPriceB,
         entrySpread: signal.spread,
         contracts: signal.contracts,
         entryTime: signal.timestamp,
@@ -421,7 +431,13 @@ function runSignalGeneration(correlationPairsInput) {
   if (correlationPairsInput) {
     correlationPairs = correlationPairsInput;
   } else {
-    const cpPath = path.join(__dirname, "../../../public/correlation_pairs.json");
+    // Try multiple paths: agent-relative, then output-relative
+    const candidates = [
+      path.join(__dirname, "../../shared/correlation_pairs.json"),  // output/bob → output/shared/
+      path.resolve(__dirname, "../../../../public/correlation_pairs.json"),  // root public/
+      path.join(__dirname, "../../../public/correlation_pairs.json"),  // legacy path
+    ];
+    const cpPath = candidates.find(p => fs.existsSync(p)) || candidates[candidates.length - 1];
     if (!fs.existsSync(cpPath)) {
       console.error("correlation_pairs.json not found. Run the pipeline first (Phases 1-3).");
       process.exit(1);
@@ -430,10 +446,12 @@ function runSignalGeneration(correlationPairsInput) {
   }
 
   console.log("\n" + "=".repeat(60));
-  console.log("SIGNAL GENERATION — T555");
+  console.log("SIGNAL GENERATION — T567");
   console.log("Z-Score Mean Reversion on Correlated Pairs");
   console.log("=".repeat(60));
-  console.log(`Input: ${correlationPairs.total_pairs_analyzed || 0} pairs, ${correlationPairs.arbitrage_opportunities || 0} arb opportunities`);
+  const allPairs = correlationPairs.pairs || [];
+  const arbCount = allPairs.filter(p => p.is_arbitrage_opportunity).length;
+  console.log(`Input: ${allPairs.length} pairs, ${arbCount} arb opportunities`);
   console.log(`Config: z_entry=${SIGNAL_CONFIG.zScoreEntry}, z_exit=${SIGNAL_CONFIG.zScoreExit}, z_stop=${SIGNAL_CONFIG.zScoreStop}`);
 
   // Generate price data for simulation
@@ -464,12 +482,12 @@ function runSignalGeneration(correlationPairsInput) {
 
   const signalsOutput = {
     generated_at: new Date().toISOString(),
-    task: "T555",
+    task: "T567",
     strategy: "z_score_mean_reversion",
     config: { ...SIGNAL_CONFIG },
     input: {
-      correlation_pairs: correlationPairs.total_pairs_analyzed || 0,
-      arbitrage_opportunities: correlationPairs.arbitrage_opportunities || 0,
+      correlation_pairs: allPairs.length,
+      arbitrage_opportunities: arbCount,
     },
     total_signals: signals.length,
     signals,
@@ -479,7 +497,7 @@ function runSignalGeneration(correlationPairsInput) {
 
   const resultsOutput = {
     generated_at: new Date().toISOString(),
-    task: "T555",
+    task: "T567",
     strategy: "z_score_mean_reversion",
     ...results,
   };

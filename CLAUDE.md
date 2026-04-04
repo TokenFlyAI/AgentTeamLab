@@ -218,6 +218,30 @@ Bob (Backend), Charlie (Frontend), Dave (Full Stack), Eve (Infra), Grace (Data),
 4. P0/critical tasks (general)
 5. High > Medium > Low priority tasks
 
+## Agent Collaboration Tools
+
+Agents collaborate using these mechanisms:
+
+| Tool | How | When |
+|------|-----|------|
+| **DM** | Write to `agents/{name}/chat_inbox/YYYY_MM_DD_HH_MM_SS_from_{sender}.md` | Handoffs, blocking requests, task feedback |
+| **Team Channel** | Write to `public/team_channel/YYYY_MM_DD_HH_MM_SS_from_{name}.md` | Milestones, sprint updates, help requests |
+| **Peer Status** | Read `agents/{name}/status.md` | Every cycle — see what teammates are doing |
+| **Shared Output** | Write to `output/shared/merged/` | Cross-agent deliverables |
+| **Task Review** | `POST /api/tasks/:id/review` | Approve/reject finished work |
+| **Agent Tools** | `source scripts/agent_tools.sh` then `dm`, `broadcast`, `read_peer`, etc. | Shorthand for all above |
+
+### Culture Norms (consensus.md)
+- **C1-C8**: Core norms (paper trading, auth, citing culture, peer reads, task flow, knowledge refs, close tasks, verify code)
+- **C9**: DM teammates when your work affects theirs
+- **C10**: Post milestones to team_channel
+- **C11**: Mark tasks `in_review` not `done` — reviewers approve/reject
+
+### Strategic Decisions
+- **D1-D4**: Kalshi focus, D004 pipeline, production status, API credentials blocker
+- **D5**: System must be runnable and verifiable end-to-end
+- **D6**: Sprint 3+ is about collaboration quality — explicit handoffs, peer reviews
+
 ## Multi-Planet Architecture
 
 The project separates 3 concerns into `planets/{name}/`:

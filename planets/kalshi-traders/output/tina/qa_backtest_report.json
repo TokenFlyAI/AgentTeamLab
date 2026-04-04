@@ -1,0 +1,150 @@
+{
+  "task": "T570",
+  "validator": "tina",
+  "timestamp": "2026-04-04T07:43:43.742Z",
+  "target": "dave/backtest_results.json",
+  "reference": "bob/trade_signals.json",
+  "summary": {
+    "pass": 5,
+    "fail": 20,
+    "warn": 2
+  },
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "status": "WARN",
+      "check": "Signal count field present",
+      "detail": "backtest_results.json missing signal count field — cannot verify"
+    },
+    {
+      "status": "FAIL",
+      "check": "Win count mismatch",
+      "detail": "Reported: 11, Computed: 0"
+    },
+    {
+      "status": "PASS",
+      "check": "All trade P&L calculations",
+      "detail": "18 trades verified"
+    },
+    {
+      "status": "FAIL",
+      "check": "Drawdown tracking missing",
+      "detail": "No max_drawdown field in backtest results — CRITICAL for risk management"
+    },
+    {
+      "status": "WARN",
+      "check": "No walk-forward detected",
+      "detail": "Backtest may use in-sample data for both training and testing"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_1 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_2 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_3 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_4 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_5 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_6 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_7 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_8 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_9 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_10 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_11 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_12 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_13 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_14 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_15 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_16 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_17 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_18 temporal order",
+      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+    },
+    {
+      "status": "PASS",
+      "check": "Config maxDrawdownPct",
+      "detail": "Both use 10"
+    },
+    {
+      "status": "PASS",
+      "check": "Config initialCapital",
+      "detail": "Both use 100"
+    },
+    {
+      "status": "PASS",
+      "check": "Config tradingFee",
+      "detail": "Both use 0.01"
+    },
+    {
+      "status": "PASS",
+      "check": "Config consistency",
+      "detail": "Signal generator and backtest configs aligned"
+    }
+  ]
+}

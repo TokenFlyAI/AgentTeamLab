@@ -11,175 +11,123 @@ Holding pattern — No open tasks assigned. Monitoring for Founder directives.
 
 ## [Old cycles trimmed to save tokens — see logs/ for history]
 
-1. Claimed T527 → in_progress
-2. Created sprint plan: `agents/alice/output/t527_d004_sprint_plan.md`
-3. Messaged Bob (T528), Ivan (T529), Grace (T530) with clear assignments
-4. Posted announcement: `shared/announcements/2026_04_03_d004_sprint_kickoff.md`
-5. Processed 25 inbox messages
-6. Execution order: Grace(Phase 1) → Ivan(Phase 2) → Bob(Phase 3) → Grace(backtest)
+- 🆕 T573 (Frank) — open
 
-### Active Decisions
-- Following D2 (D004 north star): Full pipeline rebuild prioritized
-- Following C5 (task visibility): All tasks claimed and in_progress
-- Following C4 (read peers): Checked all teammate statuses — all idle, ready for work
-
-### Blockers
-- T236: Kalshi API credentials (Founder)
-- Contract size confirmation (Founder)
+### Bottleneck
+All remaining work is on idle agents. Need smart_run.sh or Founder action to start Dave/Grace/Ivan/Tina/Frank.
 
 ### Next Steps
-- Mark T527 done once sprint plan is confirmed
-- Monitor Bob/Ivan/Grace progress on T528-T530
-- Verify data chain integrity after each phase completes
+- Continue monitoring — nothing actionable until more agents start
 
 ---
 
-## Cycle Update (2026-04-04) — T543 Done, Pipeline Verified
+## Cycle 12 (2026-04-04) — No Changes, Entering Idle Watch
 
-### Founder Directives Processed
-1. **"Make the System Run"** (C7, C8, D5) — Acknowledged. Verified Bob's T542 pipeline runs E2E: `node run_pipeline.js` → 7 markets → 3 clusters → 6 pairs → 5 trades, $1.40 P&L, 80% win rate. Pipeline works (C8 verified).
-2. **Sprint Kickoff** — Processed. Pipeline artifacts confirmed present.
+### Status
+No inbox, no teammate changes. All actionable work complete. Remaining Sprint 2 tasks blocked on idle agents (Dave T556, Grace T557, Ivan T558, Tina T539, Frank T573).
 
-### T543 COMPLETE — Persona Evolution Report
-**Deliverable:** `output/t543_persona_evolution.md`
-**Culture ref:** Following C3 (cite culture), C4 (read peers), D2 (D004 north star)
+### My Completed Work This Session
+- ✅ T559 — Sprint 1 retro + Sprint 2 plan
+- ✅ T572 — Codebase merge (bob + dave → shared)
+- ✅ Approved T555, T567, T568 (Bob's deliverables)
+- ✅ Reviewed Heidi/Olivia/Sam cycle outputs
+- ✅ Created T568 (Bob stretch), T573 (Frank QA replacement)
+- ✅ Processed 7 inbox messages (Lord, CEO, Sam x2, Ivan, Bob, heartbeat monitor)
 
-Key findings:
-- **Bob:** Top performer. Formalize as pipeline owner.
-- **Dave:** Strong output but idle loop when queue empty → add self-direction guidance.
-- **Frank:** Inbox processing failure → add enforcement to prompt.
-- **Charlie:** Persona mismatch ("Analytical Researcher" vs Frontend) → retype.
-- **Eve:** Idle entire sprint (no infra tasks) → add proactive task creation.
-- **Proposed C9:** No agent idles >3 cycles — must seek/create work.
+### Recommendation for Founder
+Run `bash smart_run.sh` to activate agents with pending work. Key agents needed: Dave (T556), Grace (T557), Ivan (T558), Tina (T539), Frank (T573).
 
-### Dave T540 Acknowledged
-C++ engine integration complete (13/13 integration, 29/29 unit tests). Engine loads all 105 pairs.
-
-### Pipeline Status (Verified)
-- T542 DONE (Bob) — E2E pipeline runs with one command
-- T540 DONE (Dave) — C++ engine integration tested
-- All 4 phases produce output, pipeline executes in ~2ms
-
-### Open Tasks Remaining
-- T539 (Tina) — QA validate pipeline data chain
-- T545 (Grace) — Validate run_pipeline.js (Grace marked done)
-- T546 (Ivan) — Improve Phase 2 clustering
-- T547 (Charlie) — Pipeline status dashboard
-- T549 (Sam) — Sprint velocity report
-- T550 (Heidi) — Security audit of pipeline scripts
-
-### Blockers
-- T236: Kalshi API credentials (Founder)
-- Contract size confirmation (Founder)
-
-### Next Steps
-- Implement persona changes from T543 report (pending Founder approval)
-- Monitor remaining open tasks
-- Ready for next Founder directive
+### Next Steps (when agents activate)
+- Review Dave's T556 pipeline metrics
+- Review Grace's T557 synthetic price history — then Bob can integrate for backtesting
+- Review Ivan's T558 TF-IDF clustering
+- Review Tina's T539 QA validation
 
 ---
 
-## Cycle Update (2026-04-04) — T559 Done, Sprint 2 Active
+## Cycle 15 (2026-04-04) — Sprint 3 Launched, T571 In Progress
 
-### Inbox Processed
-1. **Lord message** — "Review task board" → Reviewed. Sprint 2 tasks all in_progress or assigned.
-2. **CEO Sprint 2 kickoff** — Acknowledged. Tasks T555-T560 + T539 assigned. My task T559.
-3. **Sam velocity report** — 17/20 idle, T236 still blocking. Noted.
-4. **Ivan T546 update** — Phase 2 clustering v2 deployed, 3 clusters, 26 cross-category correlations.
-
-### T559 COMPLETE ✅ — Sprint Report
-**Deliverable:** `output/shared/merged/sprint_report.md`
-**Culture ref:** Following C3 (cite culture), C7 (close tasks when done), D2 (D004 north star)
-- Sprint 1 retrospective: 10/10 tasks, pipeline E2E, quality/security audits PASS
-- Sprint 2 plan: 7 tasks assigned — signals (Bob), backtesting (Grace), monitoring (Dave), clustering (Ivan), QA (Frank, Tina)
-
-### Task Board Status
-- T555 (Bob) — in_progress, CRITICAL: signal generation
-- T556 (Dave) — in_progress: pipeline metrics
-- T557 (Grace) — in_progress: synthetic price history
-- T558 (Ivan) — in_progress: TF-IDF clustering
-- T559 (Alice) — DONE ✅
-- T560 (Frank) — in_progress: QA tests
-- T539 (Tina) — in_progress: QA data chain (Sprint 1 carryover)
-
-### Team Status
-- **Bob:** Running, T542 done, should be picking up T555
-- **All others:** Idle — Sprint 2 tasks assigned, awaiting start
-
-### Blockers
-- T236: Kalshi API credentials (Founder)
-- Contract size confirmation (Founder)
-
-### Next Steps
-- Monitor Bob's T555 progress (critical path)
-- Check if idle agents pick up their Sprint 2 tasks when started
-- Available for coordination and unblocking
-
----
-
-## Cycle 2 (2026-04-04) — Monitoring Sprint 2
-
-### Observations
-- **Inbox:** Empty — no new messages
-- **Bob:** Running (heartbeat 00:06:09) but status.md still shows T542 as last work. Hasn't picked up T555 yet.
-- **All others:** Still idle
+### Sprint 3 Active
+New task board with 10 tasks. Clear handoff chain: Bob→Dave→Tina→Olivia (D6).
+New culture norms: C9 (DM on handoffs), C10 (team_channel posts), C11 (review before done).
 
 ### Actions Taken
-- **DM'd Bob** about T555 (critical path signal generation) with clear instructions to claim and start
+1. **Claimed T571** — Sprint 3 coordination tracking
+2. **Wrote sprint3_status.md** to output/shared/merged/ — initial status with handoff tracker
+3. **Posted to team_channel** (C10) — Sprint 3 launch announcement with critical path and new norms
+
+### Sprint 3 Task Note
+T567-T576 are NEW Sprint 3 tasks (reusing some IDs from Sprint 2 done tasks). Sprint 2's T555/T559/T567/T568/T572 are all done.
+
+### Bottleneck
+All Sprint 3 agents idle. Bob (T567) is the critical path start — nothing moves until he generates fresh signals.
 
 ### Next Steps
-- Monitor Bob's T555 pickup in next cycle
-- If Bob doesn't respond, escalate or consider reassignment
-- Available for coordination
+- T571 is ongoing — update sprint3_status.md each cycle as agents activate
+- Monitor Bob's T567 pickup (critical path)
+- DM blocked agents if handoffs stall
 
 ---
 
-## Cycle 3 (2026-04-04) — T555 Approved, Sprint 2 Critical Path Done
+## Cycle 16 (2026-04-04) — Sprint 3 Coordination Active
 
-### Observations
-- **Bob:** Went idle after completing T555. Status.md not yet updated but task API shows in_review → approved.
-- **T555 verified:** `node run_pipeline.js --with-signals` runs successfully. Phase 5 produces 8 signal trades. P&L negative on synthetic data (expected — efficient mock markets produce poor signals by design). Infrastructure is sound.
-- **Bob's T555 message** still in his inbox (unread when he went idle — he found T555 via task board directly)
+### CEO Directive Processed
+Founder confirmed T571 Sprint 3 coordination. Monitor ALL agents, track handoff chain bob→dave→tina→olivia, DM blocked agents, write sprint3_status.md, post to team_channel EVERY cycle. Following C9-C11, D6.
+
+### Running Agents (6): alice, bob, charlie, dave, grace, heidi
+### Idle with Sprint 3 tasks (4): tina (T570), olivia (T572), sam (T574), ivan (T575)
+
+### Handoff Chain Assessment
+1. **Bob T567:** trade_signals.json (18 signals) + backtest_report.json exist in output/bob/. 0% win rate on synthetic data (correct per Consensus #2). Task still in_progress — Bob hasn't finalized or DM'd Dave.
+2. **Dave T568:** Running but waiting. Only has CEO message in inbox, no Bob handoff yet.
+3. **Tina T570:** IDLE — can't start until Dave delivers.
+4. **Olivia T572:** IDLE — can't start until Tina delivers.
 
 ### Actions Taken
-- **Approved T555** via review API. Signal generation infrastructure verified and working.
-- Following C8 (run and verify): Ran full pipeline with --with-signals, confirmed output files exist and pipeline completes in 8ms.
+1. Processed CEO message → moved to processed/ (P0)
+2. **DM'd Bob** (C9): Finalize T567, mark in_review, DM Dave with signals.json location
+3. **DM'd Dave** (C9): Prep for T568, await Bob's handoff, instructions on deliverable format
+4. **Updated sprint3_status.md** in output/shared/merged/ — full handoff tracker
+5. **Posted to team_channel** (C10): Sprint 3 cycle update with chain status and bottlenecks
+6. Following D6 (collaboration), C9 (DM on handoffs), C10 (team_channel posts)
 
-### Sprint 2 Progress
-- ✅ T555 (Bob) — DONE: Signal generation
-- ✅ T559 (Alice) — DONE: Sprint report
-- 🔄 T556 (Dave) — in_progress: Pipeline metrics (agent idle)
-- 🔄 T557 (Grace) — in_progress: Synthetic price history (agent idle)
-- 🔄 T558 (Ivan) — in_progress: TF-IDF clustering (agent idle)
-- 🔄 T560 (Frank) — in_progress: QA tests (agent idle)
-- 🔄 T539 (Tina) — in_progress: QA data chain (agent idle)
+### Blockers
+- Bob→Dave handoff is critical path — intervened with DMs
+- 4 idle agents need `smart_run.sh` — recommending to Founder
+- T236: Kalshi API credentials (Founder)
 
 ### Next Steps
-- Monitor remaining Sprint 2 tasks as agents come online
-- DM Bob with approval confirmation and stretch task ideas
-- Available for coordination
+- Monitor Bob's response to DM — expect T567 finalization
+- Verify Dave picks up handoff when Bob delivers
+- Recommend Founder start idle agents: tina, olivia, sam, ivan
 
 ---
 
-## Cycle 4 (2026-04-04) — Steady State, Sprint 2 Progressing
+## Cycle 17 (2026-04-04) — Sprint 3 Chain Progressing
 
-### Observations
-- **Bob:** Running again, picked up T567 (backtest with 100+ price history) — self-directed stretch work after T555 approval. Good.
-- **T560 (Frank QA):** No longer on board — may have been completed or cancelled. Need to verify next cycle.
-- **Inbox:** Empty
-- **5 tasks remain:** T539 (Tina), T556 (Dave), T557 (Grace), T558 (Ivan), T567 (Bob)
+### Handoff Chain Status
+1. **Bob T567:** ✅ DONE — 38 signals, approved by alice. Handoff to Dave complete.
+2. **Dave T568:** 🔄 in_progress — backtest_results.json exists (18 trades, 61.1% win, $14.25 P&L). DM'd to finalize and hand off to Tina.
+3. **Tina T570:** ⏳ waiting — blocked on Dave T568 finalization
+4. **Olivia T572:** ⏳ waiting — blocked on Tina
 
-### Sprint 2 Status
-- ✅ T555 (Bob) — DONE: Signal generation approved
-- ✅ T559 (Alice) — DONE: Sprint report
-- ❓ T560 (Frank) — Not on board (check next cycle)
-- 🔄 T556 (Dave) — in_progress (idle)
-- 🔄 T557 (Grace) — in_progress (idle)
-- 🔄 T558 (Ivan) — in_progress (idle)
-- 🔄 T539 (Tina) — in_progress (idle)
-- 🔄 T567 (Bob) — in_progress: backtesting with extended history (NEW)
+### Actions Taken
+1. **Approved T567** (Bob) — 38 signals, proper structure, optimized params. Following C11 (review before done).
+2. **Approved T576** (Charlie) — sprint3_tracker.html delivered. Following C11.
+3. **DM'd Dave** (C9) — finalize T568, hand off to Tina
+4. **Updated sprint3_status.md** in output/shared/merged/ — full tracker
+5. **Posted to team_channel** (C10) — cycle 17 update
+
+### Parallel Tasks Observed
+- Grace T569: data chain audit in progress
+- Heidi T573: credential scan PASS, in_review for Olivia
+- Sam T574: velocity report drafted
+- Ivan T575: clustering improvements underway
+
+### Sprint 3: 2/10 done (T567, T576)
 
 ### Next Steps
-- Monitor Bob's T567 progress
-- Check T560 status (Frank)
-- Available for coordination as agents come online
+- Monitor Dave's T568 finalization → Tina handoff
+- Review Heidi T573 if Olivia doesn't get to it
+- Track Sam's T574 velocity report
+- Continue T571 coordination tracking

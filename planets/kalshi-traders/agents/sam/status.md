@@ -9,98 +9,8 @@ Initial velocity baseline scan complete. All 20 agents assessed.
 ## Last Velocity Snapshot
 | Agent | Status | Current Task | Blocked? | Notes |
 
-## [Historical cycles trimmed to save tokens — see logs/ for full history]
+## [Old cycles trimmed to save tokens — see logs/ for history]
 
-5. Automated data pipeline
-
-### Deliverables
-- ✅ Velocity report: `output/velocity_2026_04_02.md`
-- ✅ Task 229 marked done via API
-
----
-
-## Cycle 9 Update — 2026-04-03 (Task 263 COMPLETE)
-
-### Task 263 Delivered
-- Velocity report: `public/reports/velocity_report_apr3.md`
-- Scanned 8 agents: Bob, Charlie, Dave, Grace, Mia, Heidi, Liam, Pat
-- Task 263 marked done via API
-
-### Summary
-| Agent | Status | Key Deliverables |
-|-------|--------|------------------|
-| Bob | Complete | Dashboard API, strategy framework |
-| Charlie | Complete | Dashboard frontend, research |
-| Dave | Complete | CoinGecko fix, credentials |
-| Grace | Complete | Scheduler, econ scanner |
-| Mia | Complete | API bug fixes |
-| Heidi | Complete | Risk module, security reviews |
-| Liam | NO STATUS | (monitoring assigned) |
-| Pat | NO STATUS | (database) |
-
-### Kalshi Alpha Dashboard: OPERATIONAL ✅
-
----
-
-## Cycle 10 Update — 2026-04-03
-
-### Sprint 2 Complete ✅
-- All test coverage tasks delivered (T279, T286-T289)
-- 96 unit + 30 integration + 576 E2E tests
-- CI runner operational
-- Cloud deployment plan ready (ECS Fargate ~$29/mo)
-
-### Sprint 3 Kicked Off
-- Focus: Deployment & Live Trading Readiness
-- Blocker: T236 (Kalshi API credentials from Founder)
-
-### Key Culture Updates
-| # | Type | Content |
-|---|------|---------|
-| 1 | culture | Paper trading mode required before live orders |
-| 2 | culture | mean_reversion primary strategy (85.7% win rate) |
-| 3 | culture | All API endpoints require auth via Authorization header |
-| 4 | culture | Confidence threshold 0.80 minimum |
-| 5 | decision | Kalshi primary venue; T236 blocks live API |
-
-### My Status
-- No open tasks assigned
-- Inbox cleared
-- Available for next velocity tracking assignment
-
-### Next Steps
-- Monitor Sprint 3 progress
-- Track velocity on cloud deployment tasks
-- Flag any blockers on live trading readiness
-
----
-
-## Cycle 11 Update — 2026-04-03
-
-### 🎯 STRATEGIC DIRECTION UPDATE
-**D004: Build Kalshi Arbitrage Engine (Wen Zhou)** is now the NORTH STAR.
-
-### D004 4-Phase Pipeline
-| Phase | Owner | Status | Output |
-|-------|-------|--------|--------|
-| 1 — Market Filtering | Grace | ✅ COMPLETE | markets_filtered.json (3 markets) |
-| 2 — LLM Clustering | Ivan | ✅ COMPLETE | market_clusters.json (5 clusters) |
-| 3 — Pearson Correlation | Bob | ✅ COMPLETE | correlation_pairs.json (9 pairs, 6 arb ops) |
-| 4 — C++ HFT Execution | Dave | ✅ DESIGN COMPLETE | Architecture ready for Sprint 9 |
-
-### Critical Culture Updates
-| ID | Type | Key Point |
-|----|------|-----------|
-| C4 | NORM | Read other agents' status.md every cycle |
-| C5 | NORM | Tasks MUST progress: pending → claimed → done |
-| C6 | NORM | Reference public/knowledge.md for technical facts |
-| D2 | DECISION | D004 is civilization's north star |
-| D3 | DECISION | D004 PRODUCTION READY (84% win rate paper trading) |
-| D4 | DECISION | Blocked only by T236 (Kalshi API credentials) |
-
-### My Role Re: D004
-As Velocity TPM, I now track:
-- Phase 1-4 pipeline velocity
 - Blockers on arbitrage detection/execution
 - Sprint 9 readiness metrics
 
@@ -142,3 +52,82 @@ Founder directive: D004 Pipeline Push — get trading pipeline running end-to-en
 - Monitor T546 (Ivan clustering improvement) and T547 (Charlie dashboard)
 - Track T236 resolution
 - Produce next velocity report when sprint activity picks up
+
+---
+
+## Cycle 13 Update — 2026-04-04 00:30
+
+### CEO Directive Processed
+Sprint 2 Kickoff — Signal Generation & Backtesting. Processed and archived.
+
+### T571 COMPLETE — Sprint 2 Velocity + Cost Report
+- Claimed T571 via API, moved to in_progress
+- Scanned all 20 agent status.md files
+- Pulled cost data from /api/cost endpoint
+- Checked all Sprint 2 tasks (T539, T555-T572)
+
+### Deliverables
+- `output/sprint2_velocity.md` — full velocity + cost report
+- `public/reports/velocity_report.md` — copy for team
+- DM'd Alice with 5 action items (idle agents, stale tasks, missing T560, founder blockers)
+
+### Sprint 2 Snapshot
+- **4/12 tasks done** (33%): T555, T559, T567, T568
+- **7 in_progress**: T539, T556, T557, T558, T569, T570, T572
+- **Running agents**: bob, heidi, olivia (+ sam this cycle)
+- **Idle agents**: 11/20 — charlie, dave, eve, frank, grace, ivan, judy, karl, liam, mia, nick, pat, quinn, rosa, tina
+- **Top spender**: Bob $5.85 (61% of $9.61 today)
+- **Stale**: Nick T264 (20+ hrs), Dave T556 (claimed but idle)
+- **Founder blockers**: T236 (API creds), contract sizes
+
+### Actions Taken
+- DM'd Alice: velocity alert with 5 recommendations
+- Flagged 11 idle agents, 2 stale tasks, 1 missing task (T560)
+
+### Next Steps
+- Monitor Sprint 2 task completion
+- Track dave T556, grace T557, ivan T558 activation
+- Follow up on T560 (Frank QA tests) status
+- Produce next velocity report when more tasks complete
+
+---
+
+## Cycle 14 Update — 2026-04-04 00:41
+
+### CEO Directive Processed
+Sprint 3 is live. Read consensus.md C9-C11, D6. Claimed T574.
+
+### T574 IN_PROGRESS — Sprint 3 Velocity + Collaboration Metrics
+- Claimed T574 via API (atomic claim confirmed)
+- Scanned all 20 agent status.md files
+- Pulled cost data from /api/cost
+- Checked all Sprint 3 tasks (T567-T576)
+
+### Deliverables
+- `output/sprint3_velocity.md` — full Sprint 3 velocity + collaboration report
+- `public/reports/velocity_report.md` — copy for team
+- DM'd Alice with velocity alert + 4 action items
+- Posted Sprint 3 velocity update to team_channel (C10)
+
+### Sprint 3 Snapshot
+- **0/10 tasks done** (0%): Sprint just kicked off
+- **6 in_progress**: T567 (bob), T568 (dave), T569 (grace), T571 (alice), T573 (heidi), T574 (sam)
+- **3 open/waiting**: T570 (tina), T572 (olivia), T575 (ivan)
+- **Running agents**: 8/20 (alice, bob, charlie, dave, grace, heidi, olivia, sam)
+- **Idle agents**: 12/20
+- **Critical path**: Bob T567 → Dave T568 → Tina T570 → Olivia T572
+- **Bottleneck**: Bob T567 (signals.json) — all downstream waits on this
+- **Top spender**: Bob $11.15 (53% of $20.96 today)
+- **Persistent blocker**: T236 (Kalshi API creds from Founder)
+
+### Actions Taken
+- DM'd Alice: velocity alert with critical path analysis + 4 recommendations
+- Posted to team_channel (C10): Sprint 3 velocity summary
+- Flagged Bob T567 as bottleneck, Ivan T575 idle, Tina T570 needs activation
+
+### Next Steps
+- Monitor Bob T567 delivery — if signals complete, the chain unblocks
+- Track handoff: bob→dave DM when T567 done (C9 compliance)
+- Watch for Dave T568 completion to alert Tina
+- Mark T574 in_review when report is validated by Alice
+- Produce updated velocity report next cycle
