@@ -1358,6 +1358,17 @@ body {
   <div class="topbar-left">
     <span class="company-name">🪐 Agent Planet</span>
     <span class="topbar-tagline" style="font-size:0.8rem;color:#666;margin-left:12px;font-weight:400;">all agents are created equal</span>
+    <!-- Planet Selector -->
+    <div style="position:relative;margin-left:12px;" id="planet-selector">
+      <button class="topbar-btn" onclick="togglePlanetMenu()" id="planet-btn" style="display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:0.82rem;border-color:#7c3aed;color:#c4b5fd;">
+        <span style="font-size:1rem;">🪐</span> <span id="planet-name-label">loading...</span> <span style="font-size:0.7rem;">▾</span>
+      </button>
+      <div id="planet-dropdown" style="display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#16213e;border:1px solid #7c3aed;border-radius:8px;padding:8px 0;min-width:240px;box-shadow:0 8px 24px rgba(124,58,237,0.3);z-index:200;">
+        <div id="planet-list" style="max-height:200px;overflow-y:auto;"></div>
+        <div style="border-top:1px solid #2d1b69;margin:4px 0;"></div>
+        <button class="topbar-btn" onclick="openNewPlanetModal();togglePlanetMenu();" style="width:100%;text-align:left;border:none;border-radius:0;padding:8px 16px;color:#a78bfa;">+ New Planet</button>
+      </div>
+    </div>
     <span id="cost-today" title="Today's token spend (click for 7-day)" onclick="showCostDetails()" style="cursor:pointer;margin-left:14px;font-size:0.72rem;color:#ffaa00;font-family:monospace;background:#1a1200;padding:2px 7px;border-radius:10px;border:1px solid #3a2800;">$-.-- today</span>
     <div class="connection-status">
       <span class="status-dot disconnected" id="conn-dot"></span>
@@ -2131,6 +2142,30 @@ body {
       </div>
       <div class="form-row" style="margin-top:10px;justify-content:flex-end;">
         <button class="submit-btn" style="background:#3a2a00;border:1px solid #ffaa00;color:#ffaa00;" onclick="sendBroadcast()">📢 Send to All Agents</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NEW PLANET MODAL ===== -->
+<div class="modal-overlay" id="new-planet-modal-overlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>Create New Planet</h2>
+      <button class="modal-close" onclick="closeNewPlanetModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:12px;">
+        <label style="font-size:0.85rem;color:#aaa;margin-bottom:6px;display:block;">Planet Name</label>
+        <input id="new-planet-name" type="text" placeholder="my-project" style="width:100%;padding:10px;background:#0e0e1a;border:1px solid #7c3aed;border-radius:6px;color:#e0e0e0;font-family:inherit;font-size:0.9rem;">
+      </div>
+      <div class="form-row" style="margin-bottom:12px;">
+        <label style="font-size:0.85rem;color:#aaa;margin-bottom:6px;display:block;">Agents (space-separated)</label>
+        <input id="new-planet-agents" type="text" placeholder="alice bob charlie dave eve" value="alice bob charlie dave eve" style="width:100%;padding:10px;background:#0e0e1a;border:1px solid #30363d;border-radius:6px;color:#e0e0e0;font-family:inherit;font-size:0.9rem;">
+      </div>
+      <div id="new-planet-status" style="font-size:0.82rem;color:#aaa;margin-bottom:10px;"></div>
+      <div class="form-row" style="justify-content:flex-end;">
+        <button class="submit-btn" style="background:#2d1b69;border:1px solid #7c3aed;color:#c4b5fd;" onclick="createNewPlanet()">Create Planet</button>
       </div>
     </div>
   </div>
@@ -3356,6 +3391,89 @@ function sendBroadcast() {
 document.getElementById('broadcast-modal-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeBroadcastModal();
 });
+
+// ===== PLANET MANAGEMENT =====
+let _planetMenuOpen = false;
+function togglePlanetMenu() {
+  _planetMenuOpen = !_planetMenuOpen;
+  const dd = document.getElementById('planet-dropdown');
+  dd.style.display = _planetMenuOpen ? 'block' : 'none';
+  if (_planetMenuOpen) loadPlanetList();
+}
+function loadPlanetList() {
+  apiFetch('/api/planets').then(r => r.json()).then(data => {
+    document.getElementById('planet-name-label').textContent = data.active || '?';
+    const list = document.getElementById('planet-list');
+    list.innerHTML = data.planets.map(p => {
+      const isActive = p.active ? ' style="color:#00ff88;font-weight:600;"' : '';
+      const badge = p.active ? ' (active)' : '';
+      const desc = p.description ? '<div style="font-size:0.72rem;color:#666;padding:0 16px 4px;">' + p.description + '</div>' : '';
+      return '<button class="topbar-btn" onclick="switchPlanet(\'' + p.name + '\')" style="width:100%;text-align:left;border:none;border-radius:0;padding:6px 16px;"' + isActive + '>' +
+        p.name + badge + '</button>' + desc;
+    }).join('');
+  }).catch(() => {});
+}
+function switchPlanet(name) {
+  if (!confirm('Switch to planet "' + name + '"? All running agents will be stopped and the server will need to restart.')) return;
+  togglePlanetMenu();
+  showToast('Switching to ' + name + '...', 5000);
+  apiFetch('/api/planets/switch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ planet: name })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      showToast('Switched to ' + name + '. Reloading in 3s...', 4000);
+      setTimeout(() => location.reload(), 3000);
+    } else {
+      alert('Switch failed: ' + (d.error || 'unknown'));
+    }
+  }).catch(e => alert('Switch error: ' + e.message));
+}
+function openNewPlanetModal() {
+  document.getElementById('new-planet-name').value = '';
+  document.getElementById('new-planet-agents').value = 'alice bob charlie dave eve';
+  document.getElementById('new-planet-status').textContent = '';
+  document.getElementById('new-planet-modal-overlay').classList.add('visible');
+  setTimeout(() => document.getElementById('new-planet-name').focus(), 100);
+}
+function closeNewPlanetModal() {
+  document.getElementById('new-planet-modal-overlay').classList.remove('visible');
+}
+function createNewPlanet() {
+  const name = document.getElementById('new-planet-name').value.trim();
+  const agents = document.getElementById('new-planet-agents').value.trim();
+  if (!name) { document.getElementById('new-planet-status').textContent = 'Name is required'; return; }
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) { document.getElementById('new-planet-status').textContent = 'Only letters, numbers, hyphens, underscores'; return; }
+  document.getElementById('new-planet-status').textContent = 'Creating...';
+  apiFetch('/api/planets/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, agents })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      closeNewPlanetModal();
+      showToast('Planet "' + name + '" created with ' + (d.agents || []).length + ' agents', 5000);
+      loadPlanetList();
+    } else {
+      document.getElementById('new-planet-status').textContent = 'Error: ' + (d.error || 'unknown');
+    }
+  }).catch(e => { document.getElementById('new-planet-status').textContent = 'Error: ' + e.message; });
+}
+document.getElementById('new-planet-modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeNewPlanetModal();
+});
+// Close planet menu on outside click
+document.addEventListener('click', e => {
+  if (_planetMenuOpen && !document.getElementById('planet-selector').contains(e.target)) {
+    _planetMenuOpen = false;
+    document.getElementById('planet-dropdown').style.display = 'none';
+  }
+});
+// Load planet name on startup
+apiFetch('/api/planets').then(r => r.json()).then(d => {
+  document.getElementById('planet-name-label').textContent = d.active || '?';
+}).catch(() => {});
 
 // ===== BULK ACTIONS =====
 function runWatchdog() {

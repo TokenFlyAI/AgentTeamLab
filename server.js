@@ -1150,6 +1150,40 @@ async function handleRequest(req, res) {
     return json(res, { planet: PLANET_NAME, dir: PLANET_DIR });
   }
 
+  if (method === "POST" && pathname === "/api/planets/switch") {
+    const body = await parseBody(req);
+    const target = (body.planet || "").replace(/[^a-zA-Z0-9_-]/g, "");
+    if (!target) return json(res, { error: "planet name required" }, 400);
+    const targetDir = path.join(DIR, "planets", target);
+    if (!fs.existsSync(targetDir)) return json(res, { error: `planet not found: ${target}` }, 404);
+    if (target === PLANET_NAME) return json(res, { ok: true, planet: target, message: "already active" });
+    // Run switch_planet.sh (stops agents, updates symlinks, swaps worktree)
+    const { execFile: ef } = require("child_process");
+    return new Promise((resolve) => {
+      ef("bash", [path.join(DIR, "switch_planet.sh"), target], { cwd: DIR, timeout: 30000 }, (err, stdout, stderr) => {
+        if (err) return resolve(json(res, { error: "switch failed", details: (stderr || err.message).trim() }, 500));
+        // Server needs restart to pick up new paths — tell the client
+        resolve(json(res, { ok: true, planet: target, message: "Switched. Server restart required.", stdout: stdout.trim() }));
+      });
+    });
+  }
+
+  if (method === "POST" && pathname === "/api/planets/create") {
+    const body = await parseBody(req);
+    const name = (body.name || "").replace(/[^a-zA-Z0-9_-]/g, "");
+    const agents = body.agents || "alice bob charlie dave eve";
+    if (!name) return json(res, { error: "planet name required" }, 400);
+    const targetDir = path.join(DIR, "planets", name);
+    if (fs.existsSync(targetDir)) return json(res, { error: `planet already exists: ${name}` }, 409);
+    const { execFile: ef } = require("child_process");
+    return new Promise((resolve) => {
+      ef("bash", [path.join(DIR, "init_planet.sh"), name, agents], { cwd: DIR, timeout: 30000 }, (err, stdout, stderr) => {
+        if (err) return resolve(json(res, { error: "creation failed", details: (stderr || err.message).trim() }, 500));
+        resolve(json(res, { ok: true, planet: name, agents: agents.split(/\s+/), stdout: stdout.trim() }, 201));
+      });
+    });
+  }
+
   if (method === "GET" && pathname === "/api/config") {
     const companyMd = safeRead(path.join(DIR, "company.md"));
     let companyName = "Agent Planet";
