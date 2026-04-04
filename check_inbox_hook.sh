@@ -1,23 +1,39 @@
 #!/bin/bash
 # check_inbox_hook.sh — PreToolUse hook for message delivery
 # Runs from agent's working directory (agents/{name}/)
+#
+# Within-cycle dedup: only dumps inbox content when it changes (new message arrives
+# or a message is processed). Silences on repeated identical tool calls.
 INBOX_DIR="chat_inbox"
+AGENT_NAME=$(basename "$(pwd)")
 shopt -s nullglob
-UNREAD=""
+
+UNREAD_FILES=()
 for msg in "$INBOX_DIR"/*.md; do
     [ -f "$msg" ] || continue
-    # Skip already-read messages (prefixed with read_)
     [[ "$(basename "$msg")" == read_* ]] && continue
-    UNREAD="$UNREAD $msg"
+    UNREAD_FILES+=("$msg")
 done
 shopt -u nullglob
 
-if [ -n "$UNREAD" ]; then
-    echo "=== URGENT: UNREAD MESSAGES IN YOUR INBOX ==="
-    for msg in $UNREAD; do
-        echo "--- Message: $(basename $msg) ---"
-        cat "$msg"
-    done
-    echo "REQUIRED: Move to chat_inbox/processed/ after handling"
+[ ${#UNREAD_FILES[@]} -eq 0 ] && exit 0
+
+# Build output
+OUTPUT="=== URGENT: UNREAD MESSAGES IN YOUR INBOX ===\n"
+for msg in "${UNREAD_FILES[@]}"; do
+    OUTPUT="${OUTPUT}--- Message: $(basename $msg) ---\n$(cat "$msg")\n"
+done
+OUTPUT="${OUTPUT}REQUIRED: Move to chat_inbox/processed/ after handling\n"
+
+# Within-cycle dedup: skip if inbox content unchanged since last emission this cycle.
+STAMP_FILE="/tmp/.inbox_hook_${AGENT_NAME}_${PPID}"
+NEW_HASH=$(printf '%s' "$OUTPUT" | md5 2>/dev/null || printf '%s' "$OUTPUT" | md5sum 2>/dev/null | cut -d' ' -f1)
+OLD_HASH=$(cat "$STAMP_FILE" 2>/dev/null || true)
+
+if [ "$NEW_HASH" = "$OLD_HASH" ]; then
+    exit 0
 fi
+
+echo "$NEW_HASH" > "$STAMP_FILE"
+printf '%b' "$OUTPUT"
 exit 0

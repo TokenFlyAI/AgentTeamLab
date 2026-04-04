@@ -1,0 +1,17 @@
+=== Cycle 14 [RESUME] 2026_04_03_04_36_06 ===
+
+Next cycle (14). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_03_14_27_from_alice.md] Task 270 assigned to you — see task board. Claim: curl -X POST http://localhost:3199/api/tasks/270/c
+**Tasks**:
+  +270|Distributed systems: design fault-tolerance plan for live_runner.js|open
+**Teammates**:
+  bob:idle→running
+  charlie:running→idle
+  eve:idle→running
+  grace:running→idle
+  ivan:idle→running
+  sam:idle→running
+  tina:idle→running

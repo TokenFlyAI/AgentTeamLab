@@ -65,7 +65,9 @@ elif [ -n "$SAVED_SESSION_ID" ] && [ "$SAVED_CYCLE" -lt "$SESSION_MAX_CYCLES" ];
     # (dry run has no real session to resume)
     if [ "$SAVED_SESSION_ID" != "dryrun" ]; then
         if [ "$EXECUTOR" = "kimi" ]; then
-            RESUME_FLAG="--session $SAVED_SESSION_ID"
+            # kimi tracks sessions per working directory — --continue resumes the last session
+            # (no explicit session ID needed; avoids stream-json dependency for ID extraction)
+            RESUME_FLAG="--continue"
         else
             RESUME_FLAG="--resume $SAVED_SESSION_ID"
         fi
@@ -76,6 +78,7 @@ else
         echo "[session:${AGENT_NAME}] Max cycles reached (${SAVED_CYCLE}/${SESSION_MAX_CYCLES}) — saving memory, starting fresh"
         # Save memory snapshot from status.md before resetting
         # Cap to last 150 lines to prevent unbounded growth (fresh prompts stay lean)
+        MEMORY_FILE="${AGENT_DIR}/memory.md"
         if [ -f "${AGENT_DIR}/status.md" ] && [ -s "${AGENT_DIR}/status.md" ]; then
             {
                 echo "# Agent Memory Snapshot — ${AGENT_NAME} — $(date +%Y-%m-%dT%H:%M:%S)"
@@ -113,6 +116,7 @@ if [ $USE_RESUME -eq 1 ]; then
     _DASHBOARD_PORT="${DASHBOARD_PORT:-3199}"
     _NEW_CTX=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
         -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
+    _CYCLE_SNAPSHOT_JSON="$_NEW_CTX"
 
     if [ -n "$_NEW_CTX" ] && [ -f "$SNAPSHOT_FILE" ]; then
         # Compute delta: only what's new/changed since the last snapshot
@@ -200,11 +204,14 @@ if tm_changes:
     for name, old, new in tm_changes:
         changes.append("  {}:{}→{}".format(name, old, new))
 
-# Culture / consensus changes — full content (it's small and agents must see new entries)
+# Culture / consensus changes — only new lines (not the full board)
 prev_culture = (prev.get("culture") or "").strip()
 curr_culture = (curr.get("culture") or "").strip()
 if curr_culture != prev_culture and curr_culture:
-    changes.append("**Culture**:\n" + curr_culture)
+    prev_lines = set(prev_culture.splitlines())
+    new_lines = [l for l in curr_culture.splitlines() if l.strip() and l not in prev_lines]
+    if new_lines:
+        changes.append("**Culture (new)**:\n" + "\n".join(new_lines))
 
 if changes:
     print("## Context Delta (changes since last cycle)")
@@ -231,6 +238,7 @@ PYEOF
     if [ -n "$DELTA_TEXT" ] && [ "$(echo "$DELTA_TEXT" | tr -d '[:space:]')" != "" ]; then
         PROMPT_TEXT="$(printf '%s\n\n%s' "$_CYCLE_NOTE" "$DELTA_TEXT")"
         echo "[session:${AGENT_NAME}] Resume: injecting context delta"
+        echo "$DELTA_TEXT" | sed 's/^/  [delta] /'
     else
         PROMPT_TEXT="${_CYCLE_NOTE} Nothing changed — continue your current work."
         echo "[session:${AGENT_NAME}] Resume: no changes detected"
@@ -256,6 +264,7 @@ else
     _DASHBOARD_PORT="${DASHBOARD_PORT:-3199}"
     _CTX_JSON=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
         -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
+    _CYCLE_SNAPSHOT_JSON="$_CTX_JSON"
 
     if [ -n "$_CTX_JSON" ]; then
         # Render JSON context into human-readable markdown for the prompt
@@ -427,12 +436,32 @@ TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
 echo "" >> "$DAILY_LOG"
 echo "========== CYCLE START — ${TIMESTAMP} [session:$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")] [executor:${EXECUTOR}] ==========" >> "$DAILY_LOG"
 
+# ── Log what gets sent to the LLM this cycle ─────────────────────────────────
+_CYCLE_LOG_DIR="${AGENT_DIR}/logs/cycles"
+mkdir -p "$_CYCLE_LOG_DIR"
+_ABS_CYCLE=$([ -f "$SESSION_CYCLE_FILE" ] && cat "$SESSION_CYCLE_FILE" || echo 0)
+_ABS_CYCLE=$(( _ABS_CYCLE + 1 ))
+_CYCLE_TYPE=$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")
+_CYCLE_BASE=$(printf "%s/%04d_%s_%s" "$_CYCLE_LOG_DIR" "$_ABS_CYCLE" "$_CYCLE_TYPE" "$TIMESTAMP")
+# prompt.txt — what gets sent/appended to the LLM this cycle
+printf "=== Cycle %d [%s] %s ===\n\n%s\n" "$_ABS_CYCLE" "$_CYCLE_TYPE" "$TIMESTAMP" "$PROMPT_TEXT" > "${_CYCLE_BASE}_prompt.txt"
+# snapshot.json — full context state at this cycle
+[ -n "$_CYCLE_SNAPSHOT_JSON" ] && echo "$_CYCLE_SNAPSHOT_JSON" > "${_CYCLE_BASE}_snapshot.json"
+
 # ── Update heartbeat ──────────────────────────────────────────────────────────
 # Agents are expected to update heartbeat.md themselves, but the launcher
 # should at least touch it so the dashboard knows the agent process started.
 echo "status: running" > "${AGENT_DIR}/heartbeat.md"
 echo "timestamp: $(date +%Y_%m_%d_%H_%M_%S)" >> "${AGENT_DIR}/heartbeat.md"
 echo "task: Processing work cycle" >> "${AGENT_DIR}/heartbeat.md"
+
+# Trap to ensure heartbeat is reset to idle even if script is killed (SIGTERM, SIGKILL, error)
+_write_idle_heartbeat() {
+    echo "status: idle" > "${AGENT_DIR}/heartbeat.md"
+    echo "timestamp: $(date +%Y_%m_%d_%H_%M_%S)" >> "${AGENT_DIR}/heartbeat.md"
+    echo "task: Available for assignment" >> "${AGENT_DIR}/heartbeat.md"
+}
+trap '_write_idle_heartbeat' EXIT
 
 # ── Run Agent ─────────────────────────────────────────────────────────────────
 cd "$AGENT_DIR"
@@ -477,29 +506,43 @@ elif [ "$EXECUTOR" = "kimi" ]; then
         kimi -p "$PROMPT_TEXT" \
             -w "$AGENT_DIR" \
             $RESUME_FLAG \
+            --no-thinking \
             --print \
-            --output-format stream-json \
             2>/dev/null \
         | tee -a "$RAW_LOG" \
-        | jq --unbuffered -r '
-            if .type == "assistant" then
-                [.message.content[]? |
-                    if .type == "text" then "[ASSISTANT] " + .text
-                    elif .type == "tool_use" then
-                        "[TOOL] " + .name +
-                        (if .input.file_path then " " + .input.file_path
-                         elif .input.command then " $ " + (.input.command | tostring | .[0:150])
-                         elif .input.content then " (writing " + (.input.content | length | tostring) + " chars)"
-                         else "" end)
-                    else empty end
-                ] | join("\n")
-            elif .type == "result" then
-                "[DONE] turns=" + (.num_turns // 0 | tostring) +
-                " cost=$" + ((.total_cost_usd // 0) * 100 | floor / 100 | tostring) +
-                " duration=" + ((.duration_ms // 0) / 1000 | tostring) + "s" +
-                " session=" + (.session_id // "?")
-            else empty end
-        ' >> "$DAILY_LOG" 2>/dev/null || true
+        | python3 -u -c "
+import sys, re
+buf = []; in_tp = False
+def extract_text_from_buf(lines):
+    # Join buffer and do a single multiline search for text='...' or text=\"...\"
+    # This handles kimi wrapping long text values across physical lines
+    joined = '\n'.join(lines)
+    m = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\n?\\)\", joined, re.DOTALL)
+    if m:
+        return m.group(2)
+    # Fallback: try single-line match on each line
+    for line in lines:
+        m2 = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\)?\\s*\$\", line, re.DOTALL)
+        if m2:
+            return m2.group(2)
+    return None
+for line in sys.stdin:
+    line = line.rstrip('\n')
+    if re.match(r'^TextPart\(', line):
+        in_tp = True; buf = [line]
+    elif in_tp:
+        buf.append(line)
+        if line.strip() == ')':
+            t = extract_text_from_buf(buf)
+            if t is not None:
+                display = t.replace('\\\\n', ' ').replace('\\\\t', ' ')
+                print('[ASSISTANT] ' + display)
+            in_tp = False; buf = []
+    elif not re.match(r'^(TurnBegin|StepBegin|TurnEnd|StatusUpdate|ThinkPart|\s)', line) and line.strip():
+        print(line)
+sys.stdout.flush()
+" >> "$DAILY_LOG" 2>/dev/null || true
+        echo "[DONE] kimi cycle complete" >> "$DAILY_LOG"
 else
     # Claude execution
     # shellcheck disable=SC2086
@@ -554,6 +597,17 @@ echo "task: Available for assignment" >> "$AGENT_DIR/heartbeat.md"
 NEW_SESSION_ID=""
 if [ "$_DRY_RUN" = "1" ]; then
     NEW_SESSION_ID="dryrun"
+elif [ "$EXECUTOR" = "kimi" ]; then
+    # kimi uses --continue for resume (no explicit session ID needed).
+    # Save "kimi" marker if the cycle succeeded (TurnEnd or StatusUpdate in text output).
+    if grep -q 'TurnEnd\|StatusUpdate' "$RAW_LOG" 2>/dev/null; then
+        NEW_SESSION_ID="kimi"
+    else
+        # kimi produced no output — likely --continue failed (session expired/missing in workdir).
+        # Reset session so next cycle starts fresh (without --continue) instead of looping.
+        rm -f "$SESSION_ID_FILE" "$SESSION_CYCLE_FILE"
+        echo "[session:${AGENT_NAME}] kimi session reset (no output detected — stale --continue)"
+    fi
 else
     NEW_SESSION_ID=$(jq -r 'select(.type == "result") | .session_id // ""' "$RAW_LOG" 2>/dev/null \
         | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true)

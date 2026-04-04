@@ -14,7 +14,7 @@ This file configures which AI CLI executor (Claude Code or Kimi Code) each agent
 The default executor for all agents unless overridden below:
 
 ```yaml
-executor: claude
+executor: kimi
 ```
 
 ## Per-Agent Overrides
@@ -23,8 +23,6 @@ Override the global default for specific agents:
 
 | Agent | Executor | Notes |
 |-------|----------|-------|
-| alice | claude | Lead Coordinator - keep on Claude for stability |
-| bob | claude | Backend Engineer |
 
 ## How Configuration Works
 

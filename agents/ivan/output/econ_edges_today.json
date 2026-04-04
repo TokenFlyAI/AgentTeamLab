@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-04-01T22:16:42.544124",
+  "opportunities": [
+    {
+      "ticker": "KXNF-20260501-T100000",
+      "title": "NFP above 100k",
+      "event_type": "nfp",
+      "forecast_consensus": 60000.0,
+      "forecast_unit": "jobs",
+      "forecast_source": "TradingEconomics",
+      "kalshi_yes_price": 67,
+      "model_probability": 0.00122154241358019,
+      "edge": -0.6687784575864198,
+      "ev_per_contract_cents": -66.87784575864198,
+      "recommendation": "BUY NO"
+    },
+    {
+      "ticker": "KXNF-20260501-T150000",
+      "title": "NFP above 150k",
+      "event_type": "nfp",
+      "forecast_consensus": 60000.0,
+      "forecast_unit": "jobs",
+      "forecast_source": "TradingEconomics",
+      "kalshi_yes_price": 52,
+      "model_probability": 4.6099790651510375e-12,
+      "edge": -0.51999999999539,
+      "ev_per_contract_cents": -51.99999999953901,
+      "recommendation": "BUY NO"
+    },
+    {
+      "ticker": "KXNF-20260501-T200000",
+      "title": "NFP above 200k",
+      "event_type": "nfp",
+      "forecast_consensus": 60000.0,
+      "forecast_unit": "jobs",
+      "forecast_source": "TradingEconomics",
+      "kalshi_yes_price": 28,
+      "model_probability": 0.0,
+      "edge": -0.28,
+      "ev_per_contract_cents": -28.000000000000004,
+      "recommendation": "BUY NO"
+    }
+  ]
+}

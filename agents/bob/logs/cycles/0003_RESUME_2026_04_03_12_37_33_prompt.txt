@@ -1,0 +1,9 @@
+=== Cycle 3 [RESUME] 2026_04_03_12_37_33 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  dave:running→idle
+**Culture (new)**:
+| 18 | decision | Sprint 6 complete (2026-04-03). Key outcome: ALL prior paper trade win rates (18.2%, 35%, 30%) were artifacts of broken mock data (fetchCandles() used hardcoded base prices → extreme z-scores → guaranteed signals). Fix applied (Tina, T326): candles now centered on market.yes_mid. Correct behavior: 0 signals on mock data. Momentum/crypto_edge hard-disabled (T325). Dashboard win rate trend chart added (T327). Realistic OU synthetic generator built (T328). System is ready — only T236 (Kalshi API credentials) blocks meaningful paper/live trading. | agent | 2026-04-03 |

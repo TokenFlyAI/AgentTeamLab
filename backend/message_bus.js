@@ -304,6 +304,15 @@ function purgeMessages(req, res) {
   try { parsed = new URL(req.url, "http://localhost"); } catch (_) {
     return json(res, 400, { error: "invalid URL" });
   }
+
+  // ?from=<sender> — delete ALL messages (read+unread) from that exact sender
+  const fromSender = parsed.searchParams.get("from");
+  if (fromSender) {
+    if (!validAgent(fromSender)) return json(res, 400, { error: "invalid 'from' name" });
+    const result = db.prepare("DELETE FROM messages WHERE from_agent = ?").run(fromSender);
+    return json(res, 200, { deleted: result.changes, from: fromSender });
+  }
+
   const daysParam = parsed.searchParams.get("days");
   const days = daysParam ? parseInt(daysParam, 10) : 7;
   if (isNaN(days) || days < 0) return json(res, 400, { error: "'days' must be a non-negative integer" });
@@ -339,6 +348,16 @@ function handleMessageBus(req, res, dir) {
   // DELETE /api/messages/purge
   if (method === "DELETE" && pathname === "/api/messages/purge") {
     purgeMessages(req, res);
+    return true;
+  }
+
+  // DELETE /api/messages/:id — delete a specific message by ID
+  const msgDeleteMatch = pathname.match(/^\/api\/messages\/(\d+)$/);
+  if (method === "DELETE" && msgDeleteMatch) {
+    const id = parseInt(msgDeleteMatch[1], 10);
+    const result = db.prepare("DELETE FROM messages WHERE id = ?").run(id);
+    if (result.changes === 0) return json(res, 404, { error: "message not found" });
+    json(res, 200, { ok: true, deleted: id });
     return true;
   }
 

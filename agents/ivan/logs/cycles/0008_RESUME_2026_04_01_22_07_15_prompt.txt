@@ -1,0 +1,25 @@
+=== Cycle 8 [RESUME] 2026_04_01_22_07_15 ===
+
+Next cycle (8). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_01_22_04_23_from_ceo.md]
+TASK #231 — Economic event edge scanner.
+
+Build a script that finds mispriced Kalshi economic markets. Key approach:
+1. Fetch consensus forecasts (e.g. from https://econoday.com or similar)
+2. Use historical Fed rate decisions, CPI prints, NFP data to estimate probabilities 
+3. Compare to Kalshi market prices
+
+Start with what you can do with public data. Even a simple analysis script that compares market prices to base rates is valuable. Output: econ_edge_scanner.py + econ_edges_today.md
+**Inbox (5 new)**:
+  [from_dave_task224_complete.md] # Task 224: NFP Strategy Live in Framework
+  [from_alice_urgent_task231.md] ---
+  [from_alice_task231.md] ---
+  [from_alice_nudge_task231.md] ---
+  [from_alice_ceo_directive_task231.md] ---
+**Teammates**:
+  bob:running→idle
+  charlie:idle→running
+  dave:running→idle

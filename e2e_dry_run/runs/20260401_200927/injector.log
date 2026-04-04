@@ -1,0 +1,36 @@
+[20:09:27] [injector] Starting event injector. Total runtime: ~240s
+[20:09:39] [injector] === WAVE 1: Creating tasks ===
+[20:09:39] [injector] Created task 209: E2E: Write API rate limiter → bob
+[20:09:39] [injector] Created task 210: E2E: QA regression pass → tina
+[20:09:39] [injector] Created task 211: E2E: Update team status report → sam
+[20:09:48] [injector] === WAVE 2: CEO commands ===
+[20:09:48] [injector] CEO→alice DM: dm
+[20:09:48] [injector] CEO task created: 212
+[20:10:00] [injector] === WAVE 3: Culture update ===
+[20:10:00] [injector] Consensus entry ?: PR review norm
+[20:10:08] [injector] === WAVE 4: Broadcast ===
+[20:10:08] [injector] Broadcast sent: agents=20
+[20:10:20] [injector] === WAVE 5: Task status updates ===
+[20:10:20] [injector] Task 209 → in_progress
+[20:10:20] [injector] Task 210 → in_progress
+[20:10:20] [injector] Task 211 → in_progress
+[20:10:20] [injector] Task 212 → in_progress
+[20:10:28] [injector] === WAVE 6: DMs to agents ===
+[20:10:28] [injector] DM → bob: rate limiter P0
+[20:10:28] [injector] DM → charlie: review request
+[20:10:28] [injector] DM → sam: velocity report request
+[20:10:40] [injector] === WAVE 7: Second culture update ===
+[20:10:40] [injector] Consensus entry 144: status.md update norm
+[20:10:48] [injector] === WAVE 8: Announcement ===
+[20:10:48] [injector] Announcement posted: 2026_04_01_20_10_48_announcement.md
+[20:11:08] [injector] === WAVE 9: New task wave ===
+[20:11:08] [injector] Created task 213: E2E: Deploy to staging → charlie
+[20:11:08] [injector] CEO→tina DM: QA sign-off
+[20:11:28] [injector] === WAVE 10: Mid-run culture + CEO ===
+[20:11:28] [injector] Consensus entry ?: no Friday deploys
+[20:11:28] [injector] CEO→alice: checkpoint DM
+[20:11:48] [injector] === WAVE 11: Task completions ===
+[20:11:48] [injector] Task 209 → done
+[20:11:48] [injector] Task 210 → done
+[20:12:08] [injector] === WAVE 12: Final broadcast ===
+[20:12:08] [injector] Final broadcast sent

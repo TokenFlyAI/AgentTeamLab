@@ -1,0 +1,31 @@
+{
+  "passed": 5,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "Happy path: signal → risk check → paper trade execution",
+      "status": "PASS",
+      "duration": 81
+    },
+    {
+      "name": "Risk rejection: restrictive limits block all trades",
+      "status": "PASS",
+      "duration": 64
+    },
+    {
+      "name": "Paper trading mode: no real orders, trades logged only",
+      "status": "PASS",
+      "duration": 63
+    },
+    {
+      "name": "Live mode guard: PAPER_TRADING=false enters live execution path",
+      "status": "PASS",
+      "duration": 63
+    },
+    {
+      "name": "Signal confidence >= 0.80 threshold",
+      "status": "PASS",
+      "duration": 61
+    }
+  ]
+}

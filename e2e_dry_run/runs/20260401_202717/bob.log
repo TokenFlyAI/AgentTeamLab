@@ -1,0 +1,7 @@
+[20:27:17] [bob] Starting 60 cycles
+
+>>> CYCLE 1 / 60 — 20:27:17 <<<
+[executor:bob] Using: kimi
+[session:bob] Static prefix: persona.md + prompt.md
+[session:bob] Live snapshot fetched from /api/agents/bob/context
+[session:bob] Injecting live snapshot into fresh session (no memory.md)

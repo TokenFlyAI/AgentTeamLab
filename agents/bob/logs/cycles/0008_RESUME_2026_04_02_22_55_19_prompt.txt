@@ -1,0 +1,7 @@
+=== Cycle 8 [RESUME] 2026_04_02_22_55_19 ===
+
+Next cycle (8). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  #252:open→in_progress

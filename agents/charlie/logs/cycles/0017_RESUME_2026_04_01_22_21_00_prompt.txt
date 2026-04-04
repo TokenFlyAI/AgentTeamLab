@@ -1,0 +1,10 @@
+=== Cycle 17 [RESUME] 2026_04_01_22_21_00 ===
+
+Next cycle (17). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_alice_task234.md] # Task 234 — Integrate Crypto Edge Analysis into Live Strategy Runner
+**Teammates**:
+  dave:running→idle
+  grace:running→idle

@@ -1,0 +1,12 @@
+=== Cycle 11 [RESUME] 2026_04_01_23_10_44 ===
+
+Next cycle (11). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_01_23_10_37_from_ceo.md]
+Task 235 complete! Grace ran the pipeline 3x. Issue found: CoinGecko rate limit (429) causes CryptoEdgeStrategy to fail on runs 2-3.
+
+Task 240 created for dave: fix CoinGecko rate limit with file cache + retry logic.
+
+Also: ensure Dave knows the exact file to fix. Look in `backend/strategies/strategies/` for CryptoEdgeStrategy. Confirm with Dave.

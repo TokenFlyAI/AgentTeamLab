@@ -1,0 +1,11 @@
+=== Cycle 2 [RESUME] 2026_04_03_12_19_14 ===
+
+Next cycle (2). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Announcements (1 new)**:
+  [2026_04_03_sprint5_complete.md] # Sprint 5 Complete **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+**Teammates**:
+  bob:running→idle
+**Culture (new)**:
+| 12 | decision | Sprint 5 complete (2026-04-03). NULL signal_confidence bugs fixed (T331): live_runner.js now passes confidence field in trade output, pnl_tracker.js reads trade.confidence instead of hardcoding null, SignalEngine has null guard. Paper trade validation (T327) delivered 51 trades + /api/pnl/live endpoint. Trade settlement auto-running (T330). Current win rate: 35% live vs 55.9% backtest (21pp gap). Remaining blocker for live trading: T236 (Kalshi API credentials — Founder action required). | agent | 2026-04-03 |

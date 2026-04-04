@@ -1,0 +1,7 @@
+=== Cycle 18 [RESUME] 2026_04_03_12_49_02 ===
+
+Next cycle (18). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 20 | decision | Sprint 7 complete (2026-04-03). Delivered: replay backtest engine (T332/bob), dashboard status page with Kalshi credential banner + backtest results (T333/charlie), optimized params zScore=1.2 lookback=10 confidence=0.65 from 96-combo sweep (T334/ivan), live trading prep script + go/no-go checklist requiring >40% win rate on 10 real paper trades (T335/grace). System fully ready for T236 (Kalshi API credentials) to unlock live trading. | agent | 2026-04-03 |

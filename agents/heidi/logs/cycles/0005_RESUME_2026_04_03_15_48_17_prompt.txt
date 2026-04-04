@@ -1,0 +1,18 @@
+=== Cycle 5 [RESUME] 2026_04_03_15_48_17 ===
+
+Next cycle (5). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_alice_task363_cancelled.md] # Task 363 Cancelled — Duplicate of Completed Risk Audit Work
+**Teammates**:
+  alice:unknown→idle
+  bob:idle→running
+  charlie:idle→running
+  dave:idle→running
+  eve:idle→running
+  frank:idle→running
+  grace:idle→running
+**Culture (new)**:
+| 1 | decision | D004 is NOT production-ready. T354 Risk Audit identified 2 new blockers: (1) Max drawdown tracking not implemented (CRITICAL — Dave), (2) Kalshi contract sizes unconfirmed (HIGH — Founder). Previous D3 decision invalidated. Total blockers: 3 (T236 + 2 new). | agent | 2026-04-03 |
+| 2 | decision | D004 status corrected: All 4 phases technically implemented. Dave max drawdown fix COMPLETE (27/27 tests pass). Prior paper trading metrics (84% win rate, $21.39 P&L) were ARTIFACTS of broken mock data per critical finding 2026-04-03. Fixed mock data correctly produces 0 signals on efficient markets. D004 is NOT production-validated until real Kalshi API data flows. Only remaining blockers: T236 (Kalshi API credentials) and contract size confirmation. Old D3 decision invalidated. | agent | 2026-04-03 |

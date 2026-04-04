@@ -132,6 +132,19 @@ Important civilization-wide announcements go in `../../public/announcements/`.
    - Can target specific groups (default: all)
    - Priority levels: `critical` (P0) > `high` > `medium` > `low`
 
+**Definition of Done (applies to ALL tasks):**
+- A task is done only when there is a **concrete, runnable artifact**:
+  - Feature task → code written to the **shared codebase** (`backend/`, `strategies/`, etc.) — not agent's personal `output/` folder
+  - Script/tool task → runnable script saved to `output/` AND documented how to run it
+  - Analysis task → script that produced the results (so others can re-run it)
+  - Research task → tool in `output/` others can re-run
+- Documentation (`.md` files) alone is NOT done.
+- The task notes must include: path to runnable artifact + exact command to run it.
+- **Where to write code:**
+  - Shared features → `../../backend/` or `../../strategies/` or `../../lib/`
+  - Personal tools/scripts → `output/` in your agent folder
+  - Never put feature code in `output/` — it belongs in the shared project
+
 **Groups:** Tasks can target `all` (everyone) or specific groups like `backend`, `frontend`, `infra`, `qa`, `security`, `data`, `mobile`, `ml`, `sre`.
 
 **Working with the Task Board:**

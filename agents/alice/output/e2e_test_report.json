@@ -1,0 +1,94 @@
+{
+  "test_run": {
+    "timestamp": "2026-04-03T21:07:44.127Z",
+    "test_suite": "T352_Phase4_E2E_Integration",
+    "version": "1.0.0"
+  },
+  "results": {
+    "phase1_market_filtering": {
+      "passed": true,
+      "details": {
+        "marketCount": 15,
+        "filters": {
+          "note": "Filters not stored in output"
+        },
+        "timestamp": "2026-04-03T21:07:37.060Z"
+      }
+    },
+    "phase2_llm_clustering": {
+      "passed": true,
+      "details": {
+        "clusterCount": 5,
+        "totalMarkets": 12,
+        "clusterNames": [
+          "crypto_cluster",
+          "politics_cluster",
+          "finance_cluster",
+          "sports_cluster",
+          "economics_cluster"
+        ],
+        "hiddenCorrelations": [
+          {
+            "market1": "FED-RATE-DEC",
+            "market2": "AI-BREAKTHROUGH",
+            "categories": [
+              "Economics",
+              "Technology"
+            ],
+            "correlation": 0.45,
+            "insight": "Economics market correlates with Technology market"
+          }
+        ]
+      }
+    },
+    "phase3_correlation_detection": {
+      "passed": true,
+      "details": {
+        "totalPairs": 9,
+        "opportunities": 6,
+        "config": {
+          "minCorrelation": 0.75,
+          "spreadThreshold": 2,
+          "minHistoryLength": 10,
+          "lookbackWindow": 30
+        },
+        "topPair": {
+          "cluster": "finance_cluster",
+          "market_a": "SP500-5000",
+          "market_b": "NASDAQ-ALLTIME",
+          "pearson_correlation": 0.951,
+          "expected_spread": 0.0259,
+          "current_spread": -0.0267,
+          "spread_deviation": 2.08,
+          "arbitrage_confidence": 0.97,
+          "direction": "buy_A_sell_B",
+          "is_arbitrage_opportunity": true
+        }
+      }
+    },
+    "phase4_cpp_engine": {
+      "passed": true,
+      "details": {
+        "testsPassed": 24,
+        "testsFailed": 0,
+        "spreadCalcLatencyUs": 0.496,
+        "cacheUpdateLatencyUs": 0.125
+      }
+    },
+    "full_integration": {
+      "passed": true,
+      "details": {
+        "dataFlowValid": true,
+        "engineLoadsPairs": true,
+        "latencyBudgetMet": true,
+        "endToEndLatency": "spread=0.496µs, cache=0.125µs"
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "success_rate": "100%"
+  }
+}

@@ -83,5 +83,70 @@ module.exports = {
       merge_logs: false,
       time: true,
     },
+
+    {
+      // Kalshi Alpha Dashboard API (P0 founder priority)
+      name: "kalshi-dashboard",
+      script: "agents/bob/backend/dashboard_api.js",
+      cwd: __dirname,
+      instances: 1,
+      exec_mode: "fork",
+      watch: false,
+      restart_delay: 3000,
+      max_restarts: 10,
+      min_uptime: "10s",
+      env: {
+        NODE_ENV: "production",
+        PORT: "3200",
+      },
+      log_file: "/tmp/aicompany_runtime_logs/kalshi-dashboard.log",
+      error_file: "/tmp/aicompany_runtime_logs/kalshi-dashboard-error.log",
+      out_file: "/tmp/aicompany_runtime_logs/kalshi-dashboard-out.log",
+      merge_logs: false,
+      time: true,
+    },
+
+    {
+      // Kalshi pipeline scheduler (runs live_runner.js every 10 min)
+      name: "kalshi-scheduler",
+      script: "agents/bob/backend/dashboard/run_scheduler.sh",
+      cwd: __dirname,
+      instances: 1,
+      exec_mode: "fork",
+      watch: false,
+      restart_delay: 5000,
+      max_restarts: 5,
+      min_uptime: "10s",
+      env: {
+        NODE_ENV: "production",
+      },
+      interpreter: "bash",
+      log_file: "/tmp/aicompany_runtime_logs/kalshi-scheduler.log",
+      error_file: "/tmp/aicompany_runtime_logs/kalshi-scheduler-error.log",
+      out_file: "/tmp/aicompany_runtime_logs/kalshi-scheduler-out.log",
+      merge_logs: false,
+      time: true,
+    },
+
+    {
+      // Kalshi dashboard monitor (alerts if pipeline stale)
+      name: "kalshi-monitor",
+      script: "agents/bob/backend/dashboard/monitor.js",
+      cwd: __dirname,
+      instances: 1,
+      exec_mode: "fork",
+      watch: false,
+      restart_delay: 5000,
+      max_restarts: 5,
+      min_uptime: "10s",
+      env: {
+        NODE_ENV: "production",
+      },
+      log_file: "/tmp/aicompany_runtime_logs/kalshi-monitor.log",
+      error_file: "/tmp/aicompany_runtime_logs/kalshi-monitor-error.log",
+      out_file: "/tmp/aicompany_runtime_logs/kalshi-monitor-out.log",
+      merge_logs: false,
+      time: true,
+    },
   ],
 };

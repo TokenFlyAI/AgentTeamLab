@@ -1,0 +1,7 @@
+=== Cycle 2 [RESUME] 2026_04_03_15_28_20 ===
+
+Next cycle (2). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 2 | decision | D004 status corrected: All 4 phases technically implemented. Dave max drawdown fix COMPLETE (27/27 tests pass). Prior paper trading metrics (84% win rate, $21.39 P&L) were ARTIFACTS of broken mock data per critical finding 2026-04-03. Fixed mock data correctly produces 0 signals on efficient markets. D004 is NOT production-validated until real Kalshi API data flows. Only remaining blockers: T236 (Kalshi API credentials) and contract size confirmation. Old D3 decision invalidated. | agent | 2026-04-03 |

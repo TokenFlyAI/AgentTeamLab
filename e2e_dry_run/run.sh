@@ -1,42 +1,58 @@
 #!/bin/bash
-# E2E dry run orchestrator — 5 agents × 60 cycles + event injection
-# Usage: bash e2e_dry_run/run.sh
+# E2E orchestrator — 5 agents × 60 cycles + event injection
+# Usage: bash e2e_dry_run/run.sh [--cycles N]
 set -e
 
 COMPANY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 AGENTS=(alice bob charlie sam tina)
 CYCLES=60
-DRY_SLEEP=3          # seconds per dry-run cycle (fast, observable)
-CYCLE_OVERHEAD=1     # approx overhead per cycle
-CYCLE_TOTAL=$(( DRY_SLEEP + CYCLE_OVERHEAD ))
-RUN_DIR="$COMPANY_DIR/e2e_dry_run/runs/$(date +%Y%m%d_%H%M%S)"
 
-mkdir -p "$RUN_DIR"
-LOG="$RUN_DIR/orchestrator.log"
+# Parse optional --cycles arg
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --cycles) CYCLES="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
 
-log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
-
-# ── Step 1: Temporarily lower dry_run_sleep ──────────────────────────────────
 CONFIG="$COMPANY_DIR/public/smart_run_config.json"
-ORIG_SLEEP=$(python3 -c "import json; print(json.load(open('$CONFIG')).get('dry_run_sleep',120))")
-log "Lowering dry_run_sleep: $ORIG_SLEEP → $DRY_SLEEP"
-python3 -c "
+IS_DRY=$(python3 -c "import json; print(json.load(open('$CONFIG')).get('dry_run', False))" 2>/dev/null || echo False)
+
+# Cycle timing for event injector — dry runs: 4s/cycle, real runs: 60s/cycle estimate
+if [ "$IS_DRY" = "True" ] || [ "$IS_DRY" = "true" ]; then
+  DRY_SLEEP=3
+  CYCLE_TOTAL=4
+  # Temporarily lower dry_run_sleep for fast iteration
+  ORIG_SLEEP=$(python3 -c "import json; print(json.load(open('$CONFIG')).get('dry_run_sleep',120))" 2>/dev/null || echo 120)
+  python3 -c "
 import json
 with open('$CONFIG') as f: c = json.load(f)
 c['dry_run_sleep'] = $DRY_SLEEP
 with open('$CONFIG','w') as f: json.dump(c, f, indent=2)
 "
-
-restore_config() {
-  log "Restoring dry_run_sleep → $ORIG_SLEEP"
-  python3 -c "
+  restore_config() {
+    python3 -c "
 import json
 with open('$CONFIG') as f: c = json.load(f)
 c['dry_run_sleep'] = $ORIG_SLEEP
 with open('$CONFIG','w') as f: json.dump(c, f, indent=2)
 "
-}
-trap restore_config EXIT
+  }
+  trap restore_config EXIT
+  MODE_LABEL="DRY RUN"
+else
+  CYCLE_TOTAL=60  # estimate: ~60s per real kimi/claude cycle
+  MODE_LABEL="REAL RUN"
+fi
+
+RUN_DIR="$COMPANY_DIR/e2e_dry_run/runs/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$RUN_DIR"
+LOG="$RUN_DIR/orchestrator.log"
+
+log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
+
+# ── Step 1b: Log run mode ─────────────────────────────────────────────────────
+log "Mode: $MODE_LABEL | Agents: ${AGENTS[*]} | Cycles: $CYCLES | Cycle estimate: ${CYCLE_TOTAL}s"
 
 # ── Step 2: Clean agents ──────────────────────────────────────────────────────
 log "Cleaning agents: ${AGENTS[*]}"

@@ -1,0 +1,15 @@
+=== Cycle 4 [RESUME] 2026_04_02_09_54_18 ===
+
+Next cycle (4). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +242|Connect dashboard to live Kalshi API with real credentials|open
+  +244|Integrate risk_manager.js into live trading pipeline|open
+**Teammates**:
+  dave:running→idle
+  eve:idle→running
+  grace:running→idle
+  heidi:running→idle
+  liam:running→idle
+  mia:running→idle

@@ -1,0 +1,70 @@
+# NFP Nowcasting Model Configuration
+
+model:
+  name: "nfp_nowcast_v1"
+  type: "xgboost"
+  version: "0.1.0"
+  
+training:
+  start_date: "2015-01-01"
+  end_date: "2025-03-01"
+  test_size: 0.2
+  random_state: 42
+  
+xgboost_params:
+  objective: "binary:logistic"
+  eval_metric: "logloss"
+  max_depth: 6
+  learning_rate: 0.05
+  n_estimators: 200
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  
+thresholds:
+  - 0
+  - 50000
+  - 100000
+  - 150000
+  - 200000
+  - 250000
+  - 300000
+
+features:
+  adp:
+    enabled: true
+    transform: ["yoy_change", "surprise"]
+  job_postings:
+    enabled: true
+    transform: ["4wk_ma", "yoy_change"]
+  initial_claims:
+    enabled: true
+    transform: ["4wk_ma", "log_diff"]
+  continuing_claims:
+    enabled: true
+    transform: ["level", "change"]
+  ism_employment:
+    enabled: true
+    transform: ["level", "vs_50"]
+  credit_card_spending:
+    enabled: true
+    transform: ["yoy_change"]
+    priority: "P1"
+
+data_sources:
+  adp:
+    url: "https://adpemploymentreport.com/"
+    frequency: "monthly"
+    lead_days: 2
+  dol_claims:
+    url: "https://oui.doleta.gov/unemploy/claims.asp"
+    frequency: "weekly"
+  ism:
+    url: "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/"
+    frequency: "monthly"
+    lead_days: 2
+
+kalshi_markets:
+  series_prefix: "KXNF"
+  market_type: "binary_threshold"

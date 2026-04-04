@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-04-03T22:57:09.415Z",
+  "task": "T414",
+  "overall_status": "DEGRADED",
+  "all_fresh": false,
+  "strict_mode": true,
+  "summary": {
+    "total_files": 4,
+    "fresh": 0,
+    "stale": 0,
+    "missing": 4
+  },
+  "files": [
+    {
+      "name": "markets_filtered",
+      "path": "agents/public/markets_filtered.json",
+      "exists": false,
+      "status": "MISSING",
+      "ageMs": null,
+      "maxAgeMs": 86400000,
+      "fresh": false,
+      "description": "Phase 1 market filtering output"
+    },
+    {
+      "name": "market_clusters",
+      "path": "agents/public/market_clusters.json",
+      "exists": false,
+      "status": "MISSING",
+      "ageMs": null,
+      "maxAgeMs": 86400000,
+      "fresh": false,
+      "description": "Phase 2 LLM clustering output"
+    },
+    {
+      "name": "correlation_pairs",
+      "path": "agents/public/correlation_pairs.json",
+      "exists": false,
+      "status": "MISSING",
+      "ageMs": null,
+      "maxAgeMs": 86400000,
+      "fresh": false,
+      "description": "Phase 3 correlation analysis output"
+    },
+    {
+      "name": "risk_summary",
+      "path": "agents/bob/backend/cpp_engine/risk_summary.json",
+      "exists": false,
+      "status": "MISSING",
+      "ageMs": null,
+      "maxAgeMs": 900000,
+      "fresh": false,
+      "description": "Phase 4 C++ engine risk metrics"
+    }
+  ]
+}

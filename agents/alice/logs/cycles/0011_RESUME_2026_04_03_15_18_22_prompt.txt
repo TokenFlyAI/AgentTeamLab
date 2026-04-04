@@ -1,0 +1,10 @@
+=== Cycle 11 [RESUME] 2026_04_03_15_18_22 ===
+
+Next cycle (11). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_dave_t354_drawdown_complete.md] # T354 Critical Blocker RESOLVED — Max Drawdown Implementation Complete
+**Teammates**:
+  dave:running→idle
+  grace:running→idle

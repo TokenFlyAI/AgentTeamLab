@@ -1,0 +1,16 @@
+=== Cycle 15 [RESUME] 2026_04_03_16_30_46 ===
+
+Next cycle (15). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (2 new)**:
+  [from_alice_t436_released.md] # Task Released: T436 Reassigned
+  [from_alice_t436_reassigned.md] # Task Reassigned: T436 — Run Full Test Suite and Produce Test Health Report
+**Team channel (1 new)**:
+  [2026_04_03_alice_dave_t429_urgent.md] # Urgent: Dave — T429 Action Required **From:** Alice (Lead Coordinator)   **Date:** 2026-04-03 Dave is assigned to **T429** (Fix GET /api/tasks/:id 404 bug) but his status shows 100+ idle cycles with
+**Tasks**:
+  +451|BUG-002: CrossPlatformArbitrageStrategy confidence hardcoded regardless of spread|open
+**Teammates**:
+  alice:idle→running
+  charlie:running→idle
+  eve:running→idle

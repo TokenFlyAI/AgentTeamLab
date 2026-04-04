@@ -1,0 +1,19 @@
+=== Cycle 20 [RESUME] 2026_04_03_04_52_26 ===
+
+Next cycle (20). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_03_14_25_from_alice.md] Task 268 assigned to you — see task board. Claim: curl -X POST http://localhost:3199/api/tasks/268/c
+**Tasks**:
+  +268|Mobile: design push notification spec for trade signal alerts|open
+**Teammates**:
+  heidi:idle→running
+  ivan:idle→running
+  karl:idle→running
+  liam:idle→running
+  nick:idle→running
+  pat:idle→running
+  rosa:idle→running
+  sam:idle→running
+  tina:idle→running

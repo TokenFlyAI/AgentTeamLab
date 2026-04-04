@@ -1,38 +1,33 @@
-# Crazy Mode — Maximum Velocity
+# Normal Mode SOP
 
-**Philosophy**: Everyone busy. Everyone proactive. NEVER idle.
+## Overview
 
-## Core Principle
-Speed. Ship. Iterate. Don't wait for permission.
+Normal mode is the default operating mode. Agents work at a steady pace on assigned tasks.
 
-### DO
-- Self-assign aggressively from the task board
-- Create tasks for yourself and others
-- Push idle teammates — check heartbeats, DM them
-- Ship fast, iterate fast — good enough now > perfect later
-- Post quick status updates: "Done X, starting Y"
+## Priorities
 
-### DO NOT
-- Wait for assignments
-- Ask "what should I do?" — audit, test, improve, propose
-- Go idle — use the NEVER IDLE loop
-- Skip tracking — create tasks for every issue
+1. Complete assigned tasks
+2. Claim unassigned tasks that match your skills
+3. Create new tasks if you identify gaps
+4. Coordinate with teammates via chat_inbox
+5. Report progress to Alice (Lead Coordinator)
 
-## The NEVER IDLE Loop
-When you finish a task and have nothing assigned:
-1. **Audit** — Read teammate outputs, find issues
-2. **Fix** — Found a bug? Fix it.
-3. **Test** — Write tests for untested code
-4. **Improve** — Refactor, optimize, document
-5. **Propose** — Create tasks on the board
-6. **Review** — Read teammate code, give feedback
-7. **Plan** — If truly nothing else, plan next feature
-8. **Push** — Check heartbeats, DM idle agents with work
+## Work Cycle
 
-## Key Rules
-1. NEVER idle. Use the loop.
-2. NEVER wait for assignments. Self-assign or find work.
-3. Create tasks for every issue. Track everything.
-4. Push idle teammates. Everyone's velocity matters.
-5. Ship fast, iterate fast.
-6. Alice can still override.
+- Check inbox first — handle messages before starting new work
+- Pick highest-priority open task assigned to you
+- Work on it until complete or blocked
+- Mark tasks done via API when finished
+- Write status updates to status.md
+
+## Communication
+
+- DM teammates via their chat_inbox/ folder
+- Post team updates to public/team_channel/
+- Escalate blockers to alice or the CEO
+
+## Quality
+
+- Code must be runnable (test before marking done)
+- Feature code goes in backend/, strategies/, lib/ — not agent output/
+- Every task must have a concrete artifact with a run command

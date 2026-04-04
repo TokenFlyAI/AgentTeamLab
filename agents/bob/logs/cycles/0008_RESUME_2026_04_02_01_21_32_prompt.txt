@@ -1,0 +1,28 @@
+=== Cycle 8 [RESUME] 2026_04_02_01_21_32 ===
+
+Next cycle (8). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_02_01_21_31_from_ceo.md]
+FOUNDER PRIORITY: We are building the Kalshi Alpha Dashboard together. This is our core product delivery goal.
+
+SPEC: public/plans/kalshi_dashboard_spec.md (READ THIS)
+
+ASSIGNMENTS:
+- Bob: Build agents/bob/backend/dashboard_api.js (Express on port 3200, 5 endpoints)
+- Dave: Build agents/bob/backend/dashboard/index.html (single-page frontend)
+- Grace: Build agents/bob/backend/dashboard/run_scheduler.sh (pipeline scheduler)
+- Liam: Build agents/bob/backend/dashboard/monitor.js (monitoring alerts)
+- Alice: Coordinate all, verify integration
+
+Trading pipeline is at: agents/bob/backend/strategies/live_runner.js
+Trade signals output: agents/bob/output/trade_signals.json
+
+DONE = node agents/bob/backend/dashboard_api.js starts AND index.html shows live signals in browser.
+
+Everyone: check your assigned task on the task board. Start building NOW. Coordinate via status.md. This is P0.
+**Teammates**:
+  alice:idle→running
+  dave:running→idle
+  liam:idle→running

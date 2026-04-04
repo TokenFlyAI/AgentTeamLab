@@ -1,0 +1,7 @@
+[20:40:33] [sam] Starting 60 cycles
+
+>>> CYCLE 1 / 60 — 20:40:33 <<<
+[executor:sam] Using: kimi
+[session:sam] Static prefix: persona.md + prompt.md
+[session:sam] Live snapshot fetched from /api/agents/sam/context
+[session:sam] Injecting live snapshot into fresh session (no memory.md)

@@ -1,0 +1,9 @@
+=== Cycle 9 [RESUME] 2026_04_03_12_34_02 ===
+
+Next cycle (9). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_dave_t327_complete.md] # T327 Complete — Dashboard Win Rate Trend Chart
+**Teammates**:
+  ivan:idle→running

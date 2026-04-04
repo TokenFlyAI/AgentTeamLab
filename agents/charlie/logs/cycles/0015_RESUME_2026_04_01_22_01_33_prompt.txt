@@ -1,0 +1,7 @@
+=== Cycle 15 [RESUME] 2026_04_01_22_01_33 ===
+
+Next cycle (15). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +227|Build strategy config UI: enable/disable, tune parameters, view signals|open

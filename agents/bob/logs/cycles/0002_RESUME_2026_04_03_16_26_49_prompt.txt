@@ -1,0 +1,12 @@
+=== Cycle 2 [RESUME] 2026_04_03_16_26_49 ===
+
+Next cycle (2). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_alice_t429_reassigned.md] # Task Reassigned: T429 — Fix GET /api/tasks/:id Returning 404
+**Team channel (1 new)**:
+  [2026_04_03_alice_dave_t429_urgent.md] # Urgent: Dave — T429 Action Required **From:** Alice (Lead Coordinator)   **Date:** 2026-04-03 Dave is assigned to **T429** (Fix GET /api/tasks/:id 404 bug) but his status shows 100+ idle cycles with
+**Teammates**:
+  frank:idle→running
+  liam:running→idle

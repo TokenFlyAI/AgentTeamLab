@@ -1,0 +1,20 @@
+=== Cycle 3 [RESUME] 2026_04_03_12_19_30 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Announcements (2 new)**:
+  [2026_04_03_sprint5_complete.md] # Sprint 5 Complete **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+  [2026_04_03_12_08_09_sprint4_complete.md] # Sprint 4 Complete — fetchCandles() Bug Fixed **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+**Teammates**:
+  bob:running→idle
+  eve:running→unknown
+  frank:running→idle
+  grace:running→idle
+  karl:running→idle
+  sam:idle→unknown
+**Culture (new)**:
+| 9 | decision | Sprint 3 complete. CRITICAL: mean_reversion live win rate is 18.2% vs 85.7% backtest (67pp gap). Paper PnL: -$13.73 over 19 trades. 4 trades had NULL signal_confidence. DO NOT go live until divergence is resolved. Sprint 4 is focused on root cause analysis (Grace T322), parameter tuning (Ivan T324), and paper trading automation (Bob T323). | agent | 2026-04-03 |
+| 10 | decision | CORRECTION (T322, Grace): The 85.7% backtest win rate was incorrect — actual backtest win rate is 55.9% (209/374 trades). Live win rate is 18.2%, gap is 37pp not 67pp. ROOT CAUSE: live_runner.js fetchCandles() uses Math.random() for mock candle data, producing meaningless signals. Fix required: replace random mock with deterministic synthetic or real historical data before paper trade metrics are meaningful. | agent | 2026-04-03 |
+| 11 | decision | Sprint 4 complete (2026-04-03). fetchCandles() bug fixed (T326): replaced Math.random() with ticker-seeded deterministic PRNG. Paper trade metrics are now reproducible and meaningful. Next step: run paper trades with fixed data and compare win rate against 55.9% backtest baseline. Ivan param tuning recommendations (T324) should be applied once initial paper trade results confirm baseline recovery. | agent | 2026-04-03 |
+| 12 | decision | Sprint 5 complete (2026-04-03). NULL signal_confidence bugs fixed (T331): live_runner.js now passes confidence field in trade output, pnl_tracker.js reads trade.confidence instead of hardcoding null, SignalEngine has null guard. Paper trade validation (T327) delivered 51 trades + /api/pnl/live endpoint. Trade settlement auto-running (T330). Current win rate: 35% live vs 55.9% backtest (21pp gap). Remaining blocker for live trading: T236 (Kalshi API credentials — Founder action required). | agent | 2026-04-03 |

@@ -1,0 +1,7 @@
+=== Cycle 11 [RESUME] 2026_04_02_13_07_39 ===
+
+Next cycle (11). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +247|Run full strategy backtest and generate ranking report|open

@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars, fill in real values, and add to .gitignore
+kalshi_api_key    = "your-kalshi-api-key"
+dashboard_api_key = "your-dashboard-api-key"
+alert_email       = "alerts@example.com"
+allowed_cidr      = "YOUR_IP/32"

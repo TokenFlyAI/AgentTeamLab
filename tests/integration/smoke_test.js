@@ -1,0 +1,1 @@
+../../agents/bob/backend/smoke_test.js

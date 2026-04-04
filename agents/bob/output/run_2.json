@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-04-02T05:38:42.592Z",
+  "source": "mock_fallback",
+  "marketCount": 5,
+  "signalCount": 5,
+  "executed": false,
+  "markets": [
+    {
+      "id": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "title": "Will Bitcoin exceed $100,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 64,
+      "noMid": 36,
+      "volume": 890000,
+      "priceHistoryMean": 85.71428571428571,
+      "priceHistoryStddev": 2.312344865176949,
+      "priceChange24h": 1
+    },
+    {
+      "id": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 84,
+      "noMid": 16,
+      "volume": 720000,
+      "priceHistoryMean": 84.28571428571429,
+      "priceHistoryStddev": 2.913725436338734,
+      "priceChange24h": 2
+    },
+    {
+      "id": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+      "category": "Crypto",
+      "yesMid": 30,
+      "noMid": 70,
+      "volume": 540000,
+      "priceHistoryMean": 86.28571428571429,
+      "priceHistoryStddev": 1.8294640678379568,
+      "priceChange24h": -3
+    },
+    {
+      "id": "m1",
+      "ticker": "INXW-25-DEC31",
+      "title": "S&P 500 to close above 5000",
+      "category": "Economics",
+      "yesMid": 86,
+      "noMid": 14,
+      "volume": 250000,
+      "priceHistoryMean": 86.57142857142857,
+      "priceHistoryStddev": 1.9897697538834456,
+      "priceChange24h": -4
+    },
+    {
+      "id": "m3",
+      "ticker": "UNEMP-25-MAR",
+      "title": "Unemployment below 4%",
+      "category": "Economics",
+      "yesMid": 56,
+      "noMid": 44,
+      "volume": 90000,
+      "priceHistoryMean": 56.42857142857143,
+      "priceHistoryStddev": 2.3819045715047236,
+      "priceChange24h": 3
+    }
+  ],
+  "signals": [
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 64,
+      "currentPrice": 64,
+      "expectedEdge": 22,
+      "recommendedContracts": 29,
+      "riskAmount": 1856,
+      "reason": "Mean reversion: z-score=-9.39, mean=85.7, vol=890000"
+    },
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 30,
+      "currentPrice": 30,
+      "expectedEdge": 56,
+      "recommendedContracts": 62,
+      "riskAmount": 1860,
+      "reason": "Mean reversion: z-score=-30.77, mean=86.3, vol=540000"
+    },
+    {
+      "strategy": "momentum",
+      "marketId": "m1",
+      "ticker": "INXW-25-DEC31",
+      "side": "no",
+      "signalType": "entry",
+      "confidence": 0.2667,
+      "targetPrice": 14,
+      "currentPrice": 14,
+      "expectedEdge": 2,
+      "recommendedContracts": 37,
+      "riskAmount": 518,
+      "reason": "Momentum: -4c in 24h, vol24h=250000"
+    },
+    {
+      "strategy": "momentum",
+      "marketId": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "no",
+      "signalType": "entry",
+      "confidence": 0.2,
+      "targetPrice": 70,
+      "currentPrice": 70,
+      "expectedEdge": 2,
+      "recommendedContracts": 5,
+      "riskAmount": 350,
+      "reason": "Momentum: -3c in 24h, vol24h=540000"
+    },
+    {
+      "strategy": "momentum",
+      "marketId": "m3",
+      "ticker": "UNEMP-25-MAR",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.2,
+      "targetPrice": 56,
+      "currentPrice": 56,
+      "expectedEdge": 2,
+      "recommendedContracts": 7,
+      "riskAmount": 392,
+      "reason": "Momentum: +3c in 24h, vol24h=90000"
+    }
+  ]
+}

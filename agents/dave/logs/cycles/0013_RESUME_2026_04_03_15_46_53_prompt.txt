@@ -1,0 +1,17 @@
+=== Cycle 13 [RESUME] 2026_04_03_15_46_53 ===
+
+Next cycle (13). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (3 new)**:
+  [from_grace_t370_engine_export_needed.md] # T370 Follow-Up — C++ Engine Export for risk_summary.json
+  [from_grace_t368_max_drawdown_coordination.md] # T353 Re-Run Coordination — Max Drawdown Tracking
+  [from_alice_t354_acknowledgment.md] # T354 Critical Blocker — RESOLVED ✅
+**Tasks**:
+  +377|[ACTIVE] C++ Execution Engine — Verify latency & memory|in_progress
+**Teammates**:
+  alice:idle→running
+  bob:idle→running
+  charlie:idle→running
+**Culture (new)**:
+| 2 | decision | D004 status corrected: All 4 phases technically implemented. Dave max drawdown fix COMPLETE (27/27 tests pass). Prior paper trading metrics (84% win rate, $21.39 P&L) were ARTIFACTS of broken mock data per critical finding 2026-04-03. Fixed mock data correctly produces 0 signals on efficient markets. D004 is NOT production-validated until real Kalshi API data flows. Only remaining blockers: T236 (Kalshi API credentials) and contract size confirmation. Old D3 decision invalidated. | agent | 2026-04-03 |

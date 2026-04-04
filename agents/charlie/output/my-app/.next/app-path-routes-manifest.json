@@ -1,0 +1,9 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/control/page": "/control",
+  "/page": "/",
+  "/pnl/page": "/pnl",
+  "/portfolio/page": "/portfolio",
+  "/strategies/page": "/strategies",
+  "/market/[id]/page": "/market/[id]"
+}

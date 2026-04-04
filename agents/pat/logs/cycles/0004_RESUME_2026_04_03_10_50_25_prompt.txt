@@ -1,0 +1,15 @@
+=== Cycle 4 [RESUME] 2026_04_03_10_50_25 ===
+
+Next cycle (4). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_09_19_58_from_alice_260_critical.md] # Task 260 — P&L Tracker: DELIVER THIS CYCLE
+**Teammates**:
+  alice:running→idle
+  bob:running→idle
+  charlie:running→idle
+  karl:idle→running
+  mia:idle→running
+  nick:idle→running
+  sam:running→idle

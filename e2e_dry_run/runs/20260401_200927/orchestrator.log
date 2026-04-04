@@ -1,0 +1,125 @@
+[20:09:27] Lowering dry_run_sleep: 120 → 3
+[20:09:27] Cleaning agents: alice bob charlie sam tina
+[clean] Cleaning agents: alice bob charlie sam tina
+[clean] alice — done
+[clean] bob — done
+[clean] charlie — done
+[clean] sam — done
+[clean] tina — done
+[clean] All done.
+[20:09:27] Saving starting state...
+[20:09:27] Starting event injector...
+[20:09:27] Injector PID: 60416
+[20:09:27] Starting 5 agents × 60 cycles...
+[20:09:27] Started alice loop (PID 60426)
+[20:09:27] Started bob loop (PID 60433)
+[20:09:27] Started charlie loop (PID 60440)
+[20:09:27] Started sam loop (PID 60449)
+[20:09:27] Started tina loop (PID 60464)
+[20:09:27] Waiting for all agents to complete...
+  alice:     5/60
+  bob:       5/60
+  charlie:   5/60
+  sam:       5/60
+  tina:      5/60
+[20:09:42] Progress: 25 / 300 cycles total
+  alice:     10/60
+  bob:       10/60
+  charlie:   10/60
+  sam:       10/60
+  tina:      10/60
+[20:09:57] Progress: 50 / 300 cycles total
+  alice:     14/60
+  bob:       14/60
+  charlie:   14/60
+  sam:       14/60
+  tina:      14/60
+[20:10:13] Progress: 70 / 300 cycles total
+  alice:     19/60
+  bob:       19/60
+  charlie:   19/60
+  sam:       19/60
+  tina:      19/60
+[20:10:28] Progress: 95 / 300 cycles total
+  alice:     24/60
+  bob:       24/60
+  charlie:   24/60
+  sam:       24/60
+  tina:      24/60
+[20:10:43] Progress: 120 / 300 cycles total
+  alice:     28/60
+  bob:       28/60
+  charlie:   28/60
+  sam:       28/60
+  tina:      28/60
+[20:10:58] Progress: 140 / 300 cycles total
+  alice:     33/60
+  bob:       33/60
+  charlie:   33/60
+  sam:       33/60
+  tina:      33/60
+[20:11:13] Progress: 165 / 300 cycles total
+  alice:     38/60
+  bob:       38/60
+  charlie:   38/60
+  sam:       38/60
+  tina:      38/60
+[20:11:28] Progress: 190 / 300 cycles total
+  alice:     42/60
+  bob:       42/60
+  charlie:   42/60
+  sam:       42/60
+  tina:      42/60
+[20:11:43] Progress: 210 / 300 cycles total
+  alice:     47/60
+  bob:       47/60
+  charlie:   47/60
+  sam:       47/60
+  tina:      47/60
+[20:11:58] Progress: 235 / 300 cycles total
+  alice:     52/60
+  bob:       52/60
+  charlie:   52/60
+  sam:       52/60
+  tina:      52/60
+[20:12:13] Progress: 260 / 300 cycles total
+  alice:     56/60
+  bob:       56/60
+  charlie:   56/60
+  sam:       56/60
+  tina:      56/60
+[20:12:28] Progress: 280 / 300 cycles total
+  alice:     60/60
+  bob:       60/60
+  charlie:   60/60
+  sam:       60/60
+  tina:      60/60
+[20:12:43] Progress: 300 / 300 cycles total
+[20:12:43] Collecting final state...
+[20:12:43] 
+[20:12:43] ========== RUN COMPLETE ==========
+[20:12:43] Output dir: /Users/chenyangcui/Documents/code/aicompany/e2e_dry_run/runs/20260401_200927
+[20:12:43] 
+[20:12:43] Cycle counts per agent:
+[20:12:43]   alice: 60 cycles (3 fresh starts, 57 resume cycles)
+[20:12:43]   bob: 60 cycles (3 fresh starts, 57 resume cycles)
+[20:12:43]   charlie: 60 cycles (3 fresh starts, 57 resume cycles)
+[20:12:43]   sam: 60 cycles (3 fresh starts, 57 resume cycles)
+[20:12:43]   tina: 60 cycles (3 fresh starts, 57 resume cycles)
+[20:12:43] 
+[20:12:43] Delta injections (from injector log):
+  [20:09:39] [injector] === WAVE 1: Creating tasks ===
+  [20:09:48] [injector] === WAVE 2: CEO commands ===
+  [20:10:00] [injector] === WAVE 3: Culture update ===
+  [20:10:08] [injector] === WAVE 4: Broadcast ===
+  [20:10:20] [injector] === WAVE 5: Task status updates ===
+  [20:10:28] [injector] === WAVE 6: DMs to agents ===
+  [20:10:40] [injector] === WAVE 7: Second culture update ===
+  [20:10:48] [injector] === WAVE 8: Announcement ===
+  [20:11:08] [injector] === WAVE 9: New task wave ===
+  [20:11:28] [injector] === WAVE 10: Mid-run culture + CEO ===
+  [20:11:48] [injector] === WAVE 11: Task completions ===
+  [20:12:08] [injector] === WAVE 12: Final broadcast ===
+[20:12:43] 
+[20:12:43] Files:
+[20:12:43] Restoring dry_run_sleep → 120

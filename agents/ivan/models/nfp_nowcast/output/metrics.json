@@ -1,0 +1,42 @@
+{
+  "100000": {
+    "threshold": 100000,
+    "brier_score": 0.22835320723044267,
+    "log_loss": 0.6777763412789036,
+    "accuracy": 0.7,
+    "positive_rate_train": 0.775,
+    "positive_rate_test": 0.8,
+    "mean_prediction": "0.64172757",
+    "n_features": 15
+  },
+  "150000": {
+    "threshold": 150000,
+    "brier_score": 0.12496715361334694,
+    "log_loss": 0.38440602948074015,
+    "accuracy": 0.8,
+    "positive_rate_train": 0.575,
+    "positive_rate_test": 0.5,
+    "mean_prediction": "0.48210573",
+    "n_features": 15
+  },
+  "200000": {
+    "threshold": 200000,
+    "brier_score": 0.12420659166258027,
+    "log_loss": 0.43519783335000445,
+    "accuracy": 0.8,
+    "positive_rate_train": 0.3,
+    "positive_rate_test": 0.4,
+    "mean_prediction": "0.261918",
+    "n_features": 15
+  },
+  "250000": {
+    "threshold": 250000,
+    "brier_score": 0.17536564503563024,
+    "log_loss": 0.6309845063639253,
+    "accuracy": 0.8,
+    "positive_rate_train": 0.175,
+    "positive_rate_test": 0.2,
+    "mean_prediction": "0.20862539",
+    "n_features": 15
+  }
+}

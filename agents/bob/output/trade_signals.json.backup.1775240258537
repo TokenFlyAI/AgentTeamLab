@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-04-03T18:16:58.955Z",
+  "source": "mock_fallback",
+  "marketCount": 5,
+  "signalCount": 3,
+  "executed": false,
+  "markets": [
+    {
+      "id": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "title": "Will Bitcoin exceed $100,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 64,
+      "noMid": 36,
+      "volume": 890000,
+      "priceHistoryMean": 86,
+      "priceHistoryStddev": 3.1622776601683795,
+      "priceChange24h": -4
+    },
+    {
+      "id": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 84,
+      "noMid": 16,
+      "volume": 720000,
+      "priceHistoryMean": 85.14285714285714,
+      "priceHistoryStddev": 2.58725289661069,
+      "priceChange24h": 5
+    },
+    {
+      "id": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+      "category": "Crypto",
+      "yesMid": 30,
+      "noMid": 70,
+      "volume": 540000,
+      "priceHistoryMean": 86.85714285714286,
+      "priceHistoryStddev": 2.4743582965269675,
+      "priceChange24h": -4
+    },
+    {
+      "id": "m1",
+      "ticker": "INXW-25-DEC31",
+      "title": "S&P 500 to close above 5000",
+      "category": "Economics",
+      "yesMid": 86,
+      "noMid": 14,
+      "volume": 250000,
+      "priceHistoryMean": 85.57142857142857,
+      "priceHistoryStddev": 3.063944369932459,
+      "priceChange24h": 7
+    },
+    {
+      "id": "m7",
+      "ticker": "KXNF-20260501-T150000",
+      "title": "NFP above 150k",
+      "category": "Financial",
+      "yesMid": 51,
+      "noMid": 49,
+      "volume": 200000,
+      "priceHistoryMean": 86.28571428571429,
+      "priceHistoryStddev": 2.813959371941744,
+      "priceChange24h": -6
+    }
+  ],
+  "signals": [
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 64,
+      "currentPrice": 64,
+      "expectedEdge": 22,
+      "recommendedContracts": 29,
+      "riskAmount": 1856,
+      "reason": "Mean reversion: z-score=-6.96, mean=86.0, vol=890000"
+    },
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 30,
+      "currentPrice": 30,
+      "expectedEdge": 57,
+      "recommendedContracts": 62,
+      "riskAmount": 1860,
+      "reason": "Mean reversion: z-score=-22.98, mean=86.9, vol=540000"
+    },
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m7",
+      "ticker": "KXNF-20260501-T150000",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 51,
+      "currentPrice": 51,
+      "expectedEdge": 35,
+      "recommendedContracts": 37,
+      "riskAmount": 1887,
+      "reason": "Mean reversion: z-score=-12.54, mean=86.3, vol=200000"
+    }
+  ]
+}

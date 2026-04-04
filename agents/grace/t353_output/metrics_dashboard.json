@@ -1,0 +1,2895 @@
+{
+  "generated_at": "2026-04-03T22:51:40.694Z",
+  "task": "T353",
+  "summary": {
+    "total_trades": 200,
+    "win_rate": 0.855,
+    "total_pnl_cents": 2203,
+    "total_pnl_dollars": 22.03,
+    "max_drawdown_cents": 30,
+    "max_drawdown_percent": 0.25,
+    "max_drawdown_trade_boundary_cents": 24,
+    "initial_capital_cents": 10000,
+    "sharpe_ratio": 18.383
+  },
+  "time_series": {
+    "pnl_curve": [
+      {
+        "trade_id": 1,
+        "timestamp": "2026-04-03T22:51:40.690Z",
+        "cumulative_pnl": 15,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 2,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 30,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 3,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 46,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 4,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 62,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 5,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 78,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 6,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 66,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 7,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 81,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 8,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 96,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 9,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 111,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 10,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 100,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 11,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 114,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 12,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 128,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 13,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 143,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 14,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 159,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 15,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 175,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 16,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 191,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 17,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 205,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 18,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 220,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 19,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 235,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 20,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 250,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 21,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 238,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 22,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 253,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 23,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 267,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 24,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 283,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 25,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 297,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 26,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 313,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 27,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 328,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 28,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 344,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 29,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 360,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 30,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 374,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 31,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 388,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 32,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 403,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 33,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 417,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 34,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 433,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 35,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 420,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 36,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 434,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 37,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 449,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 38,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 463,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 39,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 478,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 40,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 493,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 41,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 509,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 42,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 523,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 43,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 539,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 44,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 553,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 45,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 568,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 46,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 583,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 47,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 597,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 48,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 613,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 49,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 627,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 50,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 643,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 51,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 658,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 52,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 673,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 53,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 662,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 54,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 678,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 55,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 693,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 56,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 680,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 57,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 696,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 58,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 712,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 59,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 726,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 60,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 741,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 61,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 755,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 62,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 769,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 63,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 785,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 64,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 799,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 65,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 787,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 66,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 801,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 67,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 817,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 68,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 833,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 69,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 848,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 70,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 863,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 71,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 879,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 72,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 895,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 73,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 910,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 74,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 925,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 75,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 913,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 76,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 927,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 77,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 941,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 78,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 956,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 79,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 971,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 80,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 987,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 81,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1001,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 82,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1016,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 83,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1030,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 84,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1046,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 85,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1061,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 86,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1075,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 87,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1091,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 88,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1105,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 89,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1119,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 90,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1135,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 91,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1151,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 92,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1166,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 93,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1180,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 94,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1195,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 95,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1211,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 96,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1225,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 97,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1241,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 98,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1255,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 99,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1271,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 100,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1286,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 101,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1300,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 102,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1316,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 103,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1332,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 104,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1348,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 105,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1336,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 106,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1350,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 107,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1365,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 108,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1353,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 109,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1341,
+        "drawdown": 24
+      },
+      {
+        "trade_id": 110,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1356,
+        "drawdown": 9
+      },
+      {
+        "trade_id": 111,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1370,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 112,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1384,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 113,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1373,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 114,
+        "timestamp": "2026-04-03T22:51:40.691Z",
+        "cumulative_pnl": 1387,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 115,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1401,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 116,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1389,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 117,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1405,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 118,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1421,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 119,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1435,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 120,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1449,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 121,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1464,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 122,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1479,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 123,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1493,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 124,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1509,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 125,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1524,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 126,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1538,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 127,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1554,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 128,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1569,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 129,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1585,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 130,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1600,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 131,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1614,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 132,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1629,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 133,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1643,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 134,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1658,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 135,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1673,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 136,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1688,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 137,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1702,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 138,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1690,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 139,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1678,
+        "drawdown": 24
+      },
+      {
+        "trade_id": 140,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1692,
+        "drawdown": 10
+      },
+      {
+        "trade_id": 141,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1706,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 142,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1720,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 143,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1735,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 144,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1722,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 145,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1737,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 146,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1753,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 147,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1767,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 148,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1783,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 149,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1772,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 150,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1787,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 151,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1801,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 152,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1815,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 153,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1829,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 154,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1818,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 155,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1806,
+        "drawdown": 23
+      },
+      {
+        "trade_id": 156,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1820,
+        "drawdown": 9
+      },
+      {
+        "trade_id": 157,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1835,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 158,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1822,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 159,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1838,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 160,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1825,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 161,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1840,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 162,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1854,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 163,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1842,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 164,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1858,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 165,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1874,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 166,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1862,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 167,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1878,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 168,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1892,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 169,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1908,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 170,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1922,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 171,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1938,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 172,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1954,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 173,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1968,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 174,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1983,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 175,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1997,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 176,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2011,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 177,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2000,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 178,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 1987,
+        "drawdown": 24
+      },
+      {
+        "trade_id": 179,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2001,
+        "drawdown": 10
+      },
+      {
+        "trade_id": 180,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2015,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 181,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2030,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 182,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2046,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 183,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2060,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 184,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2048,
+        "drawdown": 12
+      },
+      {
+        "trade_id": 185,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2062,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 186,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2051,
+        "drawdown": 11
+      },
+      {
+        "trade_id": 187,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2065,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 188,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2081,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 189,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2095,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 190,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2110,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 191,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2124,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 192,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2140,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 193,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2155,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 194,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2170,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 195,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2184,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 196,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2198,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 197,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2185,
+        "drawdown": 13
+      },
+      {
+        "trade_id": 198,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2200,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 199,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2215,
+        "drawdown": 0
+      },
+      {
+        "trade_id": 200,
+        "timestamp": "2026-04-03T22:51:40.692Z",
+        "cumulative_pnl": 2203,
+        "drawdown": 12
+      }
+    ]
+  },
+  "pair_metrics": [
+    {
+      "pair_id": "BTC-DOM-60_ETH-BTC-RATIO",
+      "market_a": "BTC-DOM-60",
+      "market_b": "ETH-BTC-RATIO",
+      "cluster": "crypto_cluster",
+      "trades": 34,
+      "wins": 33,
+      "losses": 1,
+      "total_pnl": 483,
+      "win_rate": 0.9705882352941176,
+      "avg_pnl": 14.205882352941176
+    },
+    {
+      "pair_id": "SP500-5000_NASDAQ-ALLTIME",
+      "market_a": "SP500-5000",
+      "market_b": "NASDAQ-ALLTIME",
+      "cluster": "finance_cluster",
+      "trades": 34,
+      "wins": 31,
+      "losses": 3,
+      "total_pnl": 433,
+      "win_rate": 0.9117647058823529,
+      "avg_pnl": 12.735294117647058
+    },
+    {
+      "pair_id": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "market_a": "BTCW-26-JUN-100K",
+      "market_b": "ETHW-26-DEC-5K",
+      "cluster": "crypto_cluster",
+      "trades": 34,
+      "wins": 30,
+      "losses": 4,
+      "total_pnl": 400,
+      "win_rate": 0.8823529411764706,
+      "avg_pnl": 11.764705882352942
+    },
+    {
+      "pair_id": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "market_a": "BTCW-26-JUN-100K",
+      "market_b": "BTC-DOM-60",
+      "cluster": "crypto_cluster",
+      "trades": 33,
+      "wins": 28,
+      "losses": 5,
+      "total_pnl": 357,
+      "win_rate": 0.8484848484848485,
+      "avg_pnl": 10.818181818181818
+    },
+    {
+      "pair_id": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "market_a": "SUPER-BOWL-LVIII",
+      "market_b": "NBA-CHAMP-2024",
+      "cluster": "sports_cluster",
+      "trades": 31,
+      "wins": 25,
+      "losses": 6,
+      "total_pnl": 295,
+      "win_rate": 0.8064516129032258,
+      "avg_pnl": 9.516129032258064
+    },
+    {
+      "pair_id": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "market_a": "ETHW-26-DEC-5K",
+      "market_b": "ETH-BTC-RATIO",
+      "cluster": "crypto_cluster",
+      "trades": 34,
+      "wins": 24,
+      "losses": 10,
+      "total_pnl": 235,
+      "win_rate": 0.7058823529411765,
+      "avg_pnl": 6.911764705882353
+    }
+  ],
+  "trade_log": [
+    {
+      "trade_id": 1,
+      "timestamp": "2026-04-03T22:51:40.690Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 2,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 3,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 4,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 5,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 6,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 7,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 8,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 9,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 10,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 11,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 12,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 13,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 14,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 15,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 16,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 17,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 18,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 19,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 20,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 21,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 22,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 23,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 24,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 25,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 26,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 27,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 28,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 29,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 30,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 31,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 32,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 33,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 34,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "SP500-5000_NASDAQ-ALLTIME",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 35,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 36,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 37,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 38,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 39,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 40,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 41,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 42,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 43,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 44,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 45,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 46,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 47,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 48,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 49,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 50,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 51,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 52,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 53,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 54,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 55,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 56,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 57,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 58,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 59,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 60,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 61,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 62,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 63,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 64,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 65,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 66,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 67,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 68,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_ETHW-26-DEC-5K",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 69,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 70,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 71,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 72,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 73,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 74,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 75,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 76,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 77,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 78,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 79,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 80,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 81,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 82,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 83,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 84,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 85,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 86,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 87,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 88,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 89,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 90,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 91,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 92,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 93,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 94,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 95,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 96,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 97,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 98,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 99,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 100,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 101,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 102,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTC-DOM-60_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 103,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 104,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 105,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 106,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 107,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 108,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 109,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 110,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 111,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 112,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 113,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 114,
+      "timestamp": "2026-04-03T22:51:40.691Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 115,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 116,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 117,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 118,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 119,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 120,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 121,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 122,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 123,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 124,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 125,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 126,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 127,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 128,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 129,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 130,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 131,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 132,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 133,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 134,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 135,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "BTCW-26-JUN-100K_BTC-DOM-60",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 136,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 137,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 138,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 139,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 140,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 141,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 142,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 143,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 144,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 145,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 146,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 147,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 148,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 149,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 150,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 151,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 152,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 153,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 154,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 155,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 156,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 157,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 158,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 159,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 160,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 161,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 162,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 163,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 164,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 165,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 166,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 167,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 168,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 169,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 170,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 171,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 172,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 173,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 174,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 175,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 176,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 177,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 178,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 179,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 180,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 181,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 182,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 183,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 184,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    },
+    {
+      "trade_id": 185,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 186,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -11
+    },
+    {
+      "trade_id": 187,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 188,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 189,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 190,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 191,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 192,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 16
+    },
+    {
+      "trade_id": 193,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 194,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 195,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 196,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "WIN",
+      "pnl": 14
+    },
+    {
+      "trade_id": 197,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -13
+    },
+    {
+      "trade_id": 198,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 199,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "ETHW-26-DEC-5K_ETH-BTC-RATIO",
+      "direction": "buy_A_sell_B",
+      "outcome": "WIN",
+      "pnl": 15
+    },
+    {
+      "trade_id": 200,
+      "timestamp": "2026-04-03T22:51:40.692Z",
+      "pair": "SUPER-BOWL-LVIII_NBA-CHAMP-2024",
+      "direction": "sell_A_buy_B",
+      "outcome": "LOSS",
+      "pnl": -12
+    }
+  ]
+}

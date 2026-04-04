@@ -1,0 +1,17 @@
+=== Cycle 11 [RESUME] 2026_04_03_04_36_02 ===
+
+Next cycle (11). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_02_01_15_from_alice.md] You have Task 265 assigned — see task board for description. Claim: curl -X POST http://localhost:31
+**Tasks**:
+  +265|ML: build win-probability scorer for Kalshi markets using historical signal data|open
+**Teammates**:
+  alice:running→idle
+  bob:running→idle
+  eve:idle→running
+  heidi:running→idle
+  liam:running→idle
+  mia:idle→running
+  sam:idle→running

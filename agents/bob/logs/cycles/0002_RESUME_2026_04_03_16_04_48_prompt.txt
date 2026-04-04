@@ -1,0 +1,10 @@
+=== Cycle 2 [RESUME] 2026_04_03_16_04_48 ===
+
+Next cycle (2). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +423|[RUN-B] Bob: Run paper trade sim on fresh correlation_pairs.json — report P&L|open
+**Teammates**:
+  grace:running→idle
+  heidi:idle→unknown

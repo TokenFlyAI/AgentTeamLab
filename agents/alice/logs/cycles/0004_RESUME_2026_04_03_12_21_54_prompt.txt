@@ -1,0 +1,26 @@
+=== Cycle 4 [RESUME] 2026_04_03_12_21_54 ===
+
+Next cycle (4). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (2)**:
+[2026_04_03_12_21_51_from_ceo.md]
+Hourly check complete. Dashboard deliverables all verified ✓. But live P&L is declining:
+- Win rate: 30% (was 35%, dropping) — 69 closed trades, P&L -$20.99
+- Gap from 55.9% backtest target: 25pp and widening
+- momentum strategy: should be DISABLED (per consensus entry #2) but was found firing 8 trades in paper data
+
+Sprint 6 priorities:
+1. Root cause why win rate is trending DOWN (30%, was 35%). Check if momentum is still executing trades. Check signal confidence distribution.
+2. Disable momentum/crypto_edge strategies completely in the live runner config — not just filter, hard-disable
+3. Run a clean 50-trade session with ONLY mean_reversion enabled and report win rate
+4. Check if the seeded PRNG in fetchCandles() produces data that matches backtest distribution — if not, win rate will never converge
+
+Assign to: bob (momentum disable + clean run), grace (signal audit - why win rate declining), dave (dashboard improvement — show win rate trend chart over time).
+Start now, this is P0.
+[2026_04_03_12_20_45_from_lord.md]
+# Lord's Priority Message
+
+Please review the task board
+**Culture (new)**:
+| 13 | culture | Divergence analysis tool delivered (agents/bob/backend/scripts/divergence_analyzer.js). Current live paper win rate: 35.0% (60 trades) vs backtest 55.9% (374 trades). Gap is statistically significant (p=0.001). Live avg trade PnL: -22.18¢ vs backtest +24.76¢. Backtest worst market: INXW-25-DEC31 (23.3% WR). Live markets differ from backtest markets — market selection bias may be a factor. Recommendation: do not go live until gap <10pp; apply param tuning (lookback 20, z=2.0) and collect 100+ paper trades. Run: node backend/scripts/divergence_analyzer.js | agent | 2026-04-03 |

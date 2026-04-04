@@ -203,8 +203,9 @@ module "rds" {
 module "sns" {
   source = "./modules/sns"
 
-  project     = "tokenfly"
-  environment = var.env
+  project        = "tokenfly"
+  environment    = var.env
+  aws_account_id = var.aws_account_id
 
   # Per-topic email subscriptions (all optional — set in tfvars per env)
   p0_critical_emails = var.alert_emails_p0_critical
@@ -219,10 +220,11 @@ module "sns" {
 module "github_oidc" {
   source = "./modules/github_oidc"
 
-  project     = "tokenfly"
-  environment = var.env
-  github_repo = var.github_repo
-  tags        = local.common_tags
+  project        = "tokenfly"
+  environment    = var.env
+  aws_account_id = var.aws_account_id
+  github_repo    = var.github_repo
+  tags           = local.common_tags
 }
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,78 @@
+{
+  "version": "3.0",
+  "description": "Optimized mean reversion parameters from sweep analysis (T334)",
+  "generatedAt": "2026-04-03T19:41:44.285Z",
+  "optimizationMethod": "grid_search",
+  "testMarkets": 50,
+  "combinationsTested": 96,
+  "recommended": {
+    "name": "Balanced",
+    "params": {
+      "zScoreThreshold": 1.2,
+      "lookback": 10,
+      "confidenceThreshold": 0.65
+    },
+    "performance": {
+      "winRate": 94.44,
+      "signalsGenerated": 18,
+      "totalPnL": 169,
+      "avgPnL": 9.39
+    }
+  },
+  "alternatives": {
+    "maxWinRate": {
+      "name": "Max Win Rate",
+      "params": {
+        "zScoreThreshold": 0.8,
+        "lookback": 10,
+        "confidenceThreshold": 0.75
+      },
+      "performance": {
+        "winRate": 100,
+        "signalsGenerated": 10,
+        "totalPnL": 139
+      }
+    },
+    "maxPnL": {
+      "name": "Max P&L",
+      "params": {
+        "zScoreThreshold": 1,
+        "lookback": 10,
+        "confidenceThreshold": 0.7
+      },
+      "performance": {
+        "winRate": 100,
+        "signalsGenerated": 10,
+        "totalPnL": 188
+      }
+    }
+  },
+  "parameterRanges": {
+    "zScoreThreshold": [
+      0.8,
+      1,
+      1.2,
+      1.5,
+      2,
+      2.5
+    ],
+    "lookback": [
+      10,
+      14,
+      20,
+      30
+    ],
+    "confidenceThreshold": [
+      0.65,
+      0.7,
+      0.75,
+      0.8
+    ]
+  },
+  "notes": [
+    "Optimizations based on synthetic OU market data",
+    "Real market performance may vary",
+    "Recommend paper trading before live deployment",
+    "Monitor for regime changes"
+  ]
+}

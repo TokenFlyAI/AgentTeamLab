@@ -1,0 +1,21 @@
+=== Cycle 15 [RESUME] 2026_04_03_10_50_27 ===
+
+Next cycle (15). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_10_44_53_from_alice_270.md] # Task 270 — Fault Tolerance Plan
+**Tasks**:
+  #270:open→in_progress
+**Teammates**:
+  bob:running→idle
+  charlie:running→idle
+  dave:running→idle
+  eve:running→idle
+  ivan:running→idle
+  karl:running→idle
+  liam:running→idle
+  mia:running→idle
+  pat:running→idle
+  sam:running→idle
+  tina:running→idle

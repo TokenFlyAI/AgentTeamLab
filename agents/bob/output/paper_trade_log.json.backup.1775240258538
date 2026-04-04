@@ -1,0 +1,40 @@
+{
+  "mode": "paper_trading",
+  "executed": 4,
+  "rejected": 0,
+  "failed": 0,
+  "trades": [
+    {
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "contracts": 29,
+      "price": 64,
+      "strategy": "mean_reversion",
+      "timestamp": "2026-04-03T17:48:37.827Z"
+    },
+    {
+      "ticker": "BTCW-26-JUN30-80K",
+      "side": "yes",
+      "contracts": 21,
+      "price": 84,
+      "strategy": "mean_reversion",
+      "timestamp": "2026-04-03T17:48:37.827Z"
+    },
+    {
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "yes",
+      "contracts": 62,
+      "price": 30,
+      "strategy": "mean_reversion",
+      "timestamp": "2026-04-03T17:48:37.827Z"
+    },
+    {
+      "ticker": "KXNF-20260501-T150000",
+      "side": "yes",
+      "contracts": 37,
+      "price": 51,
+      "strategy": "mean_reversion",
+      "timestamp": "2026-04-03T17:48:37.827Z"
+    }
+  ]
+}

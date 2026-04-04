@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-04-03T13:00:00Z",
+  "method": "LLM embedding similarity (keyword-based)",
+  "similarity_threshold": 0.3,
+  "clusters": [
+    {
+      "id": "crypto_cluster",
+      "label": "Crypto Markets",
+      "markets": [
+        "BTCW-26-JUN-100K",
+        "ETHW-26-DEC-5K",
+        "BTC-DOM-60",
+        "ETH-BTC-RATIO"
+      ],
+      "correlation_strength": 1.0,
+      "description": "Markets related to crypto"
+    },
+    {
+      "id": "politics_cluster",
+      "label": "Politics Markets",
+      "markets": [
+        "US-PRES-2024",
+        "SENATE-CONTROL"
+      ],
+      "correlation_strength": 1.0,
+      "description": "Markets related to politics"
+    },
+    {
+      "id": "finance_cluster",
+      "label": "Finance Markets",
+      "markets": [
+        "SP500-5000",
+        "NASDAQ-ALLTIME"
+      ],
+      "correlation_strength": 1.0,
+      "description": "Markets related to finance"
+    },
+    {
+      "id": "sports_cluster",
+      "label": "Sports Markets",
+      "markets": [
+        "SUPER-BOWL-LVIII",
+        "NBA-CHAMP-2024"
+      ],
+      "correlation_strength": 1.0,
+      "description": "Markets related to sports"
+    },
+    {
+      "id": "economics_cluster",
+      "label": "Economics Markets",
+      "markets": [
+        "FED-RATE-DEC",
+        "CPI-OVER-4"
+      ],
+      "correlation_strength": 0.89,
+      "description": "Markets related to economics"
+    }
+  ],
+  "hidden_correlations": [
+    {
+      "market1": "FED-RATE-DEC",
+      "market2": "AI-BREAKTHROUGH",
+      "categories": [
+        "Economics",
+        "Technology"
+      ],
+      "correlation": 0.45,
+      "insight": "Economics market correlates with Technology market"
+    }
+  ],
+  "summary": {
+    "total_clusters": 5,
+    "total_markets_clustered": 12,
+    "hidden_correlations_found": 1
+  }
+}

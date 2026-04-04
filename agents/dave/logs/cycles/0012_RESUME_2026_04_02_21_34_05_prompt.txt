@@ -1,0 +1,13 @@
+=== Cycle 12 [RESUME] 2026_04_02_21_34_05 ===
+
+Next cycle (12). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (3 new)**:
+  [2026_04_02_21_33_30_from_alice.md] # Task 255 — Trading System README (OPEN)
+  [2026_04_02_21_29_41_from_alice.md] # Task 255 — Trading System README
+  [2026_04_02_21_04_04_from_alice.md] # Task 255 — Trading System README
+**Tasks**:
+  +255|Write trading system README and quick-start guide|open
+**Teammates**:
+  alice:idle→running

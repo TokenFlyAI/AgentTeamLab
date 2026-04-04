@@ -1,0 +1,41 @@
+{
+  "version": "2.0",
+  "description": "Mean Reversion Strategy Configuration - T324 Tuned Parameters",
+  "author": "Ivan (ML Engineer)",
+  "date": "2026-04-03",
+  "parameters": {
+    "lookbackPeriods": 20,
+    "zScoreThreshold": 2.0,
+    "minVolume": 50000,
+    "maxHoldDays": 5,
+    "confidenceThreshold": 0.80,
+    "earlyExitOnMeanTouch": true
+  },
+  "alternativeSets": {
+    "moderate": {
+      "lookbackPeriods": 15,
+      "zScoreThreshold": 1.8,
+      "minVolume": 25000,
+      "maxHoldDays": 4,
+      "confidenceThreshold": 0.75
+    },
+    "aggressive": {
+      "lookbackPeriods": 12,
+      "zScoreThreshold": 1.6,
+      "minVolume": 15000,
+      "maxHoldDays": 3,
+      "confidenceThreshold": 0.70
+    }
+  },
+  "paperTrading": {
+    "enabled": true,
+    "validationTradesRequired": 20,
+    "minWinRateThreshold": 0.60,
+    "maxDrawdownThreshold": 0.10
+  },
+  "riskManagement": {
+    "positionSizeMultiplier": 0.5,
+    "dailyLossLimit": 1000,
+    "consecutiveLossLimit": 3
+  }
+}

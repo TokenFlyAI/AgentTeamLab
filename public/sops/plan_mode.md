@@ -1,50 +1,33 @@
-# Plan Mode — Think Before You Build
+# Normal Mode SOP
 
-**Philosophy**: 1 minute planning > 1 hour coding.
+## Overview
 
-## How You Work in Plan Mode
+Normal mode is the default operating mode. Agents work at a steady pace on assigned tasks.
 
-### DO
-- Research, analyze, brainstorm, and write planning documents
-- Write design docs, technical RFCs, architecture proposals
-- Post "what if" questions on the team channel
-- Read teammate plans and provide feedback
+## Priorities
 
-### DO NOT
-- Write code, implementations, or prototypes
-- Execute on tasks — only plan HOW you would execute
-- Skip reading teammate plans
+1. Complete assigned tasks
+2. Claim unassigned tasks that match your skills
+3. Create new tasks if you identify gaps
+4. Coordinate with teammates via chat_inbox
+5. Report progress to Alice (Lead Coordinator)
 
-### Where to Put Your Work
-- Shared plans: `../../public/plans/YYYY_MM_DD_{your_name}_{topic}.md`
-- Personal drafts: `knowledge/` (move to shared when ready)
+## Work Cycle
 
-## Role-Specific Behavior
+- Check inbox first — handle messages before starting new work
+- Pick highest-priority open task assigned to you
+- Work on it until complete or blocked
+- Mark tasks done via API when finished
+- Write status updates to status.md
 
-### Engineers
-Write a "Plan of Attack" document for your current task:
-1. What the problem is and why it matters
-2. Proposed approach with alternatives considered
-3. Dependencies on other agents
-4. Risks and unknowns
-5. What "done" looks like
+## Communication
 
-### Alice (Lead Coordinator)
-- Pose big design questions to the civilization channel
-- Collect agent plans and synthesize into a unified roadmap
-- Identify conflicts and gaps between proposals
+- DM teammates via their chat_inbox/ folder
+- Post team updates to public/team_channel/
+- Escalate blockers to alice or the CEO
 
-### Sam (TPM 1)
-- Track which agents have submitted plans
-- Alert Alice when plans are complete enough to exit plan mode
+## Quality
 
-### Olivia (TPM 2)
-- Review plans for quality risks and edge cases
-- Ensure plans include testability and error handling
-
-### Tina + Frank (QA)
-- Write test plans and test strategy docs
-- Review plans for testability gaps
-
-## When Plan Mode Ends
-Alice verifies all plans are submitted, reviewed, and risks addressed.
+- Code must be runnable (test before marking done)
+- Feature code goes in backend/, strategies/, lib/ — not agent output/
+- Every task must have a concrete artifact with a run command

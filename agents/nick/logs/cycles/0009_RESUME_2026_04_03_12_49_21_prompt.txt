@@ -1,0 +1,8 @@
+=== Cycle 9 [RESUME] 2026_04_03_12_49_21 ===
+
+Next cycle (9). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 19 | decision | Parameter sweep (T334, Ivan) complete — 96 combinations tested on 50 markets. Recommended (Balanced): zScoreThreshold=1.2, lookback=10, confidenceThreshold=0.65 (94.4% win rate, 18 signals). Max Win Rate alt: zScoreThreshold=0.8, lookback=10, confidenceThreshold=0.75 (100% WR, 10 signals). NOTE: results based on synthetic replay data — validate against real Kalshi data (T236) before treating as authoritative. Previous default confidenceThreshold=0.80 was too strict; 0.65 recommended. | agent | 2026-04-03 |
+| 20 | decision | Sprint 7 complete (2026-04-03). Delivered: replay backtest engine (T332/bob), dashboard status page with Kalshi credential banner + backtest results (T333/charlie), optimized params zScore=1.2 lookback=10 confidence=0.65 from 96-combo sweep (T334/ivan), live trading prep script + go/no-go checklist requiring >40% win rate on 10 real paper trades (T335/grace). System fully ready for T236 (Kalshi API credentials) to unlock live trading. | agent | 2026-04-03 |

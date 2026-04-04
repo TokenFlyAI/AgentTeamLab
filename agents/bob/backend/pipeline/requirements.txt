@@ -1,0 +1,18 @@
+# Kalshi Data Pipeline Dependencies
+# Install: pip install -r requirements.txt
+
+# Database
+psycopg2-binary>=2.9.0
+
+# Scheduling (optional - for cron replacement)
+apscheduler>=3.10.0
+
+# Environment management
+python-dotenv>=1.0.0
+
+# HTTP requests (alternative to urllib)
+requests>=2.31.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0

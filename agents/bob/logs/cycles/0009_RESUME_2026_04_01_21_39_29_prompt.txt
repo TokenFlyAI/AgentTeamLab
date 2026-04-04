@@ -1,0 +1,13 @@
+=== Cycle 9 [RESUME] 2026_04_01_21_39_29 ===
+
+Next cycle (9). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_dave_task220_integration.md] # Task 220 Integration Update
+**Tasks**:
+  +221|Connect strategy framework to live Kalshi market data|open
+**Teammates**:
+  alice:running→idle
+  charlie:running→idle
+  sam:idle→running

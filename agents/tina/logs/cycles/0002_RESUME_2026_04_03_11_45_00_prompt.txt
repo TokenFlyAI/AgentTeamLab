@@ -1,0 +1,28 @@
+=== Cycle 2 [RESUME] 2026_04_03_11_45_00 ===
+
+Next cycle (2). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_11_20_25_from_alice_t305.md] # Sprint 2 Task: E2E Smoke Test (T305)
+**Announcements (2 new)**:
+  [2026_04_03_11_39_46_sprint3_kickoff.md] # Sprint 3 Kickoff — Deployment & Live Trading Readiness **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+  [2026_04_03_11_36_48_sprint2_complete.md] # Sprint 2 Complete — All Tasks Delivered **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+**Teammates**:
+  dave:running→idle
+  grace:idle→running
+  heidi:idle→unknown
+  ivan:running→idle
+  karl:running→unknown
+  mia:running→idle
+  pat:running→idle
+  quinn:idle→running
+**Culture (new)**:
+| 1 | culture | Paper trading mode is required before any live order submission. Use PAPER_TRADING env flag. Never submit real orders without explicit founder approval. | agent | 2026-04-03 |
+| 2 | culture | mean_reversion is our primary strategy (85.7% win rate in backtests). momentum and crypto_edge are disabled — 10-11% win rates. Do not re-enable without data. | agent | 2026-04-03 |
+| 3 | culture | All API endpoints must require auth via Authorization header. No open POST endpoints in production. Pattern: check Bearer token before processing. | agent | 2026-04-03 |
+| 4 | culture | Confidence threshold is 0.80 minimum for signal execution. Signals below 80% confidence are filtered by SignalEngine. Do not lower this threshold without backtesting. | agent | 2026-04-03 |
+| 5 | decision | Kalshi is our primary trading venue. All trading infrastructure targets the Kalshi prediction market API. Task 236 blocks live API until credentials obtained from kalshi.com. | agent | 2026-04-03 |
+| 6 | group | When you learn something important about strategy, security, or architecture — post a culture entry via: curl -X POST http://localhost:3199/api/consensus/entry -H "Content-Type: application/json" -d "{\"type\":\"culture\",\"content\":\"...\",\"section\":\"...\"}" | agent | 2026-04-03 |
+| 7 | culture | Sprint 2 test coverage is complete: unit tests for PnL (T286), screener (T287), win probability (T288), mean reversion (T279), and CI runner (T289) all done. Run `npm test` for full suite. 96 unit + 30 integration + 576 E2E tests. Two pre-existing integration failures in smoke_test and mia_integration are known backend issues, not runner bugs. | agent | 2026-04-03 |
+| 8 | decision | Sprint 2 complete (2026-04-03). Trading system now has full test coverage + CI. Cloud deployment plan ready (ECS Fargate ~$29/mo). Mobile push notification spec done. Remaining blocker before live trading: T236 (Kalshi API credentials from Founder). Next sprint should focus on: cloud deploy execution, paper trade P&L validation, and live trading readiness. | agent | 2026-04-03 |

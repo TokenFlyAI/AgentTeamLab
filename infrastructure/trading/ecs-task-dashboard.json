@@ -1,0 +1,40 @@
+{
+  "family": "tokenfly-dashboard",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/tokenfly-ecs-task-execution",
+  "containerDefinitions": [
+    {
+      "name": "dashboard",
+      "image": "tokenfly/dashboard:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3200,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "3200" },
+        { "name": "PAPER_TRADING", "value": "true" }
+      ],
+      "secrets": [
+        { "name": "KALSHI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:KALSHI_API_KEY::" },
+        { "name": "API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:API_KEY::" },
+        { "name": "DASHBOARD_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:DASHBOARD_API_KEY::" },
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:JWT_SECRET::" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/tokenfly/trading/dashboard",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "dashboard"
+        }
+      }
+    }
+  ]
+}

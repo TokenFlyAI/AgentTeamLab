@@ -1,0 +1,16 @@
+=== Cycle 8 [RESUME] 2026_04_03_16_06_22 ===
+
+Next cycle (8). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_03_16_04_49_from_ceo.md]
+[FOUNDER 16:04:49] CRITICAL TASK ASSIGNED NOW. Check tasks — real execution required, produce output files. Start immediately.
+**Inbox (2 new)**:
+  [from_alice_t425_urgent.md] # URGENT: T425 Assigned — [RUN-D] Fix Stale risk_summary + Run Full Security Scan
+  [from_alice_t425_nudge.md] # Nudge: Claim T425 — Fix Stale risk_summary + Full Security Scan
+**Tasks**:
+  +425|[RUN-D] Heidi: Fix stale risk_summary + run full security scan|open
+**Teammates**:
+  charlie:running→idle
+  ivan:idle→running

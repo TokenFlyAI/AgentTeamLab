@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-04-04T00:09:56.439Z",
+  "source": "mock_fallback",
+  "marketCount": 5,
+  "signalCount": 1,
+  "executed": false,
+  "markets": [
+    {
+      "id": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "title": "Will Bitcoin exceed $100,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 64,
+      "noMid": 36,
+      "volume": 890000,
+      "priceHistoryMean": 69.8,
+      "priceHistoryStddev": 1.8867962264113207,
+      "priceChange24h": 4
+    },
+    {
+      "id": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 84,
+      "noMid": 16,
+      "volume": 720000,
+      "priceHistoryMean": 82.8,
+      "priceHistoryStddev": 1.7204650534085253,
+      "priceChange24h": -2
+    },
+    {
+      "id": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+      "category": "Crypto",
+      "yesMid": 30,
+      "noMid": 70,
+      "volume": 540000,
+      "priceHistoryMean": 30,
+      "priceHistoryStddev": 0,
+      "priceChange24h": 0
+    },
+    {
+      "id": "m1",
+      "ticker": "INXW-25-DEC31",
+      "title": "S&P 500 to close above 5000",
+      "category": "Economics",
+      "yesMid": 86,
+      "noMid": 14,
+      "volume": 250000,
+      "priceHistoryMean": 82.7,
+      "priceHistoryStddev": 1.9519221295943137,
+      "priceChange24h": -6
+    },
+    {
+      "id": "m7",
+      "ticker": "KXNF-20260501-T150000",
+      "title": "NFP above 150k",
+      "category": "Financial",
+      "yesMid": 51,
+      "noMid": 49,
+      "volume": 200000,
+      "priceHistoryMean": 52.5,
+      "priceHistoryStddev": 0.806225774829855,
+      "priceChange24h": 2
+    }
+  ],
+  "signals": [
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 64,
+      "currentPrice": 64,
+      "expectedEdge": 6,
+      "recommendedContracts": 29,
+      "riskAmount": 1856,
+      "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-04-03T17:52:21.097Z",
+  "model": "LogisticRegression",
+  "trainingAccuracy": 1,
+  "scoredSignals": [
+    {
+      "ticker": "KXNF-20260501-T150000",
+      "strategy": "mean_reversion",
+      "side": "yes",
+      "confidence": 0.95,
+      "expectedEdge": 34,
+      "winProbability": 1,
+      "expectedValue": 34,
+      "recommendation": "STRONG_BUY"
+    },
+    {
+      "ticker": "BTCW-26-JUN30-100K",
+      "strategy": "mean_reversion",
+      "side": "yes",
+      "confidence": 0.95,
+      "expectedEdge": 20,
+      "winProbability": 0.9999999999985874,
+      "expectedValue": 19.999999999943498,
+      "recommendation": "STRONG_BUY"
+    },
+    {
+      "ticker": "ETHW-26-DEC31-5K",
+      "strategy": "mean_reversion",
+      "side": "yes",
+      "confidence": 0.95,
+      "expectedEdge": 56,
+      "winProbability": 5.365231541925615e-19,
+      "expectedValue": -56,
+      "recommendation": "AVOID"
+    }
+  ]
+}

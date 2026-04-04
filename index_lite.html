@@ -1543,6 +1543,15 @@ body {
       <button onclick="exportTasksCSV()" title="Download task board as CSV" style="padding:5px 10px;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);color:#00c8ff;border-radius:6px;cursor:pointer;font-size:0.78rem;">⬇ CSV</button>
       <button onclick="toggleArchive()" id="archive-toggle-btn" title="Show archived tasks" style="padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#888;border-radius:6px;cursor:pointer;font-size:0.78rem;">📦 Archive</button>
     </div>
+    <!-- Task Health Banner -->
+    <div id="task-health-banner" style="display:none;margin:8px 0;padding:10px 14px;background:rgba(255,160,0,0.08);border:1px solid rgba(255,160,0,0.3);border-radius:8px;font-size:0.82rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-weight:600;color:#ffa000;">Task Health</span>
+        <button onclick="loadTaskHealth()" style="background:none;border:none;color:#888;cursor:pointer;font-size:0.75rem;padding:0;">↻ refresh</button>
+      </div>
+      <div id="task-health-content" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+    </div>
+
     <div style="overflow-x:auto;">
       <table class="task-table">
         <thead>
@@ -3629,7 +3638,38 @@ function sortTasks(field) {
   renderTasks();
 }
 
+async function loadTaskHealth() {
+  const banner = document.getElementById('task-health-banner');
+  const content = document.getElementById('task-health-content');
+  if (!banner || !content) return;
+  try {
+    const data = await safeFetch('/api/tasks/health');
+    if (!data) return;
+    const { stale = [], unassigned = [], noResult = [] } = data;
+    if (stale.length === 0 && unassigned.length === 0 && noResult.length === 0) {
+      banner.style.display = 'none';
+      return;
+    }
+    banner.style.display = 'block';
+    const items = [];
+    if (stale.length > 0) {
+      const list = stale.map(t => `#${t.id} ${t.title}${t.ageHours ? ` (${t.ageHours}h)` : ''}`).join(', ');
+      items.push(`<span style="color:#ff7043;"><b>${stale.length} stale in_progress:</b> ${list}</span>`);
+    }
+    if (unassigned.length > 0) {
+      const list = unassigned.map(t => `#${t.id} ${t.title}`).join(', ');
+      items.push(`<span style="color:#ffb300;"><b>${unassigned.length} unassigned open:</b> ${list}</span>`);
+    }
+    if (noResult.length > 0) {
+      const list = noResult.map(t => `#${t.id} ${t.title}`).join(', ');
+      items.push(`<span style="color:#78909c;"><b>${noResult.length} in_progress without output:</b> ${list}</span>`);
+    }
+    content.innerHTML = items.map(i => `<div style="flex:1 1 100%;">${i}</div>`).join('');
+  } catch (_) {}
+}
+
 function renderTasks() {
+  loadTaskHealth();
   const tbody = document.getElementById('task-tbody');
   const search = document.getElementById('task-search').value.toLowerCase();
   const groupFilter = document.getElementById('task-filter-group').value;
@@ -3661,36 +3701,38 @@ function renderTasks() {
 
   // Group by type and status for collapsible sections
   function buildTaskRow(t, i) {
-    // Ensure id is always a safe integer for inline onclick handlers
-    const id = (Number.isInteger(t.id) && t.id > 0) ? t.id : (parseInt(t.id, 10) > 0 ? parseInt(t.id, 10) : i);
+    // Use original ID (can be string like "D004" or integer like 123)
+    const id = t.id;
+    // For onclick handlers, quote string IDs to prevent JavaScript parsing errors
+    const idForOnclick = typeof id === 'string' ? '\'' + id.replace(/'/g, "\\'") + '\'' : id;
     const statusClass = 'status-' + (t.status || 'open').replace(/[^a-z0-9_-]/gi, '_');
     const prioClass = 'priority-' + (t.priority || 'medium').replace(/[^a-z0-9_-]/gi, '_');
     const agentNames = (Array.isArray(agents) ? agents : []).map(a => a.name || a.agent).filter(Boolean);
     const assigneeOpts = ['', ...agentNames].map(n =>
       '<option value="' + esc(n) + '"' + ((t.assignee || '') === n ? ' selected' : '') + '>' + esc(n || '—') + '</option>'
     ).join('');
-    
+
     // Type badge
     const typeBadge = {
       direction: '<span style="display:inline-block;padding:2px 6px;background:rgba(255,100,100,0.2);color:#ff6464;border-radius:3px;font-size:0.7rem;font-weight:600;">DIRECTION</span>',
       instruction: '<span style="display:inline-block;padding:2px 6px;background:rgba(100,150,255,0.2);color:#6496ff;border-radius:3px;font-size:0.7rem;font-weight:600;">INSTRUCTION</span>',
       task: '<span style="display:inline-block;padding:2px 6px;background:rgba(100,200,100,0.2);color:#64c864;border-radius:3px;font-size:0.7rem;font-weight:600;">TASK</span>'
     }[t.task_type || 'task'] || '';
-    
+
     // Group badge
     const groupColors = {
-      all: '#888', backend: '#64c8c8', frontend: '#c864c8', infra: '#c8c864', 
-      qa: '#64ff64', security: '#ff6464', data: '#64a0ff', mobile: '#ffa064', 
+      all: '#888', backend: '#64c8c8', frontend: '#c864c8', infra: '#c8c864',
+      qa: '#64ff64', security: '#ff6464', data: '#64a0ff', mobile: '#ffa064',
       ml: '#a064ff', sre: '#64ffc8'
     };
     const groupColor = groupColors[t.group || 'all'] || '#888';
     const groupBadge = '<span style="display:inline-block;padding:2px 6px;background:' + groupColor + '20;color:' + groupColor + ';border:1px solid ' + groupColor + '40;border-radius:3px;font-size:0.7rem;font-weight:500;">' + (t.group || 'all').toUpperCase() + '</span>';
-    
+
     // Direction/Instruction don't have status dropdown - they're persistent
     const isPersistent = t.task_type === 'direction' || t.task_type === 'instruction';
-    const statusCell = isPersistent 
+    const statusCell = isPersistent
       ? '<span style="color:#888;font-size:0.85rem;">—</span>'
-      : '<select class="task-status-select ' + statusClass + '" onchange="updateTaskStatus(' + id + ', this.value)">' +
+      : '<select class="task-status-select ' + statusClass + '" onchange="updateTaskStatus(' + idForOnclick + ', this.value)">' +
         '<option value="open"' + (t.status === 'open' ? ' selected' : '') + '>Open</option>' +
         '<option value="in_progress"' + (t.status === 'in_progress' ? ' selected' : '') + '>In Progress</option>' +
         '<option value="blocked"' + (t.status === 'blocked' ? ' selected' : '') + '>Blocked</option>' +
@@ -3698,33 +3740,33 @@ function renderTasks() {
         '<option value="done"' + (t.status === 'done' ? ' selected' : '') + '>Done</option>' +
         '<option value="cancelled"' + (t.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option>' +
         '</select>';
-    
+
     return '<tr data-task-id="' + id + '">' +
       '<td>' + typeBadge + '</td>' +
-      '<td style="cursor:pointer;" onclick="openTaskDetail(' + id + ')" title="Click for details">' + esc(t.title || 'Untitled') + (t.description ? ' <span style="color:#555;font-size:0.7rem;">…</span>' : '') + '</td>' +
-      '<td><select class="task-status-select ' + prioClass + '" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:inherit;font-size:0.8rem;" onchange="updateTaskField(' + id + ', \'priority\', this.value)">' +
+      '<td style="cursor:pointer;" onclick="openTaskDetail(' + idForOnclick + ')" title="Click for details">' + esc(t.title || 'Untitled') + (t.description ? ' <span style="color:#555;font-size:0.7rem;">…</span>' : '') + '</td>' +
+      '<td><select class="task-status-select ' + prioClass + '" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:inherit;font-size:0.8rem;" onchange="updateTaskField(' + idForOnclick + ', \'priority\', this.value)">' +
         '<option value="critical"' + (t.priority === 'critical' ? ' selected' : '') + '>critical</option>' +
         '<option value="high"' + (t.priority === 'high' ? ' selected' : '') + '>high</option>' +
         '<option value="medium"' + (t.priority === 'medium' ? ' selected' : '') + '>medium</option>' +
         '<option value="low"' + (t.priority === 'low' ? ' selected' : '') + '>low</option>' +
       '</select></td>' +
       '<td>' + groupBadge + '</td>' +
-      '<td class="task-col-assignee"><select class="task-status-select" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;font-size:0.8rem;" onchange="updateTaskField(' + id + ', \'assignee\', this.value)">' + assigneeOpts + '</select></td>' +
+      '<td class="task-col-assignee"><select class="task-status-select" style="background:#0e0e1a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;font-size:0.8rem;" onchange="updateTaskField(' + idForOnclick + ', \'assignee\', this.value)">' + assigneeOpts + '</select></td>' +
       '<td>' + statusCell + '</td>' +
       '<td class="text-muted task-col-created">' + formatTime(t.created_at || t.created || '') + '</td>' +
       '<td style="white-space:nowrap;">' +
         (t.assignee && t.status === 'done' ?
-          '<button onclick="viewTaskResult(' + id + ')" style="background:#1a3a1a;border:1px solid #1a5a1a;color:#00ff88;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View task-specific result file">📄 Result</button>' : '') +
+          '<button onclick="viewTaskResult(' + idForOnclick + ')" style="background:#1a3a1a;border:1px solid #1a5a1a;color:#00ff88;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View task-specific result file">📄 Result</button>' : '') +
         (t.assignee && t.status === 'in_progress' ?
           '<button onclick="openAgentModal(\'' + esc(t.assignee) + '\'); setTimeout(()=>{ document.querySelector(\'[data-mtab=cycles]\')&&document.querySelector(\'[data-mtab=cycles]\').click(); }, 400);" style="background:#1a2a0a;border:1px solid #3a5a1a;color:#aaff44;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View cycle progress for ' + esc(t.assignee) + '">⏳ Progress</button>' : '') +
-        '<button onclick="deleteTask(\'' + id + '\')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;padding:2px 6px;" title="Delete task">✕</button>' +
+        '<button onclick="deleteTask(' + idForOnclick + ')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;padding:2px 6px;" title="Delete task">✕</button>' +
       '</td>' +
     '</tr>';
   }
 
   const colCount = 8;
-  const SECTION_ORDER = ['in_progress', 'open', 'blocked', 'in_review', 'done', 'cancelled'];
-  const SECTION_LABEL = { open: 'Open', in_progress: 'In Progress', blocked: 'Blocked', in_review: 'In Review', done: 'Done', cancelled: 'Cancelled' };
+  const SECTION_ORDER = ['done', 'in_progress', 'open', 'blocked', 'in_review', 'cancelled'];
+  const SECTION_LABEL = { open: 'Open', in_progress: 'In Progress', blocked: 'Blocked', in_review: 'In Review', done: 'Done ✓', cancelled: 'Cancelled' };
   const SECTION_COLOR = { open: '#4da8da', in_progress: '#ffaa00', blocked: '#ff4444', in_review: '#cc88ff', done: '#00ff88', cancelled: '#555' };
 
   if (!statusFilter) {
@@ -4366,22 +4408,28 @@ function switchResearchTab(tab) {
   if (tab === 'files') loadResearch();
 }
 
-// Stub functions for knowledge and research loading
-function loadKnowledgeTree() {
+// Load knowledge and research data when subtabs are activated
+async function loadKnowledgeTree() {
   const tree = document.getElementById('knowledge-tree');
   if (tree && !tree.dataset.loaded) {
-    tree.innerHTML = '<div style="color:#666;padding:20px;">Knowledge base loading...</div>';
     tree.dataset.loaded = 'true';
-    // TODO: Implement actual knowledge tree loading
+    if (!knowledgeData || Object.keys(knowledgeData).length === 0) {
+      const data = await safeFetch('/api/knowledge');
+      if (data) knowledgeData = data;
+    }
+    renderKnowledge();
   }
 }
 
-function loadResearch() {
+async function loadResearch() {
   const list = document.getElementById('research-list');
   if (list && !list.dataset.loaded) {
-    list.innerHTML = '<div style="color:#666;padding:20px;">Research files loading...</div>';
     list.dataset.loaded = 'true';
-    // TODO: Implement actual research files loading
+    if (!researchFiles || researchFiles.length === 0) {
+      const data = await safeFetch('/api/research');
+      if (data) researchFiles = data;
+    }
+    renderResearch();
   }
 }
 
@@ -4968,60 +5016,128 @@ async function refreshAgentModal() {
     lastCtxEl.innerHTML = '<div class="raw-viewer text-muted">No last context available</div>';
   }
 
-  // Cycles tab
+  // Cycles tab — preserve expanded state, only rebuild list if changed
   const cyclesEl = document.getElementById('mtab-cycles');
   if (cyclesData && cyclesData.cycles) {
     const cycles = cyclesData.cycles;
-    if (cycles.length === 0) {
-      cyclesEl.innerHTML = '<div class="text-muted" style="padding:16px;">No cycles today yet.</div>';
-    } else {
-      cyclesEl.innerHTML = '<div style="font-size:0.8rem;color:#888;padding-bottom:8px;">' + cycles.length + ' cycles today — click to expand</div>' +
-        cycles.map(c => {
-          const cost = c.cost_usd != null ? ' $' + c.cost_usd.toFixed(4) : '';
-          const dur = c.duration_s != null ? ' ' + c.duration_s + 's' : '';
-          const turns = c.turns != null ? ' ' + c.turns + ' turns' : '';
-          return '<div style="border:1px solid #1a2a3a;border-radius:4px;margin-bottom:6px;padding:8px;cursor:pointer;" onclick="loadCycleDetail(\'' + esc(name) + '\', ' + c.n + ', this)">' +
-            '<div style="display:flex;justify-content:space-between;">' +
-            '<strong>Cycle #' + c.n + '</strong>' +
-            '<span style="color:#555;font-size:0.75rem;">' + esc(c.started || '') + cost + dur + turns + '</span>' +
-            '</div>' +
-            '<div style="color:#888;font-size:0.75rem;margin-top:4px;">' + esc(c.preview || '') + '</div>' +
-            '<div id="cycle-detail-' + c.n + '" style="display:none;"></div>' +
-            '</div>';
-        }).join('');
+    const newCycleSig = cycles.map(c => c.n + ':' + (c.started||'') + ':' + (c.ended||'')).join('|');
+    if (cyclesEl._lastSig !== newCycleSig) {
+      cyclesEl._lastSig = newCycleSig;
+      if (cycles.length === 0) {
+        cyclesEl.innerHTML = '<div class="text-muted" style="padding:16px;">No cycles today yet.</div>';
+      } else {
+        cyclesEl.innerHTML = '<div style="font-size:0.8rem;color:#888;padding-bottom:8px;">' + cycles.length + ' cycles today — click to see LLM output</div>' +
+          cycles.map(c => {
+            const cost = c.cost_usd != null ? ' · $' + c.cost_usd.toFixed(4) : '';
+            const dur = c.duration_s != null ? ' · ' + c.duration_s + 's' : '';
+            const turns = c.turns != null ? ' · ' + c.turns + ' turns' : '';
+            const isRecent = c.started && (Date.now() - new Date((c.started||'').replace(/_/g,' ')).getTime()) < 600000;
+            return '<div style="border:1px solid ' + (isRecent?'#1a3a2a':'#1a2a3a') + ';border-radius:4px;margin-bottom:6px;padding:8px;cursor:pointer;" onclick="loadCycleDetail(\'' + esc(name) + '\', ' + c.n + ', this)">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+              '<strong style="color:' + (isRecent?'#00ff88':'#ccc') + ';">Cycle #' + c.n + '</strong>' +
+              '<span style="color:#555;font-size:0.75rem;">' + esc(c.started || '') + cost + dur + turns + '</span>' +
+              '</div>' +
+              '<div id="cycle-detail-' + c.n + '" style="display:none;"></div>' +
+              '</div>';
+          }).join('');
+      }
     }
   } else {
     cyclesEl.innerHTML = '<div class="text-muted" style="padding:16px;">No cycle data available.</div>';
   }
 
-  // Output tab
+  // Output tab — only rebuild if file list changed (preserve expanded state)
   const outputEl = document.getElementById('mtab-output');
   if (outputData && outputData.files) {
-    const files = outputData.files;
-    if (files.length === 0) {
-      outputEl.innerHTML = '<div class="text-muted" style="padding:16px;">No output files yet.</div>';
+    const files = outputData.files; // already sorted newest-first by server
+    const newSig = files.map(f => f.name + ':' + f.size + ':' + f.mtime).join('|');
+    if (outputEl._lastSig === newSig && files.length > 0) {
+      // Nothing changed — don't rebuild, preserve expanded state
     } else {
-      outputEl.innerHTML = '<div style="font-size:0.8rem;color:#888;padding-bottom:8px;">' + files.length + ' output file(s)</div>' +
-        files.map(f => {
-          const kb = (f.size / 1024).toFixed(1);
-          return '<div style="border:1px solid #1a2a3a;border-radius:4px;margin-bottom:6px;padding:8px;">' +
-            '<div style="display:flex;justify-content:space-between;cursor:pointer;" data-agent-name="' + encodeURIComponent(name) + '" data-file-name="' + encodeURIComponent(f.name) + '">' +
-            '<span style="color:#00ff88;">' + esc(f.name) + '</span>' +
-            '<span style="color:#555;font-size:0.75rem;">' + kb + ' KB · ' + (f.mtime ? f.mtime.slice(0,16).replace('T',' ') : '') + '</span>' +
-            '</div>' +
-            '<div data-output-key="' + encodeURIComponent(f.name) + '" style="display:none;margin-top:8px;"></div>' +
-            '</div>';
-        }).join('');
-      if (outputEl._clickHandler) outputEl.removeEventListener('click', outputEl._clickHandler);
-      outputEl._clickHandler = e => {
-        const row = e.target.closest('[data-agent-name]');
-        if (row) loadOutputFile(decodeURIComponent(row.dataset.agentName), decodeURIComponent(row.dataset.fileName), row);
-      };
-      outputEl.addEventListener('click', outputEl._clickHandler);
+      outputEl._lastSig = newSig;
+      if (files.length === 0) {
+        outputEl.innerHTML = '<div class="text-muted" style="padding:16px;">No output files yet.</div>';
+      } else {
+        const now = new Date().toLocaleTimeString();
+        outputEl.innerHTML =
+          '<div style="display:flex;align-items:center;gap:10px;font-size:0.8rem;color:#888;padding-bottom:8px;">' +
+          '<span>' + files.length + ' output file(s)</span>' +
+          '<span style="color:#444;">· refreshed ' + now + '</span>' +
+          '</div>' +
+          files.map(f => {
+            const kb = (f.size / 1024).toFixed(1);
+            const isNew = f.mtime && (Date.now() - new Date(f.mtime).getTime()) < 300000; // <5 min
+            return '<div style="border:1px solid ' + (isNew ? '#1a3a2a' : '#1a2a3a') + ';border-radius:4px;margin-bottom:6px;padding:8px;">' +
+              '<div style="display:flex;justify-content:space-between;cursor:pointer;align-items:center;" data-agent-name="' + encodeURIComponent(name) + '" data-file-name="' + encodeURIComponent(f.name) + '">' +
+              '<span style="color:' + (isNew ? '#00ff88' : '#00cc66') + ';">' + (isNew ? '🆕 ' : '') + esc(f.name) + '</span>' +
+              '<span style="color:#555;font-size:0.75rem;">' + kb + ' KB · ' + (f.mtime ? f.mtime.slice(0,16).replace('T',' ') : '') + '</span>' +
+              '</div>' +
+              '<div data-output-key="' + encodeURIComponent(f.name) + '" style="display:none;margin-top:8px;"></div>' +
+              '</div>';
+          }).join('');
+        if (outputEl._clickHandler) outputEl.removeEventListener('click', outputEl._clickHandler);
+        outputEl._clickHandler = e => {
+          const row = e.target.closest('[data-agent-name]');
+          if (row) loadOutputFile(decodeURIComponent(row.dataset.agentName), decodeURIComponent(row.dataset.fileName), row);
+        };
+        outputEl.addEventListener('click', outputEl._clickHandler);
+      }
     }
   } else {
     outputEl.innerHTML = '<div class="text-muted" style="padding:16px;">No output files.</div>';
   }
+}
+
+function parseCycleContent(raw) {
+  // Extract readable LLM output from the daily log format.
+  // run_agent.sh processes kimi output:
+  //   - Single-line TextPart → "[ASSISTANT] <text>" via sed
+  //   - Multi-line TextPart → "TextPart(\n<continuation of text>'" (first indented line removed)
+  //   - Tool calls → "ToolCallPart(\n<bash args>}')"
+  const items = [];
+  let m;
+
+  // 1. [ASSISTANT] <text> — sed-converted single-line kimi TextPart (most common)
+  const assistantRe = /\[ASSISTANT\] ([\s\S]*?)(?=\n(?:ToolCall\(|ToolResult\(|ToolCallPart\(|TextPart\(|\[ASSISTANT\]|={5})|\s*$)/g;
+  while ((m = assistantRe.exec(raw)) !== null) {
+    const t = m[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").trim();
+    if (t.length > 5) items.push({ type: 'text', content: t, pos: m.index });
+  }
+
+  // 2. TextPart(\n<content>') — multi-line kimi TextPart (4-space lines stripped, continuation kept)
+  const textPartRe = /TextPart\(\n([\s\S]*?)(?='?\n(?:ToolCall\(|ToolResult\(|ToolCallPart\(|TextPart\(|\[ASSISTANT\]|={5}))/g;
+  while ((m = textPartRe.exec(raw)) !== null) {
+    const t = m[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/^'|'$/, '').trim();
+    if (t.length > 5) items.push({ type: 'text', content: t, pos: m.index });
+  }
+
+  // 3. ToolCallPart(\n<bash command args>)' — extract bash commands for context
+  const toolPartRe = /ToolCallPart\(\n([\s\S]{5,200}?)(?='?\n(?:ToolCall\(|ToolResult\(|ToolCallPart\(|TextPart\(|\[ASSISTANT\])|$)/g;
+  while ((m = toolPartRe.exec(raw)) !== null) {
+    // Extract command from the args JSON fragment
+    const inner = m[1];
+    const cmdM = inner.match(/"command"\s*:\s*"([^"\\]{5,}(?:\\.[^"\\]*)*)/);
+    const cmd = cmdM ? cmdM[1].replace(/\\n/g, ' ').replace(/\\"/g, '"').slice(0, 150) : '';
+    if (cmd.length > 5) items.push({ type: 'tool', content: cmd.trim(), pos: m.index });
+  }
+
+  // Sort by position in log
+  items.sort((a, b) => a.pos - b.pos);
+
+  if (items.length === 0) {
+    // Fallback: show last 60 meaningful lines of the cycle
+    const meaningful = raw.split('\n').filter(l => {
+      const t = l.trim();
+      return t && !t.startsWith('=====') && t !== 'ToolCall(' && t !== 'ToolResult(' && t.length > 8;
+    });
+    return '<pre style="white-space:pre-wrap;font-size:0.72rem;color:#888;max-height:400px;overflow-y:auto;">' + esc(meaningful.slice(-60).join('\n')) + '</pre>';
+  }
+  return items.map(item => {
+    if (item.type === 'text') {
+      return '<div style="padding:8px 0 6px;color:#e0e0e0;font-size:0.83rem;white-space:pre-wrap;border-bottom:1px solid #111;">' + esc(item.content) + '</div>';
+    }
+    return '<div style="padding:2px 0;color:#444;font-size:0.72rem;font-family:monospace;">$ ' + esc(item.content.slice(0,150)) + (item.content.length > 150 ? '…' : '') + '</div>';
+  }).join('');
 }
 
 async function loadCycleDetail(agentName, cycleN, container) {
@@ -5032,7 +5148,16 @@ async function loadCycleDetail(agentName, cycleN, container) {
   detailEl.innerHTML = '<div style="color:#555;font-size:0.75rem;padding:4px;">Loading…</div>';
   const data = await safeFetch('/api/agents/' + encodeURIComponent(agentName) + '/cycles/' + cycleN);
   if (data && data.content) {
-    detailEl.innerHTML = '<pre style="white-space:pre-wrap;font-size:0.72rem;color:#ccc;border-top:1px solid #1a2a3a;padding-top:8px;margin-top:6px;max-height:400px;overflow-y:auto;">' + esc(data.content) + '</pre>';
+    const parsed = parseCycleContent(data.content);
+    detailEl.innerHTML =
+      '<div style="border-top:1px solid #1a2a3a;margin-top:6px;padding-top:8px;max-height:450px;overflow-y:auto;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+      '<span style="font-size:0.75rem;color:#888;">LLM output</span>' +
+      '<button onclick="this.parentElement.parentElement.querySelector(\'.raw-cycle\').style.display=this.parentElement.parentElement.querySelector(\'.raw-cycle\').style.display===\'none\'?\'block\':\'none\'" style="background:none;border:1px solid #333;color:#666;font-size:0.7rem;cursor:pointer;padding:2px 6px;border-radius:3px;">raw</button>' +
+      '</div>' +
+      parsed +
+      '<pre class="raw-cycle" style="display:none;white-space:pre-wrap;font-size:0.7rem;color:#555;margin-top:8px;max-height:300px;overflow-y:auto;">' + esc(data.content) + '</pre>' +
+      '</div>';
   } else {
     detailEl.innerHTML = '<div style="color:#555;font-size:0.75rem;">Could not load cycle content</div>';
   }

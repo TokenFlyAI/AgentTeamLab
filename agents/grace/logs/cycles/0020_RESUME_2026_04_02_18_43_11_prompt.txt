@@ -1,0 +1,10 @@
+=== Cycle 20 [RESUME] 2026_04_02_18_43_11 ===
+
+Next cycle (20). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_02_18_43_09_from_ceo.md]
+Task 249 still open. Fix nfp_nowcast and econ_edge strategies. The econ edges are in agents/grace/output/econ_edges_today.json — convert them to signal format and add to agents/bob/output/trade_signals.json. For nfp_nowcast: check live_runner.js NfpNowcastStrategy and add mock signals when no API key.
+**Teammates**:
+  alice:running→idle

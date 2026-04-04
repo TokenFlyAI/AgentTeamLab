@@ -1,0 +1,29 @@
+{
+  "max_drawdown": 0,
+  "max_drawdown_percent": 0.00,
+  "peak_unrealized_pnl": 0,
+  "timestamp": "2026-04-03T16:10:00Z",
+  "limits": {
+    "maxDailyLoss": 50000,
+    "maxPositionSize": 1000,
+    "maxTotalExposure": 200000,
+    "maxConcentration": 0.25,
+    "maxDrawdown": 0.10
+  },
+  "current": {
+    "dailyPnL": {
+      "realized": 0,
+      "unrealized": 0,
+      "total": 0
+    },
+    "totalExposure": 0,
+    "openPositions": 0
+  },
+  "utilization": {
+    "dailyLoss": 0,
+    "exposure": 0
+  },
+  "status": "OK",
+  "refreshed_by": "heidi",
+  "refreshed_at": "2026-04-03T16:10:00Z"
+}

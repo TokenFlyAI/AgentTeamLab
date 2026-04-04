@@ -9,6 +9,7 @@
  *   GET  /api/agents              — list all agents with status
  *   GET  /api/agents/:name        — single agent detail
  *   GET  /api/tasks               — list all tasks from task_board.md
+ *   GET  /api/tasks/:id           — get a single task by ID
  *   POST /api/tasks               — create a new task
  *   PATCH /api/tasks/:id          — update a task (status, assignee, priority)
  *   DELETE /api/tasks/:id         — delete a task
@@ -256,6 +257,50 @@ function handleApiRequest(req, res, dir) {
   const parsed = new URL(req.url, `http://localhost`);
   const pathname = parsed.pathname;
 
+  // POST /api/login — Agent authentication endpoint
+  // Returns a session token for subsequent authenticated requests
+  if (req.method === "POST" && pathname === "/api/login") {
+    parseBody((body) => {
+      const { agent_name, password } = body;
+      if (!agent_name || !password) {
+        return err(400, "agent_name and password are required");
+      }
+      
+      // Validate agent name format (security: prevent path traversal)
+      if (!AGENT_NAME_RE.test(agent_name)) {
+        return err(400, "Invalid agent name format");
+      }
+      
+      // Check if agent exists
+      const agent = getAgent(dir, agent_name);
+      if (!agent) {
+        // Return same error as wrong password to prevent username enumeration
+        return err(401, "Invalid credentials");
+      }
+      
+      // Verify password against environment variable or default
+      // Format: AGENT_PASSWORD_<AGENT_NAME_UPPER>=<password>
+      const envPassword = process.env[`AGENT_PASSWORD_${agent_name.toUpperCase()}`];
+      const isValid = verifyPassword(password, envPassword);
+      
+      if (!isValid) {
+        return err(401, "Invalid credentials");
+      }
+      
+      // Generate session token
+      const token = generateSessionToken(agent_name);
+      
+      json(200, {
+        success: true,
+        agent: agent_name,
+        token: token,
+        token_type: "Bearer",
+        expires_in: 86400, // 24 hours
+      });
+    });
+    return true;
+  }
+
   // Health check must be reachable without auth (load balancers, monitoring probes)
   if (req.method === "GET" && pathname === "/api/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -342,6 +387,16 @@ function handleApiRequest(req, res, dir) {
       return true;
     });
     return json(200, filtered);
+  }
+
+  // GET /api/tasks/:id
+  const taskDetailMatch = pathname.match(/^\/api\/tasks\/(\d+)$/);
+  if (method === "GET" && taskDetailMatch) {
+    const id = parseInt(taskDetailMatch[1], 10);
+    const tasks = parseTaskBoard(dir);
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return err(404, `Task ${id} not found`);
+    return json(200, task);
   }
 
   // POST /api/tasks

@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-04-02T06:12:34.570Z",
+  "source": "mock_fallback",
+  "marketCount": 5,
+  "signalCount": 5,
+  "executed": false,
+  "markets": [
+    {
+      "id": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "title": "Will Bitcoin exceed $100,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 64,
+      "noMid": 36,
+      "volume": 890000,
+      "priceHistoryMean": 84.71428571428571,
+      "priceHistoryStddev": 2.4907993963089563,
+      "priceChange24h": 1
+    },
+    {
+      "id": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+      "category": "Crypto",
+      "yesMid": 84,
+      "noMid": 16,
+      "volume": 720000,
+      "priceHistoryMean": 84.42857142857143,
+      "priceHistoryStddev": 2.5555062599997593,
+      "priceChange24h": 1
+    },
+    {
+      "id": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+      "category": "Crypto",
+      "yesMid": 30,
+      "noMid": 70,
+      "volume": 540000,
+      "priceHistoryMean": 84.57142857142857,
+      "priceHistoryStddev": 2.5555062599997593,
+      "priceChange24h": 2
+    },
+    {
+      "id": "m1",
+      "ticker": "INXW-25-DEC31",
+      "title": "S&P 500 to close above 5000",
+      "category": "Economics",
+      "yesMid": 86,
+      "noMid": 14,
+      "volume": 250000,
+      "priceHistoryMean": 86.71428571428571,
+      "priceHistoryStddev": 2.4907993963089563,
+      "priceChange24h": -1
+    },
+    {
+      "id": "m3",
+      "ticker": "UNEMP-25-MAR",
+      "title": "Unemployment below 4%",
+      "category": "Economics",
+      "yesMid": 56,
+      "noMid": 44,
+      "volume": 90000,
+      "priceHistoryMean": 56,
+      "priceHistoryStddev": 2.32992949004287,
+      "priceChange24h": 2
+    }
+  ],
+  "signals": [
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 64,
+      "currentPrice": 64,
+      "expectedEdge": 21,
+      "recommendedContracts": 29,
+      "riskAmount": 1856,
+      "reason": "Mean reversion: z-score=-8.32, mean=84.7, vol=890000"
+    },
+    {
+      "strategy": "mean_reversion",
+      "marketId": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.95,
+      "targetPrice": 30,
+      "currentPrice": 30,
+      "expectedEdge": 55,
+      "recommendedContracts": 62,
+      "riskAmount": 1860,
+      "reason": "Mean reversion: z-score=-21.35, mean=84.6, vol=540000"
+    },
+    {
+      "strategy": "crypto_edge",
+      "marketId": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "side": "no",
+      "signalType": "entry",
+      "confidence": 0.5719,
+      "targetPrice": 26.81,
+      "currentPrice": 84,
+      "expectedEdge": 57.19,
+      "recommendedContracts": 13,
+      "riskAmount": 1092,
+      "reason": "Crypto lognormal edge: model 26.8¢ vs market 84.0¢"
+    },
+    {
+      "strategy": "crypto_edge",
+      "marketId": "m4",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "no",
+      "signalType": "entry",
+      "confidence": 0.5545,
+      "targetPrice": 8.55,
+      "currentPrice": 64,
+      "expectedEdge": 55.45,
+      "recommendedContracts": 17,
+      "riskAmount": 1088,
+      "reason": "Crypto lognormal edge: model 8.6¢ vs market 64.0¢"
+    },
+    {
+      "strategy": "crypto_edge",
+      "marketId": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "side": "no",
+      "signalType": "entry",
+      "confidence": 0.2297,
+      "targetPrice": 7.03,
+      "currentPrice": 30,
+      "expectedEdge": 22.97,
+      "recommendedContracts": 15,
+      "riskAmount": 450,
+      "reason": "Crypto lognormal edge: model 7.0¢ vs market 30.0¢"
+    }
+  ]
+}

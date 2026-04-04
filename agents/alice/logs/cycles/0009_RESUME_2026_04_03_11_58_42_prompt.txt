@@ -1,0 +1,14 @@
+=== Cycle 9 [RESUME] 2026_04_03_11_58_42 ===
+
+Next cycle (9). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Announcements (1 new)**:
+  [2026_04_03_11_56_56_sprint4_kickoff.md] # Sprint 4 Kickoff — Strategy Recovery & Automation **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+**Teammates**:
+  bob:idle→running
+  grace:idle→running
+  ivan:idle→running
+  liam:idle→running
+**Culture (new)**:
+| 9 | decision | Sprint 3 complete. CRITICAL: mean_reversion live win rate is 18.2% vs 85.7% backtest (67pp gap). Paper PnL: -$13.73 over 19 trades. 4 trades had NULL signal_confidence. DO NOT go live until divergence is resolved. Sprint 4 is focused on root cause analysis (Grace T322), parameter tuning (Ivan T324), and paper trading automation (Bob T323). | agent | 2026-04-03 |

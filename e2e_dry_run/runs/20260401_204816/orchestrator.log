@@ -1,0 +1,55 @@
+[20:48:16] Mode: REAL RUN | Agents: alice bob charlie sam tina | Cycles: 60 | Cycle estimate: 60s
+[20:48:16] Cleaning agents: alice bob charlie sam tina
+[clean] Cleaning agents: alice bob charlie sam tina
+[clean] alice — done
+[clean] bob — done
+[clean] charlie — done
+[clean] sam — done
+[clean] tina — done
+[clean] All done.
+[20:48:17] Saving starting state...
+[20:48:17] Starting event injector...
+[20:48:17] Injector PID: 37698
+[20:48:17] Starting 5 agents × 60 cycles...
+[20:48:17] Started alice loop (PID 37709)
+[20:48:17] Started bob loop (PID 37715)
+[20:48:17] Started charlie loop (PID 37722)
+[20:48:17] Started sam loop (PID 37731)
+[20:48:17] Started tina loop (PID 37746)
+[20:48:17] Waiting for all agents to complete...
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       1/60
+  tina:      7/60
+[20:48:32] Progress: 11 / 300 cycles total
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       1/60
+  tina:      14/60
+[20:48:47] Progress: 18 / 300 cycles total
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       1/60
+  tina:      21/60
+[20:49:02] Progress: 25 / 300 cycles total
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       1/60
+  tina:      29/60
+[20:49:17] Progress: 33 / 300 cycles total
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       2/60
+  tina:      36/60
+[20:49:32] Progress: 41 / 300 cycles total
+  alice:     1/60
+  bob:       1/60
+  charlie:   1/60
+  sam:       2/60
+  tina:      42/60
+[20:49:47] Progress: 47 / 300 cycles total

@@ -352,7 +352,12 @@ function listDirRecursive(dir, base) {
 function listAgentNames() {
   return listDir(EMPLOYEES_DIR).filter((n) => {
     if (!/^[a-zA-Z0-9_-]+$/.test(n) || n.length > 64) return false;
-    try { return fs.statSync(path.join(EMPLOYEES_DIR, n)).isDirectory(); } catch (_) { return false; }
+    try {
+      const dir = path.join(EMPLOYEES_DIR, n);
+      if (!fs.statSync(dir).isDirectory()) return false;
+      // Must have prompt.md to be a real agent (filters out shared dirs like agents/public)
+      return fs.existsSync(path.join(dir, 'prompt.md'));
+    } catch (_) { return false; }
   });
 }
 
@@ -528,7 +533,8 @@ function getAgentSummary(name) {
   const last_update = rawLogMtime ? new Date(rawLogMtime).toISOString() : null;
   const lastSeenSecs = rawLogMtime ? Math.floor((Date.now() - rawLogMtime) / 1000) : null;
 
-  return { name, role, status, current_task, cycles, last_update, lastSeenSecs, heartbeat_age_ms, auth_error };
+  const executor = getExecutorForAgent(name);
+  return { name, role, status, current_task, cycles, last_update, lastSeenSecs, heartbeat_age_ms, auth_error, executor };
 }
 
 // ---------------------------------------------------------------------------
@@ -781,7 +787,15 @@ async function appendTaskRow(task) {
     // Auto-archive done tasks when board exceeds 50 rows
     if (existing.length >= 50) archiveDoneTasks();
     const all = parseTaskBoard(); // re-read after potential archive
-    const maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id || t["#"] || "0", 10) || 0), 0);
+    let maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id || t["#"] || "0", 10) || 0), 0);
+    // Also check task_outputs/ so deleted tasks don't get ID-reused (orphaned result files cause test failures)
+    const taskOutDir = path.join(PUBLIC_DIR, "task_outputs");
+    if (fs.existsSync(taskOutDir)) {
+      for (const f of listDir(taskOutDir)) {
+        const m = f.match(/^task[_-]?0*(\d+)[_-]/i);
+        if (m) maxId = Math.max(maxId, parseInt(m[1], 10) || 0);
+      }
+    }
     newId = maxId + 1;
     const now = new Date().toISOString().slice(0, 10);
     const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.group || "all")} | ${sanitizeCell(task.assignee)} | ${sanitizeCell(task.status || "open")} | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
@@ -1113,7 +1127,7 @@ async function handleRequest(req, res) {
       (t.notes || "").toLowerCase().includes(q)
     );
     if (matchedTasks.length > 0) {
-      results.push({ type: "tasks", matches: matchedTasks.slice(0, 10).map((t) => ({
+      results.push({ type: "tasks", agent: null, file: null, matches: matchedTasks.slice(0, 10).map((t) => ({
         id: t.id, title: t.title, status: t.status, assignee: t.assignee, priority: t.priority,
       })) });
     }
@@ -1130,7 +1144,7 @@ async function handleRequest(req, res) {
       }
     }
     if (matchedAnns.length > 0) {
-      results.push({ type: "announcements", matches: matchedAnns.slice(0, 5) });
+      results.push({ type: "announcements", agent: null, file: null, matches: matchedAnns.slice(0, 5) });
     }
 
     return json(res, { query: q, results, total: results.reduce((s, r) => s + (Array.isArray(r.matches) ? r.matches.length : 1), 0) });
@@ -2060,7 +2074,13 @@ async function handleRequest(req, res) {
       else if (inCycle) { cycleLines.push(line); if (line.match(/^={5,} CYCLE END/)) { inCycle = false; break; } }
     }
     if (cycleLines.length === 0) return notFound(res, `cycle ${cycleN} not found`);
-    return json(res, { name, cycle: cycleN, content: cycleLines.join("\n") });
+    // Extract metadata from cycle lines
+    let turns = null, cost_usd = null, duration_s = null;
+    for (const cl of cycleLines) {
+      const m = cl.match(/^\[DONE\] turns=(\d+) cost=\$([0-9.]+) duration=([0-9.]+)s/);
+      if (m) { turns = parseInt(m[1], 10); cost_usd = parseFloat(m[2]); duration_s = parseFloat(m[3]); break; }
+    }
+    return json(res, { name, cycle: cycleN, turns, cost_usd, duration_s, content: cycleLines.join("\n") });
   }
 
   // GET /api/agents/:name/health — agent health score (Ivan's v2 model)
@@ -2126,6 +2146,16 @@ async function handleRequest(req, res) {
       console.error("[POST /api/tasks] error:", e);
       return json(res, { error: "Internal server error" }, 500);
     }
+  }
+
+  const taskIdMatch = pathname.match(/^\/api\/tasks\/(\d+)$/);
+
+  // GET /api/tasks/:id
+  if (method === "GET" && taskIdMatch) {
+    const id = taskIdMatch[1];
+    const task = parseTaskBoard().find((t) => String(t.id) === String(id));
+    if (!task) return notFound(res, "task not found");
+    return json(res, { ...task, id: parseInt(task.id, 10), notesList: (task.notes || "").split(" ;; ").filter(Boolean) });
   }
 
   const taskPatchMatch = pathname.match(/^\/api\/tasks\/(\d+)$/);
@@ -2336,6 +2366,62 @@ async function handleRequest(req, res) {
       "Access-Control-Allow-Origin": "*",
     });
     return res.end(rows);
+  }
+
+  // GET /api/tasks/health — task health check: stale, unassigned, no-result
+  if (method === "GET" && pathname === "/api/tasks/health") {
+    const tasks = parseTaskBoard();
+    const now = Date.now();
+    const STALE_MS = 60 * 60 * 1000; // 1 hour
+    const stale = [];
+    const unassigned = [];
+    const noResult = [];
+
+    for (const t of tasks) {
+      if (/done|cancel/i.test(t.status)) continue;
+      const id = String(t.id);
+      // Skip Directions (D prefix) and Instructions (I prefix) — intentionally unassigned
+      if (/^[DdIi]/.test(id)) continue;
+      const assignee = (t.assignee || "").trim().toLowerCase();
+      const isUnassigned = !assignee || assignee === "unassigned" || assignee === "undefined" || assignee === "-";
+
+      if (isUnassigned && /open/i.test(t.status)) {
+        unassigned.push({ id, title: t.title, priority: t.priority, created: t.created });
+      }
+
+      if (/in_progress/i.test(t.status)) {
+        // Check staleness via updated timestamp
+        const updatedStr = t.updated || t.created || "";
+        let ageMs = null;
+        if (updatedStr) {
+          const ts = new Date(updatedStr).getTime();
+          if (!isNaN(ts)) ageMs = now - ts;
+        }
+        if (ageMs === null || ageMs > STALE_MS) {
+          stale.push({ id, title: t.title, assignee: t.assignee, priority: t.priority, updated: t.updated, ageHours: ageMs ? Math.round(ageMs / 3600000 * 10) / 10 : null });
+        }
+
+        // Check for result file
+        const resultDir = path.join(PUBLIC_DIR, "task_outputs");
+        const resultFiles = listDir(resultDir);
+        const hasResult = resultFiles && resultFiles.some((f) => f.includes(`task-${id}-`) || f.includes(`task_${id}_`));
+        if (!hasResult) {
+          noResult.push({ id, title: t.title, assignee: t.assignee, status: t.status });
+        }
+      }
+    }
+
+    return json(res, {
+      stale,
+      unassigned,
+      noResult,
+      summary: {
+        staleCount: stale.length,
+        unassignedCount: unassigned.length,
+        noResultCount: noResult.length,
+        checkedAt: new Date().toISOString(),
+      },
+    });
   }
 
   // ---- Communication ----
@@ -2975,6 +3061,8 @@ async function handleRequest(req, res) {
       const stat = fs.existsSync(fp) ? fs.statSync(fp) : null;
       return { name: f, size: stat ? stat.size : 0, mtime: stat ? stat.mtime.toISOString() : null };
     });
+    // Sort newest first
+    fileList.sort((a, b) => (b.mtime || "").localeCompare(a.mtime || ""));
     return json(res, { agent: name, files: fileList });
   }
 

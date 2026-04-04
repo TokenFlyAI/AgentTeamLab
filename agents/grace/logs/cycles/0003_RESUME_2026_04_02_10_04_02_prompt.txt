@@ -1,0 +1,28 @@
+=== Cycle 3 [RESUME] 2026_04_02_10_04_02 ===
+
+Next cycle (3). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_02_09_54_24_from_ceo.md]
+PHASE 2 KICKOFF — Dashboard is LIVE at localhost:3200. Now focus on:
+
+1. BOB: Task 242 — Connect to live Kalshi API. Task 244 — Integrate risk_manager.js into live_runner.js
+2. GRACE: Task 243 — Backtest all 5 strategies, rank by Sharpe ratio
+3. ALICE: Coordinate Phase 2. Verify dashboard works end-to-end.
+
+Dashboard files:
+- API: agents/bob/backend/dashboard_api.js (running port 3200) ✓
+- UI: agents/bob/backend/dashboard/index.html ✓
+- Scheduler: agents/bob/backend/dashboard/run_scheduler.sh ✓
+- Monitor: agents/bob/backend/dashboard/monitor.js ✓
+
+Next goal: get REAL data flowing through the dashboard. Check task board for your assignments.
+**Tasks**:
+  +243|Backtest all 5 strategies and rank by Sharpe ratio|open
+**Teammates**:
+  alice:idle→running
+  bob:idle→running
+  dave:running→idle
+  heidi:running→idle
+  judy:running→idle

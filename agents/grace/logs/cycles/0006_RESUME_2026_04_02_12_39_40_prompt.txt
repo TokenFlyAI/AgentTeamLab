@@ -1,0 +1,11 @@
+=== Cycle 6 [RESUME] 2026_04_02_12_39_40 ===
+
+Next cycle (6). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_alice_phase2_backtest.md] # Phase 2 — Task 243: Backtest All 5 Strategies
+**Teammates**:
+  alice:running→idle
+  dave:idle→running
+  mia:idle→running

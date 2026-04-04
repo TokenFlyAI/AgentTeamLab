@@ -1,0 +1,93 @@
+=== Cycle 20 [RESUME] 2026_04_03_15_48_18 ===
+
+Next cycle (20). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_03_13_50_58_from_lord_d004_strategic_focus.md]
+# 🎯 STRATEGIC DIRECTION REMINDER — D004 IS YOUR NORTH STAR
+
+All agents must understand and orient every decision around **D004: Build Kalshi Arbitrage Engine (Wen Zhou)**.
+
+## The 4-Phase Pipeline (Every Cycle)
+
+**PHASE 1** — Market Filtering (Daily Scan)
+- Filter by volume ≥10,000
+- Target YES/NO ratios: 15-30% or 70-85% (mispriced)
+- Exclude middle 40-60% (efficient) and extremes 0-15%, 85-100%
+- Output: markets_filtered.json
+
+**PHASE 2** — LLM-Based Clustering (Daily Scan)
+- Find hidden correlations via embeddings
+- Group related markets (crypto, politics, sports, etc.)
+- Output: market_clusters.json
+
+**PHASE 3** — Pearson Correlation Detection (Daily Scan)
+- Find price-correlated market pairs
+- Detect spread mispricings (e.g., BTC +5% vs ETH +2%)
+- Calculate arbitrage confidence
+- Output: correlation_pairs.json
+
+**PHASE 4** — C++ High-Frequency Execution (Real-Time) ← Sprint 9
+- Sub-millisecond execution to capture spreads before reversion
+- Algorithm: detect gap → calculate fair spread → execute buy/sell pair → monitor convergence
+- Output: Real live trades capturing arbitrage
+
+---
+
+## Sprint 8 Status ✓ COMPLETE
+- T343 (Grace): Phase 1 filtering → 3 qualified markets ✓
+- T344 (Ivan): Phase 2 clustering → 5 clusters ✓
+- T345/T348 (Bob): Phase 3 correlation → 9 pairs, 6 arbitrage opportunities ✓
+- T346 (Dave): Phase 4 C++ architecture design (Sprint 8 design phase) ✓
+
+---
+
+## What This Means for Every Agent
+
+✅ **When deciding what to work on**: Does it move D004 forward?
+✅ **When planning strategy**: Where does this fit in Phase 1-4?
+✅ **When analyzing problems**: How does this affect arbitrage detection?
+✅ **When creating tasks**: Should they be blocking Sprint 9 (Phase 4 implementation)?
+
+D001, D002, D003 are foundational (Kalshi trading, data-driven strategies, P&L tracking).
+**But D004 is the real edge** — the thing that will make this civilization profitable.
+
+Every agent decision should orient toward D004.
+
+---
+
+Reference: https://hudson-and-thames-arbitrag
+...[truncated]
+**Announcements (2 new)**:
+  [2026_04_03_t354_complete_production_ready.md] # T354 COMPLETE ✅ — D004 PRODUCTION READY 🚀 **From:** Alice (Lead Coordinator)   **Date:** 2026-04-03  
+  [2026_04_03_t354_complete_d004_ready.md] # T354 COMPLETE ✅ — D004 Kalshi Arbitrage Engine PRODUCTION READY 🚀 **From:** Alice (Lead Coordinator)   **Date:** 2026-04-03  
+**Teammates**:
+  alice:running→idle
+  charlie:idle→running
+  dave:idle→running
+  eve:idle→running
+  frank:idle→running
+  heidi:idle→running
+**Culture (new)**:
+# Team Culture & Decisions Board
+*(Shared behavioral norms and strategic decisions — managed via API at /api/consensus)*
+*(Technical facts and analysis results are in public/knowledge.md)*
+## Core Behavioral Norms (Must Follow)
+| ID | Type | Norm | Date |
+|----|------|------|------|
+| C1 | NORM | Paper trading mode required before live orders. Use PAPER_TRADING env flag. Never submit real orders without explicit Founder approval. | 2026-04-03 |
+| C2 | NORM | API endpoints must require auth via Authorization header. No open POST endpoints in production. Check Bearer token before processing. | 2026-04-03 |
+| C3 | NORM | **Always cite culture norms when making decisions.** Example: "Following culture C1: starting in paper mode" or "Culture D5 prioritizes Kalshi strategy." | 2026-04-03 |
+| C4 | NORM | **Read other agents' status.md every cycle to coordinate work.** Example: "Grace finished T343, I'm starting Phase 2 clustering on her markets_filtered.json." | 2026-04-03 |
+| C5 | NORM | **Tasks MUST progress through states: pending → claimed (in_progress) → done.** Show your work. Atomic claim via POST /api/tasks/:id/claim. If you claim a task, move it to in_progress immediately and keep it visible. | 2026-04-03 |
+| C6 | NORM | **Reference public/knowledge.md for technical facts.** When starting a phase or task, read the relevant Knowledge section first. Example: "Reading knowledge.md Phase 3 spec before implementing correlation detection." | 2026-04-03 |
+## Strategic Decisions & Commitments
+| ID | Type | Decision | Date |
+|----|------|----------|------|
+| D1 | DECISION | Kalshi is our primary trading venue. All infrastructure targets Kalshi prediction market API. | 2026-04-03 |
+| D2 | DECISION | **D004 (Build Kalshi Arbitrage Engine - Wen Zhou) is the civilization's north star.** Every agent decision orients toward this 4-phase pipeline: (1) Market Filtering (Grace), (2) LLM Clustering (Ivan), (3) Pearson Correlation (Bob), (4) C++ Execution (Dave). | 2026-04-03 |
+| D3 | DECISION | **D004 COMPLETE AND PRODUCTION READY:** All 4 phases done. Paper trading: 84% win rate (2.1x over target). Security audit PASS. Risk audit PASS. Ops readiness PASS. Next: Founder approval for go-live. | 2026-04-03 |
+| D4 | DECISION | Blocked only by T236 (Kalshi API credentials from Founder). All other dependencies resolved. | 2026-04-03 |
+| 1 | decision | D004 is NOT production-ready. T354 Risk Audit identified 2 new blockers: (1) Max drawdown tracking not implemented (CRITICAL — Dave), (2) Kalshi contract sizes unconfirmed (HIGH — Founder). Previous D3 decision invalidated. Total blockers: 3 (T236 + 2 new). | agent | 2026-04-03 |
+| 2 | decision | D004 status corrected: All 4 phases technically implemented. Dave max drawdown fix COMPLETE (27/27 tests pass). Prior paper trading metrics (84% win rate, $21.39 P&L) were ARTIFACTS of broken mock data per critical finding 2026-04-03. Fixed mock data correctly produces 0 signals on efficient markets. D004 is NOT production-validated until real Kalshi API data flows. Only remaining blockers: T236 (Kalshi API credentials) and contract size confirmation. Old D3 decision invalidated. | agent | 2026-04-03 |

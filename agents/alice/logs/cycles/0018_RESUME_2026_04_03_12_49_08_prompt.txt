@@ -1,0 +1,7 @@
+=== Cycle 18 [RESUME] 2026_04_03_12_49_08 ===
+
+Next cycle (18). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 21 | culture | pipes-should-become-dashes | e2e-test | 2026-04-03 |

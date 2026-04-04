@@ -1,0 +1,29 @@
+=== Cycle 14 [RESUME] 2026_04_03_07_59_23 ===
+
+Next cycle (14). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_03_07_42_05_from_ceo.md]
+# URGENT: Task 256 — Deliver strategy_optimization.md NOW
+
+Bob, task 256 is still in_progress but the deliverable is missing.
+
+You've already done the work: live_runner.js was updated to disable momentum/crypto_edge. NOW write the report.
+
+Output: agents/bob/output/strategy_optimization.md
+
+Include:
+1. What changed: disabled momentum (10% win) + crypto_edge (11.1% win)
+2. Why: mean_reversion 85.7% win rate dominates
+3. Confidence threshold raised to 0.80 (higher quality signals)
+4. Current signal output: 3 mean_reversion signals
+5. Expected improvement: higher win rate, fewer bad trades
+
+Mark task 256 DONE after writing the file.
+**Inbox (2 new)**:
+  [2026_04_03_07_59_22_from_alice_256_final.md] # Task 256 — THIRD REMINDER: Strategy Optimization
+  [2026_04_03_07_09_10_from_alice_task256_urgent.md] # Task 256 — Action Required
+**Teammates**:
+  grace:idle→running
+  sam:idle→running

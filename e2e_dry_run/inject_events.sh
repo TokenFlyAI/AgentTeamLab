@@ -61,7 +61,7 @@ TASK_IDS+=("$id")
 sleep $(( CYCLE_SECS * 3 ))
 log "=== WAVE 3: Culture update ==="
 
-r=$(api_post "/api/consensus/entry" '{"type":"norm","content":"All PRs must have at least one reviewer before merge","author":"alice","section":"engineering"}')
+r=$(api_post "/api/consensus/entry" '{"type":"culture","content":"All PRs must have at least one reviewer before merge","author":"alice","section":"engineering"}')
 eid=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id','?'))" 2>/dev/null)
 log "Consensus entry $eid: PR review norm"
 
@@ -128,7 +128,7 @@ log "CEO→tina DM: QA sign-off"
 sleep $(( CYCLE_SECS * 5 ))
 log "=== WAVE 10: Mid-run culture + CEO ==="
 
-r=$(api_post "/api/consensus/entry" '{"type":"norm","content":"No deploys on Fridays without CEO approval","author":"alice","section":"engineering"}')
+r=$(api_post "/api/consensus/entry" '{"type":"culture","content":"No deploys on Fridays without CEO approval","author":"alice","section":"engineering"}')
 eid=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id','?'))" 2>/dev/null)
 log "Consensus entry $eid: no Friday deploys"
 

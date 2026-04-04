@@ -1,0 +1,104 @@
+{
+  "generated_at": "2026-04-03T23:31:28.938Z",
+  "task": "T343",
+  "phase": "Sprint 8 Phase 1",
+  "config": {
+    "minVolume": 10000,
+    "targetRanges": [
+      {
+        "min": 15,
+        "max": 30
+      },
+      {
+        "min": 70,
+        "max": 85
+      }
+    ],
+    "excludedRange": {
+      "min": 40,
+      "max": 60
+    },
+    "outputPath": "/Users/chenyangcui/Documents/code/aicompany/agents/public/markets_filtered.json"
+  },
+  "summary": {
+    "total_markets": 8,
+    "after_volume_filter": 8,
+    "qualifying_markets": 3,
+    "excluded_low_volume": 0,
+    "excluded_middle_range": 2,
+    "extreme_ratio": 3
+  },
+  "qualifying_markets": [
+    {
+      "id": "m2",
+      "ticker": "BTCW-26-JUN30-80K",
+      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+      "category": "Crypto",
+      "volume": 720000,
+      "yes_bid": 82,
+      "yes_ask": 86,
+      "no_bid": 14,
+      "no_ask": 18,
+      "yes_ratio": 84,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "m5",
+      "ticker": "ETHW-26-DEC31-5K",
+      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+      "category": "Crypto",
+      "volume": 540000,
+      "yes_bid": 28,
+      "yes_ask": 32,
+      "no_bid": 68,
+      "no_ask": 72,
+      "yes_ratio": 30,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "m8",
+      "ticker": "KXNF-20260501-T200000",
+      "title": "NFP above 200k",
+      "category": "Financial",
+      "volume": 180000,
+      "yes_bid": 26,
+      "yes_ask": 28,
+      "no_bid": 72,
+      "no_ask": 74,
+      "yes_ratio": 27,
+      "recommendation": "proceed_to_clustering"
+    }
+  ],
+  "excluded_markets": [
+    {
+      "ticker": "UNEMP-25-MAR",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 56
+    },
+    {
+      "ticker": "KXNF-20260501-T150000",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 51
+    },
+    {
+      "ticker": "INXW-25-DEC31",
+      "reason": "extreme_ratio",
+      "yes_ratio": 86
+    },
+    {
+      "ticker": "BTCW-26-JUN30-100K",
+      "reason": "extreme_ratio",
+      "yes_ratio": 64
+    },
+    {
+      "ticker": "KXNF-20260501-T100000",
+      "reason": "extreme_ratio",
+      "yes_ratio": 66
+    }
+  ],
+  "next_phase": {
+    "recipient": "Ivan (T344)",
+    "task": "Clustering analysis on qualifying markets",
+    "markets_count": 3
+  }
+}

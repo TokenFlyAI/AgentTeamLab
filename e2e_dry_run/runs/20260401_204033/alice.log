@@ -1,0 +1,7 @@
+[20:40:33] [alice] Starting 60 cycles
+
+>>> CYCLE 1 / 60 — 20:40:33 <<<
+[executor:alice] Using: kimi
+[session:alice] Static prefix: persona.md + prompt.md
+[session:alice] Live snapshot fetched from /api/agents/alice/context
+[session:alice] Injecting live snapshot into fresh session (no memory.md)

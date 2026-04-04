@@ -1,0 +1,11 @@
+=== Cycle 7 [RESUME] 2026_04_03_13_32_22 ===
+
+Next cycle (7). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_03_alice_sprint8_t345_unblocked.md] # T345 Unblocked — Start Pearson Correlation Detection
+**Teammates**:
+  alice:running→idle
+**Culture (new)**:
+| 23 | decision | D004 STRATEGIC DIRECTION: Build Kalshi Arbitrage Engine (Wen Zhou). 4-phase pipeline: (1) Market Filtering by volume + yes/no ratio (15-30%, 70-85% targets), (2) LLM embedding-based clustering for related markets, (3) Pearson correlation detection for price pairs, (4) C++ high-frequency execution (<1ms latency). Phases 1-3 run daily, Phase 4 trades in real-time. This is the real edge — every agent decision should orient toward this. Reference: hudson-and-thames-arbitragelab Pearson approach. | agent | 2026-04-03 |

@@ -1,6 +1,9 @@
 #!/bin/bash
 # check_taskboard_hook.sh — PreToolUse hook: show agent their latest relevant tasks
 # Runs from agent's working directory (agents/{name}/)
+#
+# Within-cycle dedup: only outputs when the task list changes, not on every tool call.
+# Uses a temp stamp file keyed by agent + session PID to silence repeated identical output.
 TASKBOARD="../../public/task_board.md"
 AGENT_NAME=$(basename "$(pwd)")
 
@@ -21,22 +24,31 @@ MY_TASKS=$(echo "$ACTIVE" | grep -i "| *${AGENT_NAME} *|" | tail -10)
 # Match rows where assignee column (col 5) is empty, a dash variant, or "unassigned"
 UNASSIGNED=$(echo "$ACTIVE" | grep -E "\| *(—|-+|unassigned) *\|" | tail -10)
 
+# Build the output we'd emit
+OUTPUT=""
 if [ -n "$MY_P0" ]; then
-    echo "=== P0/CRITICAL TASKS ASSIGNED TO YOU — DROP EVERYTHING ==="
-    echo "$MY_P0"
-    echo ""
+    OUTPUT="${OUTPUT}=== P0/CRITICAL TASKS ASSIGNED TO YOU — DROP EVERYTHING ===\n${MY_P0}\n\n"
 fi
-
 if [ -n "$MY_TASKS" ]; then
-    echo "=== YOUR LATEST ASSIGNED TASKS (focus on these) ==="
-    echo "$MY_TASKS"
-    echo ""
+    OUTPUT="${OUTPUT}=== YOUR LATEST ASSIGNED TASKS (focus on these) ===\n${MY_TASKS}\n\n"
 fi
-
 if [ -z "$MY_TASKS" ] && [ -n "$UNASSIGNED" ]; then
-    echo "=== LATEST UNASSIGNED TASKS (claim one) ==="
-    echo "$UNASSIGNED"
-    echo ""
+    OUTPUT="${OUTPUT}=== LATEST UNASSIGNED TASKS (claim one) ===\n${UNASSIGNED}\n\n"
 fi
 
+[ -z "$OUTPUT" ] && exit 0
+
+# Within-cycle dedup: hash the output; skip if identical to last emission this cycle.
+# Stamp file is keyed by agent + parent PID (one per agent process tree).
+STAMP_FILE="/tmp/.taskboard_hook_${AGENT_NAME}_${PPID}"
+NEW_HASH=$(printf '%s' "$OUTPUT" | md5 2>/dev/null || printf '%s' "$OUTPUT" | md5sum 2>/dev/null | cut -d' ' -f1)
+OLD_HASH=$(cat "$STAMP_FILE" 2>/dev/null || true)
+
+if [ "$NEW_HASH" = "$OLD_HASH" ]; then
+    # Task list unchanged since last emission this cycle — stay silent
+    exit 0
+fi
+
+echo "$NEW_HASH" > "$STAMP_FILE"
+printf '%b' "$OUTPUT"
 exit 0

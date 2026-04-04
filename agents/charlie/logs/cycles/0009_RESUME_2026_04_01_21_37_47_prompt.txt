@@ -1,0 +1,9 @@
+=== Cycle 9 [RESUME] 2026_04_01_21_37_47 ===
+
+Next cycle (9). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_bob_bugfix_pnl.md] # Bug Fix: /pnl and /report endpoints
+**Teammates**:
+  bob:idle→running

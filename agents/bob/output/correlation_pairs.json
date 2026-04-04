@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-04-03T23:01:42.601Z",
+  "config": {
+    "minCorrelation": 0.75,
+    "spreadThreshold": 2,
+    "minHistoryLength": 10,
+    "lookbackWindow": 30
+  },
+  "total_pairs_analyzed": 9,
+  "arbitrage_opportunities": 6,
+  "pairs": [
+    {
+      "cluster": "finance_cluster",
+      "market_a": "SP500-5000",
+      "market_b": "NASDAQ-ALLTIME",
+      "pearson_correlation": 0.951,
+      "expected_spread": 0.0259,
+      "current_spread": -0.0267,
+      "spread_deviation": 2.08,
+      "arbitrage_confidence": 0.97,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "BTCW-26-JUN-100K",
+      "market_b": "ETHW-26-DEC-5K",
+      "pearson_correlation": 0.9377,
+      "expected_spread": -0.111,
+      "current_spread": 0.0549,
+      "spread_deviation": 2.35,
+      "arbitrage_confidence": 0.96,
+      "direction": "sell_A_buy_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "BTC-DOM-60",
+      "market_b": "ETH-BTC-RATIO",
+      "pearson_correlation": 0.9321,
+      "expected_spread": -0.02,
+      "current_spread": -0.1538,
+      "spread_deviation": 2.97,
+      "arbitrage_confidence": 0.96,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "BTCW-26-JUN-100K",
+      "market_b": "BTC-DOM-60",
+      "pearson_correlation": 0.9064,
+      "expected_spread": -0.0515,
+      "current_spread": 0.0462,
+      "spread_deviation": 2.59,
+      "arbitrage_confidence": 0.94,
+      "direction": "sell_A_buy_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "economics_cluster",
+      "market_a": "FED-RATE-DEC",
+      "market_b": "CPI-OVER-4",
+      "pearson_correlation": 0.9198,
+      "expected_spread": 0.0197,
+      "current_spread": -0.08,
+      "spread_deviation": 1.88,
+      "arbitrage_confidence": 0.93,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": false
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "ETHW-26-DEC-5K",
+      "market_b": "ETH-BTC-RATIO",
+      "pearson_correlation": 0.8276,
+      "expected_spread": 0.0395,
+      "current_spread": -0.1626,
+      "spread_deviation": 2.37,
+      "arbitrage_confidence": 0.9,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "sports_cluster",
+      "market_a": "SUPER-BOWL-LVIII",
+      "market_b": "NBA-CHAMP-2024",
+      "pearson_correlation": 0.7573,
+      "expected_spread": -0.0259,
+      "current_spread": 0.16,
+      "spread_deviation": 4.37,
+      "arbitrage_confidence": 0.85,
+      "direction": "sell_A_buy_B",
+      "is_arbitrage_opportunity": true
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "ETHW-26-DEC-5K",
+      "market_b": "BTC-DOM-60",
+      "pearson_correlation": 0.9401,
+      "expected_spread": 0.0595,
+      "current_spread": -0.0088,
+      "spread_deviation": 1.05,
+      "arbitrage_confidence": 0.77,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": false
+    },
+    {
+      "cluster": "crypto_cluster",
+      "market_a": "BTCW-26-JUN-100K",
+      "market_b": "ETH-BTC-RATIO",
+      "pearson_correlation": 0.8274,
+      "expected_spread": -0.0715,
+      "current_spread": -0.1077,
+      "spread_deviation": 0.51,
+      "arbitrage_confidence": 0.6,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "win-probability-scorer-tests",
+  "version": "1.0.0",
+  "description": "Unit tests for win probability scorer",
+  "scripts": {
+    "test": "node scorer.test.js",
+    "test:verbose": "node scorer.test.js --verbose"
+  }
+}

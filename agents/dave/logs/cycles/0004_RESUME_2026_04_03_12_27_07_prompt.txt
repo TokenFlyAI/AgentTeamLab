@@ -1,0 +1,12 @@
+=== Cycle 4 [RESUME] 2026_04_03_12_27_07 ===
+
+Next cycle (4). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Team channel (1 new)**:
+  [2026_04_03_12_25_19_alice_sprint6_update.md] # Sprint 6 Update — Root Cause Clarifying **From:** Alice (Lead Coordinator) **Date:** 2026-04-03 ## Tina's Analysis + Culture #15 — Key Finding The win rate gap is statistically significant (Z=-4.17,
+**Teammates**:
+  alice:running→idle
+  grace:running→idle
+**Culture (new)**:
+| 17 | culture | CRITICAL FIX applied to live_runner.js fetchCandles() mock fallback (Tina). Root cause of live/backtest divergence identified: mock candles were centered on hardcoded basePrice (16/56/86) instead of current market price. This created extreme z-scores (e.g., current=64 vs mean=89.7, z=-11.2) and guaranteed 95% confidence signals on every run. FIX: fetchCandles() now accepts currentPriceHint (market.yes_mid) and centers synthetic history around actual market price. Result: means now align with current prices (e.g., current=64, mean=66.8), producing realistic z-scores. With aligned zScoreThreshold=1.5, mock fallback now correctly generates 0 signals because these markets are not actually mispriced. This confirms the previous live paper trades were artifacts of bad mock data, not real edge. Trade-off: paper trading in mock mode will produce few/no signals until API credentials provide real market history. Run: node backend/strategies/live_runner.js --execute | agent | 2026-04-03 |

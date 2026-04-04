@@ -82,15 +82,15 @@ read_config() {
     if [ -f "$CONFIG_FILE" ]; then
         # Use jq if available, otherwise grep/sed
         if command -v jq >/dev/null 2>&1; then
-            MAX_AGENTS=$(jq -r '.max_agents // 3' "$CONFIG_FILE")
+            MAX_AGENTS=$(jq -r '.max_agents // 4' "$CONFIG_FILE")
             INTERVAL_SECONDS=$(jq -r '.interval_seconds // 30' "$CONFIG_FILE")
             MODE=$(jq -r '.mode // "smart"' "$CONFIG_FILE")
-            FORCE_ALICE=$(jq -r '.force_alice // true' "$CONFIG_FILE" | grep -qi "true" && echo 1 || echo 0)
+            FORCE_ALICE=$(jq -r 'if (.force_alice == true or .force_alice == 1) then 1 else 0 end' "$CONFIG_FILE")
             SELECTION_MODE=$(jq -r '.selection_mode // "deterministic"' "$CONFIG_FILE")
         else
             # Fallback: simple grep/sed parsing
             MAX_AGENTS=$(grep -o '"max_agents":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*' | head -1)
-            MAX_AGENTS="${MAX_AGENTS:-3}"
+            MAX_AGENTS="${MAX_AGENTS:-4}"
             INTERVAL_SECONDS=$(grep -o '"interval_seconds":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*' | head -1)
             INTERVAL_SECONDS="${INTERVAL_SECONDS:-30}"
             SELECTION_MODE=$(grep -o '"selection_mode":[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*"selection_mode":[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
@@ -108,9 +108,9 @@ read_config() {
 write_config() {
     local enabled="$1"
     local patch
-    patch=$(printf '{"max_agents":%s,"enabled":%s,"interval_seconds":%s,"last_updated":"%s","mode":"%s","force_alice":%s}' \
+    patch=$(printf '{"max_agents":%s,"enabled":%s,"interval_seconds":%s,"last_updated":"%s","mode":"%s","force_alice":%s,"selection_mode":"%s"}' \
         "${MAX_AGENTS}" "${enabled}" "${INTERVAL_SECONDS}" \
-        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${MODE}" "${FORCE_ALICE:-true}")
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${MODE}" "${FORCE_ALICE:-true}" "${SELECTION_MODE:-deterministic}")
 
     if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_FILE" ]; then
         # Merge: existing config wins for unknown keys; our patch wins for known keys
@@ -130,12 +130,24 @@ is_agent_running() {
     if [ -f "$hb" ]; then
         local hb_status
         hb_status=$(grep '^status:' "$hb" 2>/dev/null | head -1 | sed 's/^status:[[:space:]]*//')
-        [ "$hb_status" = "running" ] && return 0
+        if [ "$hb_status" = "running" ]; then
+            # Verify heartbeat is fresh (<5 min) — stale "running" means process died without cleanup
+            local hb_age
+            hb_age=$(( $(date +%s) - $(stat -f '%m' "$hb" 2>/dev/null || echo 0) ))
+            if [ "$hb_age" -lt 300 ]; then
+                return 0  # Fresh heartbeat — agent is genuinely running
+            fi
+            # Stale heartbeat (>5 min) — verify process is actually alive
+            # Note: \b not supported in macOS pgrep (POSIX ERE) — use explicit patterns
+            pgrep -f "run_agent.sh ${ag}$" > /dev/null 2>&1 && return 0
+            pgrep -f "run_agent.sh ${ag} " > /dev/null 2>&1 && return 0
+            return 1  # Stale heartbeat, no process — treat as not running
+        fi
     fi
     # Heartbeat says idle/stopped — confirm with pgrep (catches cases where process
     # is alive but hasn't written heartbeat yet, e.g. first few seconds of startup)
-    pgrep -f "run_agent.sh.*\b${ag}\b" > /dev/null 2>&1 || \
-    pgrep -f "run_subset.sh.*\b${ag}\b" > /dev/null 2>&1
+    pgrep -f "run_agent.sh ${ag}$" > /dev/null 2>&1 || \
+    pgrep -f "run_agent.sh ${ag} " > /dev/null 2>&1
 }
 
 # ── Helper: Get running agent count ───────────────────────────────────────────
@@ -164,20 +176,24 @@ build_selection_list() {
     OPEN_TASK_COUNT=0
     
     if [ -f "$TASK_BOARD" ]; then
-        while IFS='|' read -r _ id title assignee status _; do
+        # Task board columns: | ID | Title | Description | Priority | Group | Assignee | Status | ... |
+        while IFS='|' read -r _ id title _desc _priority _group assignee tb_status _; do
             id_clean=$(echo "$id" | tr -d ' ')
             echo "$id_clean" | grep -qE '^(-+|ID)$' && continue
             [ -z "$id_clean" ] && continue
-            
-            status_clean=$(echo "$status" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+
+            status_clean=$(echo "$tb_status" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
             [ "$status_clean" = "done" ] && continue
             [ "$status_clean" = "cancelled" ] && continue
             [ "$status_clean" = "closed" ] && continue
-            
+
             OPEN_TASK_COUNT=$((OPEN_TASK_COUNT + 1))
             assignee_clean=$(echo "$assignee" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-            if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "-" ]; then
-                echo "$ASSIGNED_AGENTS" | grep -qw "$assignee_clean" || ASSIGNED_AGENTS="$ASSIGNED_AGENTS $assignee_clean"
+            if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "undefined" ] && [ "$assignee_clean" != "-" ]; then
+                # Assignee may be comma-separated (e.g. "ivan,grace") — add each
+                for a in $(echo "$assignee_clean" | tr ',' ' '); do
+                    echo "$ASSIGNED_AGENTS" | grep -qw "$a" || ASSIGNED_AGENTS="$ASSIGNED_AGENTS $a"
+                done
             else
                 UNASSIGNED_COUNT=$((UNASSIGNED_COUNT + 1))
             fi
@@ -215,9 +231,13 @@ build_selection_list() {
         [ "$total" -lt "$MAX_AGENTS" ]
     }
     
-    # Priority 1: Alice
+    # Priority 1: Alice — always runs when FORCE_ALICE=1, even if at capacity
     if [ "$FORCE_ALICE" -eq 1 ] || [ "$OPEN_TASK_COUNT" -gt 0 ] || echo "$INBOX_AGENTS" | grep -qw "alice"; then
-        under_max && add_agent "alice"
+        if [ "$FORCE_ALICE" -eq 1 ]; then
+            add_agent "alice"  # bypasses under_max — alice slot is guaranteed
+        else
+            under_max && add_agent "alice"
+        fi
     fi
     
     # Priority 2: Task-assigned agents
@@ -278,8 +298,9 @@ daemon_loop() {
     # Update config to enabled
     write_config "true"
 
-    # Trap signals for graceful shutdown
-    trap 'write_config "false"; rm -f "$PID_FILE"; exit 0' SIGTERM
+    # Trap signals for graceful shutdown — only clean up PID file, don't write config
+    # (writing config on SIGTERM would overwrite user-updated values with stale runtime values)
+    trap 'rm -f "$PID_FILE"; exit 0' SIGTERM
     trap 'exit 0' SIGINT SIGHUP SIGQUIT
 
     local cycle=0
@@ -318,7 +339,12 @@ daemon_loop() {
                 for ag in $to_start; do
                     echo "[daemon] Launching $ag..."
                     # Launch agent in background, detached from daemon's process group
-                    setsid bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
+                    # setsid not available on macOS — use nohup + disown instead
+                    if command -v setsid >/dev/null 2>&1; then
+                        setsid bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
+                    else
+                        nohup bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
+                    fi
                     disown $! 2>/dev/null || true
                     sleep 1  # Small delay between launches
                 done
@@ -362,8 +388,6 @@ if [ $STOP_DAEMON -eq 1 ]; then
         PID=$(cat "$PID_FILE")
         if kill -0 "$PID" 2>/dev/null; then
             echo "Stopping Smart Run daemon (PID: $PID)..."
-            # Update config first so daemon knows to stop gracefully
-            write_config "false"
             kill "$PID" 2>/dev/null
             sleep 1
             if kill -0 "$PID" 2>/dev/null; then

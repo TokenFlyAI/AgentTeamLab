@@ -1,0 +1,123 @@
+{
+  "validation_date": "2026-04-01T23:14:35.479393",
+  "total_runs": 3,
+  "total_signals_generated": 22,
+  "average_signals_per_run": 7.333333333333333,
+  "status": "PASS",
+  "notes": "All 3 runs completed successfully. No errors. Pipeline working end-to-end.",
+  "runs": [
+    {
+      "run_number": 1,
+      "timestamp": "2026-04-02T06:12:34.570Z",
+      "signals_count": 5,
+      "markets_count": 5,
+      "source": "mock_fallback",
+      "strategies_breakdown": {
+        "mean_reversion": 2,
+        "crypto_edge": 3
+      },
+      "top_3_signals": [
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "BTCW-26-JUN30-100K",
+          "price": 64,
+          "confidence": 0.95,
+          "expected_edge": 21
+        },
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "ETHW-26-DEC31-5K",
+          "price": 30,
+          "confidence": 0.95,
+          "expected_edge": 55
+        },
+        {
+          "strategy": "crypto_edge",
+          "side": "no",
+          "ticker": "BTCW-26-JUN30-80K",
+          "price": 84,
+          "confidence": 0.5719,
+          "expected_edge": 57.19
+        }
+      ]
+    },
+    {
+      "run_number": 2,
+      "timestamp": "2026-04-02T06:12:44.253Z",
+      "signals_count": 9,
+      "markets_count": 5,
+      "source": "mock_fallback",
+      "strategies_breakdown": {
+        "mean_reversion": 2,
+        "momentum": 4,
+        "crypto_edge": 3
+      },
+      "top_3_signals": [
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "BTCW-26-JUN30-100K",
+          "price": 64,
+          "confidence": 0.95,
+          "expected_edge": 22
+        },
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "ETHW-26-DEC31-5K",
+          "price": 30,
+          "confidence": 0.95,
+          "expected_edge": 53
+        },
+        {
+          "strategy": "crypto_edge",
+          "side": "no",
+          "ticker": "BTCW-26-JUN30-80K",
+          "price": 84,
+          "confidence": 0.5719,
+          "expected_edge": 57.19
+        }
+      ]
+    },
+    {
+      "run_number": 3,
+      "timestamp": "2026-04-02T06:12:53.272Z",
+      "signals_count": 8,
+      "markets_count": 5,
+      "source": "mock_fallback",
+      "strategies_breakdown": {
+        "mean_reversion": 3,
+        "momentum": 2,
+        "crypto_edge": 3
+      },
+      "top_3_signals": [
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "BTCW-26-JUN30-100K",
+          "price": 64,
+          "confidence": 0.95,
+          "expected_edge": 20
+        },
+        {
+          "strategy": "mean_reversion",
+          "side": "yes",
+          "ticker": "ETHW-26-DEC31-5K",
+          "price": 30,
+          "confidence": 0.95,
+          "expected_edge": 57
+        },
+        {
+          "strategy": "crypto_edge",
+          "side": "no",
+          "ticker": "BTCW-26-JUN30-80K",
+          "price": 84,
+          "confidence": 0.5719,
+          "expected_edge": 57.19
+        }
+      ]
+    }
+  ]
+}

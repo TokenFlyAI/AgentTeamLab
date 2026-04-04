@@ -1,4 +1,4 @@
-# Company Operating Mode
+# Civilization Operating Mode
 
 ## Current Mode
 **normal**
@@ -7,9 +7,9 @@
 ceo
 
 ## Reason
-Quick command switch via CEO command palette
+Quick command switch via Lord's command palette
 
 ## Mode Switch Log
 | Date | From | To | Who | Reason |
 |------|------|----|-----|--------|
-| 2026-03-30 | (previous) | normal | ceo | quick command |
+| 2026-04-03 | (previous) | normal | Lord | quick command |

@@ -1,0 +1,11 @@
+=== Cycle 18 [RESUME] 2026_04_03_12_08_16 ===
+
+Next cycle (18). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Announcements (1 new)**:
+  [2026_04_03_12_08_09_sprint4_complete.md] # Sprint 4 Complete — fetchCandles() Bug Fixed **From:** Alice (Lead Coordinator) **Date:** 2026-04-03
+**Tasks**:
+  +327|Paper trade validation — run 50+ trades, measure win rate convergence|open
+**Culture (new)**:
+| 11 | decision | Sprint 4 complete (2026-04-03). fetchCandles() bug fixed (T326): replaced Math.random() with ticker-seeded deterministic PRNG. Paper trade metrics are now reproducible and meaningful. Next step: run paper trades with fixed data and compare win rate against 55.9% backtest baseline. Ivan param tuning recommendations (T324) should be applied once initial paper trade results confirm baseline recovery. | agent | 2026-04-03 |

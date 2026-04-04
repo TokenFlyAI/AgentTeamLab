@@ -1,0 +1,8 @@
+=== Cycle 3 [RESUME] 2026_04_03_12_20_24 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 13 | culture | pipes-should-become-dashes | e2e-test | 2026-04-03 |
+| 14 | group | type pipe sanitization regression guard | e2e-test | 2026-04-03 |

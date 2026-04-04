@@ -1,0 +1,122 @@
+{
+  "version": "1.0.0",
+  "description": "Trading Operations Alert Rules - Task #238",
+  "author": "Liam (SRE)",
+  
+  "health_checks": {
+    "strategy_api": {
+      "endpoint": "http://localhost:3200/api/health",
+      "interval_seconds": 30,
+      "timeout_ms": 5000,
+      "failure_threshold": 3
+    }
+  },
+
+  "alerts": [
+    {
+      "id": "ALT-101",
+      "name": "strategy_api_down",
+      "description": "Strategy API health check failing",
+      "severity": "P0-Critical",
+      "condition": "consecutive_health_failures >= 3",
+      "cooldown_seconds": 300,
+      "notification_channels": ["log", "webhook"],
+      "runbook": "Check if server.js is running. Restart if needed: node server.js --dir . --port 3200"
+    },
+    {
+      "id": "ALT-102",
+      "name": "trade_failure_spike",
+      "description": "Abnormal number of trade failures",
+      "severity": "P1-High",
+      "condition": "failed_trades_5m >= 5",
+      "cooldown_seconds": 60,
+      "notification_channels": ["log", "webhook"],
+      "runbook": "Check Kalshi API status. Review execution_engine logs for specific errors."
+    },
+    {
+      "id": "ALT-103",
+      "name": "daily_loss_limit",
+      "description": "Daily realized P&L exceeds loss limit",
+      "severity": "P1-High",
+      "condition": "daily_realized_pnl_cents < -50000",
+      "cooldown_seconds": 300,
+      "notification_channels": ["log", "webhook"],
+      "runbook": "Review open positions. Consider reducing position sizes or pausing strategies."
+    },
+    {
+      "id": "ALT-104",
+      "name": "max_drawdown",
+      "description": "Portfolio drawdown exceeds threshold",
+      "severity": "P1-High",
+      "condition": "max_drawdown_percent > 10%",
+      "cooldown_seconds": 300,
+      "notification_channels": ["log", "webhook"],
+      "runbook": "Evaluate strategy performance. Consider risk-off measures."
+    },
+    {
+      "id": "ALT-105",
+      "name": "pipeline_stale_econ",
+      "description": "Economic data pipeline not running",
+      "severity": "P2-Medium",
+      "condition": "econ_scanner_last_run > 1 hour ago",
+      "cooldown_seconds": 600,
+      "notification_channels": ["log"],
+      "runbook": "Check Grace's econ_edge_scanner.py. Verify cron/scheduler is active."
+    },
+    {
+      "id": "ALT-106",
+      "name": "pipeline_stale_crypto",
+      "description": "Crypto data pipeline not running",
+      "severity": "P2-Medium",
+      "condition": "crypto_scanner_last_run > 1 hour ago",
+      "cooldown_seconds": 600,
+      "notification_channels": ["log"],
+      "runbook": "Check Dave's crypto_edge_analysis.py. Verify cron/scheduler is active."
+    },
+    {
+      "id": "ALT-107",
+      "name": "low_sharpe_ratio",
+      "description": "Strategy Sharpe ratio below threshold",
+      "severity": "P2-Medium",
+      "condition": "sharpe_ratio < 0.5 AND total_trades > 20",
+      "cooldown_seconds": 3600,
+      "notification_channels": ["log"],
+      "runbook": "Review strategy performance. May indicate overtrading or poor signal quality."
+    },
+    {
+      "id": "ALT-108",
+      "name": "no_trades_24h",
+      "description": "No trades executed in last 24 hours",
+      "severity": "P2-Medium",
+      "condition": "last_trade_at < now - 24h",
+      "cooldown_seconds": 3600,
+      "notification_channels": ["log"],
+      "runbook": "Verify live_runner.js is scheduled. Check for market data issues."
+    }
+  ],
+
+  "thresholds": {
+    "max_daily_loss_cents": 50000,
+    "max_drawdown_percent": 0.10,
+    "min_sharpe_ratio": 0.5,
+    "max_failed_trades_per_5m": 5,
+    "max_pipeline_staleness_minutes": 60,
+    "min_trades_per_day": 1
+  },
+
+  "notification": {
+    "log_file": "../../../public/reports/trading_alerts.jsonl",
+    "metrics_file": "../../../public/reports/trading_metrics.json",
+    "webhook_url": "${TRADING_ALERT_WEBHOOK}",
+    "console_output": true
+  },
+
+  "strategies_monitored": [
+    "mean_reversion",
+    "momentum",
+    "crypto_edge",
+    "economic_momentum",
+    "longshot_fading",
+    "cross_platform_arbitrage"
+  ]
+}

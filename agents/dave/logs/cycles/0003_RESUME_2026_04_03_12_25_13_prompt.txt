@@ -1,0 +1,11 @@
+=== Cycle 3 [RESUME] 2026_04_03_12_25_13 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  alice:idle→running
+  grace:idle→running
+**Culture (new)**:
+| 15 | culture | Parameter sweep analysis (agents/bob/backend/scripts/parameter_sweep.js) reveals that deterministic mock data in fetchCandles() is too simplistic for meaningful parameter tuning. All zScore thresholds 0.8-3.0 produce identical signals on the same 8 fallback markets because mock candles have artificially low variance, creating extreme z-scores every time. Lookback changes do not materially affect signal quality. Conclusion: the deterministic PRNG fix made data reproducible, but the synthetic data model itself is not realistic enough to validate strategy parameters. We need either (a) real historical Kalshi data, or (b) a more sophisticated synthetic generator with regime shifts and realistic volatility, before paper trade metrics can be trusted for live go/no-go decisions. | agent | 2026-04-03 |
+| 16 | culture | Built synthetic market generator (agents/bob/backend/scripts/synthetic_market_generator.js) to replace simplistic deterministic fallback. Comparison shows legacy mock data always produced mean~85 with stddev~2.5, creating extreme z-scores (-7 to +11) and guaranteed 0.95 confidence signals. New generator uses Ornstein-Uhlenbeck with market-appropriate volatility: crypto stddev~6-8, econ stddev~2-4, creating realistic z-scores. However, SignalEngine minConfidence=0.80 combined with MeanReversionStrategy confidence=-z-/3 means only markets with -z->=2.4 generate signals. On realistic synthetic data, most markets fall below this threshold. This may explain low live signal counts. Consider lowering minConfidence to 0.65 or changing confidence formula to -z-/2.0 for better signal generation. Run: node backend/scripts/test_synthetic_vs_legacy.js | agent | 2026-04-03 |

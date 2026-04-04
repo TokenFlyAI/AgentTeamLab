@@ -1,0 +1,43 @@
+{
+  "_comment": "Risk Policy Configuration for Kalshi Trading",
+  "_author": "Heidi (Security Engineer)",
+  "_task": "#237",
+  "_version": "1.0.0",
+  
+  "dailyLossLimit": 50000,
+  "dailyLossLimitDollars": 500,
+  
+  "maxPositionSizePerStrategy": 1000,
+  "maxOpenPositionsPerStrategy": 10,
+  "maxExposurePerStrategy": 200000,
+  "maxExposurePerStrategyDollars": 2000,
+  
+  "maxTotalOpenPositions": 50,
+  "maxTotalExposure": 1000000,
+  "maxTotalExposureDollars": 10000,
+  
+  "circuitBreakerConsecutiveLosses": 5,
+  "circuitBreakerConsecutiveLossAmount": 25000,
+  "circuitBreakerConsecutiveLossAmountDollars": 250,
+  
+  "circuitBreakerMaxDrawdownPct": 0.10,
+  "circuitBreakerMaxDrawdownPctDisplay": "10%",
+  "circuitBreakerDrawdownAmount": 100000,
+  "circuitBreakerDrawdownAmountDollars": 1000,
+  
+  "autoResetHours": 24,
+  "resetOnNewDay": true,
+  
+  "environments": {
+    "paper": {
+      "dailyLossLimit": 50000,
+      "circuitBreakerConsecutiveLosses": 5,
+      "circuitBreakerMaxDrawdownPct": 0.10
+    },
+    "live": {
+      "dailyLossLimit": 50000,
+      "circuitBreakerConsecutiveLosses": 3,
+      "circuitBreakerMaxDrawdownPct": 0.05
+    }
+  }
+}

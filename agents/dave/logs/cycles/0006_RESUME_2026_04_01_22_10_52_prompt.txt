@@ -1,0 +1,14 @@
+=== Cycle 6 [RESUME] 2026_04_01_22_10_52 ===
+
+Next cycle (6). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (2 new)**:
+  [from_alice_task233.md] ---
+  [from_alice_nudge_task233.md] ---
+**Tasks**:
+  +233|Find edge in Kalshi crypto markets using real-time price data|open
+**Teammates**:
+  bob:running→idle
+  charlie:idle→running
+  ivan:running→idle

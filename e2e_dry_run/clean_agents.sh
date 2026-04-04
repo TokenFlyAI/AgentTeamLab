@@ -39,4 +39,12 @@ for agent in "${AGENTS[@]}"; do
   echo "[clean] $agent — done"
 done
 
+# Also wipe inboxes of ALL other agents (they may have received messages from E2E agents)
+ALL_AGENTS=(alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina)
+for agent in "${ALL_AGENTS[@]}"; do
+  DIR="$COMPANY_DIR/agents/$agent"
+  [ -d "$DIR" ] || continue
+  find "$DIR/chat_inbox" -maxdepth 1 -name "*.md" -delete 2>/dev/null || true
+done
+
 echo "[clean] All done."

@@ -1,114 +1,123 @@
 {
-  "timestamp": "2026-03-31T05:02:38.314Z",
-  "total_agents": 20,
-  "alive_count": 0,
-  "stale_count": 20,
-  "alive_pct": 0,
+  "timestamp": "2026-04-04T00:15:57.960Z",
+  "total_agents": 22,
+  "alive_count": 14,
+  "stale_count": 8,
+  "alive_pct": 63.6,
   "alive_threshold_ms": 300000,
   "agents": [
     {
-      "name": "alice",
+      "name": "agents",
       "alive": false,
-      "stale_sec": 27742
+      "stale_sec": null,
+      "error": "no_heartbeat_file"
+    },
+    {
+      "name": "alice",
+      "alive": true,
+      "stale_sec": 11
     },
     {
       "name": "bob",
-      "alive": false,
-      "stale_sec": 3857
+      "alive": true,
+      "stale_sec": 10
     },
     {
       "name": "charlie",
-      "alive": false,
-      "stale_sec": 27355
+      "alive": true,
+      "stale_sec": 10
     },
     {
       "name": "dave",
-      "alive": false,
-      "stale_sec": 76860
+      "alive": true,
+      "stale_sec": 9
     },
     {
       "name": "eve",
-      "alive": false,
-      "stale_sec": 27443
+      "alive": true,
+      "stale_sec": 7
     },
     {
       "name": "frank",
-      "alive": false,
-      "stale_sec": 27594
+      "alive": true,
+      "stale_sec": 7
     },
     {
       "name": "grace",
-      "alive": false,
-      "stale_sec": 27399
+      "alive": true,
+      "stale_sec": 6
     },
     {
       "name": "heidi",
       "alive": false,
-      "stale_sec": 27419
+      "stale_sec": 1013
     },
     {
       "name": "ivan",
-      "alive": false,
-      "stale_sec": 27959
+      "alive": true,
+      "stale_sec": 4
     },
     {
       "name": "judy",
-      "alive": false,
-      "stale_sec": 27635
+      "alive": true,
+      "stale_sec": 3
     },
     {
       "name": "karl",
       "alive": false,
-      "stale_sec": 27703
+      "stale_sec": 1013
     },
     {
       "name": "liam",
-      "alive": false,
-      "stale_sec": 45725
+      "alive": true,
+      "stale_sec": 0
     },
     {
       "name": "mia",
       "alive": false,
-      "stale_sec": 27358
+      "stale_sec": 1013
     },
     {
       "name": "nick",
-      "alive": false,
-      "stale_sec": 45941
+      "alive": true,
+      "stale_sec": 118
     },
     {
       "name": "olivia",
       "alive": false,
-      "stale_sec": 46578
+      "stale_sec": 1013
     },
     {
       "name": "pat",
       "alive": false,
-      "stale_sec": 27597
+      "stale_sec": 1013
+    },
+    {
+      "name": "public",
+      "alive": false,
+      "stale_sec": null,
+      "error": "no_heartbeat_file"
     },
     {
       "name": "quinn",
-      "alive": false,
-      "stale_sec": 27352
+      "alive": true,
+      "stale_sec": 115
     },
     {
       "name": "rosa",
-      "alive": false,
-      "stale_sec": 27427
+      "alive": true,
+      "stale_sec": 115
     },
     {
       "name": "sam",
       "alive": false,
-      "stale_sec": 27331
+      "stale_sec": 1013
     },
     {
       "name": "tina",
-      "alive": false,
-      "stale_sec": 27819
+      "alive": true,
+      "stale_sec": 112
     }
   ],
-  "alerts_active": [
-    "ALT-006",
-    "ALT-005"
-  ]
+  "alerts_active": []
 }

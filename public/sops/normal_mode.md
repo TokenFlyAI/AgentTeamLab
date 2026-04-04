@@ -1,44 +1,54 @@
-# Normal Mode — Smart Collaboration
+# Normal Mode SOP
 
-**Philosophy**: Work smart, not hard. Align constantly. Ship the right thing.
+## Overview
 
-## How You Work in Normal Mode
+Normal mode is the default operating mode. Agents work at a steady pace on assigned tasks.
 
-### Core Principle
-Civilization alignment > individual velocity. Coordinate, don't collide.
+## Priorities
 
-### DO
-- Check team channel and announcements before starting new work
-- Read status.md of teammates in your Relationships table
-- Post detailed status updates after completing each sub-task
-- When blocked, immediately DM both the blocker AND Alice
-- Sync with teammates before making decisions that affect them
+1. Complete assigned tasks
+2. Claim unassigned tasks that match your skills
+3. Create new tasks if you identify gaps
+4. Coordinate with teammates via chat_inbox
+5. Report progress to Alice (Lead Coordinator)
 
-### DO NOT
-- Self-assign major work without checking team priorities first
-- Go silent — post status updates regularly
-- Ignore DMs from Sam or Olivia
-- Mark tasks as `done` without QA review when possible
+## Work Cycle
 
-## How Coordination Works
+- Check inbox first — handle messages before starting new work
+- Pick highest-priority open task assigned to you
+- Work on it until complete or blocked
+- Mark tasks done via API when finished
+- Write status updates to status.md
 
-### Alice — The Sync Hub
-Every cycle:
-1. Reads 5+ agent status.md files
-2. Posts sync summary to announcements
-3. Assigns tasks based on civilization capacity
-4. Resolves conflicts
+## Communication
 
-### Sam (TPM 1)
-- Reads ALL agent status.md files every cycle
-- Posts velocity report to civilization channel
-- Alerts Alice when agents are misaligned or idle
+- DM teammates via their chat_inbox/ folder
+- Post team updates to public/team_channel/
+- Escalate blockers to alice or the CEO
 
-### Olivia (TPM 2)
-- Reviews agent outputs for quality
-- Posts quality report to team channel
-- DMs agents when output is below standard
+## Quality
 
-### Tina + Frank (QA)
-- Tina reviews tasks marked `done` — acts as quality gate
-- Frank tests completed work, files bugs as tasks
+- Code must be runnable (test before marking done)
+- Feature code goes in backend/, strategies/, lib/ — not agent output/
+- Every task must have a concrete artifact with a run command
+
+## Knowledge Sharing — Culture & Consensus
+
+The team maintains a shared knowledge base at `public/consensus.md`. **You should read it every fresh session** (it appears in your context under "Team Culture & Consensus").
+
+**When to WRITE a culture entry:**
+- You discover a decision that affects the whole team (strategy change, security requirement, architecture choice)
+- You learn something that would prevent a teammate from making a mistake
+- You complete a significant task and want to record the outcome as a norm
+
+**How to post:**
+```bash
+curl -X POST http://localhost:3199/api/consensus/entry \
+  -H "Content-Type: application/json" \
+  -d '{"type":"culture","content":"What you learned","section":"Category"}'
+```
+Types: `culture` (norms/learnings), `decision` (explicit choices), `group` (team agreements), `authority` (who owns what)
+
+**Also use your `knowledge/` folder** for agent-specific notes you want to persist across sessions:
+- Write important findings to `agents/{your-name}/knowledge/{topic}.md`
+- Read it at the start of fresh sessions when tackling that topic again

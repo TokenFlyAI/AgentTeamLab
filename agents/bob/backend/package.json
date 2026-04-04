@@ -1,0 +1,32 @@
+{
+  "name": "kalshi-trading-backend",
+  "version": "1.0.0",
+  "description": "Kalshi trading operation backend infrastructure",
+  "main": "kalshi_client.js",
+  "scripts": {
+    "api": "node api/server.js",
+    "fetch:markets": "node pipeline/fetch_markets.js",
+    "fetch:prices": "node pipeline/fetch_prices.js",
+    "sync:positions": "node pipeline/sync_positions.js",
+    "db:init": "psql -d kalshi_trading -f db/schema.sql && psql -d kalshi_trading -f db/schema_strategies.sql",
+    "strategies:run": "node strategies/cli.js run-all",
+    "strategies:pnl": "node strategies/cli.js update-pnl",
+    "strategies:snapshot": "node strategies/cli.js snapshot",
+    "strategies:list": "node strategies/cli.js list",
+    "strategies:live": "node strategies/live_runner.js",
+    "cli:markets": "node kalshi_data_fetcher.js markets",
+    "cli:categories": "node kalshi_data_fetcher.js categories",
+    "cli:stats": "node kalshi_data_fetcher.js stats",
+    "test": "node smoke_test.js && node tests/unit/screener/screener.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Bob (Backend Engineer)",
+  "license": "UNLICENSED"
+}

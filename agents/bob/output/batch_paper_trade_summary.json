@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-04-03T19:09:10.035Z",
+  "targetTrades": 50,
+  "actualTrades": 51,
+  "runsExecuted": 17,
+  "stats": {
+    "totalTrades": 51,
+    "openTrades": 51,
+    "closedTrades": 0,
+    "byStrategy": {
+      "mean_reversion": 51
+    }
+  },
+  "note": "Trades are OPEN status. P&L requires market settlement data."
+}

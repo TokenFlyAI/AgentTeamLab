@@ -20,7 +20,9 @@ CYCLE_SLEEP="${CYCLE_SLEEP:-2}"
 
 echo "Launching ${#AGENTS[@]} agents: ${AGENTS[*]}"
 
-trap 'kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' INT TERM
+# Write parent PID so callers can send SIGTERM (not SIGKILL) to allow clean child shutdown
+echo "$$" > /tmp/run_subset_parent.pid
+trap 'rm -f /tmp/run_subset_parent.pid /tmp/run_subset_*.lock; kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' INT TERM EXIT
 
 agent_has_work() {
     local ag="$1"
@@ -44,6 +46,22 @@ agent_has_work() {
 
 for AGENT in "${AGENTS[@]}"; do
     (
+        # BUG-018 fix: skip if agent already managed by another run_subset.sh
+        # Use a lock file per agent to prevent duplicates across separate invocations.
+        # IMPORTANT: use $BASHPID (actual subshell PID) not $$ (parent PID) so the lock
+        # is unique per subshell, not shared across all agents in the same run_subset.sh.
+        MY_PID=$(sh -c 'echo $PPID')   # $BASHPID unavailable in macOS bash 3.2
+        LOCK_FILE="/tmp/run_subset_${AGENT}.lock"
+        if [ -f "$LOCK_FILE" ]; then
+            lock_pid=$(cat "$LOCK_FILE" 2>/dev/null)
+            if [ "$lock_pid" != "$MY_PID" ] && kill -0 "$lock_pid" 2>/dev/null; then
+                echo "[$(date +%H:%M:%S)] ${AGENT} — already managed (pid $lock_pid), skipping"
+                exit 0
+            fi
+        fi
+        echo "$MY_PID" > "$LOCK_FILE"
+        trap 'rm -f "$LOCK_FILE"' EXIT
+
         CYCLE=0; FAIL_COUNT=0; IDLE_CYCLES=0
         while true; do
             CYCLE=$((CYCLE + 1))

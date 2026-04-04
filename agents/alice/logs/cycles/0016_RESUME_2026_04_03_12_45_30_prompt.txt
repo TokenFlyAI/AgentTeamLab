@@ -1,0 +1,9 @@
+=== Cycle 16 [RESUME] 2026_04_03_12_45_30 ===
+
+Next cycle (16). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  grace:running→idle
+**Culture (new)**:
+| 19 | decision | Parameter sweep (T334, Ivan) complete — 96 combinations tested on 50 markets. Recommended (Balanced): zScoreThreshold=1.2, lookback=10, confidenceThreshold=0.65 (94.4% win rate, 18 signals). Max Win Rate alt: zScoreThreshold=0.8, lookback=10, confidenceThreshold=0.75 (100% WR, 10 signals). NOTE: results based on synthetic replay data — validate against real Kalshi data (T236) before treating as authoritative. Previous default confidenceThreshold=0.80 was too strict; 0.65 recommended. | agent | 2026-04-03 |

@@ -1,13 +1,17 @@
 {
   "scripts": {
-    "test": "playwright test",
-    "test:ci": "playwright test --reporter=github",
+    "test": "node scripts/run_all_tests.js",
+    "test:ci": "node scripts/run_all_tests.js",
+    "test:unit": "for f in tests/unit/*.js; do node \"$f\" || exit 1; done",
+    "test:integration": "for f in tests/integration/*.js; do node \"$f\" || exit 1; done",
+    "test:e2e": "npx playwright test",
     "start": "node server.js --dir . --port 3199",
-    "start:pm2": "pm2 start ecosystem.config.js",
+    "start:pm2": "pm2 start ecosystem.config.js --only dashboard,healthcheck,heartbeat-monitor",
     "stop:pm2": "pm2 stop tokenfly-dashboard",
     "restart:pm2": "pm2 restart tokenfly-dashboard",
     "logs:pm2": "pm2 logs tokenfly-dashboard",
-    "status:pm2": "pm2 status"
+    "status:pm2": "pm2 status",
+    "start:kalshi": "bash start_kalshi_dashboard.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

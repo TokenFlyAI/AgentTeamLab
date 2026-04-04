@@ -98,7 +98,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "ecr:DescribeImageScanFindings",
     ]
     resources = [
-      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${var.project}-${var.environment}-*"
+      "arn:aws:ecr:${data.aws_region.current.name}:${var.aws_account_id}:repository/${var.project}-${var.environment}-*"
     ]
   }
 
@@ -121,7 +121,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "ecs:UpdateService",
     ]
     resources = [
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.project}-${var.environment}/*"
+      "arn:aws:ecs:${data.aws_region.current.name}:${var.aws_account_id}:service/${var.project}-${var.environment}/*"
     ]
   }
 
@@ -131,7 +131,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
     effect = "Allow"
     actions = ["iam:PassRole"]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.project}-${var.environment}-ecs-*"
+      "arn:aws:iam::${var.aws_account_id}:role/${var.project}-${var.environment}-ecs-*"
     ]
   }
 }

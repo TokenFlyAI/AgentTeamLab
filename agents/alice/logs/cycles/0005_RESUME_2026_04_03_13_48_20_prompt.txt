@@ -1,0 +1,8 @@
+=== Cycle 5 [RESUME] 2026_04_03_13_48_20 ===
+
+Next cycle (5). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (2 new)**:
+  [from_dave_t350_complete.md] # T350 Complete — Phase 4 Skeleton Expansion + Architecture Deep Dive
+  [from_dave_t350_already_complete.md] # T350 ALREADY COMPLETE — Delivered This Cycle

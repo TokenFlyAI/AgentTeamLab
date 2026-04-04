@@ -1,0 +1,61 @@
+{
+  "release_date": "2026-05-01",
+  "status": "success",
+  "generated_at": "2026-04-02T04:54:32.905791Z",
+  "n_recommendations": 1,
+  "dave_signals": [
+    {
+      "marketId": "KXNF-20260501-T150000",
+      "direction": "buy_yes",
+      "confidence": 0.7549,
+      "edge": 8.49,
+      "price": 67.0,
+      "strategy": "nfp_nowcast_v1",
+      "timestamp": "2026-04-02T04:54:32.905779Z",
+      "metadata": {
+        "release_date": "2026-05-01",
+        "threshold": 150000,
+        "kalshi_ticker": "KXNF-20260501-T150000",
+        "model_confidence": "MEDIUM"
+      }
+    }
+  ],
+  "bob_signals": [
+    {
+      "strategy": "nfp_nowcast_v1",
+      "marketId": "KXNF-20260501-T150000",
+      "ticker": "KXNF-20260501-T150000",
+      "side": "yes",
+      "signalType": "entry",
+      "confidence": 0.7549,
+      "targetPrice": 67.0,
+      "currentPrice": 67.0,
+      "expectedEdge": 8.49,
+      "recommendedContracts": 84,
+      "riskAmount": 5628,
+      "reason": "NFP nowcast: 75.5% prob vs 67.0% market price for threshold 150000"
+    }
+  ],
+  "kalshi_output": {
+    "release_date": "2026-05-01",
+    "generated_at": "2026-04-01T21:54:32.905751",
+    "n_recommendations": 1,
+    "recommendations": [
+      {
+        "market_ticker": "KXNF-20260501-T150000",
+        "threshold": 150000,
+        "signal": "BUY",
+        "model_probability": 0.7549,
+        "edge": 0.0849,
+        "recommended_position": "YES",
+        "confidence": "MEDIUM"
+      }
+    ]
+  },
+  "market_prices": {
+    "100000": 0.99,
+    "150000": 0.67,
+    "200000": 0.09,
+    "250000": 0.07
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "runAt": "2026-04-02T06:09:29.804Z",
+  "hasCredentials": false,
+  "credentialError": null,
+  "liveMarketCount": 0,
+  "liveMarket": null,
+  "liveOrder": null,
+  "simulated": {
+    "validation": true,
+    "order": {
+      "order_id": "demo-4481df98-9a93-473e-849a-c471304a0896",
+      "ticker": "INXW-25-DEC31",
+      "side": "yes",
+      "count": 10,
+      "price": 86,
+      "client_order_id": "paper-44122c9e-27f9-491d-b40c-2f92a6f508b8",
+      "status": "filled",
+      "filled_count": 10,
+      "avg_fill_price": 86,
+      "created_at": "2026-04-02T06:09:29.803Z",
+      "updated_at": "2026-04-02T06:09:29.804Z"
+    },
+    "fillPrice": 86,
+    "fillContracts": 10,
+    "maxGain": 140,
+    "maxLoss": 860
+  }
+}

@@ -1,0 +1,12 @@
+=== Cycle 3 [RESUME] 2026_04_01_21_39_28 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +223|Publish weekly velocity report: tasks done, in-progress, blocked|open
+**Teammates**:
+  alice:running→idle
+  bob:running→idle
+  charlie:running→idle
+  tina:running→idle

@@ -1,0 +1,11 @@
+=== Cycle 11 [RESUME] 2026_04_01_22_00_59 ===
+
+Next cycle (11). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [from_dave_task224_integration.md] # Task 224: NFP Strategy Added to Your Framework
+**Teammates**:
+  grace:running→idle
+  ivan:running→idle
+  mia:running→idle

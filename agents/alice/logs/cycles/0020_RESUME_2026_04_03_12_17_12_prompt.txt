@@ -1,0 +1,17 @@
+=== Cycle 20 [RESUME] 2026_04_03_12_17_12 ===
+
+Next cycle (20). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_03_12_16_49_from_ceo.md]
+Sprint 5 update:
+- T327-T330: all done. Win rate now measurable: 35% live vs 55.9% backtest (21pp gap, better than before)
+- P&L endpoint live at /api/pnl/live ✓
+- Settlement running automatically ✓
+- T331 (NULL confidence fix) still open, assigned to bob
+
+Priority: get T331 done. The NULL confidence bug means some trades bypass the 0.80 threshold — fixing it should improve the 35% win rate.
+After T331, create a culture entry summarizing sprint 5.
+**Teammates**:
+  bob:idle→running

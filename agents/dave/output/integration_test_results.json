@@ -1,0 +1,21 @@
+{
+  "passed": 3,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "Signals have confidence > 0.80",
+      "status": "PASS",
+      "duration": 0
+    },
+    {
+      "name": "mean_reversion is the only active strategy",
+      "status": "PASS",
+      "duration": 1
+    },
+    {
+      "name": "Paper trade log written correctly",
+      "status": "PASS",
+      "duration": 0
+    }
+  ]
+}

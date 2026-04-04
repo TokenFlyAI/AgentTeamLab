@@ -1,0 +1,33 @@
+{
+  "family": "tokenfly-scheduler",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "128",
+  "memory": "256",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/tokenfly-ecs-task-execution",
+  "containerDefinitions": [
+    {
+      "name": "scheduler",
+      "image": "tokenfly/scheduler:latest",
+      "essential": true,
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PAPER_TRADING", "value": "true" }
+      ],
+      "secrets": [
+        { "name": "KALSHI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:KALSHI_API_KEY::" },
+        { "name": "API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:API_KEY::" },
+        { "name": "DASHBOARD_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:DASHBOARD_API_KEY::" },
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:tokenfly/trading:JWT_SECRET::" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/tokenfly/trading/scheduler",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "scheduler"
+        }
+      }
+    }
+  ]
+}
