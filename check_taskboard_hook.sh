@@ -24,16 +24,27 @@ MY_TASKS=$(echo "$ACTIVE" | grep -i "| *${AGENT_NAME} *|" | tail -10)
 # Match rows where assignee column (col 5) is empty, a dash variant, or "unassigned"
 UNASSIGNED=$(echo "$ACTIVE" | grep -E "\| *(—|-+|unassigned) *\|" | tail -10)
 
+# Truncate long rows to avoid description column blowing up token count
+truncate_rows() {
+    while IFS= read -r line; do
+        if [ ${#line} -gt 300 ]; then
+            printf '%s…\n' "${line:0:300}"
+        else
+            printf '%s\n' "$line"
+        fi
+    done
+}
+
 # Build the output we'd emit
 OUTPUT=""
 if [ -n "$MY_P0" ]; then
-    OUTPUT="${OUTPUT}=== P0/CRITICAL TASKS ASSIGNED TO YOU — DROP EVERYTHING ===\n${MY_P0}\n\n"
+    OUTPUT="${OUTPUT}=== P0/CRITICAL TASKS ASSIGNED TO YOU — DROP EVERYTHING ===\n$(echo "$MY_P0" | truncate_rows)\n\n"
 fi
 if [ -n "$MY_TASKS" ]; then
-    OUTPUT="${OUTPUT}=== YOUR LATEST ASSIGNED TASKS (focus on these) ===\n${MY_TASKS}\n\n"
+    OUTPUT="${OUTPUT}=== YOUR LATEST ASSIGNED TASKS (focus on these) ===\n$(echo "$MY_TASKS" | truncate_rows)\n\n"
 fi
 if [ -z "$MY_TASKS" ] && [ -n "$UNASSIGNED" ]; then
-    OUTPUT="${OUTPUT}=== LATEST UNASSIGNED TASKS (claim one) ===\n${UNASSIGNED}\n\n"
+    OUTPUT="${OUTPUT}=== LATEST UNASSIGNED TASKS (claim one) ===\n$(echo "$UNASSIGNED" | truncate_rows)\n\n"
 fi
 
 [ -z "$OUTPUT" ] && exit 0

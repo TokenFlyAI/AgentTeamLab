@@ -72,7 +72,7 @@ When you work, write to status.md:
 **Send a DM to a teammate:**
 ```bash
 TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
-cat > ../../agents/BOB/chat_inbox/${TIMESTAMP}_from_alice.md << 'EOF'
+cat > ../../agents/bob/chat_inbox/${TIMESTAMP}_from_alice.md << 'EOF'
 # Message from Alice
 [your message here]
 EOF

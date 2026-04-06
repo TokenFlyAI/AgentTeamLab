@@ -621,7 +621,8 @@ extract_session_id() {
                 | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true
             ;;
         codex)
-            jq -r '(.session_id // .conversation_id // .thread_id // .session.id // "")' "$raw_log" 2>/dev/null \
+            # Handle both JSONL and JSON array output from codex
+            jq -r 'if type == "array" then .[] else . end | (.session_id // .conversation_id // .thread_id // .session.id // "")' "$raw_log" 2>/dev/null \
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
