@@ -2159,7 +2159,8 @@ async function handleRequest(req, res) {
         total_unread: inboxFiles.length,
         urgent: urgentMessages,
         messages: inboxPreviews,
-        more: Math.max(0, regularFiles.length - 15),
+        // more = total shown is urgent(2) + regular(15); anything beyond that is hidden
+        more: Math.max(0, (urgentFiles.length - 2) + (regularFiles.length - 15)),
       },
       tasks,
       team_channel: teamChannel,

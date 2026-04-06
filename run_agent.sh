@@ -396,8 +396,10 @@ inbox = d.get("inbox", {})
 total = inbox.get("total_unread", 0)
 msgs = inbox.get("messages", [])
 more = inbox.get("more", 0)
+shown = len(urgent) + len(msgs)
 if total > 0:
-    out.append("**Unread inbox**: {} messages{}".format(total, " (showing {})".format(len(msgs)) if more > 0 else ""))
+    suffix = " (showing {}, {} more unread)".format(shown, more) if more > 0 else ""
+    out.append("**Unread inbox**: {}{}".format(total, suffix))
     for m in msgs:
         out.append("  [{}] {}".format(m["filename"], m["preview"]))
 else:
