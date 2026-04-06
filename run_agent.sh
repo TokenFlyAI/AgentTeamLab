@@ -190,7 +190,7 @@ PERSONA_FILE="${AGENT_DIR}/persona.md"
 MEMORY_FILE="${AGENT_DIR}/memory.md"
 
 # Count urgent (CEO/lord) messages in inbox — always surfaced in resume prompt
-CEO_COUNT=$(find "${AGENT_DIR}/chat_inbox" -maxdepth 1 -name "*from_ceo*" -o -name "*from_lord*" 2>/dev/null \
+CEO_COUNT=$(find "${AGENT_DIR}/chat_inbox" -maxdepth 1 \( -name "*from_ceo*" -o -name "*from_lord*" \) 2>/dev/null \
     | grep -v '/processed' | wc -l | tr -d ' ')
 CEO_COUNT="${CEO_COUNT:-0}"
 

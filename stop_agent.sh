@@ -15,11 +15,11 @@ sleep 0.3
 pkill -TERM -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
 sleep 0.3
 
-# 3. Force-kill executor subprocess for this agent
-pkill -9 -f "claude.*agents/${AGENT_NAME}" 2>/dev/null || true
-pkill -9 -f "kimi.*agents/${AGENT_NAME}"   2>/dev/null || true
-pkill -9 -f "codex.*agents/${AGENT_NAME}"  2>/dev/null || true
-pkill -9 -f "gemini.*agents/${AGENT_NAME}" 2>/dev/null || true
+# 3. Force-kill executor subprocess for this agent (match both flat and planet paths)
+for _exec in claude kimi codex gemini; do
+    pkill -9 -f "${_exec}.*planets.*/${AGENT_NAME}" 2>/dev/null || true
+    pkill -9 -f "${_exec}.*agents/${AGENT_NAME}"    2>/dev/null || true
+done
 pkill -9 -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
 
 # 4. Clean session locks
