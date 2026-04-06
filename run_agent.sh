@@ -107,8 +107,13 @@ elif [ -n "$SAVED_SESSION_ID" ] && [ "$SAVED_CYCLE" -lt "$SESSION_MAX_CYCLES" ];
                 RESUME_FLAG="--resume $SAVED_SESSION_ID"
                 ;;
             gemini)
-                # Gemini resumes by index or "latest" — use latest since sessions are per-workdir
-                RESUME_FLAG="--resume latest"
+                # Use UUID if we have a real session ID, otherwise fall back to latest.
+                # UUIDs look like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (contains hyphens).
+                if echo "$SAVED_SESSION_ID" | grep -qE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
+                    RESUME_FLAG="--resume $SAVED_SESSION_ID"
+                else
+                    RESUME_FLAG="--resume latest"
+                fi
                 ;;
             codex)
                 RESUME_FLAG="$SAVED_SESSION_ID"
@@ -620,7 +625,18 @@ extract_session_id() {
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
-            # Gemini sessions are resumed by "latest" not UUID — use presence of turn output as marker
+            # Gemini stores sessions in ~/.gemini/tmp/{project}/chats/session-{ts}-{uuid}.json
+            # Find the newest session file written during/after this run and extract its UUID.
+            # This ensures each agent resumes its OWN session, not another agent's.
+            _GEMINI_PROJ=$(ls -t ~/.gemini/tmp/ 2>/dev/null | head -1)
+            if [ -n "$_GEMINI_PROJ" ]; then
+                _NEWEST=$(ls -t ~/.gemini/tmp/"$_GEMINI_PROJ"/chats/session-*.json 2>/dev/null | head -1)
+                if [ -n "$_NEWEST" ]; then
+                    _GEMINI_UUID=$(python3 -c "import json; d=json.load(open('$_NEWEST')); print(d.get('sessionId',''))" 2>/dev/null)
+                    if [ -n "$_GEMINI_UUID" ]; then echo "$_GEMINI_UUID"; return; fi
+                fi
+            fi
+            # Fallback: if session file not found but output exists, save marker
             if grep -q '"type":"message"' "$raw_log" 2>/dev/null || grep -q '"role":"assistant"' "$raw_log" 2>/dev/null; then
                 echo "gemini"
             fi
