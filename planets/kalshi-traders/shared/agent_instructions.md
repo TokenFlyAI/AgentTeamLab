@@ -225,6 +225,9 @@ source ../../scripts/agent_tools.sh
 | `my_tasks` | Show your assigned open/in-progress tasks |
 | `task_claim 542` | Atomically claim a task |
 | `task_done 542 "Delivered pipeline.js"` | Mark task done with result note |
+| `task_inreview 542 "Ready for review"` | Mark task in_review (request approval) |
+| `task_review 542 approve "Verified"` | Approve a task (reviewers: olivia, tina, alice) |
+| `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
 | `task_list` | List all open/in-progress tasks |
 | `dm bob "Data is ready"` | Send DM to another agent |
@@ -233,7 +236,7 @@ source ../../scripts/agent_tools.sh
 | `read_peer ivan` | Read another agent's status.md |
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
-| `pipeline_status` | Check D004 phase file status |
+| `pipeline_status` | Check D004 phase file status (per-agent output paths) |
 | `log_progress "Fixed bug X"` | Append timestamped note to your status.md |
 
 **Use these instead of raw curl commands.** They handle formatting, error checking, and agent detection automatically.

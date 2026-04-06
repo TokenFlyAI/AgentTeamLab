@@ -89,6 +89,40 @@ except: print('Error parsing response')
 " 2>/dev/null
 }
 
+task_review() {
+  local id="$1" verdict="$2" comment="$3"
+  [ -z "$id" ] || [ -z "$verdict" ] && echo "Usage: task_review <task-id> <approve|reject> [\"comment\"]" && return 1
+  local reviewer="${_SELF:-unknown}"
+  local body="{\"verdict\":\"${verdict}\",\"reviewer\":\"${reviewer}\",\"comment\":\"${comment:-Reviewed}\"}"
+  curl -s -X POST "${_API}/api/tasks/${id}/review" \
+    -H "Content-Type: application/json" \
+    -d "$body" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} ${verdict}d by ${reviewer}')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+task_inreview() {
+  local id="$1" note="$2"
+  [ -z "$id" ] && echo "Usage: task_inreview <task-id> [\"note\"]" && return 1
+  local body="{\"status\":\"in_review\"}"
+  [ -n "$note" ] && body="{\"status\":\"in_review\",\"notes\":\"${note}\"}"
+  curl -s -X PATCH "${_API}/api/tasks/${id}" \
+    -H "Content-Type: application/json" \
+    -d "$body" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} marked IN_REVIEW')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
 task_list() {
   local assignee="$1"
   curl -s "${_API}/api/tasks" 2>/dev/null | python3 -c "
@@ -169,20 +203,30 @@ read_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status ==="
+  echo "=== D004 Pipeline Status (Sprint 4) ==="
   echo ""
-  echo "Phase 1 (Market Filter):"
-  [ -f "${_SHARED}/markets_filtered.json" ] && echo "  markets_filtered.json exists ($(wc -c < "${_SHARED}/markets_filtered.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  _check_file() {
+    local label="$1" path="$2"
+    if [ -f "$path" ]; then
+      echo "  ✓ $label ($(wc -c < "$path" | tr -d ' ') bytes): $path"
+    else
+      echo "  ✗ $label MISSING: $path"
+    fi
+  }
+  echo "Phase 1 (Market Filter — bob → mock data):"
+  _check_file "mock_kalshi_markets.json" "${_AGENTS}/bob/output/mock_kalshi_markets.json"
   echo ""
-  echo "Phase 2 (Clustering):"
-  [ -f "${_SHARED}/market_clusters.json" ] && echo "  market_clusters.json exists ($(wc -c < "${_SHARED}/market_clusters.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  echo "Phase 1b (Market Filter — grace filters):"
+  _check_file "filtered_markets.json" "${_AGENTS}/grace/output/filtered_markets.json"
   echo ""
-  echo "Phase 3 (Correlation):"
-  [ -f "${_SHARED}/correlation_pairs.json" ] && echo "  correlation_pairs.json exists ($(wc -c < "${_SHARED}/correlation_pairs.json" | tr -d ' ') bytes)" || echo "  MISSING"
+  echo "Phase 2 (Clustering — ivan):"
+  _check_file "market_clusters.json" "${_AGENTS}/ivan/output/market_clusters.json"
   echo ""
-  echo "Phase 4 (C++ Engine):"
-  local engine_files=$(find "${_AGENTS}/../output" -name "*.cpp" 2>/dev/null | wc -l | tr -d ' ')
-  echo "  C++ files: ${engine_files}"
+  echo "Phase 3 (Correlation — bob):"
+  _check_file "correlation_pairs.json" "${_AGENTS}/bob/output/correlation_pairs.json"
+  echo ""
+  echo "Phase 4 (Simulation — dave):"
+  _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
 }
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -198,4 +242,4 @@ log_progress() {
   echo "Progress logged to status.md"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_progress, task_list, my_tasks, dm, broadcast, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, post, dm, broadcast, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
