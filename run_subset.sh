@@ -28,8 +28,10 @@ trap 'rm -f /tmp/run_subset_parent.pid /tmp/run_subset_*.lock; kill $(jobs -p) 2
 agent_has_work() {
     local ag="$1"
     local inbox_dir="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${ag}/chat_inbox"
-    # Check inbox — only count UNREAD messages (not read_ prefixed files)
-    if [ -d "$inbox_dir" ] && ls "$inbox_dir"/*.md 2>/dev/null | grep -qv '/read_'; then
+    # Check inbox — only count UNREAD messages (not read_ or processed_ prefixed files)
+    local _unread
+    _unread=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | grep -v '/processed_' | wc -l | tr -d ' ')
+    if [ "${_unread:-0}" -gt 0 ]; then
         return 0
     fi
     # Check task board for assigned open/in_progress tasks

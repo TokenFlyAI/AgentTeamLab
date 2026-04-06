@@ -206,7 +206,7 @@ build_selection_list() {
     for ag in $ALL_AGENTS; do
         inbox_dir="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${ag}/chat_inbox"
         if [ -d "$inbox_dir" ]; then
-            count=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | wc -l | tr -d ' ')
+            count=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | grep -v '/processed_' | wc -l | tr -d ' ')
             [ "${count:-0}" -gt 0 ] && INBOX_AGENTS="$INBOX_AGENTS $ag"
         fi
     done
