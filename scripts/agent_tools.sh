@@ -118,7 +118,7 @@ dm() {
   local ts=$(date +%Y_%m_%d_%H_%M_%S)
   local inbox="${_AGENTS}/${to}/chat_inbox"
   [ ! -d "$inbox" ] && echo "Agent '${to}' not found" && return 1
-  echo "$msg" > "${inbox}/${ts}_from_${from}.md"
+  printf "# Message from %s\n\n%s\n" "$from" "$msg" > "${inbox}/${ts}_from_${from}.md"
   echo "DM sent to ${to}"
 }
 
@@ -132,9 +132,21 @@ broadcast() {
     local agent=$(basename "$agent_dir")
     [ "$agent" = "$from" ] && continue
     local inbox="${agent_dir}chat_inbox"
-    [ -d "$inbox" ] && echo "$msg" > "${inbox}/${ts}_from_${from}.md" && count=$((count+1))
+    [ -d "$inbox" ] && printf "# Broadcast from %s\n\n%s\n" "$from" "$msg" > "${inbox}/${ts}_from_${from}.md" && count=$((count+1))
   done
   echo "Broadcast sent to ${count} agents"
+}
+
+post() {
+  # post "Milestone: Phase 1 complete — 47 markets filtered"
+  local msg="$1"
+  [ -z "$msg" ] && echo "Usage: post \"message\"" && return 1
+  local from="${_SELF:-system}"
+  local ts=$(date +%Y_%m_%d_%H_%M_%S)
+  local channel="${_SHARED}/team_channel"
+  mkdir -p "$channel"
+  printf "# Update from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "${channel}/${ts}_from_${from}.md"
+  echo "Posted to team channel"
 }
 
 # ── Information ──────────────────────────────────────────────────────────────

@@ -199,8 +199,10 @@ cp -r output/backend/* ../../output/shared/codebase/backend/ 2>/dev/null
 Load the agent toolkit at the start of each cycle for easier operations:
 
 ```bash
-source "$(git rev-parse --show-toplevel)/scripts/agent_tools.sh"
+source ../../scripts/agent_tools.sh
 ```
+
+(Agents run from their own directory, so `../../` reaches the platform root where `scripts/` lives. This works with codex `--skip-git-repo-check`.)
 
 ### Available Commands:
 
@@ -212,6 +214,7 @@ source "$(git rev-parse --show-toplevel)/scripts/agent_tools.sh"
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
 | `task_list` | List all open/in-progress tasks |
 | `dm bob "Data is ready"` | Send DM to another agent |
+| `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |
 | `broadcast "Sprint complete"` | Message all agents |
 | `read_peer ivan` | Read another agent's status.md |
 | `read_knowledge` | Read shared knowledge base |
