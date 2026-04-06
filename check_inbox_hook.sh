@@ -20,11 +20,17 @@ shopt -u nullglob
 
 [ ${#UNREAD_FILES[@]} -eq 0 ] && exit 0
 
-# Build output
-OUTPUT="=== URGENT: UNREAD MESSAGES IN YOUR INBOX ===\n"
+# Build output — cap at 5 most recent messages to avoid token blowup
+MAX_MSGS=5
+TOTAL=${#UNREAD_FILES[@]}
+OUTPUT="=== URGENT: UNREAD MESSAGES IN YOUR INBOX (${TOTAL} total) ===\n"
+SHOWN=0
 for msg in "${UNREAD_FILES[@]}"; do
+    [ $SHOWN -ge $MAX_MSGS ] && break
     OUTPUT="${OUTPUT}--- Message: $(basename $msg) ---\n$(cat "$msg")\n"
+    SHOWN=$((SHOWN+1))
 done
+[ $TOTAL -gt $MAX_MSGS ] && OUTPUT="${OUTPUT}... and $((TOTAL - MAX_MSGS)) more — process these first, then re-check.\n"
 OUTPUT="${OUTPUT}REQUIRED: Move to chat_inbox/processed/ after handling\n"
 
 # Within-cycle dedup: skip if inbox content unchanged since last emission this cycle.
