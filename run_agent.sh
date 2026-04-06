@@ -22,6 +22,13 @@ AGENT_DIR="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${AGENT_NAME}"
 source "${COMPANY_DIR}/lib/executor_config.sh"
 source "${COMPANY_DIR}/lib/executors.sh"
 
+# Define early so cost-cap and other pre-heartbeat paths can call it
+_write_idle_heartbeat() {
+    echo "status: idle" > "${AGENT_DIR}/heartbeat.md"
+    echo "timestamp: $(date +%Y_%m_%d_%H_%M_%S)" >> "${AGENT_DIR}/heartbeat.md"
+    echo "task: Available for assignment" >> "${AGENT_DIR}/heartbeat.md"
+}
+
 # Validate
 [ -z "$AGENT_NAME" ] && echo "Usage: $0 <agent_name>" && exit 1
 [ ! -d "$AGENT_DIR" ] && echo "Error: Agent dir not found: $AGENT_DIR" && exit 1
@@ -532,11 +539,7 @@ echo "timestamp: $(date +%Y_%m_%d_%H_%M_%S)" >> "${AGENT_DIR}/heartbeat.md"
 echo "task: Processing work cycle" >> "${AGENT_DIR}/heartbeat.md"
 
 # Trap to ensure heartbeat is reset to idle even if script is killed (SIGTERM, SIGKILL, error)
-_write_idle_heartbeat() {
-    echo "status: idle" > "${AGENT_DIR}/heartbeat.md"
-    echo "timestamp: $(date +%Y_%m_%d_%H_%M_%S)" >> "${AGENT_DIR}/heartbeat.md"
-    echo "task: Available for assignment" >> "${AGENT_DIR}/heartbeat.md"
-}
+# _write_idle_heartbeat is defined early (before cost-cap check) — just set the trap here
 trap '_write_idle_heartbeat' EXIT
 
 # ── Executor helpers ──────────────────────────────────────────────────────────

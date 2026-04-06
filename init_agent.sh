@@ -8,7 +8,7 @@ source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 NAME="$1"
 ROLE="$2"
 SPECIALTY="${3:-General Engineering}"
-EXECUTOR="${4:-claude}"
+EXECUTOR="${4:-codex}"
 
 # Source executor config helper
 source "${COMPANY_DIR}/lib/executor_config.sh"
@@ -16,8 +16,8 @@ source "${COMPANY_DIR}/lib/executors.sh"
 
 # Validate executor
 if ! executor_is_valid "$EXECUTOR"; then
-    echo "Warning: Invalid executor '$EXECUTOR', defaulting to 'claude'"
-    EXECUTOR="claude"
+    echo "Warning: Invalid executor '$EXECUTOR', defaulting to 'codex'"
+    EXECUTOR="codex"
 fi
 
 usage() {

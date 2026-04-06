@@ -1649,21 +1649,10 @@ async function handleRequest(req, res) {
   // ---- Smart Run Daemon Management (Portal Control) ----
   // GET /api/smart-run/config - Read current smart_run configuration
   if (method === "GET" && pathname === "/api/smart-run/config") {
-    const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
     const pidPath = path.join(DIR, ".smart_run_daemon.pid");
-    let config = { max_agents: 3, enabled: false, interval_seconds: 30, mode: "smart" };
+    const { configPath, config } = readSmartRunConfig();
     let daemonRunning = false;
     let daemonPid = null;
-    
-    // Read config file
-    try {
-      if (fs.existsSync(configPath)) {
-        const raw = fs.readFileSync(configPath, "utf8");
-        config = JSON.parse(raw);
-      }
-    } catch (e) {
-      console.error("[smart-run] Error reading config:", e.message);
-    }
     
     // Check daemon status
     try {
@@ -1684,6 +1673,7 @@ async function handleRequest(req, res) {
       // Ignore errors checking daemon status
     }
     
+    config.enabled_executors = normalizeEnabledExecutorsValue(config.enabled_executors);
     return json(res, {
       config,
       daemon: {
@@ -1695,19 +1685,9 @@ async function handleRequest(req, res) {
   
   // POST /api/smart-run/config - Update smart_run configuration
   if (method === "POST" && pathname === "/api/smart-run/config") {
-    const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
     const body = await parseBody(req);
-    
-    // Read existing config
-    let config = { max_agents: 3, enabled: false, interval_seconds: 30, mode: "smart", force_alice: true };
-    try {
-      if (fs.existsSync(configPath)) {
-        const raw = fs.readFileSync(configPath, "utf8");
-        config = JSON.parse(raw);
-      }
-    } catch (e) {
-      console.error("[smart-run] Error reading existing config:", e.message);
-    }
+    const { configPath, config } = readSmartRunConfig();
+    if (config.force_alice === undefined) config.force_alice = true;
     
     // Validate and update fields
     if (body.max_agents !== undefined) {
@@ -1763,6 +1743,14 @@ async function handleRequest(req, res) {
       } else {
         return badRequest(res, "selection_mode must be deterministic or random");
       }
+    }
+
+    if (body.enabled_executors !== undefined) {
+      const normalized = normalizeEnabledExecutorsValue(body.enabled_executors);
+      if (normalized.length === 0) {
+        return badRequest(res, `enabled_executors must include at least one of: ${getSupportedExecutors().join(", ")}`);
+      }
+      config.enabled_executors = normalized;
     }
 
     // Update timestamp
@@ -3435,8 +3423,28 @@ function normalizeEndpoint(method, pathname) {
 // ---------------------------------------------------------------------------
 // Executor Configuration / Health
 // ---------------------------------------------------------------------------
+function readSmartRunConfig() {
+  const configPath = path.join(PUBLIC_DIR, "smart_run_config.json");
+  let config = { max_agents: 3, enabled: false, interval_seconds: 30, mode: "smart", enabled_executors: ["codex", "gemini"] };
+  try {
+    if (fs.existsSync(configPath)) {
+      config = { ...config, ...JSON.parse(fs.readFileSync(configPath, "utf8")) };
+    }
+  } catch (e) {
+    console.error("[smart-run] Error reading config:", e.message);
+  }
+  return { configPath, config };
+}
+
+function normalizeEnabledExecutorsValue(raw) {
+  const source = Array.isArray(raw) ? raw.join(",") : raw;
+  return getEnabledExecutors(source);
+}
+
 function getEnabledExecutorList() {
-  return getEnabledExecutors(process.env.ENABLED_EXECUTORS);
+  const { config } = readSmartRunConfig();
+  const raw = process.env.ENABLED_EXECUTORS || config.enabled_executors;
+  return normalizeEnabledExecutorsValue(raw);
 }
 
 function getExecutorConfigPath() {
@@ -3467,7 +3475,7 @@ function getExecutorHealth(name) {
   if (meta.authEnvVars && meta.authEnvVars.some((key) => process.env[key])) {
     authenticated = "configured";
   }
-  const enabled = isEnabledExecutor(executor, process.env.ENABLED_EXECUTORS);
+  const enabled = isEnabledExecutor(executor, getEnabledExecutorList().join(","));
   const runnable = installed && enabled;
   const message = !enabled
     ? "Disabled by ENABLED_EXECUTORS"
@@ -3534,7 +3542,7 @@ function setExecutorForAgent(name, executor, { requireEnabled = false } = {}) {
   if (!isValidExecutor(normalized)) {
     return { ok: false, error: `Invalid executor: ${executor}. Must be: ${getSupportedExecutors().join(", ")}` };
   }
-  if (requireEnabled && !isEnabledExecutor(normalized, process.env.ENABLED_EXECUTORS)) {
+  if (requireEnabled && !getEnabledExecutorList().includes(normalized)) {
     return { ok: false, error: `Executor disabled: ${normalized}. Enabled: ${getEnabledExecutorList().join(", ")}` };
   }
   const agentDir = path.join(EMPLOYEES_DIR, name);

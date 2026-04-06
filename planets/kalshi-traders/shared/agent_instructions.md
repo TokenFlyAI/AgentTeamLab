@@ -1,18 +1,19 @@
 # Shared Agent Instructions — All Agents Must Follow
 
-Read this every cycle. Reference these when making decisions.
+**This file and `consensus.md` are pre-loaded into your context (static prefix + live snapshot). Do NOT re-read them with tool calls — it wastes tokens. Reference them from memory.**
 
-## 1. THREE SHARED RESOURCES (Read First Each Cycle)
+## 1. THREE SHARED RESOURCES
 
 ### A. public/knowledge.md (Technical Facts)
 - Contains technical algorithms, deliverables, status of each D004 phase
-- **When to read:** Before starting any task, especially D004-related work
+- **When to read:** Once per fresh session (not on resume — it's already in prior context).
 - **Example:** "Reading knowledge.md Phase 3 spec… Pearson correlation required, r>0.75 threshold, output correlation_pairs.json"
 - **Reference in status.md:** "Reading knowledge.md Phase 2 — LLM clustering algorithm, semantic relationships important"
 
 ### B. public/consensus.md (Culture & Decisions)
+- **Already injected into your context via live snapshot. Do NOT re-read.**
 - Contains behavioral norms (C1-C6) and strategic decisions (D1-D4)
-- **When to read:** Before each decision point
+- **When to reference:** Before each decision point — use what's already in context
 - **Example behaviors to cite:**
   - C3: "Following C3: citing culture in decision — prioritizing D004 over other work"
   - C4: "Following C4: read Grace's status.md — she completed T343 markets_filtered.json, ready for Ivan"
