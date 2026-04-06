@@ -46,7 +46,7 @@ test("parseEnabledExecutors filters invalid values and preserves valid ones", ()
 });
 
 test("parseEnabledExecutors falls back to the default enabled set when config is empty", () => {
-  assert.deepStrictEqual(parseEnabledExecutors(""), ["claude", "kimi", "codex", "gemini"]);
+  assert.deepStrictEqual(parseEnabledExecutors(""), ["claude", "kimi"]);
 });
 
 test("isValidExecutor recognizes codex and gemini", () => {

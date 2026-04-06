@@ -3,6 +3,7 @@
 
 _AICOMPANY_SUPPORTED_EXECUTORS=(claude kimi codex gemini)
 _AICOMPANY_DEFAULT_EXECUTOR="claude"
+_AICOMPANY_DEFAULT_ENABLED_EXECUTORS="claude,kimi"
 
 executor_all() {
     printf '%s\n' "${_AICOMPANY_SUPPORTED_EXECUTORS[@]}"
@@ -23,7 +24,7 @@ executor_is_valid() {
 }
 
 executor_enabled_csv() {
-    local configured="${ENABLED_EXECUTORS:-claude,kimi,codex,gemini}"
+    local configured="${ENABLED_EXECUTORS:-${_AICOMPANY_DEFAULT_ENABLED_EXECUTORS}}"
     local normalized=""
     local item
     IFS=',' read -r -a _items <<< "$configured"
