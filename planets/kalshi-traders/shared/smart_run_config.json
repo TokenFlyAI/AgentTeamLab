@@ -2,18 +2,18 @@
   "max_agents": 4,
   "enabled": true,
   "interval_seconds": 30,
-  "last_updated": "2026-04-04T07:02:18.372Z",
   "mode": "smart",
+  "enabled_executors": [
+    "codex",
+    "gemini"
+  ],
+  "last_updated": "2026-04-06T19:13:12.574Z",
   "force_alice": true,
   "dry_run": true,
   "dry_run_sleep": 120,
   "description": "Smart Run configuration - Controls how many agents run and selection strategy",
   "cycle_sleep_seconds": 100,
-  "selection_mode": "random",
+  "selection_mode": "deterministic",
   "daily_cost_cap_usd": 20,
-  "per_agent_cost_cap_usd": 5,
-  "enabled_executors": [
-    "codex",
-    "gemini"
-  ]
+  "per_agent_cost_cap_usd": 5
 }

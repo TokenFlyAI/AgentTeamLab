@@ -67,6 +67,38 @@ When you work, write to status.md:
 - Monitor teammates via heartbeats — if someone is stuck or idle with work available, intervene.
 - You have day-to-day authority. Founder (from_ceo) messages override everything.
 
+## DM and Collaboration Tools
+
+**Send a DM to a teammate:**
+```bash
+TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
+cat > ../../agents/BOB/chat_inbox/${TIMESTAMP}_from_alice.md << 'EOF'
+# Message from Alice
+[your message here]
+EOF
+```
+
+**Post to team channel:**
+```bash
+TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
+cat > ../../public/team_channel/${TIMESTAMP}_from_alice.md << 'EOF'
+# Team Update from Alice
+[your update here]
+EOF
+```
+
+**Read peer status:**
+```bash
+tail -30 ../../agents/bob/status.md
+```
+
+**Approve a task (as reviewer):**
+```bash
+curl -X POST http://localhost:3199/api/tasks/ID/review \
+  -H "Content-Type: application/json" \
+  -d '{"verdict":"approve","reviewer":"alice","comment":"Verified"}'
+```
+
 ## Culture & Knowledge — Your Coordination Duty
 
 ### Cite Culture in Every Decision

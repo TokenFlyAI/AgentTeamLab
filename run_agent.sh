@@ -103,8 +103,12 @@ elif [ -n "$SAVED_SESSION_ID" ] && [ "$SAVED_CYCLE" -lt "$SESSION_MAX_CYCLES" ];
                 # kimi tracks sessions per working directory — --continue resumes the last session
                 RESUME_FLAG="--continue"
                 ;;
-            claude|gemini)
+            claude)
                 RESUME_FLAG="--resume $SAVED_SESSION_ID"
+                ;;
+            gemini)
+                # Gemini resumes by index or "latest" — use latest since sessions are per-workdir
+                RESUME_FLAG="--resume latest"
                 ;;
             codex)
                 RESUME_FLAG="$SAVED_SESSION_ID"
@@ -609,8 +613,10 @@ extract_session_id() {
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
-            jq -r '(.sessionId // .session_id // .session.id // .session // "")' "$raw_log" 2>/dev/null \
-                | grep -v '^$' | grep -v '^null$' | tail -1 || true
+            # Gemini sessions are resumed by "latest" not UUID — use presence of turn output as marker
+            if grep -q '"type":"message"' "$raw_log" 2>/dev/null || grep -q '"role":"assistant"' "$raw_log" 2>/dev/null; then
+                echo "gemini"
+            fi
             ;;
     esac
 }
@@ -706,9 +712,14 @@ sys.stdout.flush()
                 ' >> "$DAILY_LOG" 2>/dev/null || true
             ;;
         codex)
+            # --add-dir allows writes to shared resources (public/, agents/) outside agent workdir
+            _CODEX_SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
+            _CODEX_AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
             if [ $USE_RESUME -eq 1 ] && [ -n "$RESUME_FLAG" ]; then
                 $TIMEOUT_CMD codex exec resume "$RESUME_FLAG" "$PROMPT_TEXT" \
                     -C "$AGENT_DIR" \
+                    --add-dir "$_CODEX_SHARED" \
+                    --add-dir "$_CODEX_AGENTS" \
                     --skip-git-repo-check \
                     --json \
                     2>/dev/null \
@@ -717,6 +728,8 @@ sys.stdout.flush()
             else
                 $TIMEOUT_CMD codex exec "$PROMPT_TEXT" \
                     -C "$AGENT_DIR" \
+                    --add-dir "$_CODEX_SHARED" \
+                    --add-dir "$_CODEX_AGENTS" \
                     --skip-git-repo-check \
                     --json \
                     2>/dev/null \
