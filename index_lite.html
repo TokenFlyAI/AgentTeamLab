@@ -201,6 +201,16 @@ body {
   color: #a855f7;
   border: 1px solid rgba(147, 51, 234, 0.3);
 }
+.agent-card .executor-badge.codex {
+  background: rgba(0, 194, 168, 0.15);
+  color: #00c2a8;
+  border: 1px solid rgba(0, 194, 168, 0.3);
+}
+.agent-card .executor-badge.gemini {
+  background: rgba(255, 176, 32, 0.15);
+  color: #ffb020;
+  border: 1px solid rgba(255, 176, 32, 0.3);
+}
 .agent-card .stuck-icon {
   display: inline-flex;
   align-items: center;
@@ -1350,7 +1360,7 @@ body {
 <div class="reconnect-banner" id="reconnect-banner">Connection lost. Attempting to reconnect...</div>
 <!-- ===== AUTH ERROR BANNER ===== -->
 <div id="auth-error-banner" style="display:none;background:#1a0000;border-bottom:2px solid #ff4444;color:#ff8888;padding:8px 16px;font-size:0.82rem;text-align:center;">
-  🔐 <strong>Claude CLI authentication expired!</strong> Run <code style="background:#300;padding:2px 6px;border-radius:4px;font-family:monospace;">claude login</code> in your terminal to re-authenticate, then agents can run again.
+  🔐 <strong>One or more executor credentials need attention.</strong> Open an agent and check the executor health hint before the next run.
 </div>
 
 <!-- ===== TOP BAR ===== -->
@@ -2078,7 +2088,6 @@ body {
             <div style="display:flex;gap:12px;align-items:center;">
               <select id="agent-settings-executor" style="flex:1;padding:10px 14px;background:#0e0e1a;border:1px solid #0f3460;border-radius:6px;color:#e0e0e0;font-size:0.9rem;cursor:pointer;">
                 <option value="claude">🅒 Claude Code</option>
-                <option value="kimi">🅚 Kimi Code</option>
               </select>
               <button onclick="saveAgentExecutor()" style="padding:10px 20px;background:#0f3460;border:1px solid #1a5276;border-radius:6px;color:#00ff88;font-size:0.85rem;cursor:pointer;font-weight:600;">Save</button>
             </div>
@@ -2088,8 +2097,9 @@ body {
           <div style="padding:16px;background:rgba(0,136,255,0.05);border:1px solid rgba(0,136,255,0.15);border-radius:8px;">
             <h4 style="margin:0 0 10px 0;font-size:0.85rem;color:#0088ff;">About Executors</h4>
             <ul style="margin:0;padding-left:18px;font-size:0.8rem;color:#888;line-height:1.6;">
-              <li><strong>Claude Code</strong>: Anthropic's Claude Code CLI — default, stable</li>
-              <li><strong>Kimi Code</strong>: Moonshot AI's Kimi Code CLI — alternative</li>
+              <li>Executors are loaded from the backend allowlist and runtime health checks.</li>
+              <li>Claude, Kimi, Codex, and Gemini can each keep separate session state.</li>
+              <li>Runnable status depends on both CLI installation and local credentials.</li>
               <li>Each executor maintains separate session state</li>
               <li>Switching executors resets the agent's session</li>
             </ul>
@@ -2351,6 +2361,53 @@ let sseReconnectTimer = null;
 let ws = null;
 let wsReconnectTimer = null;
 let wsConnected = false;
+const executorMeta = {
+  claude: { label: 'Claude Code', icon: '🅒', className: 'claude', color: '#0088ff', background: 'rgba(0,136,255,0.15)', border: 'rgba(0,136,255,0.3)' },
+  kimi: { label: 'Kimi Code', icon: '🅚', className: 'kimi', color: '#a855f7', background: 'rgba(147,51,234,0.15)', border: 'rgba(147,51,234,0.3)' },
+  codex: { label: 'Codex CLI', icon: '⌘', className: 'codex', color: '#00c2a8', background: 'rgba(0,194,168,0.15)', border: 'rgba(0,194,168,0.3)' },
+  gemini: { label: 'Gemini CLI', icon: '✦', className: 'gemini', color: '#ffb020', background: 'rgba(255,176,32,0.15)', border: 'rgba(255,176,32,0.3)' },
+};
+let executorCatalog = { executors: Object.keys(executorMeta), health: {} };
+
+function getExecutorUi(name) {
+  return executorMeta[name] || executorMeta.claude;
+}
+
+function renderExecutorBadge(name, longLabel) {
+  const meta = getExecutorUi(name || 'claude');
+  const label = longLabel ? meta.label.replace(/\s+CLI$/,'').replace(/\s+Code$/,'') : meta.icon;
+  return '<span class="executor-badge ' + meta.className + '" title="Executor: ' + esc(meta.label) + '">' + label + '</span>';
+}
+
+function renderExecutorInlineBadge(name) {
+  const meta = getExecutorUi(name || 'claude');
+  return '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:' + meta.background + ';color:' + meta.color + ';border:1px solid ' + meta.border + ';border-radius:4px;font-size:0.75rem;font-weight:600;">' + meta.icon + ' ' + esc(meta.label.replace(/\s+(CLI|Code)$/,'')) + '</span>';
+}
+
+function populateExecutorSelect(selected) {
+  const select = document.getElementById('agent-settings-executor');
+  if (!select) return;
+  const enabled = Array.isArray(executorCatalog.executors) && executorCatalog.executors.length
+    ? executorCatalog.executors
+    : Object.keys(executorMeta);
+  select.innerHTML = enabled.map((name) => {
+    const meta = getExecutorUi(name);
+    const health = (executorCatalog.health || {})[name] || {};
+    const suffix = health.installed === false ? ' (missing CLI)' : '';
+    return '<option value="' + esc(name) + '">' + meta.icon + ' ' + esc(meta.label) + suffix + '</option>';
+  }).join('');
+  if (selected) select.value = selected;
+}
+
+async function refreshExecutorCatalog() {
+  try {
+    const data = await safeFetch('/api/executors');
+    if (data && Array.isArray(data.executors)) {
+      executorCatalog = data;
+      populateExecutorSelect();
+    }
+  } catch (_) {}
+}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -2359,6 +2416,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCommandPalette();
   initGlobalSearch();
   restoreTab();
+  refreshExecutorCatalog();
   connectSSE();
   connectWS();
   refresh();
@@ -3000,7 +3058,7 @@ function renderAgents() {
   }
 
   // Check for auth errors and show banner
-  const anyAuthErr = (Array.isArray(agents) ? agents : []).some(a => a.auth_error);
+  const anyAuthErr = (Array.isArray(agents) ? agents : []).some(a => a.auth_error || a.executor_issue);
   const authBanner = document.getElementById('auth-error-banner');
   if (authBanner) authBanner.style.display = anyAuthErr ? 'block' : 'none';
 
@@ -3016,7 +3074,7 @@ function renderAgents() {
     const isStaleHb = status === 'running' && agent.heartbeat_age_ms != null && agent.heartbeat_age_ms > 10 * 60 * 1000;
     const hbColor = getHeartbeatStatus(agent);
     const hbLbl = heartbeatLabel(agent);
-    const authErr = agent.auth_error;
+    const authErr = agent.auth_error || agent.executor_issue;
     // Use server-side health if cached, otherwise fall back to client-side
     const serverHealth = agentHealthCache[name];
     const health = serverHealth
@@ -3027,7 +3085,6 @@ function renderAgents() {
     const unreadCount = agent.unread_messages || 0;
     const agentTaskCount = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase() === name && (t.status !== 'done' && t.status !== 'cancelled')).length : 0;
     const executor = agent.executor || 'claude';
-    const executorIcon = executor === 'claude' ? '🅒' : '🅚';
     return '<div class="card agent-card' + (isStaleHb ? ' stale-heartbeat' : '') + (authErr ? ' auth-error-card' : '') + '" data-agent="' + esc(name) + '" onclick="openAgentModal(\'' + esc(name) + '\')">' +
       (authErr ? '<div style="position:absolute;top:0;left:0;right:0;background:linear-gradient(90deg,#ff4444,#ff6b35);color:#fff;font-size:0.65rem;padding:2px 8px;text-align:center;font-weight:600;letter-spacing:0.5px;">🔐 AUTH REQUIRED</div>' : '') +
       '<div class="card-header" style="' + (authErr ? 'margin-top:18px;' : '') + '">' +
@@ -3037,7 +3094,7 @@ function renderAgents() {
             '<div class="agent-name">' +
               '<span class="hb-dot hb-dot-' + hbColor + '" title="' + esc(hbLbl) + '"></span>' +
               esc(name) +
-              '<span class="executor-badge ' + executor + '" title="Executor: ' + executor + '">' + executorIcon + '</span>' +
+              renderExecutorBadge(executor, false) +
               (unreadCount > 0 ? '<span style="background:#e74c3c;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:10px;font-weight:700;flex-shrink:0;" title="Unread inbox messages">' + unreadCount + '</span>' : '') +
               (agentTaskCount > 0 ? '<span style="background:rgba(0,200,255,0.15);color:#00c8ff;font-size:0.65rem;padding:2px 6px;border-radius:10px;border:1px solid rgba(0,200,255,0.3);flex-shrink:0;" title="Open/in-progress tasks">' + agentTaskCount + ' task' + (agentTaskCount !== 1 ? 's' : '') + '</span>' : '') +
             '</div>' +
@@ -5000,6 +5057,8 @@ function openAgentModal(name) {
   currentModalAgent = name;
   document.getElementById('agent-modal-title').textContent = name;
   document.getElementById('agent-modal-overlay').classList.add('visible');
+  populateExecutorSelect();
+  refreshExecutorCatalog();
 
   // Reset to overview tab
   document.querySelectorAll('#agent-modal-tabs .modal-tab-btn').forEach(b => b.classList.remove('active'));
@@ -5143,12 +5202,12 @@ async function refreshAgentModal() {
     const completed = a.completed_tasks || a.completed || [];
     const safeStatus = ['running', 'idle', 'dreaming'].includes(status) ? status : 'idle';
     const executor = a.executor || 'claude';
-    const executorBadge = executor === 'claude' 
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(0,136,255,0.15);color:#0088ff;border:1px solid rgba(0,136,255,0.3);border-radius:4px;font-size:0.75rem;font-weight:600;">🅒 Claude</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(147,51,234,0.15);color:#a855f7;border:1px solid rgba(147,51,234,0.3);border-radius:4px;font-size:0.75rem;font-weight:600;">🅚 Kimi</span>';
+    const executorHealth = a.executorHealth || a.executor_health || {};
+    const executorBadge = renderExecutorInlineBadge(executor);
     overview.innerHTML =
       '<div class="mb-16"><strong>Status:</strong> <span class="status-dot dot-' + safeStatus + '" style="display:inline-block;vertical-align:middle;"></span> ' + esc(status) + '</div>' +
       '<div class="mb-16"><strong>Executor:</strong> ' + executorBadge + '</div>' +
+      (executorHealth.message ? '<div class="mb-16"><strong>Executor Health:</strong> ' + esc(executorHealth.message) + '</div>' : '') +
       '<div class="mb-16"><strong>Current Task:</strong> ' + esc(task) + '</div>' +
       (progress.length ? '<div class="mb-16"><strong>Progress:</strong><ul style="margin-left:20px;margin-top:4px;">' + progress.map(p => '<li style="font-size:0.85rem;">' + esc(typeof p === 'string' ? p : p.text || JSON.stringify(p)) + '</li>').join('') + '</ul></div>' : '') +
       (blockers.length ? '<div class="mb-16"><strong>Blockers:</strong><ul style="margin-left:20px;margin-top:4px;color:#ff4444;">' + blockers.map(b => '<li style="font-size:0.85rem;">' + esc(typeof b === 'string' ? b : b.text || JSON.stringify(b)) + '</li>').join('') + '</ul></div>' : '') +
@@ -5156,10 +5215,7 @@ async function refreshAgentModal() {
       '<div class="mb-8 text-muted" style="font-size:0.75rem;">Cycles: ' + (a.cycles || a.cycle_count || 0) + ' | Last update: ' + formatTime(a.last_update || a.updated_at || '') + '</div>';
     
     // Update settings tab executor dropdown
-    const executorSelect = document.getElementById('agent-settings-executor');
-    if (executorSelect) {
-      executorSelect.value = executor;
-    }
+    populateExecutorSelect(executor);
   }
 
   // Inbox — server returns {unread:[{filename,content,unread:true}], processed:[{filename,content,unread:false}]}

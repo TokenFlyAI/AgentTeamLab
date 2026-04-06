@@ -5,6 +5,7 @@ set -e
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
+source "${COMPANY_DIR}/lib/executors.sh" 2>/dev/null || true
 BACKUP_DIR="${COMPANY_DIR}/.backups/$(date +%Y%m%d_%H%M%S)"
 
 echo "=========================================="
@@ -32,9 +33,15 @@ for agent_dir in "${AGENTS_DIR:-${COMPANY_DIR}/agents}"/*; do
     if [ -d "$agent_dir" ]; then
         AGENT_NAME=$(basename "$agent_dir")
         
-        # Remove session files (both Claude and Kimi)
+        # Remove session files (legacy + generic executor-specific names)
         rm -f "${agent_dir}/session_id.txt"
+        rm -f "${agent_dir}/session_cycle.txt"
         rm -f "${agent_dir}/session_id_kimi.txt"
+        rm -f "${agent_dir}/session_cycle_kimi.txt"
+        for executor in $(executor_all 2>/dev/null); do
+            rm -f "${agent_dir}/session_id_${executor}.txt"
+            rm -f "${agent_dir}/session_cycle_${executor}.txt"
+        done
         
         # Remove status
         rm -f "${agent_dir}/status.md"

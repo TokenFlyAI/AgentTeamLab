@@ -12,9 +12,10 @@ EXECUTOR="${4:-claude}"
 
 # Source executor config helper
 source "${COMPANY_DIR}/lib/executor_config.sh"
+source "${COMPANY_DIR}/lib/executors.sh"
 
 # Validate executor
-if [ "$EXECUTOR" != "claude" ] && [ "$EXECUTOR" != "kimi" ]; then
+if ! executor_is_valid "$EXECUTOR"; then
     echo "Warning: Invalid executor '$EXECUTOR', defaulting to 'claude'"
     EXECUTOR="claude"
 fi
@@ -207,5 +208,5 @@ echo ""
 echo "Added to: public/team_directory.md"
 echo ""
 echo "To start: bash run_subset.sh ${NAME}"
-echo "To switch executor: echo 'kimi' > ${AGENT_DIR}/executor.txt"
+echo "To switch executor: echo 'codex' > ${AGENT_DIR}/executor.txt"
 echo "To add to run_all.sh: edit the AGENTS array"

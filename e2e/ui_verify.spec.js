@@ -82,7 +82,7 @@ test('03 — Agent card click: opens detail modal', async ({ page }) => {
 
   const body = await page.textContent('body');
   // Agent detail should show executor, cycles, status
-  expect(body).toMatch(/executor|cycle|status|claude|kimi/i);
+  expect(body).toMatch(/executor|cycle|status|claude|kimi|codex|gemini/i);
 });
 
 test('04 — Agent modal tabs: Overview / Cycles / Inbox / Activity', async ({ page }) => {

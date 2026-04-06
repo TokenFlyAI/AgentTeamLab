@@ -1,16 +1,16 @@
 #!/bin/bash
 # run_agent.sh — Run a single agent cycle with session resume + memory save
-# Supports both Claude Code and Kimi Code executors
+# Supports Claude Code, Kimi Code, Codex CLI, and Gemini CLI executors
 #
 # Session lifecycle:
-#   Cycles 1..SESSION_MAX_CYCLES  → --resume <session_id> (Claude) or --session <id> (Kimi)
+#   Cycles 1..SESSION_MAX_CYCLES  → provider-specific resume/continue flags
 #   Cycle SESSION_MAX_CYCLES+1    → fresh start; memory.md injected into prompt
 #   memory.md is auto-saved from status.md before each session reset
 #
 # Env overrides:
 #   SESSION_MAX_CYCLES  (default 5)  — cycles per session before reset
 #   SESSION_FORCE_FRESH (1)          — force fresh start ignoring saved session
-#   EXECUTOR            (claude|kimi) — override executor for this run
+#   EXECUTOR            (claude|kimi|codex|gemini) — override executor for this run
 set -e
 
 AGENT_NAME="$1"
@@ -20,6 +20,7 @@ AGENT_DIR="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${AGENT_NAME}"
 
 # Source executor config helper
 source "${COMPANY_DIR}/lib/executor_config.sh"
+source "${COMPANY_DIR}/lib/executors.sh"
 
 # Validate
 [ -z "$AGENT_NAME" ] && echo "Usage: $0 <agent_name>" && exit 1
@@ -27,7 +28,22 @@ source "${COMPANY_DIR}/lib/executor_config.sh"
 
 # Determine executor (env override > config > default)
 EXECUTOR="${EXECUTOR:-$(get_executor "$AGENT_NAME" "$COMPANY_DIR")}"
+EXECUTOR="$(echo "$EXECUTOR" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+if ! executor_is_valid "$EXECUTOR"; then
+    echo "[executor:${AGENT_NAME}] Invalid executor: ${EXECUTOR}"
+    exit 1
+fi
+if ! executor_is_enabled "$EXECUTOR"; then
+    echo "[executor:${AGENT_NAME}] Executor disabled by ENABLED_EXECUTORS: ${EXECUTOR}"
+    exit 1
+fi
+if ! executor_binary_exists "$EXECUTOR"; then
+    echo "[executor:${AGENT_NAME}] Missing CLI: $(executor_binary "$EXECUTOR")"
+    echo "[executor:${AGENT_NAME}] Hint: $(executor_auth_hint "$EXECUTOR")"
+    exit 1
+fi
 echo "[executor:${AGENT_NAME}] Using: ${EXECUTOR}"
+echo "[executor:${AGENT_NAME}] Auth status: $(executor_auth_status "$EXECUTOR")"
 
 # Create directories
 mkdir -p "${AGENT_DIR}/logs" "${AGENT_DIR}/chat_inbox/processed" "${AGENT_DIR}/knowledge"
@@ -65,13 +81,18 @@ elif [ -n "$SAVED_SESSION_ID" ] && [ "$SAVED_CYCLE" -lt "$SESSION_MAX_CYCLES" ];
     # Dry run: track cycle count and compute delta, but skip actual --resume flag
     # (dry run has no real session to resume)
     if [ "$SAVED_SESSION_ID" != "dryrun" ]; then
-        if [ "$EXECUTOR" = "kimi" ]; then
-            # kimi tracks sessions per working directory — --continue resumes the last session
-            # (no explicit session ID needed; avoids stream-json dependency for ID extraction)
-            RESUME_FLAG="--continue"
-        else
-            RESUME_FLAG="--resume $SAVED_SESSION_ID"
-        fi
+        case "$EXECUTOR" in
+            kimi)
+                # kimi tracks sessions per working directory — --continue resumes the last session
+                RESUME_FLAG="--continue"
+                ;;
+            claude|gemini)
+                RESUME_FLAG="--resume $SAVED_SESSION_ID"
+                ;;
+            codex)
+                RESUME_FLAG="$SAVED_SESSION_ID"
+                ;;
+        esac
     fi
     echo "[session:${AGENT_NAME}] Resuming (cycle $((SAVED_CYCLE+1)))$([ "$SAVED_SESSION_ID" = "dryrun" ] && echo " [dry-run session]" || echo " ${SAVED_SESSION_ID:0:12}…")"
 else
@@ -438,16 +459,8 @@ fi
 # ── Settings file ─────────────────────────────────────────────────────────────
 SETTINGS_FILE=$(get_settings_file "$AGENT_NAME" "$EXECUTOR")
 
-# NOTE: Kimi config via --config-file overrides ALL settings including models.
-# We don't use --config-file for Kimi; instead we rely on ~/.kimi/config.toml
-# for model settings. Hooks are not supported for Kimi until a merge-config
-# option is available.
-if [ "$EXECUTOR" = "kimi" ]; then
-    # Kimi doesn't need a separate settings file - use default ~/.kimi/config.toml
-    # which already has models configured
-    true
-else
-    # Claude uses JSON format
+# NOTE: Only Claude currently uses a generated settings file.
+if [ "$EXECUTOR" = "claude" ]; then
     _ENV_BLOCK='"DISABLE_AUTOUPDATER": "1"'
     if [ -n "${API_KEY:-}" ]; then
         _ENV_BLOCK="${_ENV_BLOCK}, \"API_KEY\": \"${API_KEY}\""
@@ -515,6 +528,206 @@ _write_idle_heartbeat() {
 }
 trap '_write_idle_heartbeat' EXIT
 
+# ── Executor helpers ──────────────────────────────────────────────────────────
+codex_stream_log() {
+    python3 -u -c '
+import json, sys
+for raw in sys.stdin:
+    raw = raw.rstrip("\n")
+    if not raw:
+        continue
+    try:
+        event = json.loads(raw)
+    except Exception:
+        print(raw)
+        continue
+    if isinstance(event, dict):
+        text = event.get("text") or event.get("message") or event.get("content")
+        if isinstance(text, str) and text.strip():
+            print("[ASSISTANT] " + text.strip())
+            continue
+        etype = str(event.get("type") or event.get("event") or "").lower()
+        if etype in ("result", "completed", "done", "final"):
+            sid = event.get("session_id") or event.get("conversation_id") or event.get("thread_id") or "?"
+            print("[DONE] session=" + str(sid))
+            continue
+    print(json.dumps(event, ensure_ascii=True))
+'
+}
+
+gemini_stream_log() {
+    python3 -u -c '
+import json, sys
+for raw in sys.stdin:
+    raw = raw.rstrip("\n")
+    if not raw:
+        continue
+    try:
+        event = json.loads(raw)
+    except Exception:
+        print(raw)
+        continue
+    if isinstance(event, dict):
+        msg = event.get("message") or event.get("text") or event.get("content")
+        if isinstance(msg, str) and msg.strip():
+            print("[ASSISTANT] " + msg.strip())
+            continue
+        etype = str(event.get("type") or "").lower()
+        if etype in ("result", "final", "completed"):
+            sid = event.get("sessionId") or event.get("session_id") or event.get("session") or "?"
+            print("[DONE] session=" + str(sid))
+            continue
+    print(json.dumps(event, ensure_ascii=True))
+'
+}
+
+extract_session_id() {
+    local raw_log="$1"
+    local executor="$2"
+    case "$executor" in
+        kimi)
+            if grep -q 'TurnEnd\|StatusUpdate' "$raw_log" 2>/dev/null; then
+                echo "kimi"
+            fi
+            ;;
+        claude)
+            jq -r 'select(.type == "result") | .session_id // ""' "$raw_log" 2>/dev/null \
+                | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true
+            ;;
+        codex)
+            jq -r '(.session_id // .conversation_id // .thread_id // .session.id // "")' "$raw_log" 2>/dev/null \
+                | grep -v '^$' | grep -v '^null$' | tail -1 || true
+            ;;
+        gemini)
+            jq -r '(.sessionId // .session_id // .session.id // .session // "")' "$raw_log" 2>/dev/null \
+                | grep -v '^$' | grep -v '^null$' | tail -1 || true
+            ;;
+    esac
+}
+
+run_executor_cycle() {
+    case "$EXECUTOR" in
+        kimi)
+            # shellcheck disable=SC2086
+            $TIMEOUT_CMD env \
+                -u CLAUDECODE \
+                -u CLAUDE_CODE_ENTRYPOINT \
+                -u CLAUDE_LAUNCHER_SESSION_FILE \
+                -u CLAUDE_CODE_CONTAINER_ID \
+                -u CLAUDE_CODE_TMPDIR \
+                -u ANTHROPIC_CUSTOM_HEADERS \
+                -u CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
+                "API_KEY=${API_KEY:-}" \
+                kimi -p "$PROMPT_TEXT" \
+                    -w "$AGENT_DIR" \
+                    $RESUME_FLAG \
+                    --no-thinking \
+                    --print \
+                    2>/dev/null \
+                | tee -a "$RAW_LOG" \
+                | python3 -u -c "
+import sys, re
+buf = []; in_tp = False
+def extract_text_from_buf(lines):
+    joined = '\n'.join(lines)
+    m = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\n?\\)\", joined, re.DOTALL)
+    if m:
+        return m.group(2)
+    for line in lines:
+        m2 = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\)?\\s*\$\", line, re.DOTALL)
+        if m2:
+            return m2.group(2)
+    return None
+for line in sys.stdin:
+    line = line.rstrip('\n')
+    if re.match(r'^TextPart\(', line):
+        in_tp = True; buf = [line]
+    elif in_tp:
+        buf.append(line)
+        if line.strip() == ')':
+            t = extract_text_from_buf(buf)
+            if t is not None:
+                display = t.replace('\\\\n', ' ').replace('\\\\t', ' ')
+                print('[ASSISTANT] ' + display)
+            in_tp = False; buf = []
+    elif not re.match(r'^(TurnBegin|StepBegin|TurnEnd|StatusUpdate|ThinkPart|\s)', line) and line.strip():
+        print(line)
+sys.stdout.flush()
+" >> "$DAILY_LOG" 2>/dev/null || true
+            echo "[DONE] kimi cycle complete" >> "$DAILY_LOG"
+            ;;
+        claude)
+            # shellcheck disable=SC2086
+            $TIMEOUT_CMD env \
+                -u CLAUDECODE \
+                -u CLAUDE_CODE_ENTRYPOINT \
+                -u CLAUDE_LAUNCHER_SESSION_FILE \
+                -u CLAUDE_CODE_CONTAINER_ID \
+                -u CLAUDE_CODE_TMPDIR \
+                -u ANTHROPIC_CUSTOM_HEADERS \
+                -u CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
+                claude -p "$PROMPT_TEXT" \
+                    $RESUME_FLAG \
+                    --output-format stream-json \
+                    --verbose \
+                    --dangerously-skip-permissions \
+                    --max-turns 200 \
+                    --settings "$SETTINGS_FILE" \
+                    2>/dev/null \
+                | tee -a "$RAW_LOG" \
+                | jq --unbuffered -r '
+                    if .type == "assistant" then
+                        [.message.content[]? |
+                            if .type == "text" then "[ASSISTANT] " + .text
+                            elif .type == "tool_use" then
+                                "[TOOL] " + .name +
+                                (if .input.file_path then " " + .input.file_path
+                                 elif .input.command then " $ " + (.input.command | tostring | .[0:150])
+                                 elif .input.content then " (writing " + (.input.content | length | tostring) + " chars)"
+                                 else "" end)
+                            else empty end
+                        ] | join("\n")
+                    elif .type == "result" then
+                        "[DONE] turns=" + (.num_turns // 0 | tostring) +
+                        " cost=$" + ((.total_cost_usd // 0) * 100 | floor / 100 | tostring) +
+                        " duration=" + ((.duration_ms // 0) / 1000 | tostring) + "s" +
+                        " session=" + (.session_id // "?")
+                    else empty end
+                ' >> "$DAILY_LOG" 2>/dev/null || true
+            ;;
+        codex)
+            if [ $USE_RESUME -eq 1 ] && [ -n "$RESUME_FLAG" ]; then
+                $TIMEOUT_CMD codex exec resume "$RESUME_FLAG" "$PROMPT_TEXT" \
+                    -C "$AGENT_DIR" \
+                    --skip-git-repo-check \
+                    --json \
+                    2>/dev/null \
+                    | tee -a "$RAW_LOG" \
+                    | codex_stream_log >> "$DAILY_LOG" 2>/dev/null || true
+            else
+                $TIMEOUT_CMD codex exec "$PROMPT_TEXT" \
+                    -C "$AGENT_DIR" \
+                    --skip-git-repo-check \
+                    --json \
+                    2>/dev/null \
+                    | tee -a "$RAW_LOG" \
+                    | codex_stream_log >> "$DAILY_LOG" 2>/dev/null || true
+            fi
+            ;;
+        gemini)
+            if [ $USE_RESUME -eq 1 ] && [ -n "$RESUME_FLAG" ]; then
+                $TIMEOUT_CMD gemini --prompt "$PROMPT_TEXT" --output-format stream-json --approval-mode yolo $RESUME_FLAG 2>/dev/null \
+                    | tee -a "$RAW_LOG" \
+                    | gemini_stream_log >> "$DAILY_LOG" 2>/dev/null || true
+            else
+                $TIMEOUT_CMD gemini --prompt "$PROMPT_TEXT" --output-format stream-json --approval-mode yolo 2>/dev/null \
+                    | tee -a "$RAW_LOG" \
+                    | gemini_stream_log >> "$DAILY_LOG" 2>/dev/null || true
+            fi
+            ;;
+    esac
+}
+
 # ── Run Agent ─────────────────────────────────────────────────────────────────
 cd "$AGENT_DIR"
 
@@ -541,99 +754,8 @@ if [ "$_DRY_RUN" = "1" ]; then
             elif .type == "result" then "[DONE] turns=0 cost=$0 duration=0.1s session=dryrun"
             else empty end
         ' >> "$DAILY_LOG" 2>/dev/null || true
-elif [ "$EXECUTOR" = "kimi" ]; then
-    # Kimi execution - uses ~/.kimi/config.toml for model settings
-    # NOTE: --config-file would override all settings including models,
-    # so we don't use it. Hooks are not supported until merge-config is available.
-    # shellcheck disable=SC2086
-    $TIMEOUT_CMD env \
-        -u CLAUDECODE \
-        -u CLAUDE_CODE_ENTRYPOINT \
-        -u CLAUDE_LAUNCHER_SESSION_FILE \
-        -u CLAUDE_CODE_CONTAINER_ID \
-        -u CLAUDE_CODE_TMPDIR \
-        -u ANTHROPIC_CUSTOM_HEADERS \
-        -u CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
-        "API_KEY=${API_KEY:-}" \
-        kimi -p "$PROMPT_TEXT" \
-            -w "$AGENT_DIR" \
-            $RESUME_FLAG \
-            --no-thinking \
-            --print \
-            2>/dev/null \
-        | tee -a "$RAW_LOG" \
-        | python3 -u -c "
-import sys, re
-buf = []; in_tp = False
-def extract_text_from_buf(lines):
-    # Join buffer and do a single multiline search for text='...' or text=\"...\"
-    # This handles kimi wrapping long text values across physical lines
-    joined = '\n'.join(lines)
-    m = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\n?\\)\", joined, re.DOTALL)
-    if m:
-        return m.group(2)
-    # Fallback: try single-line match on each line
-    for line in lines:
-        m2 = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\)?\\s*\$\", line, re.DOTALL)
-        if m2:
-            return m2.group(2)
-    return None
-for line in sys.stdin:
-    line = line.rstrip('\n')
-    if re.match(r'^TextPart\(', line):
-        in_tp = True; buf = [line]
-    elif in_tp:
-        buf.append(line)
-        if line.strip() == ')':
-            t = extract_text_from_buf(buf)
-            if t is not None:
-                display = t.replace('\\\\n', ' ').replace('\\\\t', ' ')
-                print('[ASSISTANT] ' + display)
-            in_tp = False; buf = []
-    elif not re.match(r'^(TurnBegin|StepBegin|TurnEnd|StatusUpdate|ThinkPart|\s)', line) and line.strip():
-        print(line)
-sys.stdout.flush()
-" >> "$DAILY_LOG" 2>/dev/null || true
-        echo "[DONE] kimi cycle complete" >> "$DAILY_LOG"
 else
-    # Claude execution
-    # shellcheck disable=SC2086
-    $TIMEOUT_CMD env \
-        -u CLAUDECODE \
-        -u CLAUDE_CODE_ENTRYPOINT \
-        -u CLAUDE_LAUNCHER_SESSION_FILE \
-        -u CLAUDE_CODE_CONTAINER_ID \
-        -u CLAUDE_CODE_TMPDIR \
-        -u ANTHROPIC_CUSTOM_HEADERS \
-        -u CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
-        claude -p "$PROMPT_TEXT" \
-            $RESUME_FLAG \
-            --output-format stream-json \
-            --verbose \
-            --dangerously-skip-permissions \
-            --max-turns 200 \
-            --settings "$SETTINGS_FILE" \
-            2>/dev/null \
-        | tee -a "$RAW_LOG" \
-        | jq --unbuffered -r '
-            if .type == "assistant" then
-                [.message.content[]? |
-                    if .type == "text" then "[ASSISTANT] " + .text
-                    elif .type == "tool_use" then
-                        "[TOOL] " + .name +
-                        (if .input.file_path then " " + .input.file_path
-                         elif .input.command then " $ " + (.input.command | tostring | .[0:150])
-                         elif .input.content then " (writing " + (.input.content | length | tostring) + " chars)"
-                         else "" end)
-                    else empty end
-                ] | join("\n")
-            elif .type == "result" then
-                "[DONE] turns=" + (.num_turns // 0 | tostring) +
-                " cost=$" + ((.total_cost_usd // 0) * 100 | floor / 100 | tostring) +
-                " duration=" + ((.duration_ms // 0) / 1000 | tostring) + "s" +
-                " session=" + (.session_id // "?")
-            else empty end
-        ' >> "$DAILY_LOG" 2>/dev/null || true
+    run_executor_cycle
 fi
 
 echo "========== CYCLE END — $(date +%Y_%m_%d_%H_%M_%S) ==========" >> "$DAILY_LOG"
@@ -674,8 +796,7 @@ elif [ "$EXECUTOR" = "kimi" ]; then
         echo "[session:${AGENT_NAME}] kimi session reset (no output detected — stale --continue)"
     fi
 else
-    NEW_SESSION_ID=$(jq -r 'select(.type == "result") | .session_id // ""' "$RAW_LOG" 2>/dev/null \
-        | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true)
+    NEW_SESSION_ID="$(extract_session_id "$RAW_LOG" "$EXECUTOR")"
 fi
 
 if [ -n "$NEW_SESSION_ID" ]; then
@@ -726,10 +847,11 @@ fi
     echo "# Session: $(cat "$SESSION_ID_FILE" 2>/dev/null | head -c 12)… cycle $((SAVED_CYCLE+1))/${SESSION_MAX_CYCLES}"
     echo ""
     cat "$RAW_LOG" 2>/dev/null | jq -r --arg start_time "$(date +%Y-%m-%dT%H:%M:%S)" '
-        # Handle both Claude format (.type, .message.content) and Kimi format (.role, .content)
+        # Handle Claude/Kimi JSON plus broader structured executor output
         # Add timestamps using input_line_number as a proxy for sequence
         ((if .type == "assistant" then .message.content
           elif .role == "assistant" then .content
+          elif (.content | type?) == "array" then .content
           else null end) // [])[]? |
         ("
 [--- Entry ---]

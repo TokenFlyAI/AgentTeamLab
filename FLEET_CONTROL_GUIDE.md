@@ -147,9 +147,16 @@ Daemon output is silent (backgrounded). Check agent logs:
 ## Cost Optimization Tips
 
 1. **Start small**: Set max_agents to 2-3 initially
-2. **Use Kimi**: Most agents use Kimi (cheaper), only Alice uses Claude
-3. **Monitor costs**: Check the Stats tab regularly
-4. **Pause when idle**: Set max_agents to 0 to pause launches
+2. **Use mixed executors intentionally**: Claude/Kimi/Codex/Gemini can all be assigned per agent, but only expose what you want to run
+3. **Use the allowlist as a rollout gate**:
+```bash
+export ENABLED_EXECUTORS=claude,kimi,codex,gemini
+
+# Fast rollback to the original pair
+export ENABLED_EXECUTORS=claude,kimi
+```
+4. **Monitor costs**: Check the Stats tab regularly
+5. **Pause when idle**: Set max_agents to 0 to pause launches
 
 ## Integration with Existing Features
 

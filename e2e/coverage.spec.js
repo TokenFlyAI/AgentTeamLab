@@ -2799,6 +2799,8 @@ test.describe("GET /api/executors", () => {
     expect(body.executors.length).toBeGreaterThan(0);
     expect(typeof body.default).toBe("string");
     expect(body.executors).toContain("claude");
+    expect(body.executors).toContain("codex");
+    expect(body.executors).toContain("gemini");
   });
 });
 
@@ -2857,13 +2859,13 @@ test.describe("GET & POST /api/agents/:name/executor", () => {
   });
 
   test("POST sets executor and GET reflects the change", async () => {
-    const { status, body } = await apiPost("/api/agents/alice/executor", { executor: "claude" });
+    const { status, body } = await apiPost("/api/agents/alice/executor", { executor: "codex" });
     expect(status).toBe(200);
     expect(body.name).toBe("alice");
-    expect(body.executor).toBe("claude");
+    expect(body.executor).toBe("codex");
 
     const { body: get } = await apiGet("/api/agents/alice/executor");
-    expect(get.executor).toBe("claude");
+    expect(get.executor).toBe("codex");
   });
 
   test("POST returns 400 for invalid executor", async () => {

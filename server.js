@@ -9,8 +9,17 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const url = require("url");
-const { execFile, spawn } = require("child_process");
+const { execFile, spawn, spawnSync } = require("child_process");
 const crypto = require("crypto");
+const {
+  DEFAULT_EXECUTOR,
+  getEnabledExecutors,
+  getExecutorMeta,
+  getSupportedExecutors,
+  isEnabledExecutor,
+  isValidExecutor,
+  normalizeExecutorName,
+} = require("./lib/executors");
 
 // ---------------------------------------------------------------------------
 // Production metrics recording (for Ivan's api_error_monitor.js)
@@ -598,6 +607,7 @@ function getAgentSummary(name) {
   const logsDir = path.join(d, "logs");
   let rawLogMtime = null;
   let auth_error = false;
+  let executor_issue = null;
   try {
     const rawFiles = fs.existsSync(logsDir) ? fs.readdirSync(logsDir)
       .filter(f => f.endsWith("_raw.log")).sort().reverse() : [];
@@ -606,7 +616,7 @@ function getAgentSummary(name) {
       rawLogMtime = fileMtime(rPath);
       // Check last context for auth errors
       const ctx = safeRead(path.join(d, "last_context.md")) || "";
-      if (/not logged in|please run \/login|authentication_failed/i.test(ctx.slice(0, 500))) {
+      if (/not logged in|please run \/login|authentication_failed|login required|unauthorized|401/i.test(ctx.slice(0, 800))) {
         auth_error = true;
       }
     }
@@ -615,7 +625,9 @@ function getAgentSummary(name) {
   const lastSeenSecs = rawLogMtime ? Math.floor((Date.now() - rawLogMtime) / 1000) : null;
 
   const executor = getExecutorForAgent(name);
-  return { name, role, status, current_task, cycles, last_update, lastSeenSecs, heartbeat_age_ms, auth_error, executor };
+  const executor_health = getExecutorHealth(executor);
+  if (!executor_health.runnable) executor_issue = executor_health.message;
+  return { name, role, status, current_task, cycles, last_update, lastSeenSecs, heartbeat_age_ms, auth_error, executor, executor_health, executor_issue };
 }
 
 // ---------------------------------------------------------------------------
@@ -1331,12 +1343,21 @@ async function handleRequest(req, res) {
       (t) => (t.assignee || "").toLowerCase() === name.toLowerCase()
     );
     const executor = getExecutorForAgent(name);
-    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor });
+    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor, executorHealth: getExecutorHealth(executor) });
   }
 
   // GET /api/executors — list supported executors
   if (method === "GET" && pathname === "/api/executors") {
-    return json(res, { executors: VALID_EXECUTORS, default: "claude" });
+    const executors = getEnabledExecutorList();
+    const health = {};
+    for (const executor of executors) health[executor] = getExecutorHealth(executor);
+    return json(res, { executors, default: DEFAULT_EXECUTOR, health });
+  }
+
+  if (method === "GET" && pathname === "/api/executors/health") {
+    const health = {};
+    for (const executor of getSupportedExecutors()) health[executor] = getExecutorHealth(executor);
+    return json(res, { supported: getSupportedExecutors(), enabled: getEnabledExecutorList(), health });
   }
 
   // GET /api/config/executor — get all agent executors
@@ -1345,7 +1366,7 @@ async function handleRequest(req, res) {
     for (const name of listAgentNames()) {
       allExecutors[name] = getExecutorForAgent(name);
     }
-    return json(res, { default: "claude", agents: allExecutors });
+    return json(res, { default: DEFAULT_EXECUTOR, enabled: getEnabledExecutorList(), agents: allExecutors });
   }
 
   // GET /api/agents/:name/executor — get executor for specific agent
@@ -1354,7 +1375,8 @@ async function handleRequest(req, res) {
     const name = agentName(agentExecutorMatch[1]);
     if (!name) return badRequest(res, "invalid agent name");
     if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
-    return json(res, { name, executor: getExecutorForAgent(name) });
+    const executor = getExecutorForAgent(name);
+    return json(res, { name, executor, health: getExecutorHealth(executor) });
   }
 
   // POST /api/agents/:name/executor — set executor for specific agent
@@ -1364,9 +1386,9 @@ async function handleRequest(req, res) {
     if (!fs.existsSync(path.join(EMPLOYEES_DIR, name))) return notFound(res, "agent not found");
     const body = await parseBody(req);
     if (!body.executor) return badRequest(res, "executor is required");
-    const result = setExecutorForAgent(name, String(body.executor).toLowerCase());
+    const result = setExecutorForAgent(name, String(body.executor).toLowerCase(), { requireEnabled: true });
     if (!result.ok) return badRequest(res, result.error);
-    return json(res, { name, executor: result.executor });
+    return json(res, { name, executor: result.executor, health: getExecutorHealth(result.executor) });
   }
 
   const agentLogMatch = pathname.match(/^\/api\/agents\/([^/]+)\/log$/);
@@ -3411,53 +3433,115 @@ function normalizeEndpoint(method, pathname) {
 }
 
 // ---------------------------------------------------------------------------
-// Executor Configuration (Claude + Kimi support)
+// Executor Configuration / Health
 // ---------------------------------------------------------------------------
-const VALID_EXECUTORS = ["claude", "kimi"];
-const EXECUTOR_CONFIG_PATH = path.join(DIR, "public", "executor_config.md");
+function getEnabledExecutorList() {
+  return getEnabledExecutors(process.env.ENABLED_EXECUTORS);
+}
+
+function getExecutorConfigPath() {
+  const primary = path.join(PUBLIC_DIR, "executor_config.md");
+  if (fs.existsSync(primary)) return primary;
+  return path.join(DIR, "public", "executor_config.md");
+}
+
+function getExecutorHealth(name) {
+  const executor = normalizeExecutorName(name);
+  const meta = getExecutorMeta(executor);
+  if (!meta) {
+    return {
+      executor,
+      supported: false,
+      enabled: false,
+      installed: false,
+      authenticated: "unknown",
+      runnable: false,
+      message: "Unknown executor",
+    };
+  }
+  const installed = (() => {
+    const result = spawnSync(meta.binary, ["--version"], { encoding: "utf8" });
+    return !result.error && result.status === 0;
+  })();
+  let authenticated = "unknown";
+  if (meta.authEnvVars && meta.authEnvVars.some((key) => process.env[key])) {
+    authenticated = "configured";
+  }
+  const enabled = isEnabledExecutor(executor, process.env.ENABLED_EXECUTORS);
+  const runnable = installed && enabled;
+  const message = !enabled
+    ? "Disabled by ENABLED_EXECUTORS"
+    : !installed
+      ? `Missing CLI: ${meta.binary}`
+      : authenticated === "configured"
+        ? "Configured via environment"
+        : meta.authHint;
+  return {
+    executor,
+    supported: true,
+    enabled,
+    installed,
+    authenticated,
+    runnable,
+    message,
+    transport: meta.transport,
+    label: meta.label,
+    badge: meta.badge,
+    authHint: meta.authHint,
+  };
+}
 
 function getExecutorForAgent(name) {
   const agentDir = path.join(EMPLOYEES_DIR, name);
+  const configPath = getExecutorConfigPath();
   
   // Priority 1: per-agent executor.txt
   const agentExecutorPath = path.join(agentDir, "executor.txt");
   try {
-    const content = fs.readFileSync(agentExecutorPath, "utf8").trim().toLowerCase();
-    if (VALID_EXECUTORS.includes(content)) return content;
+    const content = normalizeExecutorName(fs.readFileSync(agentExecutorPath, "utf8"));
+    if (isValidExecutor(content)) return content;
   } catch (_) {}
 
   // Priority 2: global config file per-agent table
   try {
-    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
+    const config = fs.readFileSync(configPath, "utf8");
     const lines = config.split("\n");
     for (const line of lines) {
-      const match = line.match(/^\|\s*(\w+)\s*\|\s*(claude|kimi)\s*\|/i);
+      const match = line.match(/^\|\s*(\w+)\s*\|\s*([a-z0-9_-]+)\s*\|/i);
       if (match && match[1].toLowerCase() === name.toLowerCase()) {
-        return match[2].toLowerCase();
+        const executor = normalizeExecutorName(match[2]);
+        if (isValidExecutor(executor)) return executor;
       }
     }
   } catch (_) {}
 
   // Priority 3: global default
   try {
-    const config = fs.readFileSync(EXECUTOR_CONFIG_PATH, "utf8");
-    const defaultMatch = config.match(/## Global Default[\s\S]*?^executor:\s*(claude|kimi)/im);
-    if (defaultMatch) return defaultMatch[1].toLowerCase();
+    const config = fs.readFileSync(configPath, "utf8");
+    const defaultMatch = config.match(/## Global Default[\s\S]*?^executor:\s*([a-z0-9_-]+)/im);
+    if (defaultMatch) {
+      const executor = normalizeExecutorName(defaultMatch[1]);
+      if (isValidExecutor(executor)) return executor;
+    }
   } catch (_) {}
 
   // Fallback
-  return "claude";
+  return DEFAULT_EXECUTOR;
 }
 
-function setExecutorForAgent(name, executor) {
-  if (!VALID_EXECUTORS.includes(executor)) {
-    return { ok: false, error: `Invalid executor: ${executor}. Must be: ${VALID_EXECUTORS.join(", ")}` };
+function setExecutorForAgent(name, executor, { requireEnabled = false } = {}) {
+  const normalized = normalizeExecutorName(executor);
+  if (!isValidExecutor(normalized)) {
+    return { ok: false, error: `Invalid executor: ${executor}. Must be: ${getSupportedExecutors().join(", ")}` };
+  }
+  if (requireEnabled && !isEnabledExecutor(normalized, process.env.ENABLED_EXECUTORS)) {
+    return { ok: false, error: `Executor disabled: ${normalized}. Enabled: ${getEnabledExecutorList().join(", ")}` };
   }
   const agentDir = path.join(EMPLOYEES_DIR, name);
   try {
     fs.mkdirSync(agentDir, { recursive: true });
-    fs.writeFileSync(path.join(agentDir, "executor.txt"), executor, "utf8");
-    return { ok: true, executor };
+    fs.writeFileSync(path.join(agentDir, "executor.txt"), normalized, "utf8");
+    return { ok: true, executor: normalized };
   } catch (e) {
     return { ok: false, error: e.message };
   }

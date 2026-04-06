@@ -15,14 +15,16 @@ sleep 0.3
 pkill -TERM -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
 sleep 0.3
 
-# 3. Force-kill claude/kimi subprocess for this agent
+# 3. Force-kill executor subprocess for this agent
 pkill -9 -f "claude.*agents/${AGENT_NAME}" 2>/dev/null || true
 pkill -9 -f "kimi.*agents/${AGENT_NAME}"   2>/dev/null || true
+pkill -9 -f "codex.*agents/${AGENT_NAME}"  2>/dev/null || true
+pkill -9 -f "gemini.*agents/${AGENT_NAME}" 2>/dev/null || true
 pkill -9 -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
 
 # 4. Clean session locks
 rm -f /tmp/claude_launcher_*${AGENT_NAME}*.sessions 2>/dev/null || true
-rm -f /tmp/aicompany_settings_${AGENT_NAME}.json 2>/dev/null || true
+rm -f /tmp/aicompany_*_settings_${AGENT_NAME}.* 2>/dev/null || true
 
 # 5. Reset heartbeat to idle so dashboard shows correct state immediately
 HB="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${AGENT_NAME}/heartbeat.md"

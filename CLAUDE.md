@@ -176,21 +176,21 @@ curl -X POST http://localhost:3199/api/smart-run/config \
 **Config (`public/smart_run_config.json`):**
 - `"session_max_cycles": 20` — override default without env var
 
-## Executors (Claude + Kimi)
+## Executors
 
-The platform supports both **Claude Code CLI** and **Kimi Code CLI** as agent executors:
+The platform supports four executor adapters:
 
-| Feature | Claude Code | Kimi Code |
-|---------|-------------|-----------|
-| **CLI** | `claude -p ...` | `kimi -p ...` |
-| **Session Resume** | `--resume <id>` | `--session <id>` |
-| **Badge** | 🅒 Blue | 🅚 Purple |
+| Feature | Claude Code | Kimi Code | Codex CLI | Gemini CLI |
+|---------|-------------|-----------|-----------|------------|
+| **CLI** | `claude -p ...` | `kimi -p ...` | `codex exec ...` | `gemini --prompt ...` |
+| **Session Resume** | `--resume <id>` | `--continue` | `codex exec resume <id>` | `--resume <id>` |
+| **Badge** | 🅒 Blue | 🅚 Purple | ⌘ Teal | ✦ Amber |
 
 ### Configuration
 
 **Per-agent (highest priority):**
 ```bash
-echo "kimi" > agents/bob/executor.txt
+echo "gemini" > agents/bob/executor.txt
 ```
 
 **Via Dashboard:**
@@ -198,12 +198,27 @@ echo "kimi" > agents/bob/executor.txt
 
 **Global default:** Edit `public/executor_config.md`
 
+**Allowlist / rollback gate:**
+```bash
+export ENABLED_EXECUTORS=claude,kimi,codex,gemini
+
+# Fast rollback
+export ENABLED_EXECUTORS=claude,kimi
+```
+
 ### Switching Executors
 
 When you change an agent's executor:
 - Session resets (fresh start next cycle)
 - Separate session state maintained per executor
 - Works with session resume for each executor independently
+- Legacy Claude/Kimi session files remain readable for backward compatibility
+
+Credential hints:
+- `codex`: `OPENAI_API_KEY` or `codex login`
+- `claude`: `ANTHROPIC_API_KEY` or Claude auth/login
+- `gemini`: `GEMINI_API_KEY` / `GOOGLE_API_KEY` or Gemini sign-in
+- `kimi`: `KIMI_API_KEY` / `MOONSHOT_API_KEY` or `kimi login`
 
 ## Citizens (20 agents)
 

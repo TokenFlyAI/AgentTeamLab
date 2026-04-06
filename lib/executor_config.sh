@@ -2,125 +2,158 @@
 # executor_config.sh — Helper functions for executor configuration
 # Source this file to use: source "$(dirname "$0")/lib/executor_config.sh"
 
+_EXECUTOR_CONFIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${_EXECUTOR_CONFIG_DIR}/executors.sh"
+
+_executor_paths() {
+    local company_dir="${1:-$(cd "${_EXECUTOR_CONFIG_DIR}/.." && pwd)}"
+    local _agents="${AGENTS_DIR:-${company_dir}/agents}"
+    local _shared="${SHARED_DIR:-${company_dir}/public}"
+    if [ -f "${company_dir}/lib/paths.sh" ] && [ -z "$AGENTS_DIR" ]; then
+        source "${company_dir}/lib/paths.sh" 2>/dev/null || true
+        _agents="${AGENTS_DIR:-${company_dir}/agents}"
+        _shared="${SHARED_DIR:-${company_dir}/public}"
+    fi
+    echo "${_agents}|${_shared}"
+}
+
 # Get executor for an agent (with priority resolution)
 # Usage: get_executor <agent_name> [<company_dir>]
-# Returns: "claude" or "kimi"
 get_executor() {
-    local AGENT_NAME="$1"
-    local COMPANY_DIR="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-    # Planet-aware paths (source paths.sh if available)
-    local _AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
-    local _SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
-    if [ -f "${COMPANY_DIR}/lib/paths.sh" ] && [ -z "$AGENTS_DIR" ]; then
-        source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
-        _AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
-        _SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
-    fi
-    local AGENT_DIR="${_AGENTS}/${AGENT_NAME}"
-    local CONFIG_FILE="${_SHARED}/executor_config.md"
-    
-    # Priority 1: Per-agent executor.txt
-    if [ -f "${AGENT_DIR}/executor.txt" ]; then
-        local EXECUTOR=$(cat "${AGENT_DIR}/executor.txt" 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
-        if [ "$EXECUTOR" = "claude" ] || [ "$EXECUTOR" = "kimi" ]; then
-            echo "$EXECUTOR"
+    local agent_name="$1"
+    local company_dir="${2:-$(cd "${_EXECUTOR_CONFIG_DIR}/.." && pwd)}"
+    local resolved
+    resolved="$(_executor_paths "$company_dir")"
+    local _agents="${resolved%%|*}"
+    local _shared="${resolved#*|}"
+    local agent_dir="${_agents}/${agent_name}"
+    local config_file="${_shared}/executor_config.md"
+
+    if [ -f "${agent_dir}/executor.txt" ]; then
+        local executor
+        executor="$(cat "${agent_dir}/executor.txt" 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+        if executor_is_valid "$executor"; then
+            echo "$executor"
             return 0
         fi
     fi
-    
-    # Priority 2: Per-agent table in executor_config.md
-    if [ -f "$CONFIG_FILE" ]; then
-        local FROM_TABLE=$(grep "^| ${AGENT_NAME} |" "$CONFIG_FILE" 2>/dev/null | head -1 | awk -F'|' '{print $3}' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
-        if [ "$FROM_TABLE" = "claude" ] || [ "$FROM_TABLE" = "kimi" ]; then
-            echo "$FROM_TABLE"
+
+    if [ -f "$config_file" ]; then
+        local from_table
+        from_table="$(grep "^| ${agent_name} |" "$config_file" 2>/dev/null | head -1 | awk -F'|' '{print $3}' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+        if executor_is_valid "$from_table"; then
+            echo "$from_table"
             return 0
         fi
     fi
-    
-    # Priority 3: Global default in executor_config.md
-    if [ -f "$CONFIG_FILE" ]; then
-        local GLOBAL_DEFAULT=$(grep -A1 "^## Global Default" "$CONFIG_FILE" 2>/dev/null | grep "^executor:" | head -1 | awk -F':' '{print $2}' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
-        if [ "$GLOBAL_DEFAULT" = "claude" ] || [ "$GLOBAL_DEFAULT" = "kimi" ]; then
-            echo "$GLOBAL_DEFAULT"
+
+    if [ -f "$config_file" ]; then
+        local global_default
+        global_default="$(grep -A1 "^## Global Default" "$config_file" 2>/dev/null | grep "^executor:" | head -1 | awk -F':' '{print $2}' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+        if executor_is_valid "$global_default"; then
+            echo "$global_default"
             return 0
         fi
     fi
-    
-    # Priority 4: Fallback
-    echo "claude"
+
+    executor_default
 }
 
 # Set executor for an agent
-# Usage: set_executor <agent_name> <claude|kimi> [<company_dir>]
+# Usage: set_executor <agent_name> <executor> [<company_dir>]
 set_executor() {
-    local AGENT_NAME="$1"
-    local EXECUTOR="$2"
-    local COMPANY_DIR="${3:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-    local AGENT_DIR="${COMPANY_DIR}/agents/${AGENT_NAME}"
-    
-    # Validate
-    if [ "$EXECUTOR" != "claude" ] && [ "$EXECUTOR" != "kimi" ]; then
-        echo "Error: Executor must be 'claude' or 'kimi'" >&2
+    local agent_name="$1"
+    local executor
+    executor="$(echo "$2" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+    local company_dir="${3:-$(cd "${_EXECUTOR_CONFIG_DIR}/.." && pwd)}"
+    local resolved
+    resolved="$(_executor_paths "$company_dir")"
+    local _agents="${resolved%%|*}"
+    local agent_dir="${_agents}/${agent_name}"
+
+    if ! executor_is_valid "$executor"; then
+        echo "Error: Executor must be one of: $(executor_all | tr '\n' ' ' | sed 's/ $//')" >&2
         return 1
     fi
-    
-    # Create agent dir if needed
-    mkdir -p "$AGENT_DIR"
-    
-    # Write executor.txt
-    echo "$EXECUTOR" > "${AGENT_DIR}/executor.txt"
-    echo "[executor] Set ${AGENT_NAME} → ${EXECUTOR}"
+
+    mkdir -p "$agent_dir"
+    echo "$executor" > "${agent_dir}/executor.txt"
+    echo "[executor] Set ${agent_name} → ${executor}"
 }
 
-# Get session ID file path based on executor
-# Usage: get_session_id_file <agent_dir> <executor>
+_legacy_session_id_file() {
+    local agent_dir="$1"
+    local executor="$2"
+    case "$executor" in
+        kimi) echo "${agent_dir}/session_id_kimi.txt" ;;
+        claude) echo "${agent_dir}/session_id.txt" ;;
+        *) return 1 ;;
+    esac
+}
+
+_legacy_session_cycle_file() {
+    local agent_dir="$1"
+    local executor="$2"
+    case "$executor" in
+        kimi) echo "${agent_dir}/session_cycle_kimi.txt" ;;
+        claude) echo "${agent_dir}/session_cycle.txt" ;;
+        *) return 1 ;;
+    esac
+}
+
 get_session_id_file() {
-    local AGENT_DIR="$1"
-    local EXECUTOR="$2"
-    
-    if [ "$EXECUTOR" = "kimi" ]; then
-        echo "${AGENT_DIR}/session_id_kimi.txt"
+    local agent_dir="$1"
+    local executor
+    executor="$(echo "$2" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+    local generic="${agent_dir}/session_id_${executor}.txt"
+    local legacy
+    legacy="$(_legacy_session_id_file "$agent_dir" "$executor" 2>/dev/null || true)"
+    if [ -f "$generic" ]; then
+        echo "$generic"
+    elif [ -n "$legacy" ] && [ -f "$legacy" ]; then
+        echo "$legacy"
     else
-        echo "${AGENT_DIR}/session_id.txt"
+        echo "$generic"
     fi
 }
 
-# Get session cycle file path based on executor
-# Usage: get_session_cycle_file <agent_dir> <executor>
 get_session_cycle_file() {
-    local AGENT_DIR="$1"
-    local EXECUTOR="$2"
-    
-    if [ "$EXECUTOR" = "kimi" ]; then
-        echo "${AGENT_DIR}/session_cycle_kimi.txt"
+    local agent_dir="$1"
+    local executor
+    executor="$(echo "$2" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+    local generic="${agent_dir}/session_cycle_${executor}.txt"
+    local legacy
+    legacy="$(_legacy_session_cycle_file "$agent_dir" "$executor" 2>/dev/null || true)"
+    if [ -f "$generic" ]; then
+        echo "$generic"
+    elif [ -n "$legacy" ] && [ -f "$legacy" ]; then
+        echo "$legacy"
     else
-        echo "${AGENT_DIR}/session_cycle.txt"
+        echo "$generic"
     fi
 }
 
-# Get settings file path based on executor
-# Usage: get_settings_file <agent_name> <executor>
 get_settings_file() {
-    local AGENT_NAME="$1"
-    local EXECUTOR="$2"
-    
-    if [ "$EXECUTOR" = "kimi" ]; then
-        echo "/tmp/aicompany_kimi_settings_${AGENT_NAME}.toml"
-    else
-        echo "/tmp/aicompany_settings_${AGENT_NAME}.json"
-    fi
+    local agent_name="$1"
+    local executor
+    executor="$(echo "$2" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+    local ext="json"
+    [ "$executor" = "kimi" ] && ext="toml"
+    echo "/tmp/aicompany_${executor}_settings_${agent_name}.${ext}"
 }
 
-# List all agents and their executors
-# Usage: list_agent_executors [<company_dir>]
 list_agent_executors() {
-    local COMPANY_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-    local AGENTS_DIR="${COMPANY_DIR}/agents"
-    
-    for agent_dir in "$AGENTS_DIR"/*; do
+    local company_dir="${1:-$(cd "${_EXECUTOR_CONFIG_DIR}/.." && pwd)}"
+    local resolved
+    resolved="$(_executor_paths "$company_dir")"
+    local _agents="${resolved%%|*}"
+
+    for agent_dir in "$_agents"/*; do
         if [ -d "$agent_dir" ]; then
-            local name=$(basename "$agent_dir")
-            local executor=$(get_executor "$name" "$COMPANY_DIR")
+            local name
+            name="$(basename "$agent_dir")"
+            local executor
+            executor="$(get_executor "$name" "$company_dir")"
             echo "${name}:${executor}"
         fi
     done

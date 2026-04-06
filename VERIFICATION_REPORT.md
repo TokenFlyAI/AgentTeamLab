@@ -30,7 +30,7 @@ Agent Planet (formerly TokenFly Agent Team Lab) has been successfully configured
 All 20 agents have valid configurations:
 - `persona.md` - Agent identity and background
 - `prompt.md` - System instructions
-- `executor.txt` - Executor assignment (claude/kimi)
+- `executor.txt` - Executor assignment (`claude` / `kimi` / `codex` / `gemini`)
 
 **Executor Distribution**:
 - Alice → **Claude** (CEO stability)
@@ -63,11 +63,19 @@ Result with `--max 3`: **alice, bob, charlie** selected correctly.
 - **Session files**: Separate tracking per executor
   - Claude: `session_id.txt`
   - Kimi: `session_id_kimi.txt`
+  - Codex: `session_id_codex.txt`
+  - Gemini: `session_id_gemini.txt`
 - **Resume flags**:
   - Claude: `--resume <session_id>`
-  - Kimi: `--session <session_id>`
+  - Kimi: `--continue`
+  - Codex: `codex exec resume <session_id>`
+  - Gemini: `--resume <session_id>`
 - **Cycle counting**: `SESSION_MAX_CYCLES` (default: 5)
 - **Fresh start**: When cycles exhausted, persona.md reinjected
+
+Runtime rollout / rollback:
+- `ENABLED_EXECUTORS=claude,kimi,codex,gemini` exposes all executor adapters
+- `ENABLED_EXECUTORS=claude,kimi` rolls back to the original pair immediately
 
 ### 5. Cost Optimization ✅
 

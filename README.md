@@ -168,12 +168,18 @@ task: Add Redis caching (critical)
 
 ---
 
-## Dual Executor
+## Multi-Executor
 
-Each citizen can run on **Claude Code** or **Kimi Code** — independently configured. A/B test, mix by cost, split by task type.
+Each citizen can run on **Claude Code**, **Kimi Code**, **Codex CLI**, or **Gemini CLI** — independently configured. A/B test, mix by cost, split by task type.
 
 ```bash
-echo "kimi" > agents/bob/executor.txt
+echo "codex" > agents/bob/executor.txt
+
+# Optional rollout gate / rollback switch
+export ENABLED_EXECUTORS=claude,kimi,codex,gemini
+
+# Fast rollback to the original pair
+export ENABLED_EXECUTORS=claude,kimi
 ```
 
 ---
@@ -204,7 +210,23 @@ Shared Culture      →  public/task_board.md, consensus.md, knowledge.md
 Runtime Data        →  backend/messages.db, metrics_queue.jsonl
 ```
 
-**20 Citizens** across leadership, QA, and engineering roles. Each runs on Claude Code or Kimi Code, with 20-cycle session resume and KV-cache-optimized prompts.
+**20 Citizens** across leadership, QA, and engineering roles. Each runs on Claude Code, Kimi Code, Codex CLI, or Gemini CLI, with executor-specific session state and 20-cycle resume logic.
+
+### Executor Readiness
+
+Executor assignment and executor readiness are different:
+
+- `executor.txt` selects which executor an agent should use
+- `ENABLED_EXECUTORS` controls which executors are exposed for rollout or rollback
+- the dashboard reports whether an executor is installed and whether credentials appear configured
+- credentials remain provider-local and are never stored in the repo
+
+Supported credential patterns:
+
+- `codex`: `OPENAI_API_KEY` or `codex login`
+- `claude`: `ANTHROPIC_API_KEY` or Claude auth/login
+- `gemini`: `GEMINI_API_KEY` / `GOOGLE_API_KEY` or Gemini sign-in
+- `kimi`: `KIMI_API_KEY` / `MOONSHOT_API_KEY` or `kimi login`
 
 **572 E2E tests** across 6 test files (API, Dashboard, Metrics, Coverage, Smart Run, Message Bus).
 
