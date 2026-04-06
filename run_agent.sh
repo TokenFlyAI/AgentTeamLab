@@ -272,6 +272,9 @@ if new_task_ids or changed_tasks:
     for tid in new_task_ids:
         t = curr_tasks[tid]
         changes.append("  +{}|{}|{}".format(t.get("id",""), t.get("title",""), t.get("status","")))
+        desc = (t.get("description") or "").strip()
+        if desc:
+            changes.append("    Description: {}".format(desc))
     for t in changed_tasks:
         changes.append("  #{}:{}→{}".format(t.get("id",""), prev_tasks[t["id"]].get("status",""), t.get("status","")))
 
@@ -402,6 +405,10 @@ if tasks:
     out.append("**Your open tasks**:")
     for t in tasks:
         out.append("  | {} | {} | {} | {} |".format(t.get("id",""), t.get("title",""), t.get("priority",""), t.get("status","")))
+        desc = (t.get("description") or "").strip()
+        if desc:
+            # Show full description for tasks with instructions (sprint pipeline tasks have detailed steps)
+            out.append("    Description: {}".format(desc))
 else:
     out.append("**Your open tasks**: (none assigned)")
 out.append("")
