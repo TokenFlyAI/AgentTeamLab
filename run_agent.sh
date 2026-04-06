@@ -181,7 +181,12 @@ PERSONA_FILE="${AGENT_DIR}/persona.md"
 MEMORY_FILE="${AGENT_DIR}/memory.md"
 
 # Pre-compute inbox count (used in both resume and fresh paths)
-INBOX_COUNT=$(ls "${AGENT_DIR}/chat_inbox/"*.md 2>/dev/null | grep -v '/processed' | wc -l | tr -d ' ')
+# Exclude: files in processed/ subdir AND files with read_/processed_ prefix
+INBOX_COUNT=$(ls "${AGENT_DIR}/chat_inbox/"*.md 2>/dev/null \
+    | grep -v '/processed/' \
+    | grep -v '/read_' \
+    | grep -v '/processed_' \
+    | wc -l | tr -d ' ')
 INBOX_COUNT="${INBOX_COUNT:-0}"
 
 # Count urgent (CEO/lord) messages in inbox — always surfaced

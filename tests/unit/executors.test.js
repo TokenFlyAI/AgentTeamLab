@@ -28,8 +28,8 @@ function test(name, fn) {
 
 console.log("\nexecutors");
 
-test("default executor remains claude", () => {
-  assert.strictEqual(DEFAULT_EXECUTOR, "claude");
+test("default executor is codex", () => {
+  assert.strictEqual(DEFAULT_EXECUTOR, "codex");
 });
 
 test("supported executors include claude, kimi, codex, gemini", () => {
@@ -46,7 +46,7 @@ test("parseEnabledExecutors filters invalid values and preserves valid ones", ()
 });
 
 test("parseEnabledExecutors falls back to the default enabled set when config is empty", () => {
-  assert.deepStrictEqual(parseEnabledExecutors(""), ["claude", "kimi"]);
+  assert.deepStrictEqual(parseEnabledExecutors(""), ["codex", "gemini"]);
 });
 
 test("isValidExecutor recognizes codex and gemini", () => {
