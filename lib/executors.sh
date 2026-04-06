@@ -3,7 +3,24 @@
 
 _AICOMPANY_SUPPORTED_EXECUTORS=(claude kimi codex gemini)
 _AICOMPANY_DEFAULT_EXECUTOR="claude"
-_AICOMPANY_DEFAULT_ENABLED_EXECUTORS="claude,kimi"
+_AICOMPANY_DEFAULT_ENABLED_EXECUTORS="codex,gemini"
+
+_executor_config_path() {
+    local base="${1:-}"
+    if [ -n "${SHARED_DIR:-}" ] && [ -f "${SHARED_DIR}/smart_run_config.json" ]; then
+        echo "${SHARED_DIR}/smart_run_config.json"
+        return 0
+    fi
+    if [ -n "$base" ] && [ -f "${base}/public/smart_run_config.json" ]; then
+        echo "${base}/public/smart_run_config.json"
+        return 0
+    fi
+    if [ -n "$base" ] && [ -f "${base}/shared/smart_run_config.json" ]; then
+        echo "${base}/shared/smart_run_config.json"
+        return 0
+    fi
+    return 1
+}
 
 executor_all() {
     printf '%s\n' "${_AICOMPANY_SUPPORTED_EXECUTORS[@]}"
@@ -24,7 +41,18 @@ executor_is_valid() {
 }
 
 executor_enabled_csv() {
-    local configured="${ENABLED_EXECUTORS:-${_AICOMPANY_DEFAULT_ENABLED_EXECUTORS}}"
+    local configured="${ENABLED_EXECUTORS:-}"
+    if [ -z "$configured" ]; then
+        local config_path
+        config_path="$(_executor_config_path "${COMPANY_DIR:-}")"
+        if [ -n "$config_path" ] && command -v jq >/dev/null 2>&1; then
+            configured="$(jq -r '(.enabled_executors // []) | if type == "array" then join(",") else . end' "$config_path" 2>/dev/null)"
+            [ "$configured" = "null" ] && configured=""
+        elif [ -n "$config_path" ]; then
+            configured="$(grep -E '"enabled_executors"' "$config_path" | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/' 2>/dev/null)"
+        fi
+    fi
+    configured="${configured:-${_AICOMPANY_DEFAULT_ENABLED_EXECUTORS}}"
     local normalized=""
     local item
     IFS=',' read -r -a _items <<< "$configured"

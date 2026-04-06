@@ -1824,6 +1824,31 @@ body {
           </label>
         </div>
 
+        <h3>Enabled Executors</h3>
+        <div class="fleet-radio-group" id="fleet-enabled-executors">
+          <label class="fleet-radio-label">
+            <input type="checkbox" value="claude" checked>
+            <span>Claude</span>
+            <small>Default stable executor</small>
+          </label>
+          <label class="fleet-radio-label">
+            <input type="checkbox" value="kimi" checked>
+            <span>Kimi</span>
+            <small>Low-cost alternative</small>
+          </label>
+          <label class="fleet-radio-label">
+            <input type="checkbox" value="codex">
+            <span>Codex</span>
+            <small>Expose only when OpenAI credentials are ready</small>
+          </label>
+          <label class="fleet-radio-label">
+            <input type="checkbox" value="gemini">
+            <span>Gemini</span>
+            <small>Expose only when Gemini credentials are ready</small>
+          </label>
+        </div>
+        <p class="fleet-hint">This persists to <code>smart_run_config.json</code>. Environment variable <code>ENABLED_EXECUTORS</code> still overrides it for rollout or emergency rollback.</p>
+
         <h3>Actions</h3>
         <div class="fleet-actions">
           <button id="fleet-start-btn" class="fleet-btn fleet-btn-primary" onclick="startFleetDaemon()">Start Daemon</button>
@@ -2409,6 +2434,11 @@ async function refreshExecutorCatalog() {
   } catch (_) {}
 }
 
+function getEnabledExecutorSelection() {
+  return Array.from(document.querySelectorAll('#fleet-enabled-executors input[type="checkbox"]:checked'))
+    .map((el) => el.value);
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
@@ -2876,6 +2906,12 @@ function updateFleetUI(configData, statusData, agentList) {
   document.querySelectorAll('input[name="fleet-selection-mode"]')
     .forEach(r => { r.checked = r.value === selMode; });
 
+  const enabledExecutors = Array.isArray(configData.config?.enabled_executors)
+    ? configData.config.enabled_executors
+    : ['claude', 'kimi'];
+  document.querySelectorAll('#fleet-enabled-executors input[type="checkbox"]')
+    .forEach(cb => { cb.checked = enabledExecutors.includes(cb.value); });
+
   // Update agents list
   const agentsContainer = document.getElementById('fleet-agents');
   if (runningAgents.length === 0) {
@@ -2938,12 +2974,13 @@ async function stopFleetDaemon() {
 async function applyFleetConfig() {
   const maxAgents = parseInt(document.getElementById('fleet-max-agents').value, 10);
   const selectionMode = document.querySelector('input[name="fleet-selection-mode"]:checked')?.value || 'deterministic';
+  const enabledExecutors = getEnabledExecutorSelection();
 
   try {
     const res = await apiFetch('/api/smart-run/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ max_agents: maxAgents, selection_mode: selectionMode })
+      body: JSON.stringify({ max_agents: maxAgents, selection_mode: selectionMode, enabled_executors: enabledExecutors })
     });
     const data = await res.json();
     if (data.ok) {

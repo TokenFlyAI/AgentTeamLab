@@ -37,13 +37,23 @@ if ! executor_is_enabled "$EXECUTOR"; then
     echo "[executor:${AGENT_NAME}] Executor disabled by ENABLED_EXECUTORS: ${EXECUTOR}"
     exit 1
 fi
-if ! executor_binary_exists "$EXECUTOR"; then
+
+# Detect dry_run early — binary check is skipped when dry_run is active
+_EARLY_DRY_RUN="${DRY_RUN:-0}"
+if [ "$_EARLY_DRY_RUN" != "1" ] && [ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" ]; then
+    _cfg_dry=$(jq -r '.dry_run // false' "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" 2>/dev/null)
+    [ "$_cfg_dry" = "true" ] && _EARLY_DRY_RUN=1
+fi
+
+if [ "$_EARLY_DRY_RUN" != "1" ] && ! executor_binary_exists "$EXECUTOR"; then
     echo "[executor:${AGENT_NAME}] Missing CLI: $(executor_binary "$EXECUTOR")"
     echo "[executor:${AGENT_NAME}] Hint: $(executor_auth_hint "$EXECUTOR")"
     exit 1
 fi
 echo "[executor:${AGENT_NAME}] Using: ${EXECUTOR}"
-echo "[executor:${AGENT_NAME}] Auth status: $(executor_auth_status "$EXECUTOR")"
+if [ "$_EARLY_DRY_RUN" != "1" ]; then
+    echo "[executor:${AGENT_NAME}] Auth status: $(executor_auth_status "$EXECUTOR")"
+fi
 
 # Create directories
 mkdir -p "${AGENT_DIR}/logs" "${AGENT_DIR}/chat_inbox/processed" "${AGENT_DIR}/knowledge"
@@ -118,9 +128,10 @@ fi
 
 # ── Cost cap check ───────────────────────────────────────────────────────────
 # Skip cycle if agent or total daily spend exceeds cap (saves tokens!)
+# (skipped in dry_run mode — no real API spend occurs)
 _DASHBOARD_PORT="${DASHBOARD_PORT:-3199}"
 _CONFIG_FILE="${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json"
-if [ -f "$_CONFIG_FILE" ]; then
+if [ "${_EARLY_DRY_RUN:-0}" != "1" ] && [ -f "$_CONFIG_FILE" ]; then
     _AGENT_CAP=$(jq -r '.per_agent_cost_cap_usd // 0' "$_CONFIG_FILE" 2>/dev/null)
     _DAILY_CAP=$(jq -r '.daily_cost_cap_usd // 0' "$_CONFIG_FILE" 2>/dev/null)
     if [ "$_AGENT_CAP" != "0" ] || [ "$_DAILY_CAP" != "0" ]; then
@@ -732,12 +743,8 @@ sys.stdout.flush()
 cd "$AGENT_DIR"
 
 # ── Dry-run mode: skip real CLI call ─────────────────────────────────────────
-# Set DRY_RUN=1 (env var) or "dry_run": true in public/smart_run_config.json
-_DRY_RUN="${DRY_RUN:-0}"
-if [ "$_DRY_RUN" != "1" ] && [ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" ]; then
-    _cfg_dry=$(jq -r '.dry_run // false' "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" 2>/dev/null)
-    [ "$_cfg_dry" = "true" ] && _DRY_RUN=1
-fi
+# _EARLY_DRY_RUN was already resolved above (before binary check); reuse it.
+_DRY_RUN="${_EARLY_DRY_RUN:-0}"
 
 if [ "$_DRY_RUN" = "1" ]; then
     echo "[DRY RUN] ${AGENT_NAME} — skipping ${EXECUTOR} call"
