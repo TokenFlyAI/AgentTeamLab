@@ -34,7 +34,7 @@ Normal mode is the default operating mode. Agents work at a steady pace on assig
 
 ## Knowledge Sharing — Culture & Consensus
 
-The team maintains a shared knowledge base at `public/consensus.md`. **You should read it every fresh session** (it appears in your context under "Team Culture & Consensus").
+The team maintains a shared knowledge base at `public/consensus.md`. **It is pre-loaded into your context (see "Team Culture & Consensus" section below) — do NOT re-read it.** Reference it from memory.
 
 **When to WRITE a culture entry:**
 - You discover a decision that affects the whole team (strategy change, security requirement, architecture choice)
