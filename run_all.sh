@@ -42,7 +42,7 @@ if [ -f "$KALSHI_API" ] && [ -f "$KALSHI_SCHEDULER" ] && [ -f "$KALSHI_MONITOR" 
     pm2 start "${COMPANY_DIR}/ecosystem.config.js" --only kalshi-dashboard,kalshi-scheduler,kalshi-monitor
   else
     mkdir -p /tmp/aicompany_runtime_logs
-    if ! pgrep -f "agents/bob/backend/dashboard_api.js" > /dev/null 2>&1; then
+    if ! pgrep -f "dashboard_api.js" > /dev/null 2>&1; then
       nohup node "$KALSHI_API" >> /tmp/aicompany_runtime_logs/kalshi-dashboard.log 2>&1 &
       echo "  kalshi-dashboard started (pid $!)"
     else

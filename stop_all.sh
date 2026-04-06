@@ -27,9 +27,11 @@ pkill -TERM -f "run_agent.sh"  2>/dev/null && echo "  Killed run_agent.sh"  || t
 
 sleep 1
 
-# 5. Force-kill any still-running claude/kimi subprocesses under agents/
-pkill -9 -f "claude.*agents/" 2>/dev/null && echo "  Force-killed claude agent procs" || true
-pkill -9 -f "kimi.*agents/"   2>/dev/null && echo "  Force-killed kimi agent procs"   || true
+# 5. Force-kill any still-running executor subprocesses (match on run_agent.sh pattern, not hardcoded agents/ path)
+pkill -9 -f "claude.*planets/" 2>/dev/null || pkill -9 -f "claude.*agents/" 2>/dev/null || true
+echo "  Force-killed claude agent procs" 2>/dev/null || true
+pkill -9 -f "kimi.*planets/"   2>/dev/null || pkill -9 -f "kimi.*agents/"   2>/dev/null || true
+echo "  Force-killed kimi agent procs"   2>/dev/null || true
 pkill -9 -f "run_agent.sh"    2>/dev/null || true
 pkill -9 -f "run_subset.sh"   2>/dev/null || true
 

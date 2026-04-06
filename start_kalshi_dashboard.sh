@@ -33,7 +33,7 @@ else
   echo "WARNING: pm2 not found. Install with: npm install -g pm2"
   echo "Falling back to plain background processes..."
 
-  if ! pgrep -f "agents/bob/backend/dashboard_api.js" > /dev/null 2>&1; then
+  if ! pgrep -f "dashboard_api.js" > /dev/null 2>&1; then
     nohup node "${AGENTS_DIR:-${COMPANY_DIR}/agents}/bob/backend/dashboard_api.js" \
       >> /tmp/aicompany_runtime_logs/kalshi-dashboard.log 2>&1 &
     echo "  kalshi-dashboard started (pid $!) — no auto-restart on crash"
