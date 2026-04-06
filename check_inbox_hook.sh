@@ -30,10 +30,11 @@ for msg in "${UNREAD_FILES[@]}"; do
         OTHER_FILES+=("$msg")
     fi
 done
-# Reverse sort OTHER_FILES (newest first — filenames start with timestamp)
-IFS=$'\n' SORTED_OTHER=($(printf '%s\n' "${OTHER_FILES[@]}" | sort -r))
-IFS=$'\n' SORTED_CEO=($(printf '%s\n' "${CEO_FILES[@]}" | sort -r))
-unset IFS
+# Reverse sort each group (newest first — filenames start with timestamp)
+SORTED_CEO=()
+SORTED_OTHER=()
+[ ${#CEO_FILES[@]} -gt 0 ] && IFS=$'\n' SORTED_CEO=($(printf '%s\n' "${CEO_FILES[@]}" | sort -r)) && unset IFS
+[ ${#OTHER_FILES[@]} -gt 0 ] && IFS=$'\n' SORTED_OTHER=($(printf '%s\n' "${OTHER_FILES[@]}" | sort -r)) && unset IFS
 SORTED_FILES=("${SORTED_CEO[@]}" "${SORTED_OTHER[@]}")
 
 # Build output — cap at 5 most recent/priority messages to avoid token blowup
@@ -44,7 +45,8 @@ OUTPUT="=== URGENT: UNREAD MESSAGES IN YOUR INBOX (${TOTAL} total) ===\n"
 SHOWN=0
 for msg in "${SORTED_FILES[@]}"; do
     [ $SHOWN -ge $MAX_MSGS ] && break
-    OUTPUT="${OUTPUT}--- Message: $(basename $msg) ---\n$(cat "$msg")\n"
+    [ -z "$msg" ] || [ ! -f "$msg" ] && continue
+    OUTPUT="${OUTPUT}--- Message: $(basename "$msg") ---\n$(cat "$msg")\n"
     SHOWN=$((SHOWN+1))
 done
 [ $TOTAL -gt $MAX_MSGS ] && OUTPUT="${OUTPUT}... and $((TOTAL - MAX_MSGS)) more — process these first, then re-check.\n"
