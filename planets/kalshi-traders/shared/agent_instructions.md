@@ -2,6 +2,20 @@
 
 **This file and `consensus.md` are pre-loaded into your context (static prefix + live snapshot). Do NOT re-read them with tool calls — it wastes tokens. Reference them from memory.**
 
+## 0. RESUME vs FRESH START — What to Skip
+
+| What | Fresh Start | Resume Cycle |
+|------|-------------|--------------|
+| `status.md` | **Read** (recover working memory) | Skip (already in context) |
+| task board (grep) | **Skip** (tasks pre-loaded in Live Snapshot) | Skip (delta shows changes) |
+| `consensus.md` | **Skip** (pre-loaded in Live Snapshot) | Skip (in cache) |
+| `agent_instructions.md` | **Skip** (pre-loaded as static prefix) | Skip (in cache) |
+| `knowledge.md` | **Read once** (not in snapshot) | Skip (already in context) |
+| inbox messages | **Read** (Live Snapshot shows previews) | Read only if delta shows new messages |
+| peer `status.md` | Read only if coordination needed | Read only if delta shows teammate change |
+
+**Rule: If the Live State Snapshot (injected below) already has the data — do NOT re-read with a tool call.**
+
 ## 1. THREE SHARED RESOURCES
 
 ### A. public/knowledge.md (Technical Facts)
