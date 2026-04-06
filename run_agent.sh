@@ -712,14 +712,16 @@ sys.stdout.flush()
                 ' >> "$DAILY_LOG" 2>/dev/null || true
             ;;
         codex)
-            # --add-dir allows writes to shared resources (public/, agents/) outside agent workdir
+            # --add-dir allows writes to resources outside agent workdir (symlinks resolve outside sandbox)
             _CODEX_SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
             _CODEX_AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
+            _CODEX_OUTPUT="${OUTPUT_DIR:-${COMPANY_DIR}/output}"
             if [ $USE_RESUME -eq 1 ] && [ -n "$RESUME_FLAG" ]; then
                 $TIMEOUT_CMD codex exec resume "$RESUME_FLAG" "$PROMPT_TEXT" \
                     -C "$AGENT_DIR" \
                     --add-dir "$_CODEX_SHARED" \
                     --add-dir "$_CODEX_AGENTS" \
+                    --add-dir "$_CODEX_OUTPUT" \
                     --skip-git-repo-check \
                     --json \
                     2>/dev/null \
@@ -730,6 +732,7 @@ sys.stdout.flush()
                     -C "$AGENT_DIR" \
                     --add-dir "$_CODEX_SHARED" \
                     --add-dir "$_CODEX_AGENTS" \
+                    --add-dir "$_CODEX_OUTPUT" \
                     --skip-git-repo-check \
                     --json \
                     2>/dev/null \
