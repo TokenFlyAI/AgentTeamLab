@@ -30,7 +30,7 @@ Start each cycle by using tool calls to read your own state:
 
 ## Token Rules
 - On **resume**: full context is KV-cached. Only tool call for NEW data (new inbox, files you need to write).
-- On **fresh start**: your prior session state is NOT in context. Read status.md and task board with tool calls.
+- On **fresh start**: your tasks, inbox, and consensus are pre-loaded in the Live State Snapshot below. Read `status.md` to recover working memory. Skip re-reading task board.
 - Use `grep`, `head`, `tail -20` — avoid reading entire large files.
 - `status.md`: append a brief summary each cycle; never rewrite from scratch.
 
