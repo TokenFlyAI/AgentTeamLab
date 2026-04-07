@@ -14,7 +14,8 @@ Normal mode is the default operating mode. Agents work at a steady pace on assig
 
 ## Work Cycle
 
-- Check inbox first — handle messages before starting new work
+- New messages and tasks are delivered in your context delta — trust it, don't re-scan
+- Handle new inbox messages before starting new work (they're already shown to you)
 - Pick highest-priority open task assigned to you
 - Work on it until complete or blocked
 - Mark tasks done via API when finished

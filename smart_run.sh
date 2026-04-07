@@ -178,7 +178,18 @@ build_selection_list() {
     
     if [ -f "$TASK_BOARD" ]; then
         # Task board columns: | ID | Title | Description | Priority | Group | Assignee | Status | ... |
-        while IFS='|' read -r _ id title _desc _priority _group assignee tb_status _; do
+        # Only count rows in the "## Tasks" section (not Directions or Instructions)
+        _IN_TASKS_SECTION=0
+        while IFS= read -r _raw_line; do
+            # Track sections: only process rows under "## Tasks"
+            if echo "$_raw_line" | grep -qE '^## '; then
+                echo "$_raw_line" | grep -qiE 'task' && _IN_TASKS_SECTION=1 || _IN_TASKS_SECTION=0
+                continue
+            fi
+            [ "$_IN_TASKS_SECTION" -eq 0 ] && continue
+            echo "$_raw_line" | grep -q '^|' || continue
+            # Parse the pipe-delimited row
+            IFS='|' read -r _ id _title _desc _priority _group assignee tb_status _ <<< "$_raw_line"
             id_clean=$(echo "$id" | tr -d ' ')
             echo "$id_clean" | grep -qE '^(-+|ID)$' && continue
             [ -z "$id_clean" ] && continue
@@ -198,7 +209,7 @@ build_selection_list() {
             else
                 UNASSIGNED_COUNT=$((UNASSIGNED_COUNT + 1))
             fi
-        done < <(grep '^|' "$TASK_BOARD" 2>/dev/null | tail -n +3)
+        done < "$TASK_BOARD"
     fi
     
     # Check inbox
