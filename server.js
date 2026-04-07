@@ -3387,7 +3387,7 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/mode") {
-    const raw = safeRead(path.join(PUBLIC_DIR, "company_mode.md"));
+    const raw = cached("company_mode", 30_000, () => safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "");
     let mode = "normal";
     if (raw) {
       const m = raw.match(/##\s*Current Mode\s*\n\*\*(\w+)\*\*/i);
@@ -3419,13 +3419,14 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/sops") {
-    const dir = path.join(PUBLIC_DIR, "sops");
-    const files = listDir(dir).filter((f) => f.endsWith(".md"));
-    const sops = files.map((f) => ({
-      name: f,
-      filename: f,
-      content: safeRead(path.join(dir, f)),
-    }));
+    const sops = cached("sops_list", 60_000, () => {
+      const dir = path.join(PUBLIC_DIR, "sops");
+      return listDir(dir).filter((f) => f.endsWith(".md")).map((f) => ({
+        name: f,
+        filename: f,
+        content: safeRead(path.join(dir, f)),
+      }));
+    });
     return json(res, sops);
   }
 
