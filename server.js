@@ -889,6 +889,7 @@ ${sep}
 ${buildRows(regularTasks)}
 `;
   fs.writeFileSync(tbPath, content);
+  cacheInvalidate("task_board");
 }
 
 // Sanitize a string for safe insertion into a markdown table cell (strip pipe chars)
@@ -954,6 +955,7 @@ async function appendTaskRow(task) {
       const sep = raw.endsWith("\n") ? "" : "\n";
       fs.appendFileSync(tbPath, sep + row + "\n");
     }
+    cacheInvalidate("task_board");
   });
   return newId;
 }
@@ -990,7 +992,7 @@ async function updateTaskRow(id, updates) {
         break;
       }
     }
-    if (found) fs.writeFileSync(tbPath, lines.join("\n"));
+    if (found) { fs.writeFileSync(tbPath, lines.join("\n")); cacheInvalidate("task_board"); }
   });
   return found;
 }
@@ -2193,8 +2195,9 @@ async function handleRequest(req, res) {
       return { filename: f, preview: contentLine.trim().slice(0, 150) };
     });
 
-    // Open tasks for this agent
-    const tasks = parseTaskBoard()
+    // Open tasks for this agent (task board cached 10s — task updates are critical, keep TTL short)
+    const allTasks = cached("task_board", 10_000, () => parseTaskBoard());
+    const tasks = allTasks
       .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
                && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()));
 
@@ -2648,6 +2651,7 @@ async function handleRequest(req, res) {
       }
       if (found) {
         fs.writeFileSync(tbPath, lines.join("\n"));
+        cacheInvalidate("task_board");
         result = { ok: true, id: parseInt(id, 10), status: "in_progress", assignee: claimant };
         broadcastWS("task_claimed", { id: parseInt(id, 10), assignee: claimant });
       } else {
@@ -2676,6 +2680,7 @@ async function handleRequest(req, res) {
       });
       try {
         fs.writeFileSync(tbPath, filtered.join("\n"));
+        cacheInvalidate("task_board");
         deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } };
         broadcastWS("task_deleted", { id: parseInt(id, 10) });
       } catch (e) {
