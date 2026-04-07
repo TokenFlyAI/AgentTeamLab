@@ -86,6 +86,8 @@
 
 ## 3. STATUS.MD TEMPLATE
 
+**REPLACE (overwrite) status.md each cycle — do NOT append.** The prior session's content is already in your context via KV cache. Appending to status.md makes it grow unboundedly, wasting tokens every fresh start (dave's status.md ballooned to 200+ lines of stale history). Keep it to the current task only.
+
 Write to agents/{your_name}/status.md each cycle. Include:
 
 ```markdown
