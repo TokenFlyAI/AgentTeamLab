@@ -6,8 +6,10 @@
 # or a message is processed). Silences on repeated identical tool calls.
 INBOX_DIR="chat_inbox"
 AGENT_NAME=$(basename "$(pwd)")
-# Prune stale stamp files older than 24h (they accumulate per-cycle; PPID changes every run)
-find /tmp -maxdepth 1 -name ".inbox_hook_${AGENT_NAME}_*" -mtime +1 -delete 2>/dev/null || true
+# Single stamp file per agent (no PPID suffix) — BUG-018 lock ensures only one agent
+# instance runs at a time, so one file is safe and prevents unbounded accumulation.
+# Migrate: delete any legacy PPID-keyed stamp files on first encounter.
+find /tmp -maxdepth 1 -name ".inbox_hook_${AGENT_NAME}_*[0-9]" -delete 2>/dev/null || true
 shopt -s nullglob
 
 UNREAD_FILES=()
@@ -57,7 +59,7 @@ done
 OUTPUT="${OUTPUT}REQUIRED: Run inbox_done <filename> after handling each message (or mv to chat_inbox/processed/)\n"
 
 # Within-cycle dedup: skip if inbox content unchanged since last emission this cycle.
-STAMP_FILE="/tmp/.inbox_hook_${AGENT_NAME}_${PPID}"
+STAMP_FILE="/tmp/.inbox_hook_${AGENT_NAME}"
 NEW_HASH=$(printf '%s' "$OUTPUT" | md5 2>/dev/null || printf '%s' "$OUTPUT" | md5sum 2>/dev/null | cut -d' ' -f1)
 OLD_HASH=$(cat "$STAMP_FILE" 2>/dev/null || true)
 

@@ -6,8 +6,10 @@
 # Uses a temp stamp file keyed by agent + session PID to silence repeated identical output.
 TASKBOARD="../../public/task_board.md"
 AGENT_NAME=$(basename "$(pwd)")
-# Prune stale stamp files older than 24h (they accumulate per-cycle; PPID changes every run)
-find /tmp -maxdepth 1 -name ".taskboard_hook_${AGENT_NAME}_*" -mtime +1 -delete 2>/dev/null || true
+# Single stamp file per agent (no PPID suffix) — BUG-018 lock ensures only one agent
+# instance runs at a time, so one file is safe and prevents unbounded accumulation.
+# Migrate: delete any legacy PPID-keyed stamp files on first encounter.
+find /tmp -maxdepth 1 -name ".taskboard_hook_${AGENT_NAME}_*[0-9]" -delete 2>/dev/null || true
 
 [ ! -f "$TASKBOARD" ] && exit 0
 
@@ -60,7 +62,7 @@ fi
 
 # Within-cycle dedup: hash the output; skip if identical to last emission this cycle.
 # Stamp file is keyed by agent + parent PID (one per agent process tree).
-STAMP_FILE="/tmp/.taskboard_hook_${AGENT_NAME}_${PPID}"
+STAMP_FILE="/tmp/.taskboard_hook_${AGENT_NAME}"
 NEW_HASH=$(printf '%s' "$OUTPUT" | md5 2>/dev/null || printf '%s' "$OUTPUT" | md5sum 2>/dev/null | cut -d' ' -f1)
 OLD_HASH=$(cat "$STAMP_FILE" 2>/dev/null || true)
 
