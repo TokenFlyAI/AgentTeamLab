@@ -1813,12 +1813,12 @@ body {
         <h3>Selection Mode</h3>
         <div class="fleet-radio-group">
           <label class="fleet-radio-label">
-            <input type="radio" name="fleet-selection-mode" value="deterministic" checked>
+            <input type="radio" name="fleet-selection-mode" value="deterministic" checked onclick="_selectionModeUserEdited=true">
             <span>Deterministic</span>
             <small>Fixed priority order (alice → task-assigned → unassigned → inbox)</small>
           </label>
           <label class="fleet-radio-label">
-            <input type="radio" name="fleet-selection-mode" value="random">
+            <input type="radio" name="fleet-selection-mode" value="random" onclick="_selectionModeUserEdited=true">
             <span>Random</span>
             <small>Shuffle eligible agents for fair distribution</small>
           </label>
@@ -2881,10 +2881,11 @@ function updateFleetUI(configData, statusData, agentList) {
   if (maxInput && document.activeElement !== maxInput) maxInput.value = configMax;
   if (sleepInput && document.activeElement !== sleepInput) sleepInput.value = cycleSleep;
 
-  // Sync Smart Run button — if any agents running, show Stop state
+  // Sync Smart Run button — respect grace period after smart-start click
   const btn = document.getElementById('smart-start-btn');
   if (btn && document.activeElement !== btn) {
-    if (runningAgents.length > 0) setSmartStartRunning(btn);
+    if (runningAgents.length > 0) { setSmartStartRunning(btn); _smartStartGraceUntil = 0; }
+    else if (Date.now() < _smartStartGraceUntil) { /* grace: keep Stop state */ }
     else setSmartStartIdle(btn);
   }
 
@@ -2901,10 +2902,12 @@ function updateFleetUI(configData, statusData, agentList) {
     sliderValue.textContent = maxAgents;
   }
 
-  // Sync selection mode radio
-  const selMode = configData.config?.selection_mode || 'deterministic';
-  document.querySelectorAll('input[name="fleet-selection-mode"]')
-    .forEach(r => { r.checked = r.value === selMode; });
+  // Sync selection mode radio — skip if user has made a pending change
+  if (!_selectionModeUserEdited) {
+    const selMode = configData.config?.selection_mode || 'deterministic';
+    document.querySelectorAll('input[name="fleet-selection-mode"]')
+      .forEach(r => { r.checked = r.value === selMode; });
+  }
 
   const enabledExecutors = Array.isArray(configData.config?.enabled_executors)
     ? configData.config.enabled_executors
@@ -2984,6 +2987,7 @@ async function applyFleetConfig() {
     });
     const data = await res.json();
     if (data.ok) {
+      _selectionModeUserEdited = false; // Clear dirty flag — API now reflects user's choice
       showToast('Settings applied');
       loadFleetStatus();
     } else {
@@ -3871,7 +3875,8 @@ function syncSmartStartBtn(agentList) {
     const s = (a.status || a.heartbeat_status || '').toLowerCase();
     return s === 'running' || s === 'active';
   });
-  if (anyRunning) setSmartStartRunning(btn);
+  if (anyRunning) { setSmartStartRunning(btn); _smartStartGraceUntil = 0; }
+  else if (Date.now() < _smartStartGraceUntil) return; // grace period: don't revert yet
   else setSmartStartIdle(btn);
 }
 
@@ -3886,6 +3891,11 @@ function saveCycleSleep(val) {
 }
 
 let _smartRunWatchdog = null;
+// Grace period after smart-start: prevent syncSmartStartBtn from reverting button
+// before launched agents have time to write their "running" heartbeats (~5-10s).
+let _smartStartGraceUntil = 0;
+// Dirty flag: user clicked a radio — don't overwrite until Apply succeeds
+let _selectionModeUserEdited = false;
 
 function startSmartRunWatchdog() {
   if (_smartRunWatchdog) clearInterval(_smartRunWatchdog);
@@ -3921,6 +3931,7 @@ function smartStart(maxOverride) {
     .then(data => {
       if (data.ok) {
         setSmartStartRunning(btn);
+        _smartStartGraceUntil = Date.now() + 12000; // 12s grace: agents need time to write heartbeats
         const d = data.decision || {};
         const starting = d['Starting now'] || 'none';
         showToast('⚡ Smart Start (max ' + max + '): ' + starting, 5000);

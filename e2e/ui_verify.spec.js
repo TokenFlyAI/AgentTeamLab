@@ -19,7 +19,7 @@ async function shot(page, name) {
 
 test('01 — Page load: title, header, uptime visible', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   await shot(page, '01_home_full');
 
   const title = await page.title();
@@ -43,10 +43,12 @@ test('01 — Page load: title, header, uptime visible', async ({ page }) => {
 
 test('02 — Agents tab: shows agent grid with 20 agents', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
-  // Click Agents tab
-  await page.locator('#tab-agents').click();
+  // Click Agents tab nav button (not the content div)
+  await page.locator('button.tab-btn[data-tab="agents"]').click();
+  // Wait for agent cards to render from API data
+  await page.waitForSelector('.agent-card', { timeout: 10000 }).catch(() => {});
   await page.waitForTimeout(500);
   await shot(page, '02_agents_tab');
 
@@ -65,8 +67,9 @@ test('02 — Agents tab: shows agent grid with 20 agents', async ({ page }) => {
 
 test('03 — Agent card click: opens detail modal', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-agents').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="agents"]').click();
+  await page.waitForSelector('.agent-card', { timeout: 10000 }).catch(() => {});
   await page.waitForTimeout(300);
 
   // Click first agent card (alice)
@@ -87,19 +90,20 @@ test('03 — Agent card click: opens detail modal', async ({ page }) => {
 
 test('04 — Agent modal tabs: Overview / Cycles / Inbox / Activity', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-agents').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="agents"]').click();
+  await page.waitForSelector('.agent-card', { timeout: 10000 }).catch(() => {});
   await page.waitForTimeout(300);
   await page.locator('.agent-card').first().click();
   await page.waitForTimeout(500);
 
-  // Click through modal tabs
-  for (const tabText of ['Cycles', 'Inbox', 'Activity', 'Overview']) {
-    const tab = page.locator(`text=${tabText}`).first();
+  // Click through modal tabs using data-mtab attribute selectors
+  for (const [mtab, label] of [['cycles', 'Cycles'], ['inbox', 'Inbox'], ['activity', 'Activity'], ['overview', 'Overview']]) {
+    const tab = page.locator(`[data-mtab="${mtab}"]`);
     if (await tab.isVisible({ timeout: 1000 }).catch(() => false)) {
       await tab.click();
       await page.waitForTimeout(300);
-      console.log(`Clicked modal tab: ${tabText}`);
+      console.log(`Clicked modal tab: ${label}`);
     }
   }
   await shot(page, '04_agent_modal_cycles');
@@ -109,8 +113,8 @@ test('04 — Agent modal tabs: Overview / Cycles / Inbox / Activity', async ({ p
 
 test('05 — Missions tab: task board loads with tasks', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-tasks').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="tasks"]').click();
   await page.waitForTimeout(800);
   await shot(page, '05_missions_tab');
 
@@ -123,8 +127,8 @@ test('05 — Missions tab: task board loads with tasks', async ({ page }) => {
 
 test('06 — Chat tab: loads', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-chat').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="chat"]').click();
   await page.waitForTimeout(600);
   await shot(page, '06_chat_tab');
   const body = await page.textContent('body');
@@ -135,8 +139,8 @@ test('06 — Chat tab: loads', async ({ page }) => {
 
 test('07 — Culture tab: shows consensus entries', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-consensus').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="research"]').click();
   await page.waitForTimeout(800);
   await shot(page, '07_culture_tab');
 
@@ -149,8 +153,8 @@ test('07 — Culture tab: shows consensus entries', async ({ page }) => {
 
 test('08 — Stats tab: shows cost/metrics', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-stats').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="stats"]').click();
   await page.waitForTimeout(800);
   await shot(page, '08_stats_tab');
 
@@ -163,8 +167,8 @@ test('08 — Stats tab: shows cost/metrics', async ({ page }) => {
 
 test('09 — Fleet tab: shows daemon status + controls', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-fleet').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="fleet"]').click();
   await page.waitForTimeout(800);
   await shot(page, '09_fleet_tab');
 
@@ -178,20 +182,19 @@ test('09 — Fleet tab: shows daemon status + controls', async ({ page }) => {
   await expect(runningCount).toBeVisible();
   console.log('Running count:', await runningCount.textContent());
 
-  // Start/Stop/Apply buttons
+  // Start/Apply buttons always visible; Stop button only visible when daemon running
   const startBtn = page.locator('#fleet-start-btn');
-  const stopBtn  = page.locator('#fleet-stop-btn');
   const applyBtn = page.locator('#fleet-apply-btn');
   await expect(startBtn).toBeVisible();
-  await expect(stopBtn).toBeVisible();
   await expect(applyBtn).toBeVisible();
-  console.log('Fleet buttons: Start ✓ Stop ✓ Apply ✓');
+  const stopVisible = await page.locator('#fleet-stop-btn').isVisible();
+  console.log('Fleet buttons: Start ✓ Apply ✓ Stop:', stopVisible ? '✓' : '(hidden — daemon not running)');
 });
 
 test('10 — Fleet tab: Selection Mode radios work', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-fleet').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="fleet"]').click();
   await page.waitForTimeout(500);
 
   const detRadio = page.locator('input[name="fleet-selection-mode"][value="deterministic"]');
@@ -220,8 +223,8 @@ test('10 — Fleet tab: Selection Mode radios work', async ({ page }) => {
 
 test('11 — Fleet tab: Apply Settings persists to API', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-fleet').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="fleet"]').click();
   await page.waitForTimeout(500);
 
   // Click Apply
@@ -240,8 +243,8 @@ test('11 — Fleet tab: Apply Settings persists to API', async ({ page }) => {
 
 test('12 — Fleet tab: max agents slider/input visible', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-fleet').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="fleet"]').click();
   await page.waitForTimeout(500);
 
   const maxInput = page.locator('#fleet-max-agents');
@@ -255,7 +258,7 @@ test('12 — Fleet tab: max agents slider/input visible', async ({ page }) => {
 
 test('13 — CEO command bar: input + send button', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const input = page.locator('#ceo-cmd-input');
   await expect(input).toBeVisible();
@@ -279,7 +282,7 @@ test('13 — CEO command bar: input + send button', async ({ page }) => {
 
 test('14 — Broadcast button: modal opens', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const broadcastBtn = page.locator('#broadcast-btn');
   await expect(broadcastBtn).toBeVisible();
@@ -299,7 +302,7 @@ test('14 — Broadcast button: modal opens', async ({ page }) => {
 
 test('15 — Watchdog button: triggers and shows feedback', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const watchdog = page.locator('#watchdog-btn');
   const moreBtn  = page.locator('#more-actions-menu, button:has-text("More")').first();
@@ -323,7 +326,7 @@ test('15 — Watchdog button: triggers and shows feedback', async ({ page }) => 
 
 test('16 — Mode badge shows current mode', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const modeBadge = page.locator('#mode-badge');
   await expect(modeBadge).toBeVisible();
@@ -397,8 +400,8 @@ test('19 — BUG CHECK: GET /api/tasks/:id returns 404 (missing route)', async (
 
 test('20 — Live run: start alice via Smart Start, verify heartbeat updates', async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState('networkidle');
-  await page.locator('#tab-fleet').click();
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="fleet"]').click();
   await page.waitForTimeout(400);
   await shot(page, '20a_before_smart_start');
 

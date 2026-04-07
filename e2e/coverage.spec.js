@@ -2792,6 +2792,16 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
 // ── Executor API ──────────────────────────────────────────────────────────────
 
 test.describe("GET /api/executors", () => {
+  let _origExecutors = null;
+  test.beforeAll(async () => {
+    const { body } = await apiGet("/api/smart-run/config");
+    _origExecutors = (body.config || body).enabled_executors;
+    // Ensure all supported executors are enabled for this test
+    await apiPost("/api/smart-run/config", { enabled_executors: ["claude", "codex", "gemini", "kimi"] });
+  });
+  test.afterAll(async () => {
+    if (_origExecutors) await apiPost("/api/smart-run/config", { enabled_executors: _origExecutors });
+  });
   test("returns list of valid executors with default", async () => {
     const { status, body } = await apiGet("/api/executors");
     expect(status).toBe(200);
@@ -2824,16 +2834,22 @@ test.describe("GET /api/config/executor", () => {
 
 test.describe("GET & POST /api/agents/:name/executor", () => {
   let _originalExecutor = null;
+  let _origExecutors = null;
 
   test.beforeAll(async () => {
     const { body } = await apiGet("/api/agents/alice/executor");
     _originalExecutor = body.executor;
+    const { body: cfg } = await apiGet("/api/smart-run/config");
+    _origExecutors = (cfg.config || cfg).enabled_executors;
+    // Ensure codex is enabled so the POST test can set alice to codex
+    await apiPost("/api/smart-run/config", { enabled_executors: ["claude", "codex", "gemini", "kimi"] });
   });
 
   test.afterAll(async () => {
     if (_originalExecutor) {
       await apiPost("/api/agents/alice/executor", { executor: _originalExecutor });
     }
+    if (_origExecutors) await apiPost("/api/smart-run/config", { enabled_executors: _origExecutors });
   });
 
   test("GET returns current executor for alice", async () => {

@@ -1583,11 +1583,36 @@ async function handleRequest(req, res) {
   }
   if (method === "POST" && pathname === "/api/agents/stop-all") {
     const script = path.join(DIR, "stop_all.sh");
-    // Wait for stop script to complete so response reflects actual stopped state
-    execFile("bash", [script], { cwd: DIR, timeout: 15000 }, (err, stdout, stderr) => {
-      if (err) console.error("[stop-all] error:", stderr || err.message);
-      json(res, { ok: true, output: stdout || "" });
+    // Use spawn with stdio:'ignore' (no pipes = no EOF-wait hang) and wait for exit event.
+    // This is async (doesn't block the event loop) and resolves once stop_all.sh exits.
+    const killChild = spawn("bash", [script], {
+      cwd: DIR,
+      stdio: ["ignore", "ignore", "ignore"],
     });
+    const _onDone = () => {
+      // Reset heartbeats from Node.js as a belt-and-suspenders measure
+      try {
+        const agentDirs = fs.readdirSync(EMPLOYEES_DIR);
+        const ts = new Date().toISOString().replace(/[:.]/g, '_').replace('T', '_').slice(0, 19);
+        for (const name of agentDirs) {
+          const hbPath = path.join(EMPLOYEES_DIR, name, "heartbeat.md");
+          if (fs.existsSync(hbPath)) {
+            fs.writeFileSync(hbPath, `status: idle\ntimestamp: ${ts}\ntask: Stopped\n`);
+          }
+        }
+      } catch (e) { console.error("[stop-all] heartbeat reset error:", e.message); }
+      json(res, { ok: true, output: "" });
+    };
+    // Safety timeout: respond after 10s even if shell script somehow hangs
+    const _timeout = setTimeout(() => {
+      killChild.kill();
+      _onDone();
+    }, 10000);
+    killChild.on("exit", () => {
+      clearTimeout(_timeout);
+      _onDone();
+    });
+    killChild.on("error", (e) => { console.error("[stop-all] spawn error:", e.message); });
     return;
   }
 
@@ -1609,9 +1634,16 @@ async function handleRequest(req, res) {
         const metricsPath = path.join(DIR, "backend", "metrics_queue.jsonl");
         if (fs.existsSync(metricsPath)) {
           const todayStr = new Date().toISOString().slice(0, 10);
-          const lines = fs.readFileSync(metricsPath, "utf8").split("\n").filter(Boolean);
+          // Read only the tail of the file — today's entries are recent, no need to scan 100k+ old lines
+          const stat = fs.statSync(metricsPath);
+          const tailBytes = 200 * 1024; // 200KB is enough for a full day of entries
+          const start = Math.max(0, stat.size - tailBytes);
+          const buf = Buffer.alloc(Math.min(tailBytes, stat.size));
+          const fd = fs.openSync(metricsPath, "r");
+          fs.readSync(fd, buf, 0, buf.length, start);
+          fs.closeSync(fd);
           let todayCost = 0;
-          for (const line of lines) {
+          for (const line of buf.toString("utf8").split("\n")) {
             try {
               const m = JSON.parse(line);
               if (m.date === todayStr && m.cost) todayCost += m.cost;
@@ -2600,8 +2632,15 @@ async function handleRequest(req, res) {
       // Skip header row (contains "ID") and separator row (contains "---")
       if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
       const cols = line.split("|").slice(1, -1).map((c) => c.trim());
-      // Archive rows have NO Group column: ID|Title|Desc|Priority|Assignee|Status|Created|Updated
-      if (cols.length >= 6) tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], assignee: cols[4], status: cols[5], created: cols[6] || "", updated: cols[7] || "" });
+      // Archive rows: ID|Title|Desc|Priority|[Group?|]Assignee|Status|Created|Updated
+      // Group may be absent in older archives — default to ""
+      if (cols.length >= 6) {
+        // Detect if Group column is present: if cols.length >= 9, newer format with group
+        const hasGroup = cols.length >= 9;
+        const g = hasGroup ? cols[4] : "";
+        const off = hasGroup ? 1 : 0;
+        tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], group: g, assignee: cols[4 + off], status: cols[5 + off], created: cols[6 + off] || "", updated: cols[7 + off] || "" });
+      }
     }
     return json(res, tasks);
   }

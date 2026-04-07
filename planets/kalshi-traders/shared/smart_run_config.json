@@ -1,14 +1,14 @@
 {
-  "max_agents": 4,
+  "max_agents": 3,
   "enabled": true,
   "interval_seconds": 30,
   "mode": "smart",
   "enabled_executors": [
-    "codex",
-    "gemini"
+    "claude",
+    "kimi"
   ],
-  "last_updated": "2026-04-06T19:13:12.574Z",
-  "force_alice": true,
+  "last_updated": "2026-04-07T00:46:52Z",
+  "force_alice": 1,
   "dry_run": true,
   "dry_run_sleep": 120,
   "description": "Smart Run configuration - Controls how many agents run and selection strategy",

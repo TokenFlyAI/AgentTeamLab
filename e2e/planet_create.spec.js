@@ -5,11 +5,12 @@
 const { test, expect } = require('@playwright/test');
 
 const BASE = 'http://localhost:3199';
+const AUTH = { 'Authorization': 'Bearer test' };
 
 test('Create ai-job-apply planet via UI with 9 agents', async ({ page }) => {
   // Clean up if planet already exists from a previous run
-  const existing = await fetch(`${BASE}/api/planets`).then(r => r.json());
-  if (existing.planets.some(p => p.name === 'ai-job-apply')) {
+  const existing = await fetch(`${BASE}/api/planets`, { headers: AUTH }).then(r => r.json());
+  if (existing.planets && existing.planets.some(p => p.name === 'ai-job-apply')) {
     // Remove it via shell — can't do via API, so skip cleanup and use unique name
     test.skip(true, 'Planet ai-job-apply already exists — delete it first');
   }
@@ -53,7 +54,7 @@ test('Create ai-job-apply planet via UI with 9 agents', async ({ page }) => {
   await expect(modal).not.toBeVisible({ timeout: 15000 });
 
   // 10. Verify planet was created via API
-  const planets = await fetch(`${BASE}/api/planets`).then(r => r.json());
+  const planets = await fetch(`${BASE}/api/planets`, { headers: AUTH }).then(r => r.json());
   const newPlanet = planets.planets.find(p => p.name === 'ai-job-apply');
   expect(newPlanet).toBeTruthy();
   expect(newPlanet.agent_count).toBe(9);

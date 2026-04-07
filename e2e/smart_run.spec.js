@@ -87,7 +87,11 @@ test.describe("Smart Run button state", () => {
   });
 
   test.afterEach(async () => {
-    resetHeartbeat("alice");
+    // Kill all agent processes and reset heartbeats. Smart-start launches real run_agent.sh
+    // processes whose EXIT traps write "idle" heartbeats — these can race with the next test's
+    // setHeartbeat() call and silently overwrite the "running" state the test depends on.
+    await apiPost("/api/agents/stop-all");
+    resetAllHeartbeats();
   });
 
   test("button shows ⚡ Smart Run when no agents running", async ({ page }) => {
@@ -103,8 +107,8 @@ test.describe("Smart Run button state", () => {
     await page.goto("/");
     const btn = page.locator("#smart-start-btn");
     await btn.click();
-    // Wait for the button to update (server responds and UI updates)
-    await expect(btn).toContainText("Stop", { timeout: 8000 });
+    // Wait for the button to update: API takes ~2-4s, then 12s grace period keeps it in Stop state
+    await expect(btn).toContainText("Stop", { timeout: 15000 });
   });
 
   test("button stays 🟢 Stop after page refresh when agents are running", async ({
@@ -177,13 +181,17 @@ test.describe("Fleet tab — selection mode UI", () => {
     await apiPost("/api/smart-run/config", { selection_mode: "deterministic" });
     await page.goto("/");
     await page.click('[data-tab="fleet"]');
-    // Click the random radio
+    // Wait for loadFleetStatus to complete and sync radios from API before interacting.
+    // Without this, the async loadFleetStatus() can reset "random" back to "deterministic"
+    // after we click it but before we click Apply (race condition).
+    await expect(page.locator('input[name="fleet-selection-mode"][value="deterministic"]')).toBeChecked({ timeout: 5000 });
+    // Now click the random radio — loadFleetStatus has already synced
     await page.locator('input[name="fleet-selection-mode"][value="random"]').click();
     await expect(page.locator('input[name="fleet-selection-mode"][value="random"]')).toBeChecked();
     // Apply settings
     await page.click("#fleet-apply-btn");
-    // Wait for toast or short delay
-    await page.waitForTimeout(800);
+    // Wait for apply to persist (apiFetch + write config)
+    await page.waitForTimeout(1200);
     // Verify API persisted the change
     const cfg = await apiGet("/api/smart-run/config");
     expect((cfg.config || cfg).selection_mode).toBe("random");
