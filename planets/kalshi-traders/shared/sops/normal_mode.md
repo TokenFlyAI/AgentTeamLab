@@ -1,31 +1,6 @@
 # Normal Mode SOP
 
-## Overview
-
-Normal mode is the default operating mode. Agents work at a steady pace on assigned tasks.
-
-## Priorities
-
-1. Complete assigned tasks
-2. Claim unassigned tasks that match your skills
-3. Create new tasks if you identify gaps
-4. Coordinate with teammates via chat_inbox
-5. Report progress to Alice (Lead Coordinator)
-
-## Work Cycle
-
-- New messages and tasks are delivered in your context delta — trust it, don't re-scan
-- Handle new inbox messages before starting new work (they're already shown to you)
-- Pick highest-priority open task assigned to you
-- Work on it until complete or blocked
-- Mark tasks done via API when finished
-- Write status updates to status.md
-
-## Communication
-
-- DM teammates via their chat_inbox/ folder
-- Post team updates to public/team_channel/
-- Escalate blockers to alice or the CEO
+Normal mode: steady-pace execution on assigned tasks. Handle inbox → work assigned task → mark done → repeat. See agent_instructions.md for full workflow.
 
 ## Quality
 
@@ -46,9 +21,9 @@ The team maintains a shared knowledge base at `public/consensus.md`. **It is pre
 ```bash
 curl -X POST http://localhost:3199/api/consensus/entry \
   -H "Content-Type: application/json" \
-  -d '{"type":"culture","content":"What you learned","section":"Category"}'
+  -d '{"type":"culture","content":"What you learned","section":"Core Behavioral Norms (Must Follow)"}'
 ```
-Types: `culture` (norms/learnings), `decision` (explicit choices), `group` (team agreements), `authority` (who owns what)
+Types: `culture` (norms), `decision` (explicit choices). Sections: `"Core Behavioral Norms (Must Follow)"` or `"Strategic Decisions & Commitments"`.
 
 **Also use your `knowledge/` folder** for agent-specific notes you want to persist across sessions:
 - Write important findings to `agents/{your-name}/knowledge/{topic}.md`

@@ -578,6 +578,14 @@ function getAgentStatus(name) {
   return { status, heartbeat, heartbeat_age_ms };
 }
 
+function getActiveAgentsCount() {
+  // /api/health is polled frequently. Cache the filesystem scan briefly so
+  // health probes do not fan out into dozens of sync reads on the hot path.
+  return cached("health:active-agents", 30_000, () =>
+    listAgentNames().filter((name) => getAgentStatus(name).status === "running").length
+  );
+}
+
 // Build a name→role map from team_directory.md table rows (cached by file mtime)
 let _roleMapCache = null;
 let _roleMapMtime = 0;
@@ -1232,7 +1240,7 @@ async function handleRequest(req, res) {
       uptime_ms: Date.now() - startTime,
       uptime: Math.floor((Date.now() - startTime) / 1000),
       memory: { rss: mem.rss, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
-      activeAgents: listAgentNames().filter((n) => getAgentStatus(n).status === "running").length,
+      activeAgents: getActiveAgentsCount(),
       sseClients: sseClients.size,
     });
   }
@@ -1374,17 +1382,20 @@ async function handleRequest(req, res) {
 
   // ---- Agents ----
   if (method === "GET" && pathname === "/api/agents") {
-    const velocityData = buildVelocityData();
-    const agentList = listAgentNames().map((name) => {
-      const summary = getAgentSummary(name);
-      const d = path.join(EMPLOYEES_DIR, name);
-      const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
-      const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
-      const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
-      const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
-      const health = computeAgentHealth(agentData, velocityData);
-      const executor = getExecutorForAgent(name);
-      return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
+    // Cache agent list for 5s — reads ~140 files for 20 agents (7 reads × 20)
+    const agentList = cached("agent_list", 5_000, () => {
+      const velocityData = buildVelocityData();
+      return listAgentNames().map((name) => {
+        const summary = getAgentSummary(name);
+        const d = path.join(EMPLOYEES_DIR, name);
+        const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
+        const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
+        const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
+        const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+        const health = computeAgentHealth(agentData, velocityData);
+        const executor = getExecutorForAgent(name);
+        return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
+      });
     });
     return json(res, agentList);
   }
@@ -3124,9 +3135,7 @@ async function handleRequest(req, res) {
   if (method === "GET" && pathname === "/api/consensus") {
     const raw = safeRead(CONSENSUS_FILE) || "# Consensus Board\n\n(empty)\n";
     // Parse table rows from all sections
-    // Supports two formats:
-    //   4-col: | C1 | NORM | content | date |
-    //   5-col: | 1  | decision | content | author | date |
+    // Format: | C1/id | NORM/type | content | date |
     const entries = [];
     let section = "";
     for (const line of raw.split("\n")) {
@@ -3137,16 +3146,8 @@ async function handleRequest(req, res) {
       if (cols.length < 4) continue;
       const idStr = cols[0];
       if (!idStr || idStr === "ID" || /^[-:]+$/.test(idStr)) continue; // header/separator row
-      if (cols.length >= 5) {
-        // 5-col format: | id | type | content | author | date |
-        const idNum = parseInt(idStr, 10);
-        if (!isNaN(idNum)) {
-          entries.push({ id: idNum, section, type: cols[1].toLowerCase(), content: cols[2], author: cols[3], updated: cols[4] });
-          continue;
-        }
-      }
-      // 4-col format: | C1 | NORM | content | date |
-      entries.push({ id: idStr, section, type: cols[1].toLowerCase(), content: cols[2], author: "team", updated: cols[3] });
+      const id = /^\d+$/.test(idStr) ? parseInt(idStr, 10) : idStr;
+      entries.push({ id, section, type: cols[1].toLowerCase(), content: cols[2], author: "", updated: cols[3] });
     }
     return json(res, { raw, entries });
   }
@@ -3171,7 +3172,7 @@ async function handleRequest(req, res) {
     const authorSafe = (author || "agent").replace(/[^a-zA-Z0-9_-]/g, "");
     const typeSafe = String(type).replace(/\|/g, "-").replace(/\n/g, " ").trim();
     const contentSafe = String(content).replace(/\|/g, "-").replace(/\n/g, " ").trim();
-    const newRow = `| ${newId} | ${typeSafe} | ${contentSafe} | ${authorSafe} | ${today} |`;
+    const newRow = `| ${newId} | ${typeSafe} | ${contentSafe} | ${today} |`;
     // Append to "Evolving Relationships" or end of file (before the footer)
     const targetSection = section || "Evolving Relationships";
     const lines = raw.split("\n");

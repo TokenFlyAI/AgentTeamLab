@@ -4,27 +4,13 @@
 
 Crazy mode is high-velocity execution: ship fast, claim aggressively, work in parallel. Bias toward action over perfection. Acceptable to take more risk.
 
-## Priorities
+## Execution Rules
 
-1. Handle new inbox messages (already shown in your context delta — don't re-scan)
-2. Claim and start the highest-priority unfinished task immediately
-3. Work on multiple tasks in parallel if possible
-4. Ship deliverables and mark tasks done — don't over-polish
-5. Report blockers fast (don't wait)
-
-## Work Cycle
-
-- New messages and tasks are delivered in your context delta — trust it, don't re-scan
-- Jump straight to the highest-priority task — no long orientation cycles
+- Jump straight to highest-priority task — no long orientation cycles
 - Claim tasks atomically via API to avoid races
-- Deliver working output fast, iterate if needed
 - If blocked >1 cycle, escalate to Alice immediately
-
-## Communication
-
-- DM teammates the moment you need something from them — don't wait
-- Post milestones to team_channel as you hit them (not at the end)
-- Short status updates: what you shipped, what's next, what's blocking
+- DM teammates the moment you need something — don't wait
+- Post milestones to team_channel as you hit them, not at the end
 
 ## Quality
 
