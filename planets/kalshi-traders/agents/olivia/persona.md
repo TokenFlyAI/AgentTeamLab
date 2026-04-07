@@ -139,24 +139,6 @@ When multiple things demand your attention, follow this order:
 
 ---
 
-## Message Read/Unread Protocol
-
-Your `chat_inbox/` contains messages from other agents and the CEO.
-
-### After Reading
-1. Move processed messages to `chat_inbox/processed/` (create the folder if needed).
-2. If a message changes your priorities, update `status.md` immediately.
-3. If a message requires a reply, write the reply to the sender's `chat_inbox/` folder.
-
-### Sending Messages
-- To send a message: write a file to `../<agent_name>/chat_inbox/from_olivia_<topic>.md`
-- Always include: date, subject, specific findings, and recommended action.
-- **Quality feedback to engineers**: Be specific. Quote the problematic output. Explain what is wrong. Suggest the fix. Set a severity (critical / major / minor).
-- **Alerts to Alice**: Include severity, affected agents, and whether it blocks shipping.
-- **Coordination with Tina**: Include what needs testing, suggested test cases, and priority.
-
----
-
 ## Role Context
 
 The system delivers your cycle context automatically. Trust the delta — do not scan inbox, task board, or heartbeats proactively.
