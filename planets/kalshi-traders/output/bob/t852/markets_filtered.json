@@ -1,0 +1,122 @@
+{
+  "generated_at": "2026-04-07T17:19:19.987Z",
+  "phase": 1,
+  "source": "phase1_fixture",
+  "source_input": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json",
+  "source_generated_at": "2026-04-07T16:15:00.125Z",
+  "filter_criteria": {
+    "minVolume": 10000,
+    "targetRanges": [
+      {
+        "min": 15,
+        "max": 30
+      },
+      {
+        "min": 70,
+        "max": 85
+      }
+    ],
+    "excludedRange": {
+      "min": 40,
+      "max": 60
+    },
+    "inputPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/live_phase1_fixture.json",
+    "outputPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json"
+  },
+  "qualifying_markets": [
+    {
+      "id": "live-phase1-002",
+      "ticker": "KXINF-26JUN-T030",
+      "title": "Will CPI print above 3.0% in June 2026?",
+      "category": "Economics",
+      "volume": 88000,
+      "yes_bid": 27,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 73,
+      "yes_ratio": 29,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-003",
+      "ticker": "KXUNEMP-26SEP05-T072",
+      "title": "Will US unemployment be above 7.2% in September 2026?",
+      "category": "Economics",
+      "volume": 143500,
+      "yes_bid": 72,
+      "yes_ask": 76,
+      "no_bid": 24,
+      "no_ask": 28,
+      "yes_ratio": 74,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-004",
+      "ticker": "KXBTCDOM-26OCT15-T068",
+      "title": "Will Bitcoin dominance close above 68% on Oct 15, 2026?",
+      "category": "Crypto",
+      "volume": 114300,
+      "yes_bid": 24,
+      "yes_ask": 28,
+      "no_bid": 72,
+      "no_ask": 76,
+      "yes_ratio": 26,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-005",
+      "ticker": "KXSOL-27APR16-T450",
+      "title": "Will Solana trade above $450 on Apr 16, 2027?",
+      "category": "Crypto",
+      "volume": 96750,
+      "yes_bid": 18,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 82,
+      "yes_ratio": 20,
+      "recommendation": "proceed_to_clustering"
+    }
+  ],
+  "excluded_markets": [
+    {
+      "ticker": "KXBTC-26DEC31-T110000",
+      "title": "Will Bitcoin close above $110,000 on Dec 31, 2026?",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 44
+    },
+    {
+      "ticker": "KXFED-26DEC16-CUT075",
+      "title": "Will the Fed cut rates by at least 75 bps before Dec 16, 2026?",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 50
+    },
+    {
+      "ticker": "KXDOGE-26DEC31-T150",
+      "title": "Will Dogecoin trade above $1.50 on Dec 31, 2026?",
+      "reason": "extreme_ratio",
+      "yes_ratio": 12
+    },
+    {
+      "ticker": "KXHOUSE-26NOV03-REP",
+      "title": "Will Republicans control the House after Nov 3, 2026?",
+      "reason": "extreme_ratio",
+      "yes_ratio": 90
+    }
+  ],
+  "rejected_markets": [
+    {
+      "ticker": "BAD-NO-TITLE",
+      "error": "Market BAD-NO-TITLE missing title"
+    },
+    {
+      "ticker": "BAD-NO-YES",
+      "error": "Market BAD-NO-YES missing core fields: yes_quote"
+    }
+  ],
+  "summary": {
+    "total_markets": 9,
+    "qualifying": 4,
+    "excluded": 5,
+    "rejected_invalid_markets": 2
+  }
+}

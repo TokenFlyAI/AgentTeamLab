@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-04-07T17:19:19.988Z",
+  "phase": 3,
+  "config": {
+    "min_correlation": 0.6,
+    "spread_threshold": 1,
+    "min_history_length": 10
+  },
+  "total_pairs_analyzed": 1,
+  "arbitrage_opportunities": 1,
+  "pairs": [
+    {
+      "cluster": "crypto_internal",
+      "market_a": "KXBTCDOM-26OCT15-T068",
+      "market_b": "KXSOL-27APR16-T450",
+      "pearson_correlation": 0.743,
+      "expected_spread": -0.0777,
+      "current_spread": -0.106,
+      "spread_deviation": 1.05,
+      "arbitrage_confidence": 0.85,
+      "direction": "buy_A_sell_B",
+      "is_arbitrage_opportunity": true
+    }
+  ]
+}

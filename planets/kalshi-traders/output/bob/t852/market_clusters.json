@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-04-07T17:19:19.988Z",
+  "phase": 2,
+  "method": "Economic domain knowledge + cross-category correlation rules",
+  "input_markets": 4,
+  "clusters": [
+    {
+      "id": "crypto_internal",
+      "label": "Crypto Markets",
+      "markets": [
+        "KXBTCDOM-26OCT15-T068",
+        "KXSOL-27APR16-T450"
+      ],
+      "correlation_strength": 0.95,
+      "description": "Internal Crypto market correlations based on shared underlying drivers",
+      "correlation_type": "internal"
+    }
+  ],
+  "hidden_correlations": [],
+  "summary": {
+    "total_clusters": 1,
+    "internal_clusters": 1,
+    "cross_category_clusters": 0,
+    "total_markets_clustered": 2,
+    "hidden_correlations_found": 0
+  }
+}

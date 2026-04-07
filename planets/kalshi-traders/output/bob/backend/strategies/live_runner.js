@@ -40,6 +40,24 @@ const PAPER_TRADING_CAPITAL_FLOOR_CENTS = parseInt(process.env.PAPER_TRADING_CAP
 // T714: Per-trade stop-loss — no single trade should exceed this % of initial capital
 const PAPER_TRADING_MAX_TRADE_PCT = parseFloat(process.env.PAPER_TRADING_MAX_TRADE_PCT || "0.20"); // 20%
 
+function readArgValue(flag) {
+  const exact = process.argv.find((arg) => arg.startsWith(`${flag}=`));
+  if (exact) {
+    return exact.slice(flag.length + 1);
+  }
+
+  const index = process.argv.indexOf(flag);
+  if (index !== -1 && process.argv[index + 1] && !process.argv[index + 1].startsWith("--")) {
+    return process.argv[index + 1];
+  }
+
+  return null;
+}
+
+const MARKET_FIXTURE_PATH = process.env.BOB_MARKET_FIXTURE
+  ? path.resolve(process.env.BOB_MARKET_FIXTURE)
+  : (readArgValue("--market-fixture") ? path.resolve(readArgValue("--market-fixture")) : null);
+
 // Realistic fallback markets when API key is unavailable
 const FALLBACK_MARKETS = [
   {
@@ -153,6 +171,26 @@ const FALLBACK_MARKETS = [
 // ---------------------------------------------------------------------------
 
 async function fetchMarkets(client) {
+  if (MARKET_FIXTURE_PATH) {
+    console.log(`[FIXTURE] Loading Phase 1 fixture from ${MARKET_FIXTURE_PATH}`);
+    const payload = JSON.parse(fs.readFileSync(MARKET_FIXTURE_PATH, "utf8"));
+    const qualifyingMarkets = Array.isArray(payload.qualifying_markets) ? payload.qualifying_markets : [];
+    if (qualifyingMarkets.length === 0) {
+      throw new Error(`Phase 1 fixture has 0 qualifying markets: ${MARKET_FIXTURE_PATH}`);
+    }
+
+    return qualifyingMarkets.map((market) =>
+      normalizeMarket(
+        {
+          ...market,
+          status: market.status || "active",
+          open_interest: market.open_interest || market.openInterest || 0,
+        },
+        { strict: true, source: "grace_t816_live_fixture" }
+      )
+    );
+  }
+
   if (USE_MOCK_FALLBACK) {
     console.log("[FALLBACK] No KALSHI_API_KEY set — using realistic mock market data");
     return FALLBACK_MARKETS.map((market) =>
@@ -604,7 +642,8 @@ async function main() {
 
   const report = {
     generatedAt: new Date().toISOString(),
-    source: USE_MOCK_FALLBACK ? "mock_fallback" : "kalshi_live",
+    source: MARKET_FIXTURE_PATH ? "phase1_live_fixture" : (USE_MOCK_FALLBACK ? "mock_fallback" : "kalshi_live"),
+    sourceArtifact: MARKET_FIXTURE_PATH,
     marketCount: enrichedMarkets.length,
     signalCount: allSignals.length,
     approvedSignalCount: approvedSignals.length,

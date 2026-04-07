@@ -40,6 +40,42 @@ const CONFIG = {
   spreadThreshold: 1.0,
 };
 
+function readOption(argv, flag) {
+  const exact = argv.find((arg) => arg.startsWith(`${flag}=`));
+  if (exact) {
+    return exact.slice(flag.length + 1);
+  }
+
+  const index = argv.indexOf(flag);
+  if (index !== -1 && argv[index + 1] && !argv[index + 1].startsWith("--")) {
+    return argv[index + 1];
+  }
+
+  return null;
+}
+
+function parseCliArgs(argv) {
+  return {
+    phase1Input: readOption(argv, "--phase1-input"),
+    artifactDir: readOption(argv, "--artifact-dir"),
+    withSignals: argv.includes("--with-signals"),
+  };
+}
+
+function applyCliConfig(args) {
+  if (!args.artifactDir) {
+    return;
+  }
+
+  const resolvedArtifactDir = path.resolve(args.artifactDir);
+  CONFIG.outputDir = resolvedArtifactDir;
+  CONFIG.marketsFilteredPath = path.join(resolvedArtifactDir, "markets_filtered.json");
+  CONFIG.marketClustersPath = path.join(resolvedArtifactDir, "market_clusters.json");
+  CONFIG.correlationPairsPath = path.join(resolvedArtifactDir, "correlation_pairs.json");
+  CONFIG.tradeLogPath = path.join(resolvedArtifactDir, "trade_log.json");
+  CONFIG.pnlSummaryPath = path.join(resolvedArtifactDir, "pnl_summary.json");
+}
+
 // Ensure output directories exist
 function ensureDirectories() {
   const dirs = [
@@ -57,37 +93,87 @@ function ensureDirectories() {
 // ---------------------------------------------------------------------------
 // Phase 1: Market Filter
 // ---------------------------------------------------------------------------
-function runPhase1_MarketFilter() {
-  console.log("\n" + "=".repeat(60));
-  console.log("PHASE 1: Market Filtering");
-  console.log("=".repeat(60));
-  
-  // Use the synthetic market generator to create realistic market data
-  // This simulates Phase 1 output (markets_filtered.json)
-  const markets = generateFilteredMarkets();
-  
-  const output = {
+function loadPhase1Fixture(phase1InputPath) {
+  const resolvedPath = path.resolve(phase1InputPath);
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`Phase 1 fixture not found: ${resolvedPath}`);
+  }
+
+  const payload = JSON.parse(fs.readFileSync(resolvedPath, "utf8"));
+  const qualifyingMarkets = Array.isArray(payload.qualifying_markets) ? payload.qualifying_markets : [];
+  const excludedMarkets = Array.isArray(payload.excluded_markets) ? payload.excluded_markets : [];
+
+  if (qualifyingMarkets.length === 0) {
+    throw new Error(`Phase 1 fixture has 0 qualifying markets: ${resolvedPath}`);
+  }
+
+  return {
     generated_at: new Date().toISOString(),
     phase: 1,
-    filter_criteria: {
+    source: "phase1_fixture",
+    source_input: resolvedPath,
+    source_generated_at: payload.generated_at || null,
+    filter_criteria: payload.config || {
       min_volume: 10000,
       yes_no_ratio_ranges: ["15-30%", "70-85%"],
       exclude_ranges: ["0-15%", "40-60%", "85-100%"],
     },
-    qualifying_markets: markets.qualifying,
-    excluded_markets: markets.excluded,
+    qualifying_markets: qualifyingMarkets,
+    excluded_markets: excludedMarkets,
+    rejected_markets: Array.isArray(payload.rejected_markets) ? payload.rejected_markets : [],
     summary: {
-      total_markets: markets.qualifying.length + markets.excluded.length,
-      qualifying: markets.qualifying.length,
-      excluded: markets.excluded.length,
+      total_markets: payload.summary?.total_markets ?? (qualifyingMarkets.length + excludedMarkets.length),
+      qualifying: payload.summary?.qualifying_markets ?? qualifyingMarkets.length,
+      excluded: (payload.summary?.excluded_low_volume ?? 0)
+        + (payload.summary?.excluded_middle_range ?? 0)
+        + (payload.summary?.extreme_ratio ?? 0)
+        + Math.max(0, excludedMarkets.length - (
+          (payload.summary?.excluded_low_volume ?? 0)
+          + (payload.summary?.excluded_middle_range ?? 0)
+          + (payload.summary?.extreme_ratio ?? 0)
+        )),
+      rejected_invalid_markets: payload.summary?.rejected_invalid_markets ?? (Array.isArray(payload.rejected_markets) ? payload.rejected_markets.length : 0),
     },
   };
+}
+
+function runPhase1_MarketFilter(options = {}) {
+  console.log("\n" + "=".repeat(60));
+  console.log("PHASE 1: Market Filtering");
+  console.log("=".repeat(60));
+
+  let output;
+  if (options.phase1Input) {
+    output = loadPhase1Fixture(options.phase1Input);
+    console.log(`Using Phase 1 fixture: ${output.source_input}`);
+  } else {
+    // Use the synthetic market generator to create realistic market data
+    // This simulates Phase 1 output (markets_filtered.json)
+    const markets = generateFilteredMarkets();
+    output = {
+      generated_at: new Date().toISOString(),
+      phase: 1,
+      source: "synthetic_generator",
+      filter_criteria: {
+        min_volume: 10000,
+        yes_no_ratio_ranges: ["15-30%", "70-85%"],
+        exclude_ranges: ["0-15%", "40-60%", "85-100%"],
+      },
+      qualifying_markets: markets.qualifying,
+      excluded_markets: markets.excluded,
+      summary: {
+        total_markets: markets.qualifying.length + markets.excluded.length,
+        qualifying: markets.qualifying.length,
+        excluded: markets.excluded.length,
+      },
+    };
+  }
   
   fs.writeFileSync(CONFIG.marketsFilteredPath, JSON.stringify(output, null, 2));
-  console.log(`✅ Phase 1 complete: ${markets.qualifying.length} qualifying markets`);
+  console.log(`✅ Phase 1 complete: ${output.summary.qualifying} qualifying markets`);
   console.log(`   Saved to: ${CONFIG.marketsFilteredPath}`);
 
-  if (markets.qualifying.length === 0) {
+  if (output.summary.qualifying === 0) {
     console.warn("⚠️  Phase 1 produced 0 qualifying markets — downstream phases will have no data");
   }
 
@@ -604,6 +690,8 @@ function calculatePnLSummary(trades) {
 // Main Pipeline
 // ---------------------------------------------------------------------------
 async function main() {
+  const args = parseCliArgs(process.argv.slice(2));
+
   console.log("\n" + "=".repeat(60));
   console.log("D004 END-TO-END PAPER TRADING PIPELINE");
   console.log("Task T542 — Following culture norms C6, C8, D5");
@@ -615,11 +703,13 @@ async function main() {
   // Reset cached market factors for fresh generation
   for (const k of Object.keys(_marketFactors)) delete _marketFactors[k];
 
+  applyCliConfig(args);
+
   // Ensure directories exist
   ensureDirectories();
   
   // Phase 1: Market Filter
-  const phase1Result = runPhase1_MarketFilter();
+  const phase1Result = runPhase1_MarketFilter({ phase1Input: args.phase1Input });
   
   // Phase 2: Clustering
   const phase2Result = runPhase2_Clustering(phase1Result);
@@ -632,7 +722,7 @@ async function main() {
   
   // Phase 5 (optional): Signal Generation — T555
   let phase5Result = null;
-  if (process.argv.includes("--with-signals")) {
+  if (args.withSignals) {
     const { runSignalGeneration } = require("./signal_generator");
     phase5Result = runSignalGeneration(phase3Result);
   }

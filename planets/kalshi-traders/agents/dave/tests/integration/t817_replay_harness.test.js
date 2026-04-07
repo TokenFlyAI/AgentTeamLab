@@ -37,17 +37,25 @@ function main() {
   assert(fs.existsSync(REPORT), `Expected replay report at ${REPORT}`);
   const report = JSON.parse(fs.readFileSync(REPORT, "utf8"));
 
+  assert(report.task === "T853", `Expected T853 report, got ${report.task}`);
   assert(report.failed === 0, `Expected zero failed scenarios, got ${report.failed}`);
+  assert(report.sourceSignalFixture?.path, "Expected Bob signal fixture metadata");
+  assert(report.sourceSignalFixture?.signalCount > 0, "Expected live-shaped signals in source fixture");
   assert(Array.isArray(report.scenarios) && report.scenarios.length === 3, "Expected three replay scenarios");
 
   for (const scenario of report.scenarios) {
     assert(scenario.deterministic === true, `Expected deterministic output for ${scenario.scenario}`);
     assert(scenario.canonicalHash, `Expected canonical hash for ${scenario.scenario}`);
+    assert(
+      JSON.stringify(scenario.expected) === JSON.stringify(scenario.observed),
+      `Expected observed counts to match expected counts for ${scenario.scenario}`
+    );
   }
 
   const baseline = report.scenarios.find((scenario) => scenario.scenario === "baseline_execution");
   assert(baseline, "Missing baseline scenario");
-  assert(baseline.observed.executed > 0, "Baseline should execute paper trades");
+  assert(baseline.observed.executed > 0, "Baseline should execute at least one live-shaped trade");
+  assert(baseline.observed.capitalFloorBreached === false, "Baseline should stay above the capital floor");
 
   const tinyCap = report.scenarios.find((scenario) => scenario.scenario === "tiny_cap_rejection");
   assert(tinyCap, "Missing tiny-cap scenario");
@@ -59,7 +67,7 @@ function main() {
   assert(capitalFloor.observed.halted === true, "Capital floor should halt the run");
   assert(capitalFloor.observed.capitalFloorBreached === true, "Capital floor should be breached");
 
-  console.log("PASS T817 replay harness integration");
+  console.log("PASS T853 live-fixture replay harness integration");
 }
 
 main();

@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-04-07T17:19:19.989Z",
+  "phase": 4,
+  "mode": "paper_trading",
+  "total_trades": 1,
+  "trades": [
+    {
+      "id": "trade_1",
+      "timestamp": "2026-04-01T10:46:07.880Z",
+      "market_a": "KXBTCDOM-26OCT15-T068",
+      "market_b": "KXSOL-27APR16-T450",
+      "cluster": "crypto_internal",
+      "correlation": 0.743,
+      "direction": "buy_A_sell_B",
+      "contracts": 3,
+      "entry_price": 58,
+      "confidence": 0.85,
+      "outcome": "win",
+      "pnl_cents": 45,
+      "pnl_dollars": 0.45
+    }
+  ]
+}
