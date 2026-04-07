@@ -1652,28 +1652,28 @@ body {
   <!-- TAB: Research (includes Knowledge) -->
   <div class="tab-content" id="tab-research">
     <div style="display:flex;gap:10px;margin-bottom:16px;border-bottom:1px solid #0f3460;padding-bottom:10px;">
-      <button class="filter-btn active" id="research-subtab-files" onclick="switchResearchTab('files')" style="padding:8px 20px;">📄 Agent Files</button>
+      <button class="filter-btn" id="research-subtab-files" onclick="switchResearchTab('files')" style="padding:8px 20px;">📄 Agent Files</button>
       <button class="filter-btn" id="research-subtab-knowledge" onclick="switchResearchTab('knowledge')" style="padding:8px 20px;">📚 Knowledge</button>
-      <button class="filter-btn" id="research-subtab-consensus" onclick="switchResearchTab('consensus')" style="padding:8px 20px;">🤝 Social Culture</button>
+      <button class="filter-btn active" id="research-subtab-consensus" onclick="switchResearchTab('consensus')" style="padding:8px 20px;">🤝 Social Culture</button>
     </div>
     
     <!-- Research Files Sub-tab -->
-    <div id="research-files-panel">
+    <div id="research-files-panel" style="display:none;">
       <div class="global-search" style="margin-bottom:12px;">
         <input type="text" id="research-search" placeholder="Search research files...">
       </div>
       <ul class="research-list" id="research-list"></ul>
       <div class="research-content-viewer" id="research-viewer"></div>
     </div>
-    
+
     <!-- Knowledge Base Sub-tab -->
     <div id="research-knowledge-panel" style="display:none;">
       <div id="knowledge-tree"></div>
       <div class="knowledge-viewer" id="knowledge-viewer"></div>
     </div>
-    
-    <!-- Consensus Sub-tab -->
-    <div id="research-consensus-panel" style="display:none;">
+
+    <!-- Consensus Sub-tab (default) -->
+    <div id="research-consensus-panel">
       <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
         <h3 style="margin:0;color:#e0e0e0;font-size:1rem;">Social Culture — Shared Knowledge & Agreements</h3>
         <button onclick="openAddConsensus()" style="margin-left:auto;background:#0f3460;border:none;color:#e0e0e0;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;">+ Add Entry</button>
@@ -2784,6 +2784,7 @@ function switchTab(tab) {
   if (tab === 'livetail') startLiveTailPolling();
   else stopLiveTailPolling();
   if (tab === 'consensus') loadConsensus();
+  if (tab === 'research') loadConsensus(); // Culture tab default sub-tab is Social Culture
   if (tab === 'fleet') startFleetPolling();
   else stopFleetPolling();
 }

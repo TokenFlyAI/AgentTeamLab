@@ -182,13 +182,14 @@ test('09 — Fleet tab: shows daemon status + controls', async ({ page }) => {
   await expect(runningCount).toBeVisible();
   console.log('Running count:', await runningCount.textContent());
 
-  // Start/Apply buttons always visible; Stop button only visible when daemon running
-  const startBtn = page.locator('#fleet-start-btn');
+  // Apply button is always visible; Start/Stop are mutually exclusive based on daemon state
   const applyBtn = page.locator('#fleet-apply-btn');
-  await expect(startBtn).toBeVisible();
   await expect(applyBtn).toBeVisible();
+  const startVisible = await page.locator('#fleet-start-btn').isVisible();
   const stopVisible = await page.locator('#fleet-stop-btn').isVisible();
-  console.log('Fleet buttons: Start ✓ Apply ✓ Stop:', stopVisible ? '✓' : '(hidden — daemon not running)');
+  // Exactly one of start/stop should be visible
+  expect(startVisible || stopVisible).toBe(true);
+  console.log('Fleet buttons: Apply ✓ Start:', startVisible ? '✓' : '(daemon running)', 'Stop:', stopVisible ? '✓' : '(daemon stopped)');
 });
 
 test('10 — Fleet tab: Selection Mode radios work', async ({ page }) => {

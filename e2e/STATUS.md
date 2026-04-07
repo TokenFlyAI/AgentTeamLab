@@ -139,7 +139,7 @@ Every major endpoint in server.js is covered. Structure per endpoint:
 - `DELETE /api/messages/purge?from=` — ok/deleted count
 
 **Consensus**
-- `GET /api/consensus` — id/type/content/author/section/timestamp
+- `GET /api/consensus` — id/type/content/author/section/updated
 - `POST /api/consensus/entry` — id; pipe sanitization
 - `DELETE /api/consensus/entry/:id` — ok/deleted id; 404 for unknown
 
