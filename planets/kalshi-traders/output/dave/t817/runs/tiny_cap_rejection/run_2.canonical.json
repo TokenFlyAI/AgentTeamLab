@@ -1,0 +1,47 @@
+{
+  "source": "mock_fallback",
+  "marketCount": 5,
+  "signalCount": 1,
+  "approvedSignalCount": 1,
+  "rejectedSignalCount": 0,
+  "halted": false,
+  "haltReason": null,
+  "capitalFloor": {
+    "initialCapitalCents": 500000,
+    "floorCents": 5000,
+    "realizedPnLCents": 0,
+    "currentCapitalCents": 500000,
+    "breachAmountCents": 0,
+    "breached": false,
+    "closedTrades": 0,
+    "openTrades": 0
+  },
+  "stopLoss": {
+    "maxTradePct": 0.00001,
+    "referenceCapitalCents": 500000,
+    "maxTradeCostCents": 5,
+    "maxTradePctLabel": "0%"
+  },
+  "executionReport": {
+    "mode": "paper_trading",
+    "executed": 0,
+    "rejected": 1,
+    "failed": 0,
+    "persisted": 0,
+    "halted": false,
+    "haltReason": null,
+    "stopLossRejected": 1,
+    "trades": []
+  },
+  "signals": [
+    {
+      "strategy": "mean_reversion",
+      "ticker": "BTCW-26-JUN30-100K",
+      "side": "yes",
+      "confidence": 0.95,
+      "currentPrice": 64,
+      "recommendedContracts": 29,
+      "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "task": "T817",
+  "generatedAt": "2026-04-07T14:20:19.868Z",
+  "runner": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/dave/output/backend/strategies/live_runner_t714.js",
+  "inputs": {
+    "runner": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/dave/output/backend/strategies/live_runner_t714.js",
+    "stopLossWrapper": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/dave/output/backend/strategies/live_runner_t714.js",
+    "capitalFloorFixture": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/dave/output/t817/fixtures/capital_floor_breach_db.json"
+  },
+  "invariants": [
+    "Baseline execution stays within configured per-trade stop-loss cap",
+    "Tiny cap rejects oversized trades and reports zero execution",
+    "Capital floor breach halts new trades and surfaces halt reason",
+    "Canonical replay output is identical across two consecutive runs per scenario"
+  ],
+  "scenarios": [
+    {
+      "scenario": "baseline_execution",
+      "description": "Default cap allows paper trades and preserves stop-loss ceiling on every execution.",
+      "deterministic": true,
+      "canonicalHash": "437e8fad21f7bb793232e430f69fe7b50d17b7d0abfcc67c9573066185ac7a0a",
+      "expected": {
+        "halted": false,
+        "executed": 2,
+        "stopLossRejected": 0,
+        "capitalFloorBreached": false
+      },
+      "observed": {
+        "halted": false,
+        "executed": 1,
+        "stopLossRejected": 0,
+        "capitalFloorBreached": false
+      },
+      "canonicalReport": {
+        "source": "mock_fallback",
+        "marketCount": 5,
+        "signalCount": 1,
+        "approvedSignalCount": 1,
+        "rejectedSignalCount": 0,
+        "halted": false,
+        "haltReason": null,
+        "capitalFloor": {
+          "initialCapitalCents": 500000,
+          "floorCents": 5000,
+          "realizedPnLCents": 0,
+          "currentCapitalCents": 500000,
+          "breachAmountCents": 0,
+          "breached": false,
+          "closedTrades": 0,
+          "openTrades": 1
+        },
+        "stopLoss": {
+          "maxTradePct": 0.2,
+          "referenceCapitalCents": 500000,
+          "maxTradeCostCents": 100000,
+          "maxTradePctLabel": "20%"
+        },
+        "executionReport": {
+          "mode": "paper_trading",
+          "executed": 1,
+          "rejected": 0,
+          "failed": 0,
+          "persisted": 1,
+          "halted": false,
+          "haltReason": null,
+          "stopLossRejected": 0,
+          "trades": [
+            {
+              "ticker": "BTCW-26-JUN30-100K",
+              "side": "yes",
+              "contracts": 29,
+              "price": 64,
+              "tradeCostCents": 1856,
+              "strategy": "mean_reversion",
+              "confidence": 0.95
+            }
+          ]
+        },
+        "signals": [
+          {
+            "strategy": "mean_reversion",
+            "ticker": "BTCW-26-JUN30-100K",
+            "side": "yes",
+            "confidence": 0.95,
+            "currentPrice": 64,
+            "recommendedContracts": 29,
+            "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "tiny_cap_rejection",
+      "description": "Tiny trade cap rejects oversized trades and reports zero execution.",
+      "deterministic": true,
+      "canonicalHash": "f83159d85dfcf53342124a20645dea64ec756c6dc9607b7811bdafa2d5ca526a",
+      "expected": {
+        "halted": false,
+        "executed": 0,
+        "stopLossRejected": 2,
+        "capitalFloorBreached": false
+      },
+      "observed": {
+        "halted": false,
+        "executed": 0,
+        "stopLossRejected": 1,
+        "capitalFloorBreached": false
+      },
+      "canonicalReport": {
+        "source": "mock_fallback",
+        "marketCount": 5,
+        "signalCount": 1,
+        "approvedSignalCount": 1,
+        "rejectedSignalCount": 0,
+        "halted": false,
+        "haltReason": null,
+        "capitalFloor": {
+          "initialCapitalCents": 500000,
+          "floorCents": 5000,
+          "realizedPnLCents": 0,
+          "currentCapitalCents": 500000,
+          "breachAmountCents": 0,
+          "breached": false,
+          "closedTrades": 0,
+          "openTrades": 0
+        },
+        "stopLoss": {
+          "maxTradePct": 0.00001,
+          "referenceCapitalCents": 500000,
+          "maxTradeCostCents": 5,
+          "maxTradePctLabel": "0%"
+        },
+        "executionReport": {
+          "mode": "paper_trading",
+          "executed": 0,
+          "rejected": 1,
+          "failed": 0,
+          "persisted": 0,
+          "halted": false,
+          "haltReason": null,
+          "stopLossRejected": 1,
+          "trades": []
+        },
+        "signals": [
+          {
+            "strategy": "mean_reversion",
+            "ticker": "BTCW-26-JUN30-100K",
+            "side": "yes",
+            "confidence": 0.95,
+            "currentPrice": 64,
+            "recommendedContracts": 29,
+            "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "capital_floor_halt",
+      "description": "Breached capital floor blocks all new trades and surfaces halt reason.",
+      "deterministic": true,
+      "canonicalHash": "8739b630921e347e41e84020f9dd2e29bf710df65af6b14c72525a89730573bf",
+      "expected": {
+        "halted": true,
+        "executed": 0,
+        "stopLossRejected": 0,
+        "capitalFloorBreached": true
+      },
+      "observed": {
+        "halted": true,
+        "executed": 0,
+        "stopLossRejected": 0,
+        "capitalFloorBreached": true
+      },
+      "canonicalReport": {
+        "source": "mock_fallback",
+        "marketCount": 5,
+        "signalCount": 1,
+        "approvedSignalCount": 0,
+        "rejectedSignalCount": 1,
+        "halted": true,
+        "haltReason": "capital floor breached: current capital $40.00 below $50.00",
+        "capitalFloor": {
+          "initialCapitalCents": 500000,
+          "floorCents": 5000,
+          "realizedPnLCents": -496000,
+          "currentCapitalCents": 4000,
+          "breachAmountCents": 1000,
+          "breached": true,
+          "closedTrades": 1,
+          "openTrades": 0
+        },
+        "stopLoss": {
+          "maxTradePct": 0.2,
+          "referenceCapitalCents": 4000,
+          "maxTradeCostCents": 800,
+          "maxTradePctLabel": "20%"
+        },
+        "executionReport": {
+          "mode": "paper_trading",
+          "executed": 0,
+          "rejected": 0,
+          "failed": 0,
+          "persisted": 0,
+          "halted": true,
+          "haltReason": "capital floor breached: current capital $40.00 below $50.00",
+          "stopLossRejected": 0,
+          "trades": []
+        },
+        "signals": [
+          {
+            "strategy": "mean_reversion",
+            "ticker": "BTCW-26-JUN30-100K",
+            "side": "yes",
+            "confidence": 0.95,
+            "currentPrice": 64,
+            "recommendedContracts": 29,
+            "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+          }
+        ]
+      }
+    }
+  ],
+  "passed": 3,
+  "failed": 0
+}

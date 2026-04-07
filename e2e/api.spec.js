@@ -175,6 +175,20 @@ test.describe("Tasks CRUD", () => {
     expect(Array.isArray(body)).toBe(true);
   });
 
+  test("GET /api/tasks/:id returns archived tasks when the ID has been moved off the active board", async () => {
+    const { status: archiveStatus, body: archivedTasks } = await apiGet("/api/tasks/archive");
+    expect(archiveStatus).toBe(200);
+    expect(Array.isArray(archivedTasks)).toBe(true);
+    const archived = archivedTasks.find((t) => String(t.id).match(/^\d+$/));
+    if (!archived) test.skip();
+
+    const { status, body } = await apiGet(`/api/tasks/${archived.id}`);
+    expect(status).toBe(200);
+    expect(String(body.id)).toBe(String(archived.id));
+    expect(body.title).toBe(archived.title);
+    expect(body.archived).toBe(true);
+  });
+
   test("POST /api/tasks creates a new task and is findable", async () => {
     const title = `E2E-Task-${Date.now()}`;
     const { status, body } = await apiPost("/api/tasks", {

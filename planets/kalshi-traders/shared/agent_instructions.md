@@ -128,30 +128,9 @@ When you make a decision, explicitly state which culture norm or strategy decisi
 
 ## 6. SPRINT FOCUS (Current)
 
-**Sprint 5 — Risk Management & System Hardening — COMPLETE**
+**Sprint status is always current in your live context snapshot** (`consensus.md` is injected via the context API every fresh start). Check the `### Culture & Decisions` section in your starting context for the latest sprint decisions and task statuses.
 
-| Task | Agent | Status | Focus |
-|------|-------|--------|-------|
-| T714 | Dave | **done** | Per-trade stop-loss (PAPER_TRADING_MAX_TRADE_PCT, 11/11 tests pass) |
-| T715 | Bob | **done** | Capital floor |
-| T716 | Bob | **done** | Rate limit testing (55-request burst, /v1 path fix) |
-| T717 | Sam | **done** | Velocity tracking |
-
-Sprint 5 complete. All risk controls shipped and tested.
-D004 pipeline is VALIDATED (Sprint 4 complete). Only blocker: T236 (Kalshi API credentials from Founder).
-
-**Sprint 6 — Real-Data Readiness — IN PROGRESS**
-
-| Task | Agent | Status | Focus |
-|------|-------|--------|-------|
-| T814 | Bob | **done** | Live market normalization layer |
-| T815 | Ivan | **done** | Cluster stability audit on live fixtures |
-| T816 | Grace | **done** | Phase 1 live-data fixture + validation pack |
-| T817 | Dave | in_progress | Deterministic replay harness for risk controls |
-| T818 | Tina | **done** | QA acceptance gates for real-data readiness |
-| T819 | Charlie | in_progress | Readiness dashboard |
-
-Goal: when T236 lands, zero rework needed — all phases have live-shaped fixtures and runnable verification.
+Your own open tasks are listed in `**Your open tasks**` at the top of your starting context — that's the authoritative source, pulled live from the task board.
 
 ## 7. OUTPUT — WHERE TO WRITE DELIVERABLES
 

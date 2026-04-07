@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprint 6 Readiness</title>
+  <style>
+    :root {
+      --ink: #172121;
+      --paper: #f4efe6;
+      --panel: rgba(255, 252, 247, 0.84);
+      --border: rgba(23, 33, 33, 0.14);
+      --muted: #5f6b66;
+      --accent: #c65f35;
+      --accent-strong: #9f3d17;
+      --ok: #2f7d4b;
+      --warn: #b7791f;
+      --danger: #b42318;
+      --shadow: 0 18px 60px rgba(84, 55, 28, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(198, 95, 53, 0.22), transparent 30%),
+        radial-gradient(circle at top right, rgba(47, 125, 75, 0.18), transparent 26%),
+        linear-gradient(180deg, #fbf6ee 0%, #efe6d7 100%);
+    }
+
+    .shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,247,235,0.66)),
+        linear-gradient(120deg, rgba(198,95,53,0.18), rgba(23,33,33,0.03));
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -35% auto;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(198,95,53,0.24), rgba(198,95,53,0));
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 12ch;
+      font-size: clamp(2.4rem, 5vw, 4.8rem);
+      line-height: 0.94;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy {
+      max-width: 700px;
+      margin-top: 14px;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .hero-meta {
+      margin-top: 18px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: "Courier New", monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .meta-chip {
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(23,33,33,0.08);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .tile {
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .tile-label {
+      font-family: "Courier New", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .tile-value {
+      margin-top: 6px;
+      font-size: clamp(1.5rem, 4vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .board {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 18px 20px 10px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .panel-subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .blockers {
+      padding: 0 20px 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .blocker {
+      padding: 14px 14px 14px 16px;
+      border-radius: 18px;
+      border-left: 5px solid var(--danger);
+      background: rgba(180, 35, 24, 0.07);
+    }
+
+    .blocker.medium {
+      border-left-color: var(--warn);
+      background: rgba(183, 121, 31, 0.09);
+    }
+
+    .blocker h3 {
+      margin: 0;
+      font-size: 0.96rem;
+    }
+
+    .blocker p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.92rem;
+    }
+
+    .command-list {
+      padding: 0 20px 20px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .command {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(23, 33, 33, 0.05);
+      border: 1px solid rgba(23, 33, 33, 0.08);
+    }
+
+    .command strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-family: "Courier New", monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .command code,
+    .path,
+    .mono {
+      font-family: "Courier New", monospace;
+      font-size: 0.84rem;
+      word-break: break-word;
+    }
+
+    .lanes {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .lane {
+      padding: 18px;
+      border-radius: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lane::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--accent);
+      opacity: 0.8;
+    }
+
+    .lane.ready::before { background: var(--ok); }
+    .lane.warning::before, .lane.stale::before { background: var(--warn); }
+    .lane.missing::before { background: var(--danger); }
+
+    .lane-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .lane-kicker {
+      font-family: "Courier New", monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .lane h2 {
+      margin: 4px 0 0;
+      font-size: 1.1rem;
+    }
+
+    .badge-stack {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: end;
+    }
+
+    .badge {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-family: "Courier New", monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(23, 33, 33, 0.08);
+    }
+
+    .badge.ready { color: var(--ok); background: rgba(47, 125, 75, 0.12); }
+    .badge.warning, .badge.stale { color: var(--warn); background: rgba(183, 121, 31, 0.12); }
+    .badge.missing { color: var(--danger); background: rgba(180, 35, 24, 0.12); }
+
+    .lane-grid {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fact {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid rgba(23,33,33,0.08);
+    }
+
+    .fact-label {
+      display: block;
+      font-family: "Courier New", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .fact-value {
+      display: block;
+      margin-top: 5px;
+      line-height: 1.45;
+      font-size: 0.93rem;
+    }
+
+    .lane-list {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .lane-actions {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .action {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(23, 33, 33, 0.05);
+      border: 1px solid rgba(23, 33, 33, 0.08);
+    }
+
+    .action-title {
+      font-family: "Courier New", monospace;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .empty {
+      padding: 16px 20px 22px;
+      color: var(--ok);
+      font-size: 0.95rem;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .summary,
+      .lanes,
+      .board {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 14px; }
+      .hero { padding: 20px; border-radius: 22px; }
+      .lane-grid { grid-template-columns: 1fr; }
+      .lane-top { flex-direction: column; }
+      .badge-stack { justify-content: start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Sprint 6 / Real-Data Readiness</p>
+      <h1>Keep the board honest while T236 blocks live data.</h1>
+      <p class="hero-copy">
+        This view is coordination-first: artifact paths, run commands, freshness, and the exact places where readiness claims still break down.
+      </p>
+      <div class="hero-meta">
+        <span class="meta-chip" id="generated-at">Snapshot loading</span>
+        <span class="meta-chip" id="api-state">Credential state loading</span>
+      </div>
+    </section>
+
+    <section class="summary" id="summary"></section>
+
+    <section class="board">
+      <article class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Blocking Signals</h2>
+          <p class="panel-subtitle">Red means no-go, amber means review friction or stale evidence.</p>
+        </div>
+        <div class="blockers" id="blockers"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Fast Commands</h2>
+          <p class="panel-subtitle">Open the dashboard, inspect the JSON snapshot, or re-run the local server.</p>
+        </div>
+        <div class="command-list">
+          <div class="command">
+            <strong>Run</strong>
+            <code>node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/charlie/serve_sprint6_readiness_dashboard.js --port 3461</code>
+          </div>
+          <div class="command">
+            <strong>Verify</strong>
+            <code>curl -s http://localhost:3461/api/readiness | python3 -m json.tool</code>
+          </div>
+          <div class="command">
+            <strong>Open</strong>
+            <span class="mono">http://localhost:3461</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="lanes" id="lanes"></section>
+    <p class="footer-note">Status source: local task API on port 3199 plus direct artifact inspection. Missing task lookups are shown instead of hidden.</p>
+  </main>
+
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function humanizeStatus(status) {
+      return String(status || "unknown").replace(/_/g, " ");
+    }
+
+    function renderSummary(data) {
+      const items = [
+        ["Artifacts Ready", data.board.readyCount],
+        ["In Review", data.board.reviewCount],
+        ["In Progress", data.board.inProgressCount],
+        ["Blockers", data.board.blockerCount],
+      ];
+
+      document.getElementById("summary").innerHTML = items.map(([label, value]) => `
+        <article class="tile">
+          <div class="tile-label">${escapeHtml(label)}</div>
+          <div class="tile-value">${escapeHtml(value)}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderBlockers(blockers) {
+      const root = document.getElementById("blockers");
+      if (!blockers.length) {
+        root.innerHTML = '<div class="empty">No blockers detected in the current snapshot.</div>';
+        return;
+      }
+
+      root.innerHTML = blockers.map((blocker) => `
+        <article class="blocker ${escapeHtml(blocker.level)}">
+          <h3>${escapeHtml(blocker.title)}</h3>
+          <p>${escapeHtml(blocker.message)}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderLanes(lanes) {
+      document.getElementById("lanes").innerHTML = lanes.map((lane) => `
+        <article class="lane ${escapeHtml(lane.artifactState)}">
+          <div class="lane-top">
+            <div>
+              <div class="lane-kicker">T${escapeHtml(lane.id)} / ${escapeHtml(lane.owner)} / ${escapeHtml(lane.label)}</div>
+              <h2>${escapeHtml(lane.title)}</h2>
+            </div>
+            <div class="badge-stack">
+              <span class="badge ${escapeHtml(lane.artifactState)}">${escapeHtml(humanizeStatus(lane.artifactState))}</span>
+              <span class="badge">${escapeHtml(humanizeStatus(lane.taskStatus))}</span>
+            </div>
+          </div>
+
+          <div class="lane-grid">
+            <div class="fact">
+              <span class="fact-label">Artifact</span>
+              <span class="fact-value path">${escapeHtml(lane.artifact.path)}</span>
+            </div>
+            <div class="fact">
+              <span class="fact-label">Freshness</span>
+              <span class="fact-value mono">${escapeHtml(lane.freshness || "missing")}</span>
+            </div>
+            <div class="fact">
+              <span class="fact-label">Task Lookup</span>
+              <span class="fact-value">${lane.taskFound ? "present on board API" : "missing on board API"}</span>
+            </div>
+            <div class="fact">
+              <span class="fact-label">Artifact Size</span>
+              <span class="fact-value mono">${lane.artifact.exists ? escapeHtml(lane.artifact.size + " bytes") : "missing"}</span>
+            </div>
+          </div>
+
+          <ul class="lane-list">
+            ${lane.details.map((detail) => `<li>${escapeHtml(detail)}</li>`).join("")}
+          </ul>
+
+          <div class="lane-actions">
+            <div class="action">
+              <div class="action-title">Run</div>
+              <div class="mono">${escapeHtml(lane.runCommand)}</div>
+            </div>
+            <div class="action">
+              <div class="action-title">Verify</div>
+              <div class="mono">${escapeHtml(lane.verifyCommand)}</div>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function load() {
+      const response = await fetch("/api/readiness");
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      document.getElementById("generated-at").textContent = `Snapshot ${data.generatedAt}`;
+      document.getElementById("api-state").textContent = data.apiKeyConfigured
+        ? "KALSHI_API_KEY present"
+        : "KALSHI_API_KEY missing";
+
+      renderSummary(data);
+      renderBlockers(data.blockers);
+      renderLanes(data.lanes);
+    }
+
+    load().catch((error) => {
+      document.getElementById("blockers").innerHTML = `
+        <article class="blocker">
+          <h3>Dashboard load failed</h3>
+          <p>${escapeHtml(error.message)}</p>
+        </article>
+      `;
+    });
+  </script>
+</body>
+</html>

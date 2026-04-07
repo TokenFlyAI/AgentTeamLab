@@ -1,0 +1,389 @@
+{
+  "generated_at": "2026-04-07T07:22:12.984211",
+  "task": "T815",
+  "input_fixture": {
+    "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets.json",
+    "modified_at": "2026-04-06T23:25:48.159914",
+    "market_count": 50
+  },
+  "baseline": {
+    "threshold": 0.65,
+    "multi_cluster_count": 5,
+    "singleton_count": 0,
+    "clusters": [
+      {
+        "id": "cluster_4",
+        "label": "Politics Markets",
+        "size": 3,
+        "categories": {
+          "Politics": 3
+        },
+        "markets": [
+          "POL-GOV-27JUN18-134",
+          "POL-GOV-27DEC15-194",
+          "POL-GOV-27APR19-114"
+        ],
+        "reported_confidence": 0.814,
+        "reported_stability": 1.0,
+        "observed_pair_retention": 1.0,
+        "min_pair_similarity": 0.993,
+        "mean_pair_similarity": 0.994,
+        "below_threshold_pairs": 0,
+        "pair_count": 3,
+        "below_threshold_ratio": 0.0,
+        "per_removal_pair_retention": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "id": "cluster_5",
+        "label": "Weather Markets",
+        "size": 11,
+        "categories": {
+          "Weather": 11
+        },
+        "markets": [
+          "WEA-SNOW-27JAN31-088",
+          "WEA-RAIN-27MAY19-124",
+          "WEA-HURR-27APR25-116",
+          "WEA-ATL-27MAR08-100",
+          "WEA-ATL-27NOV03-180",
+          "WEA-RAIN-26NOV20-064",
+          "WEA-HURR-27JUN24-136",
+          "WEA-ATL-27JAN07-080",
+          "WEA-HURR-27AUG23-156",
+          "WEA-HEAT-26DEC14-072",
+          "WEA-RAIN-26MAY24-004"
+        ],
+        "reported_confidence": 0.729,
+        "reported_stability": 1.0,
+        "observed_pair_retention": 1.0,
+        "min_pair_similarity": 0.983,
+        "mean_pair_similarity": 0.995,
+        "below_threshold_pairs": 0,
+        "pair_count": 55,
+        "below_threshold_ratio": 0.0,
+        "per_removal_pair_retention": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "id": "cluster_2",
+        "label": "Crypto Markets",
+        "size": 10,
+        "categories": {
+          "Crypto": 10
+        },
+        "markets": [
+          "CRYP-SOL-27APR16-113",
+          "CRYP-DOGE-27APR04-109",
+          "CRYP-BTC-27MAY10-121",
+          "CRYP-DOGE-26DEC05-069",
+          "CRYP-BTCDOM-26SEP24-045",
+          "CRYP-ETH-27DEC24-197",
+          "CRYP-BTCDOM-27JUL21-145",
+          "CRYP-BTC-27JAN10-081",
+          "CRYP-BTCDOM-26MAY27-005",
+          "CRYP-BTCDOM-27JAN22-085"
+        ],
+        "reported_confidence": 0.684,
+        "reported_stability": 1.0,
+        "observed_pair_retention": 1.0,
+        "min_pair_similarity": 0.934,
+        "mean_pair_similarity": 0.974,
+        "below_threshold_pairs": 0,
+        "pair_count": 45,
+        "below_threshold_ratio": 0.0,
+        "per_removal_pair_retention": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "id": "cluster_3",
+        "label": "Politics Markets",
+        "size": 12,
+        "categories": {
+          "Politics": 12
+        },
+        "markets": [
+          "POL-APPROVAL-27JAN01-078",
+          "POL-APPROVAL-27MAY01-118",
+          "POL-HOUSE-27NOV09-182",
+          "POL-SCOTUS-27OCT04-170",
+          "POL-APPROVAL-26SEP03-038",
+          "POL-SEN-26JUL29-026",
+          "POL-SEN-26SEP27-046",
+          "POL-HOUSE-27JAN13-082",
+          "POL-HOUSE-26NOV14-062",
+          "POL-SCOTUS-27FEB06-090",
+          "POL-HOUSE-26SEP15-042",
+          "POL-SEN-27NOV21-186"
+        ],
+        "reported_confidence": 0.649,
+        "reported_stability": 1.0,
+        "observed_pair_retention": 1.0,
+        "min_pair_similarity": 0.808,
+        "mean_pair_similarity": 0.934,
+        "below_threshold_pairs": 0,
+        "pair_count": 66,
+        "below_threshold_ratio": 0.0,
+        "per_removal_pair_retention": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "id": "cluster_1",
+        "label": "Economics Markets",
+        "size": 14,
+        "categories": {
+          "Economics": 14
+        },
+        "markets": [
+          "ECON-UNEMP-27OCT31-179",
+          "ECON-CPI-27OCT07-171",
+          "ECON-FED-27JAN16-083",
+          "ECON-GDP-27JUL27-147",
+          "ECON-GDP-27JAN28-087",
+          "ECON-UNEMP-27JAN04-079",
+          "ECON-UNEMP-27DEC30-199",
+          "ECON-PAY-27AUG20-155",
+          "ECON-FED-26SEP18-043",
+          "ECON-GDP-27SEP25-167",
+          "ECON-UNEMP-26NOV05-059",
+          "ECON-CPI-26DEC11-071",
+          "ECON-CPI-27APR10-111",
+          "ECON-UNEMP-26SEP06-039"
+        ],
+        "reported_confidence": 0.586,
+        "reported_stability": 0.0,
+        "observed_pair_retention": 1.0,
+        "min_pair_similarity": 0.256,
+        "mean_pair_similarity": 0.763,
+        "below_threshold_pairs": 33,
+        "pair_count": 91,
+        "below_threshold_ratio": 0.363,
+        "per_removal_pair_retention": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    ]
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.55,
+      "multi_cluster_count": 5,
+      "singleton_count": 0,
+      "avg_confidence": 0.675,
+      "avg_stability": 0.6,
+      "pair_retention_vs_baseline": 0.842,
+      "cluster_sizes": [
+        3,
+        11,
+        7,
+        13,
+        16
+      ],
+      "labels": [
+        "Politics Markets",
+        "Weather Markets",
+        "Politics Markets",
+        "Crypto + Politics",
+        "Economics + Politics"
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "multi_cluster_count": 5,
+      "singleton_count": 0,
+      "avg_confidence": 0.692,
+      "avg_stability": 0.8,
+      "pair_retention_vs_baseline": 1.0,
+      "cluster_sizes": [
+        3,
+        11,
+        10,
+        12,
+        14
+      ],
+      "labels": [
+        "Politics Markets",
+        "Weather Markets",
+        "Crypto Markets",
+        "Politics Markets",
+        "Economics Markets"
+      ]
+    },
+    {
+      "threshold": 0.65,
+      "multi_cluster_count": 5,
+      "singleton_count": 0,
+      "avg_confidence": 0.692,
+      "avg_stability": 0.8,
+      "pair_retention_vs_baseline": 1.0,
+      "cluster_sizes": [
+        3,
+        11,
+        10,
+        12,
+        14
+      ],
+      "labels": [
+        "Politics Markets",
+        "Weather Markets",
+        "Crypto Markets",
+        "Politics Markets",
+        "Economics Markets"
+      ]
+    },
+    {
+      "threshold": 0.7,
+      "multi_cluster_count": 5,
+      "singleton_count": 0,
+      "avg_confidence": 0.692,
+      "avg_stability": 0.8,
+      "pair_retention_vs_baseline": 1.0,
+      "cluster_sizes": [
+        3,
+        11,
+        10,
+        12,
+        14
+      ],
+      "labels": [
+        "Politics Markets",
+        "Weather Markets",
+        "Crypto Markets",
+        "Politics Markets",
+        "Economics Markets"
+      ]
+    },
+    {
+      "threshold": 0.75,
+      "multi_cluster_count": 5,
+      "singleton_count": 0,
+      "avg_confidence": 0.692,
+      "avg_stability": 0.8,
+      "pair_retention_vs_baseline": 1.0,
+      "cluster_sizes": [
+        3,
+        11,
+        10,
+        12,
+        14
+      ],
+      "labels": [
+        "Politics Markets",
+        "Weather Markets",
+        "Crypto Markets",
+        "Politics Markets",
+        "Economics Markets"
+      ]
+    }
+  ],
+  "duplicate_labels": {
+    "Politics Markets": 2
+  },
+  "suspicious_fixture_values": [
+    {
+      "ticker": "ECON-UNEMP-26SEP06-039",
+      "issue": "unemployment_rate_out_of_range",
+      "title": "US unemployment above 250% in Sep 6, 2026?",
+      "value": 250.0
+    },
+    {
+      "ticker": "CRYP-BTCDOM-26SEP24-045",
+      "issue": "bitcoin_dominance_out_of_range",
+      "title": "Bitcoin dominance above 180% by Sep 24, 2026?",
+      "value": 180.0
+    },
+    {
+      "ticker": "ECON-UNEMP-27JAN04-079",
+      "issue": "unemployment_rate_out_of_range",
+      "title": "US unemployment above 225% in Jan 4, 2027?",
+      "value": 225.0
+    },
+    {
+      "ticker": "CRYP-BTCDOM-27JAN22-085",
+      "issue": "bitcoin_dominance_out_of_range",
+      "title": "Bitcoin dominance above 4,500% by Jan 22, 2027?",
+      "value": 4500.0
+    },
+    {
+      "ticker": "CRYP-SOL-27APR16-113",
+      "issue": "solana_price_implausible",
+      "title": "Solana above $95,000 by Apr 16, 2027?",
+      "value": 95000.0
+    },
+    {
+      "ticker": "ECON-UNEMP-27DEC30-199",
+      "issue": "unemployment_rate_out_of_range",
+      "title": "US unemployment above 175% in Dec 30, 2027?",
+      "value": 175.0
+    }
+  ],
+  "failure_modes": [
+    {
+      "type": "stability_metric_mismatch",
+      "cluster_id": "cluster_1",
+      "summary": "Economics Markets reports stability=0.0, but leave-one-out reruns retain 1.000 of pair memberships."
+    },
+    {
+      "type": "overbroad_semantic_cluster",
+      "cluster_id": "cluster_1",
+      "summary": "Economics Markets has 33/91 pairs below the 0.65 similarity threshold."
+    },
+    {
+      "type": "label_collision",
+      "summary": "Label 'Politics Markets' appears 2 times, masking distinct event families."
+    },
+    {
+      "type": "fixture_semantic_noise",
+      "summary": "6 live-shaped fixture titles contain impossible or implausible numeric thresholds."
+    }
+  ]
+}

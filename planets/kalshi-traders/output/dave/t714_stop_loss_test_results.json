@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-04-07T14:14:36.742Z",
+  "runner": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/backend/strategies/live_runner.js",
+  "tradeSignalsPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/output/trade_signals.json",
+  "paperTradeLogPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/output/paper_trade_log.json",
+  "results": [
+    {
+      "name": "T714 cap proof: every executed paper trade stays within 20% of capital",
+      "status": "PASS",
+      "durationMs": 44
+    },
+    {
+      "name": "T714 floor compatibility: capital floor halt still blocks all new paper trades",
+      "status": "PASS",
+      "durationMs": 37
+    }
+  ],
+  "passed": 2,
+  "failed": 0
+}

@@ -1,0 +1,146 @@
+{
+  "report": {
+    "generatedAt": "2026-04-07T14:20:19.927Z",
+    "source": "mock_fallback",
+    "marketCount": 5,
+    "signalCount": 1,
+    "approvedSignalCount": 1,
+    "rejectedSignalCount": 0,
+    "halted": false,
+    "haltReason": null,
+    "capitalFloor": {
+      "initialCapitalCents": 500000,
+      "floorCents": 5000,
+      "realizedPnLCents": 0,
+      "currentCapitalCents": 500000,
+      "breachAmountCents": 0,
+      "breached": false,
+      "closedTrades": 0,
+      "openTrades": 1
+    },
+    "stopLoss": {
+      "enabled": true,
+      "maxTradePct": 0.2,
+      "referenceCapitalCents": 500000,
+      "maxTradeCostCents": 100000,
+      "maxTradePctLabel": "20%"
+    },
+    "executed": true,
+    "executionReport": {
+      "mode": "paper_trading",
+      "executed": 1,
+      "rejected": 0,
+      "failed": 0,
+      "persisted": 1,
+      "halted": false,
+      "haltReason": null,
+      "stopLossRejected": 0,
+      "trades": [
+        {
+          "ticker": "BTCW-26-JUN30-100K",
+          "side": "yes",
+          "contracts": 29,
+          "price": 64,
+          "tradeCostCents": 1856,
+          "tradeCostDollars": 18.56,
+          "strategy": "mean_reversion",
+          "confidence": 0.95,
+          "timestamp": "2026-04-07T14:20:19.926Z",
+          "status": "OPEN"
+        }
+      ]
+    },
+    "markets": [
+      {
+        "id": "m4",
+        "ticker": "BTCW-26-JUN30-100K",
+        "title": "Will Bitcoin exceed $100,000 by June 30, 2026?",
+        "category": "Crypto",
+        "yesMid": 64,
+        "noMid": 36,
+        "volume": 890000,
+        "priceHistoryMean": 69.8,
+        "priceHistoryStddev": 1.8867962264113207,
+        "priceChange24h": 4
+      },
+      {
+        "id": "m2",
+        "ticker": "BTCW-26-JUN30-80K",
+        "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
+        "category": "Crypto",
+        "yesMid": 84,
+        "noMid": 16,
+        "volume": 720000,
+        "priceHistoryMean": 82.8,
+        "priceHistoryStddev": 1.7204650534085253,
+        "priceChange24h": -2
+      },
+      {
+        "id": "m5",
+        "ticker": "ETHW-26-DEC31-5K",
+        "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
+        "category": "Crypto",
+        "yesMid": 30,
+        "noMid": 70,
+        "volume": 540000,
+        "priceHistoryMean": 30,
+        "priceHistoryStddev": 0,
+        "priceChange24h": 0
+      },
+      {
+        "id": "m1",
+        "ticker": "INXW-25-DEC31",
+        "title": "S&P 500 to close above 5000",
+        "category": "Economics",
+        "yesMid": 86,
+        "noMid": 14,
+        "volume": 250000,
+        "priceHistoryMean": 82.7,
+        "priceHistoryStddev": 1.9519221295943137,
+        "priceChange24h": -6
+      },
+      {
+        "id": "m7",
+        "ticker": "KXNF-20260501-T150000",
+        "title": "NFP above 150k",
+        "category": "Financial",
+        "yesMid": 51,
+        "noMid": 49,
+        "volume": 200000,
+        "priceHistoryMean": 52.5,
+        "priceHistoryStddev": 0.806225774829855,
+        "priceChange24h": 2
+      }
+    ],
+    "signals": [
+      {
+        "strategy": "mean_reversion",
+        "marketId": "m4",
+        "ticker": "BTCW-26-JUN30-100K",
+        "side": "yes",
+        "signalType": "entry",
+        "confidence": 0.95,
+        "targetPrice": 64,
+        "currentPrice": 64,
+        "expectedEdge": 6,
+        "recommendedContracts": 29,
+        "riskAmount": 1856,
+        "reason": "Mean reversion: z-score=-3.07, mean=69.8, vol=890000"
+      }
+    ],
+    "t714": {
+      "artifactOwner": "dave",
+      "basedOnRunner": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/backend/strategies/live_runner.js",
+      "wrapperRunCommand": "node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/dave/backend/strategies/live_runner_t714.js --execute",
+      "freshnessMarker": "2026-04-07T14:20:19.930Z",
+      "maxTradePct": 0.2,
+      "maxTradeCostCents": 100000,
+      "maxTradeCostDollars": 1000,
+      "actualPersistedTrades": 1,
+      "stopLossRejected": 0,
+      "capitalFloorIntegrated": true
+    }
+  },
+  "stdout": "=== Live Strategy Runner (Task 221) ===\n\n[FALLBACK] No KALSHI_API_KEY set — using realistic mock market data\nSelected 5 markets for signal generation\n  BTCW-26-JUN30-100K: yes_mid=64c, mean=69.8, stddev=1.9, change=4.0c\n  BTCW-26-JUN30-80K: yes_mid=84c, mean=82.8, stddev=1.7, change=-2.0c\n  ETHW-26-DEC31-5K: yes_mid=30c, mean=30.0, stddev=0.0, change=0.0c\n  INXW-25-DEC31: yes_mid=86c, mean=82.7, stddev=2.0, change=-6.0c\n  KXNF-20260501-T150000: yes_mid=51c, mean=52.5, stddev=0.8, change=2.0c\n\n📋 Checking for trades to settle...\n  No trades ready for settlement\n\n💵 Post-settlement capital check...\n  Pre-trade: Capital: $5000.00 (realized P&L $0.00, floor $50.00)\n\n🔒 Running risk checks...\n  Risk Status: OK\n  Daily P&L: $0.00\n  Total Exposure: $0.00 / $2000.00\n  ✅ Risk approved 1 signals\n\n📝 PAPER TRADING MODE — execution constrained to paper ledger\n\n📝 PAPER TRADING MODE — logging trades without execution\n  Logged 1 paper trades to paper_trade_log.json\n  Persisted 1 trades to paper_trades.db\n\n💰 Running paper trade settlement...\n  No trades ready for settlement (1 skipped)\n\n💵 Capital floor status after settlement...\n  Post-run: Capital: $5000.00 (realized P&L $0.00, floor $50.00)\n\n✅ Wrote 1 signals to /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/trade_signals.json\n  [mean_reversion] YES BTCW-26-JUN30-100K @ 64c — size=29 contracts (conf=95.0%)\n",
+  "stderr": "[RiskManager] Optional dependency 'pg' not installed, using in-memory risk tracking\n"
+}

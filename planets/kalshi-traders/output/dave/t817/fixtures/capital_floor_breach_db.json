@@ -1,0 +1,22 @@
+[
+  {
+    "id": "pt_floor_breach_seed",
+    "timestamp": "2026-04-07T00:00:00.000Z",
+    "market": "BTCW-26-JUN30-80K",
+    "signal_type": "mean_reversion",
+    "confidence": 0.72,
+    "direction": "YES",
+    "contracts": 10,
+    "entry_price": 60,
+    "exit_price": 1,
+    "status": "CLOSED",
+    "pnl": -496000,
+    "outcome": "LOSS",
+    "created_at": "2026-04-07T00:00:00.000Z",
+    "updated_at": "2026-04-07T00:05:00.000Z",
+    "metadata": {
+      "runNumber": 1,
+      "settledAtRun": 4
+    }
+  }
+]

@@ -2519,13 +2519,14 @@ test.describe("GET /manifest.json", () => {
 // ── CORS OPTIONS preflight ────────────────────────────────────────────────────
 
 test.describe("OPTIONS /api/* CORS preflight", () => {
-  test("returns 204 with CORS headers for preflight", async () => {
-    const res = await fetch(`${BASE}/api/agents`, { method: "OPTIONS" });
-    expect(res.status).toBe(204);
-    expect(res.headers.get("access-control-allow-origin")).toBe("*");
-    expect(res.headers.get("access-control-allow-methods")).toContain("GET");
-    expect(res.headers.get("access-control-allow-methods")).toContain("POST");
-    expect(res.headers.get("access-control-allow-headers")).toContain("Authorization");
+  test("returns 204 with CORS headers for preflight", async ({ request }) => {
+    const res = await request.fetch("/api/agents", { method: "OPTIONS" });
+    expect(res.status()).toBe(204);
+    const headers = res.headers();
+    expect(headers["access-control-allow-origin"]).toBe("*");
+    expect(headers["access-control-allow-methods"]).toContain("GET");
+    expect(headers["access-control-allow-methods"]).toContain("POST");
+    expect(headers["access-control-allow-headers"]).toContain("Authorization");
   });
 });
 
