@@ -3277,9 +3277,12 @@ async function handleRequest(req, res) {
 
   // ---- Knowledge & Research ----
   if (method === "GET" && pathname === "/api/research") {
-    const plans = listDir(path.join(PUBLIC_DIR, "plans")).map((f) => ({ file: f, type: "plan", dir: "plans" }));
-    const reports = listDir(path.join(PUBLIC_DIR, "reports")).map((f) => ({ file: f, type: "report", dir: "reports" }));
-    return json(res, [...plans, ...reports]);
+    const files = cached("research_list", 30_000, () => {
+      const plans = listDir(path.join(PUBLIC_DIR, "plans")).map((f) => ({ file: f, type: "plan", dir: "plans" }));
+      const reports = listDir(path.join(PUBLIC_DIR, "reports")).map((f) => ({ file: f, type: "report", dir: "reports" }));
+      return [...plans, ...reports];
+    });
+    return json(res, files);
   }
 
   const researchFileMatch = pathname.match(/^\/api\/research\/(.+)$/);
@@ -3328,7 +3331,7 @@ async function handleRequest(req, res) {
 
   // ---- Organization ----
   if (method === "GET" && pathname === "/api/org") {
-    return json(res, parseOrgChart());
+    return json(res, cached("org_chart", 120_000, () => parseOrgChart()));
   }
 
   if (method === "GET" && pathname === "/api/mode") {
@@ -3382,39 +3385,42 @@ async function handleRequest(req, res) {
   // ---- Stats & Monitoring ----
   // GET /api/cost — fast live cost summary (today + 7-day total)
   if (method === "GET" && pathname === "/api/cost") {
-    const names = listAgentNames();
-    // "Today" means the most recent log file for each agent (avoids midnight rollover issues)
-    let todayCost = 0, todayCycles = 0, total7dCost = 0, total7dCycles = 0;
-    const perAgent = names.map((name) => {
-      const logsDir = path.join(EMPLOYEES_DIR, name, "logs");
-      let logPath = null;
-      try {
-        const lf = fs.existsSync(logsDir) ? fs.readdirSync(logsDir)
-          .filter(f => f.match(/^\d{4}_\d{2}_\d{2}\.log$/) && !f.includes("raw"))
-          .sort().reverse() : [];
-        if (lf.length) logPath = path.join(logsDir, lf[0]);
-      } catch (_) {}
-      const text = (logPath && safeRead(logPath)) || "";
-      let cost = 0, cycles = 0;
-      for (const line of text.split("\n")) {
-        const m = line.match(/\[DONE\].*cost=\$?([\d.]+)/i);
-        if (m) cost += parseFloat(m[1]) || 0;
-        if (/CYCLE\s*START/i.test(line)) cycles++;
-      }
-      todayCost += cost;
-      todayCycles += cycles;
-      const week = getAgentCostFromLogs(name, 7);
-      total7dCost += week.totalCost;
-      total7dCycles += week.cycles;
-      return { name, today_usd: Math.round(cost * 100) / 100, today_cycles: cycles };
+    const result = cached("cost_summary", 30_000, () => {
+      const names = listAgentNames();
+      // "Today" means the most recent log file for each agent (avoids midnight rollover issues)
+      let todayCost = 0, todayCycles = 0, total7dCost = 0, total7dCycles = 0;
+      const perAgent = names.map((name) => {
+        const logsDir = path.join(EMPLOYEES_DIR, name, "logs");
+        let logPath = null;
+        try {
+          const lf = fs.existsSync(logsDir) ? fs.readdirSync(logsDir)
+            .filter(f => f.match(/^\d{4}_\d{2}_\d{2}\.log$/) && !f.includes("raw"))
+            .sort().reverse() : [];
+          if (lf.length) logPath = path.join(logsDir, lf[0]);
+        } catch (_) {}
+        const text = (logPath && safeRead(logPath)) || "";
+        let cost = 0, cycles = 0;
+        for (const line of text.split("\n")) {
+          const m = line.match(/\[DONE\].*cost=\$?([\d.]+)/i);
+          if (m) cost += parseFloat(m[1]) || 0;
+          if (/CYCLE\s*START/i.test(line)) cycles++;
+        }
+        todayCost += cost;
+        todayCycles += cycles;
+        const week = getAgentCostFromLogs(name, 7);
+        total7dCost += week.totalCost;
+        total7dCycles += week.cycles;
+        return { name, today_usd: Math.round(cost * 100) / 100, today_cycles: cycles };
+      });
+      return {
+        today_usd: Math.round(todayCost * 100) / 100,
+        today_cycles: todayCycles,
+        total_7d_usd: Math.round(total7dCost * 100) / 100,
+        total_7d_cycles: total7dCycles,
+        per_agent: perAgent.sort((a, b) => b.today_usd - a.today_usd),
+      };
     });
-    return json(res, {
-      today_usd: Math.round(todayCost * 100) / 100,
-      today_cycles: todayCycles,
-      total_7d_usd: Math.round(total7dCost * 100) / 100,
-      total_7d_cycles: total7dCycles,
-      per_agent: perAgent.sort((a, b) => b.today_usd - a.today_usd),
-    });
+    return json(res, result);
   }
 
   if (method === "GET" && pathname === "/api/stats") {

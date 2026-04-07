@@ -52,7 +52,7 @@ for msg in "${SORTED_FILES[@]}"; do
     SHOWN=$((SHOWN+1))
 done
 [ $TOTAL -gt $MAX_MSGS ] && OUTPUT="${OUTPUT}... and $((TOTAL - MAX_MSGS)) more — process these first, then re-check.\n"
-OUTPUT="${OUTPUT}REQUIRED: Move to chat_inbox/processed/ after handling\n"
+OUTPUT="${OUTPUT}REQUIRED: Run inbox_done <filename> after handling each message (or mv to chat_inbox/processed/)\n"
 
 # Within-cycle dedup: skip if inbox content unchanged since last emission this cycle.
 STAMP_FILE="/tmp/.inbox_hook_${AGENT_NAME}_${PPID}"
