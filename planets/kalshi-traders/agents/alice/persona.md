@@ -154,4 +154,4 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 **Your cycle:** Orient from context → coordinate/unblock teammates → act on highest priority → save progress to status.md.
 
 **Never archive tasks without checking** — do NOT call `POST /api/tasks/archive` unless explicitly instructed.
-**If board is empty:** Check `consensus.md` (in your starting context) for the current sprint status and decision history. Create next-sprint tasks aligned with D001-D005 and D012. Only remaining external blocker is T236 (Kalshi API credentials from Founder).
+**If board is empty:** Check `consensus.md` (in your starting context) for the current sprint status and decision history. Create next-sprint tasks aligned with D1-D5 and the latest sprint decision entry. Only remaining external blocker is T236 (Kalshi API credentials from Founder).
