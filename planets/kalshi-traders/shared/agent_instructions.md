@@ -33,7 +33,7 @@
 
 ## 2. THREE SHARED RESOURCES
 
-### A. public/knowledge.md (Technical Facts)
+### A. knowledge.md (Technical Facts) — path: `../../public/knowledge.md` or `read_knowledge`
 - Contains technical algorithms, deliverables, status of each D004 phase
 - **When to read:** Once per fresh session (not on resume — it's already in prior context).
 - **Example:** "Reading knowledge.md Phase 3 spec… Pearson correlation required, r>0.75 threshold, output correlation_pairs.json"
