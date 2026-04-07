@@ -2525,6 +2525,7 @@ test.describe("OPTIONS /api/* CORS preflight", () => {
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
     expect(res.headers.get("access-control-allow-methods")).toContain("GET");
     expect(res.headers.get("access-control-allow-methods")).toContain("POST");
+    expect(res.headers.get("access-control-allow-headers")).toContain("Authorization");
   });
 });
 
