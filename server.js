@@ -1660,9 +1660,9 @@ async function handleRequest(req, res) {
     }
     const body = await parseBody(req);
     const parsedMax = parseInt(body.max, 10);
-    // If request provides a valid max, use it. Otherwise fall back to 20 (the hardcoded default),
-    // not the config value — config controls daemon mode, not one-shot smart-start calls.
-    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : "20";
+    // If request provides a valid max, use it. Otherwise use config's max_agents (default 3).
+    const configMax = parseInt(smartRunConfig.max_agents, 10) || 3;
+    const maxAgents = (!isNaN(parsedMax) && parsedMax > 0 && parsedMax <= 100) ? String(parsedMax) : String(configMax);
     const extraArgs = ["--max", maxAgents];
     // Run smart_run.sh and capture its decision summary before it launches agents
     execFile("bash", [script, "--dry-run", ...extraArgs], { cwd: DIR }, (err, stdout, stderr) => {
@@ -1786,6 +1786,18 @@ async function handleRequest(req, res) {
         return badRequest(res, `enabled_executors must include at least one of: ${getSupportedExecutors().join(", ")}`);
       }
       config.enabled_executors = normalized;
+    }
+
+    if (body.daily_cost_cap_usd !== undefined) {
+      const cap = parseFloat(body.daily_cost_cap_usd);
+      if (!isNaN(cap) && cap >= 0) config.daily_cost_cap_usd = cap;
+      else return badRequest(res, "daily_cost_cap_usd must be a non-negative number (0 = disabled)");
+    }
+
+    if (body.per_agent_cost_cap_usd !== undefined) {
+      const cap = parseFloat(body.per_agent_cost_cap_usd);
+      if (!isNaN(cap) && cap >= 0) config.per_agent_cost_cap_usd = cap;
+      else return badRequest(res, "per_agent_cost_cap_usd must be a non-negative number (0 = disabled)");
     }
 
     // Update timestamp
