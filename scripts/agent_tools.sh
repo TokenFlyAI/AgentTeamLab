@@ -228,17 +228,17 @@ read_inbox() {
   # read_inbox — show unread messages from chat_inbox
   [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
   local inbox="${_AGENTS}/${_SELF}/chat_inbox"
-  local unread=$(ls "$inbox"/*.md 2>/dev/null | grep -v '/processed' | grep -v '/read_' | head -20)
-  if [ -z "$unread" ]; then
-    echo "No unread messages"
-    return 0
-  fi
-  echo "Unread messages:"
-  for f in $unread; do
+  local count=0 found=0
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    found=1
     echo "--- $(basename "$f") ---"
     head -5 "$f"
     echo ""
-  done
+    (( count++ ))
+    [ $count -ge 20 ] && break
+  done < <(find "$inbox" -maxdepth 1 -name "*.md" ! -name "read_*" 2>/dev/null | sort)
+  [ $found -eq 0 ] && echo "No unread messages"
 }
 
 # ── Information ──────────────────────────────────────────────────────────────
@@ -290,14 +290,16 @@ pipeline_status() {
 # ── Logging ──────────────────────────────────────────────────────────────────
 
 log_progress() {
+  # Writes a timestamped note to logs/progress.log — NOT status.md (C18: overwrite each cycle, never append)
   local msg="$1"
   [ -z "$msg" ] && echo "Usage: log_progress \"what you did\"" && return 1
   [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
-  local status_file="${_AGENTS}/${_SELF}/status.md"
-  echo "" >> "$status_file"
-  echo "### $(date +%Y-%m-%d\ %H:%M) — Progress" >> "$status_file"
-  echo "$msg" >> "$status_file"
-  echo "Progress logged to status.md"
+  local log_dir="${_AGENTS}/${_SELF}/logs"
+  mkdir -p "$log_dir"
+  echo "### $(date +%Y-%m-%d\ %H:%M) — ${_SELF}" >> "${log_dir}/progress.log"
+  echo "$msg" >> "${log_dir}/progress.log"
+  echo "" >> "${log_dir}/progress.log"
+  echo "Progress logged to logs/progress.log"
 }
 
 echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"

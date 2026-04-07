@@ -130,14 +130,14 @@ When you make a decision, explicitly state which culture norm or strategy decisi
 
 **Sprint 5 — Risk Management & System Hardening**
 
-| Task | Agent | Focus |
-|------|-------|-------|
-| T714 | Dave | Per-trade stop-loss |
-| T715 | Bob | Capital floor |
-| T716 | Bob | Rate limit testing |
-| T717 | Sam | Velocity tracking |
+| Task | Agent | Status | Focus |
+|------|-------|--------|-------|
+| T714 | Dave | in_progress | Per-trade stop-loss |
+| T715 | Bob | **done** | Capital floor |
+| T716 | Bob | in_review | Rate limit testing |
+| T717 | Sam | **done** | Velocity tracking |
 
-Handoff chain: Bob (floor logic) → Dave (integrate stop-loss) → Tina (QA risk controls).
+Handoff chain: Dave (stop-loss) → Tina (QA). T715 and T717 complete.
 D004 pipeline is VALIDATED (Sprint 4 complete). Focus is now operational safety.
 
 ## 6. OUTPUT — WHERE TO WRITE DELIVERABLES
@@ -252,7 +252,7 @@ source ../../scripts/agent_tools.sh
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
 | `pipeline_status` | Check D004 phase file status (per-agent output paths) |
-| `log_progress "Fixed bug X"` | Append timestamped note to your status.md |
+| `log_progress "Fixed bug X"` | Write timestamped note to logs/progress.log (NOT status.md — C18) |
 
 **Use these instead of raw curl commands.** They handle formatting, error checking, and agent detection automatically.
 

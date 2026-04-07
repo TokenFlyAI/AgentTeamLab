@@ -114,7 +114,7 @@ What you will do next when you resume.
 Anything else you need to remember.
 ```
 
-**WRITE TO status.md CONSTANTLY.** After every decision, every task assignment, every report read. If you get killed mid-cycle, the next instance of you must be able to pick up seamlessly.
+**OVERWRITE status.md each cycle** (C18 — replace, never append). Keep it under 30 lines. Record current focus, decisions made, next actions. Your prior session is KV-cached — appending stale history wastes tokens every fresh start.
 
 ---
 

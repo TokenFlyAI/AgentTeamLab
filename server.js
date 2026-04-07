@@ -826,7 +826,8 @@ function parseTaskBoard() {
       if (cols.length < 2) continue;
       const task = { task_type: currentType };
       for (let j = 0; j < header.length; j++) {
-        task[header[j]] = cols[j] || "";
+        const v = cols[j] || "";
+        task[header[j]] = v === "undefined" ? "" : v;
       }
       tasks.push(task);
     }
