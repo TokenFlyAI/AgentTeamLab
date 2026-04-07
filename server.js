@@ -859,14 +859,21 @@ function getDateStr(daysAgo) {
 function getAgentCostFromLogs(name, days = 7) {
   const cacheKey = `${name}_${days}`;
   const cached = _statsCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < 60000) return cached.data;
+
+  // Use mtime-based cache invalidation: re-read only when the most recent log file changes.
+  // Pure time-based TTL caused stampedes because charlie/bob have 5-33MB logs that
+  // take 4-5 seconds to parse — blocking the event loop on every cache miss.
+  const logsDir = path.join(EMPLOYEES_DIR, name, "logs");
+  const todayLog = path.join(logsDir, `${getDateStr(0)}.log`);
+  const currentMtime = fileMtime(todayLog) || 0;
+  if (cached && cached.mtime === currentMtime) return cached.data;
 
   const data = { totalCost: 0, cycles: 0, dailyCosts: {}, dailyCycles: {} };
 
   try {
     for (let i = 0; i < days; i++) {
       const dateStr = getDateStr(i);
-      const cleanLogPath = path.join(EMPLOYEES_DIR, name, "logs", `${dateStr}.log`);
+      const cleanLogPath = path.join(logsDir, `${dateStr}.log`);
       const text = safeRead(cleanLogPath) || "";
       let dayCost = 0, dayCycles = 0;
       for (const line of text.split("\n")) {
@@ -884,7 +891,7 @@ function getAgentCostFromLogs(name, days = 7) {
     data.totalCost = Math.round(data.totalCost * 100) / 100;
   } catch (_) { /* no log */ }
 
-  _statsCache.set(cacheKey, { ts: Date.now(), data });
+  _statsCache.set(cacheKey, { mtime: currentMtime, data });
   return data;
 }
 
@@ -1269,6 +1276,13 @@ async function handleRequest(req, res) {
   const pathname = parsed.pathname;
   const query = parsed.query;
   const method = req.method;
+  const _reqStart = Date.now(); // track slow requests
+  const _origEnd = res.end.bind(res);
+  res.end = (...args) => {
+    const ms = Date.now() - _reqStart;
+    if (ms > 200 && pathname.startsWith("/api/")) console.log(`[SLOW] ${method} ${pathname} took ${ms}ms`);
+    return _origEnd(...args);
+  };
 
   // SEC-012: attach CORS origin to res so json() can reflect the correct value
   res._corsOrigin = corsOrigin(req, method);
@@ -2138,6 +2152,9 @@ async function handleRequest(req, res) {
         max_agents: config.max_agents,
         interval_seconds: config.interval_seconds,
         mode: config.mode,
+        max_total_cycles: config.max_total_cycles || 0,
+        selection_mode: config.selection_mode || "deterministic",
+        dry_run: config.dry_run || false,
       },
       agents: {
         running: runningAgents,
@@ -3464,7 +3481,7 @@ async function handleRequest(req, res) {
   // ---- Stats & Monitoring ----
   // GET /api/cost — fast live cost summary (today + 7-day total)
   if (method === "GET" && pathname === "/api/cost") {
-    const result = cached("cost_summary", 30_000, () => {
+    const result = cached("cost_summary", 300_000, () => { // 5-min cache: recomputing reads 171MB of logs
       const names = listAgentNames();
       // "Today" means the most recent log file for each agent (avoids midnight rollover issues)
       let todayCost = 0, todayCycles = 0, total7dCost = 0, total7dCycles = 0;
@@ -3503,7 +3520,7 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/stats") {
-    return json(res, cached("stats_7d", 60_000, () => {
+    return json(res, cached("stats_7d", 300_000, () => { // 5-min cache: recomputing reads 171MB of logs
       const agentNames = listAgentNames();
       const stats = agentNames.map((name) => ({
         agent: name,
@@ -3759,11 +3776,17 @@ function getExecutorConfigPath() {
   return path.join(DIR, "public", "executor_config.md");
 }
 
+// Cache executor health checks: spawnSync(binary, ["--version"]) is expensive
+// (synchronous process spawn, ~400ms per call × 20 agents = 8s block)
+const _executorHealthCache = new Map();
 function getExecutorHealth(name) {
   const executor = normalizeExecutorName(name);
+  // Return cached result if < 5 minutes old — binary installs don't change frequently
+  const hit = _executorHealthCache.get(executor);
+  if (hit && Date.now() - hit.ts < 300_000) return hit.data;
   const meta = getExecutorMeta(executor);
   if (!meta) {
-    return {
+    const data = {
       executor,
       supported: false,
       enabled: false,
@@ -3772,6 +3795,8 @@ function getExecutorHealth(name) {
       runnable: false,
       message: "Unknown executor",
     };
+    _executorHealthCache.set(executor, { ts: Date.now(), data });
+    return data;
   }
   const installed = (() => {
     const result = spawnSync(meta.binary, ["--version"], { encoding: "utf8" });
@@ -3790,7 +3815,7 @@ function getExecutorHealth(name) {
       : authenticated === "configured"
         ? "Configured via environment"
         : meta.authHint;
-  return {
+  const data = {
     executor,
     supported: true,
     enabled,
@@ -3803,6 +3828,8 @@ function getExecutorHealth(name) {
     badge: meta.badge,
     authHint: meta.authHint,
   };
+  _executorHealthCache.set(executor, { ts: Date.now(), data });
+  return data;
 }
 
 function getExecutorForAgent(name) {
@@ -4017,5 +4044,6 @@ server.listen(PORT, () => {
   console.log(`🪐 Agent Planet — dashboard on http://localhost:${PORT}`);
   console.log(`Directory: ${DIR}`);
   if (PLANET_NAME !== "default") console.log(`Planet: ${PLANET_NAME} (${PLANET_DIR})`);
-  console.log(`Agents: ${listAgentNames().join(", ")}`);
+  const agentNames = listAgentNames();
+  console.log(`Agents: ${agentNames.join(", ")}`);
 });
