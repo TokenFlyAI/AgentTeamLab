@@ -90,6 +90,7 @@ read_config() {
             MODE=$(jq -r '.mode // "smart"' "$CONFIG_FILE")
             FORCE_ALICE=$(jq -r 'if (.force_alice == true or .force_alice == 1) then 1 else 0 end' "$CONFIG_FILE")
             SELECTION_MODE=$(jq -r '.selection_mode // "deterministic"' "$CONFIG_FILE")
+            MAX_TOTAL_CYCLES=$(jq -r '.max_total_cycles // 0' "$CONFIG_FILE")
         else
             # Fallback: simple grep/sed parsing
             MAX_AGENTS=$(grep -o '"max_agents":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*' | head -1)
@@ -332,6 +333,7 @@ daemon_loop() {
     trap 'exit 0' SIGINT SIGHUP SIGQUIT
 
     local cycle=0
+    local total_launches=0
     while true; do
         cycle=$((cycle + 1))
         echo ""
@@ -351,11 +353,26 @@ daemon_loop() {
             fi
         fi
 
+        # Check total cycle budget (0 = unlimited)
+        MAX_TOTAL_CYCLES="${MAX_TOTAL_CYCLES:-0}"
+        if [ "${MAX_TOTAL_CYCLES}" -gt 0 ] && [ "$total_launches" -ge "${MAX_TOTAL_CYCLES}" ]; then
+            echo "[daemon] Total cycle budget reached ($total_launches/$MAX_TOTAL_CYCLES) — stopping daemon"
+            rm -f "$PID_FILE"
+            exit 0
+        fi
+
         local running_count
         running_count=$(get_running_count)
         local needed=$((MAX_AGENTS - running_count))
+        # Also cap by remaining cycle budget
+        if [ "${MAX_TOTAL_CYCLES}" -gt 0 ]; then
+            local remaining=$((MAX_TOTAL_CYCLES - total_launches))
+            [ "$needed" -gt "$remaining" ] && needed=$remaining
+        fi
 
-        echo "[daemon] Running: $running_count/$MAX_AGENTS, Need to start: $needed"
+        local budget_str=""
+        [ "${MAX_TOTAL_CYCLES}" -gt 0 ] && budget_str=" (launches: $total_launches/$MAX_TOTAL_CYCLES)"
+        echo "[daemon] Running: $running_count/$MAX_AGENTS, Need to start: $needed${budget_str}"
 
         if [ "$needed" -gt 0 ]; then
             local to_start
@@ -374,6 +391,7 @@ daemon_loop() {
                         nohup bash "${COMPANY_DIR}/run_agent.sh" "$ag" > /dev/null 2>&1 &
                     fi
                     disown $! 2>/dev/null || true
+                    total_launches=$((total_launches + 1))
                     sleep 1  # Small delay between launches
                 done
             else
