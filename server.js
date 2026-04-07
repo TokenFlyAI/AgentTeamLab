@@ -874,9 +874,18 @@ function getAgentCostFromLogs(name, days = 7) {
     for (let i = 0; i < days; i++) {
       const dateStr = getDateStr(i);
       const cleanLogPath = path.join(logsDir, `${dateStr}.log`);
-      const text = safeRead(cleanLogPath) || "";
+      if (!fs.existsSync(cleanLogPath)) continue;
+      // Use grep to extract only matching lines — avoids loading 100MB+ files into Node.js heap.
+      // grep reads in kernel space; only matching lines are returned (typically <1KB vs 100MB).
+      let lines = [];
+      try {
+        const result = spawnSync("grep", ["-iE", "\\[DONE\\].*cost=|CYCLE START", cleanLogPath], {
+          encoding: "utf8", maxBuffer: 5 * 1024 * 1024,
+        });
+        if (result.stdout) lines = result.stdout.split("\n");
+      } catch (_) {}
       let dayCost = 0, dayCycles = 0;
-      for (const line of text.split("\n")) {
+      for (const line of lines) {
         const costMatch = line.match(/\[DONE\].*cost=\$?([\d.]+)/i);
         if (costMatch) dayCost += parseFloat(costMatch[1]) || 0;
         if (/CYCLE\s*START/i.test(line)) dayCycles++;
@@ -1247,11 +1256,18 @@ function getDigest() {
   const digest = [];
   for (const name of agents) {
     const cleanLog = path.join(EMPLOYEES_DIR, name, "logs", `${today}.log`);
-    const raw = safeRead(cleanLog);
-    if (!raw) continue;
+    if (!fs.existsSync(cleanLog)) continue;
+    // Use grep to extract only structural lines — avoids loading 100MB files into heap
+    let grepLines = [];
+    try {
+      const r = spawnSync("grep", ["-iE", "CYCLE START|CYCLE END|^\\[DONE\\]", cleanLog], {
+        encoding: "utf8", maxBuffer: 2 * 1024 * 1024,
+      });
+      if (r.stdout) grepLines = r.stdout.split("\n");
+    } catch (_) {}
     const cycles = [];
     let currentCycle = null;
-    for (const line of raw.split("\n")) {
+    for (const line of grepLines) {
       if (/CYCLE\s*START/i.test(line)) {
         currentCycle = { start: line.trim(), tasks: [] };
       } else if (/CYCLE\s*END/i.test(line)) {
@@ -2276,9 +2292,17 @@ async function handleRequest(req, res) {
       return json(res, { unread, processed });
     }
     if (sub === "activity") {
-      // Parse clean log into cycle groups
+      // Parse clean log into cycle groups — read only the last 3MB to bound heap usage
+      // (charlie's log is 106MB; loading the full file caused OOM crashes)
       const today = todayStr();
-      const log = safeRead(path.join(d, "logs", `${today}.log`)) || "";
+      const logPath = path.join(d, "logs", `${today}.log`);
+      let log = "";
+      if (fs.existsSync(logPath)) {
+        try {
+          const r = spawnSync("tail", ["-c", "3145728", logPath], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 });
+          log = r.stdout || "";
+        } catch (_) { log = ""; }
+      }
       const cycles = [];
       let cur = null;
       for (const line of log.split("\n")) {
@@ -2485,9 +2509,17 @@ async function handleRequest(req, res) {
       }
     } catch (_) {}
     if (!logPath) { today = new Date().toISOString().slice(0, 10).replace(/-/g, "_"); }
-    const raw = (logPath && safeRead(logPath)) || "";
+    // Use grep to extract only structural lines — avoids loading 100MB files into heap
+    let lines = [];
+    if (logPath && fs.existsSync(logPath)) {
+      try {
+        const r = spawnSync("grep", ["-E", "^={5,}.*CYCLE (START|END)|^\\[DONE\\] turns=|^\\[TOOL\\] |^\\[ASSISTANT\\] ", logPath], {
+          encoding: "utf8", maxBuffer: 10 * 1024 * 1024,
+        });
+        if (r.stdout) lines = r.stdout.split("\n");
+      } catch (_) {}
+    }
     const cycles = [];
-    const lines = raw.split("\n");
     let current = null;
     for (const line of lines) {
       const startM = line.match(/^={5,} CYCLE START — (\S+)/);
@@ -2536,8 +2568,14 @@ async function handleRequest(req, res) {
         .sort().reverse() : [];
       if (files2.length > 0) logPath2 = path.join(logsDir2, files2[0]);
     } catch (_) {}
-    const raw = (logPath2 && safeRead(logPath2)) || "";
-    const lines = raw.split("\n");
+    // Read last 10MB only — avoids loading 100MB log into heap for detail view
+    let lines = [];
+    if (logPath2 && fs.existsSync(logPath2)) {
+      try {
+        const r2 = spawnSync("tail", ["-c", "10485760", logPath2], { encoding: "utf8", maxBuffer: 12 * 1024 * 1024 });
+        if (r2.stdout) lines = r2.stdout.split("\n");
+      } catch (_) {}
+    }
     let inCycle = false, cycleCount = 0, cycleLines = [];
     let meta = null;
     for (const line of lines) {
