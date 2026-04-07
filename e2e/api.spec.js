@@ -687,6 +687,23 @@ test.describe("Task review endpoint", () => {
     }
   });
 
+  test("POST /api/tasks/:id/review approve sends DM to assignee", async () => {
+    const assignee = "frank";
+    const { body: created } = await apiPost("/api/tasks", { title: "approve-notify-test", assignee });
+    const taskId = created.id;
+    try {
+      await apiPost(`/api/tasks/${taskId}/review`, { verdict: "approve", reviewer: "olivia", comment: "Well done" });
+      // Assignee should have a new inbox message from the reviewer
+      const { body: ctx } = await apiGet(`/api/agents/${assignee}/context`);
+      const inbox = ctx?.inbox || {};
+      const msgs = [...(inbox.urgent || []), ...(inbox.messages || [])];
+      const approvalMsg = msgs.find(m => m.filename && m.filename.includes("from_olivia"));
+      expect(approvalMsg).toBeTruthy();
+    } finally {
+      await apiDelete(`/api/tasks/${taskId}`);
+    }
+  });
+
   test("POST /api/tasks/:id/review reject sets back to in_progress", async () => {
     const { body: created } = await apiPost("/api/tasks", { title: "review-reject-test", assignee: "bob", status: "in_review" });
     const taskId = created.id;

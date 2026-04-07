@@ -2562,6 +2562,15 @@ async function handleRequest(req, res) {
       const noteText = `[REVIEWED by ${reviewer || "unknown"}] ${comment || "Approved"}${deliverableFound ? " — deliverable: " + deliverableLocation : " — no deliverable file found (manual verify)"}`;
       await updateTaskRow(id, { status: "done", notes: noteText });
       const updated = parseTaskBoard().find((t) => String(t.id) === String(id));
+      // Notify assignee via inbox so they see the approval in their delta
+      if (assignee) {
+        const inboxDir = path.join(EMPLOYEES_DIR, assignee, "chat_inbox");
+        if (fs.existsSync(inboxDir)) {
+          const ts = new Date().toISOString().replace(/[-:T]/g, "_").slice(0, 19);
+          const msgFile = path.join(inboxDir, `${ts}_from_${reviewer || "reviewer"}.md`);
+          fs.writeFileSync(msgFile, `# Task T${id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
+        }
+      }
       broadcastWS("task_updated", { id: parseInt(id, 10), status: "done", reviewer });
       return json(res, { ok: true, verdict: "approved", deliverable_found: deliverableFound, deliverable_location: deliverableLocation, task: updated });
     } else {
