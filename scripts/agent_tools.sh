@@ -265,7 +265,7 @@ read_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 4) ==="
+  echo "=== D004 Pipeline Status (Sprint 4 VALIDATED — Sprint 6 real-data readiness in progress) ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
