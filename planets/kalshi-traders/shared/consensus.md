@@ -10,7 +10,6 @@
 | C1 | NORM | Paper trading mode required before live orders. Use PAPER_TRADING env flag. Never submit real orders without explicit Founder approval. | 2026-04-03 |
 | C2 | NORM | API endpoints must require auth via Authorization header. No open POST endpoints in production. Check Bearer token before processing. | 2026-04-03 |
 | C3 | NORM | **Always cite culture norms when making decisions.** Example: "Following culture C1: starting in paper mode" or "Culture D5 prioritizes Kalshi strategy." | 2026-04-03 |
-| C4 | NORM | **Read other agents' status.md every cycle to coordinate work.** Example: "Grace finished T343, I'm starting Phase 2 clustering on her markets_filtered.json." | 2026-04-03 |
 | C5 | NORM | **Tasks MUST progress through states: pending → claimed (in_progress) → done.** Show your work. Atomic claim via POST /api/tasks/:id/claim. If you claim a task, move it to in_progress immediately and keep it visible. | 2026-04-03 |
 | C6 | NORM | **Reference public/knowledge.md for technical facts.** When starting a phase or task, read the relevant Knowledge section first. Example: "Reading knowledge.md Phase 3 spec before implementing correlation detection." | 2026-04-03 |
 
@@ -35,3 +34,10 @@
 | C12 | NORM | **Codex/Gemini executor model.** All agents run on codex or gemini (never claude/kimi). Codex has access to your agent dir + shared/ + agents/ directories. Use absolute paths or `../../public/` relative paths for shared resources. Shell commands work normally. | 2026-04-06 |
 | C13 | NORM | **Handoff = DM + team_channel + task state update.** When you complete work that unblocks a teammate: (1) DM them directly with what you produced and where it is, (2) Post to team_channel, (3) Update your task to in_review or done. Don't leave teammates guessing. | 2026-04-06 |
 | C14 | NORM | **Read output/ before starting dependent tasks.** Before starting a task that depends on another agent's work, check their output/ directory. Don't wait for a DM if the file is already there. Self-unblock when possible. | 2026-04-06 |
+| C15 | NORM | **Reviewers must verify artifact freshness, not just existence.** Check timestamps or freshness markers before approving a handoff so stale upstream files do not silently pass review. | 2026-04-06 |
+| C16 | NORM | **Every handoff must include artifact path, run command, and freshness marker.** The receiving agent should be able to reproduce the deliverable and confirm it belongs to the current sprint without reconstructing context from timestamps alone. | 2026-04-06 |
+| C17 | NORM | **A QA rejection opens an immediate blocker retro and explicit escalation.** When QA rejects or blocks a deliverable, the reviewer must record the missing artifact or failed check and notify the coordinator instead of waiting silently for recovery. | 2026-04-06 |
+| 3 | culture | pipes-should-become-dashes | e2e-test | 2026-04-07 |
+| 4 | group | type pipe sanitization regression guard | e2e-test | 2026-04-07 |
+| 5 | culture | **Read peer status only when the delta reports a change or when actively coordinating a handoff.** The system delivers teammate status changes automatically — do not scan all status.md files every cycle. Example: Delta says Grace went idle → read grace/status.md to see what she delivered. | system | 2026-04-07 |
+| 6 | culture | **Trust the delta — do not proactively scan inbox, task board, or heartbeats.** Every resume cycle injects exactly what changed. Empty delta means nothing changed; go straight to your work. Proactive scans waste ~2,000 tokens per cycle with no benefit. | system | 2026-04-07 |

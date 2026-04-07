@@ -183,6 +183,55 @@ post() {
   echo "Posted to team channel"
 }
 
+announce() {
+  # announce "Sprint 4 complete — D004 pipeline validated end-to-end"
+  local msg="$1"
+  [ -z "$msg" ] && echo "Usage: announce \"message\"" && return 1
+  local from="${_SELF:-system}"
+  local ts=$(date +%Y_%m_%d_%H_%M_%S)
+  local dir="${_SHARED}/announcements"
+  mkdir -p "$dir"
+  printf "# Announcement from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "${dir}/${ts}_from_${from}.md"
+  echo "Announcement posted"
+}
+
+create_task() {
+  # create_task "Task title" assignee priority "description"
+  local title="$1" assignee="${2:-}" priority="${3:-medium}" desc="${4:-}"
+  [ -z "$title" ] && echo "Usage: create_task \"title\" [assignee] [priority] [\"description\"]" && return 1
+  local body="{\"title\":\"${title}\",\"priority\":\"${priority}\""
+  [ -n "$assignee" ] && body="${body},\"assignee\":\"${assignee}\""
+  [ -n "$desc" ] && body="${body},\"description\":\"${desc}\""
+  body="${body}}"
+  curl -s -X POST "${_API}/api/tasks" \
+    -H "Content-Type: application/json" \
+    -d "$body" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('id'): print(f'Task created: T{d[\"id\"]} — {d.get(\"title\",\"\")}')
+  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+read_inbox() {
+  # read_inbox — show unread messages from chat_inbox
+  [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
+  local inbox="${_AGENTS}/${_SELF}/chat_inbox"
+  local unread=$(ls "$inbox"/*.md 2>/dev/null | grep -v '/processed' | grep -v '/read_' | head -20)
+  if [ -z "$unread" ]; then
+    echo "No unread messages"
+    return 0
+  fi
+  echo "Unread messages:"
+  for f in $unread; do
+    echo "--- $(basename "$f") ---"
+    head -5 "$f"
+    echo ""
+  done
+}
+
 # ── Information ──────────────────────────────────────────────────────────────
 
 read_peer() {
@@ -242,4 +291,4 @@ log_progress() {
   echo "Progress logged to status.md"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, post, dm, broadcast, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"

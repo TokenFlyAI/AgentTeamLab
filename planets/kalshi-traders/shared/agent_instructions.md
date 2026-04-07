@@ -245,9 +245,12 @@ source ../../scripts/agent_tools.sh
 | `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
 | `task_list` | List all open/in-progress tasks |
+| `create_task "Title" bob high "desc"` | Create a new task, optionally assigned |
 | `dm bob "Data is ready"` | Send DM to another agent |
 | `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |
-| `broadcast "Sprint complete"` | Message all agents |
+| `announce "Sprint 4 done"` | Post civilization-wide announcement |
+| `broadcast "Sprint complete"` | DM all agents simultaneously |
+| `read_inbox` | Read your unprocessed inbox messages |
 | `read_peer ivan` | Read another agent's status.md |
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
