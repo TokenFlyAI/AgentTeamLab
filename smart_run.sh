@@ -5,8 +5,9 @@
 # Running idle agents wastes tokens. Every cycle costs money.
 #
 # Decision logic (priority order, subject to --max cap):
-#   1. Alice: if there are ANY open/in_progress tasks OR unread inbox msgs
+#   1. Alice: if there are ANY open/in_progress/in_review tasks OR unread inbox msgs
 #   2. Task-assigned agents: ONLY if they have assigned open/in_progress tasks
+#      (in_review tasks do NOT start the assignee — they're waiting for reviewer DM)
 #   3. Unassigned tasks: add 1 agent per unassigned task (cap 3 extra)
 #   4. Inbox-only agents: added LAST, only if under --max cap
 #   5. Skip already-running agents

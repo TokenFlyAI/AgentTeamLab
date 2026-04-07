@@ -89,9 +89,10 @@ Key API endpoints:
 
 ## Token Conservation Architecture
 
-1. **`smart_run.sh`** — only starts agents with assigned open tasks OR unread inbox messages (no idle agents)
+1. **`smart_run.sh`** — only starts agents with assigned open/in_progress tasks OR unread inbox messages (no idle agents)
    - `--max N` flag caps total agents started (default 20, use 3 for testing: `bash smart_run.sh --max 3`)
-   - Priority: alice → task-assigned → unassigned tasks → inbox-only (added last)
+   - Priority: alice → task-assigned (open/in_progress) → unassigned tasks → inbox-only (added last)
+   - in_review tasks do NOT start the assignee — they're waiting for reviewer DM (already handled by inbox)
 2. **`run_subset.sh`** — auto-stops agent after `MAX_IDLE_CYCLES=3` consecutive cycles with no work
 3. **Agent prompts** — resume prompt is ~15 tokens; fresh prompt is static (KV cached); no re-loading of files already in context
 4. **Task claims** — atomic `POST /api/tasks/:id/claim` with file locking to prevent race conditions
