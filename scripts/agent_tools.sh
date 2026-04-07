@@ -64,8 +64,7 @@ except: print('Error parsing response')
 task_done() {
   local id="$1" note="$2"
   [ -z "$id" ] && echo "Usage: task_done <task-id> [\"result note\"]" && return 1
-  local body="{\"status\":\"done\"}"
-  [ -n "$note" ] && body="{\"status\":\"done\",\"notes\":\"${note}\"}"
+  local body; body=$(python3 -c "import json,sys; d={'status':'done'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
@@ -82,10 +81,11 @@ except: print('Error parsing response')
 task_progress() {
   local id="$1" note="$2"
   [ -z "$id" ] || [ -z "$note" ] && echo "Usage: task_progress <task-id> \"progress note\"" && return 1
+  local body; body=$(python3 -c "import json,sys; print(json.dumps({'status':'in_progress','notes':sys.argv[1]}))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
-    -d "{\"status\":\"in_progress\",\"notes\":\"${note}\"}" 2>/dev/null | python3 -c "
+    -d "$body" 2>/dev/null | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
@@ -96,10 +96,10 @@ except: print('Error parsing response')
 }
 
 task_review() {
-  local id="$1" verdict="$2" comment="$3"
+  local id="$1" verdict="$2" comment="${3:-Reviewed}"
   [ -z "$id" ] || [ -z "$verdict" ] && echo "Usage: task_review <task-id> <approve|reject> [\"comment\"]" && return 1
   local reviewer="${_SELF:-unknown}"
-  local body="{\"verdict\":\"${verdict}\",\"reviewer\":\"${reviewer}\",\"comment\":\"${comment:-Reviewed}\"}"
+  local body; body=$(python3 -c "import json,sys; print(json.dumps({'verdict':sys.argv[1],'reviewer':sys.argv[2],'comment':sys.argv[3]}))" "$verdict" "$reviewer" "$comment")
   curl -s -X POST "${_API}/api/tasks/${id}/review" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
@@ -107,7 +107,7 @@ task_review() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} ${verdict}d by ${reviewer}')
+  if d.get('ok'): print('T' + str(d.get('id','?')) + ' reviewed')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -116,8 +116,7 @@ except: print('Error parsing response')
 task_inreview() {
   local id="$1" note="$2"
   [ -z "$id" ] && echo "Usage: task_inreview <task-id> [\"note\"]" && return 1
-  local body="{\"status\":\"in_review\"}"
-  [ -n "$note" ] && body="{\"status\":\"in_review\",\"notes\":\"${note}\"}"
+  local body; body=$(python3 -c "import json,sys; d={'status':'in_review'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
