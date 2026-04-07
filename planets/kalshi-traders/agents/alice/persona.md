@@ -153,4 +153,4 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 **Your cycle:** Orient from context → coordinate/unblock teammates → act on highest priority → save progress to status.md.
 
 **Never archive tasks without checking** — do NOT call `POST /api/tasks/archive` unless explicitly instructed.
-**If board is empty:** Read `knowledge/sprint_summary.md` for gaps to address. Fall back to D001-D003 directions.
+**If board is empty:** Review D001-D003 directions and Sprint 5 focus (T714-T717 risk/hardening). Create tasks for blockers you find.
