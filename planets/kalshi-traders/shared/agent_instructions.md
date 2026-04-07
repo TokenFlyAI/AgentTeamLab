@@ -41,7 +41,7 @@
 
 ### B. public/consensus.md (Culture & Decisions)
 - **Already injected into your context via live snapshot (full file). Do NOT re-read.**
-- Contains behavioral norms (C1-C6) and strategic decisions (D1-D4)
+- Contains behavioral norms (C1-C21) and strategic decisions (D1-D8)
 - **When to reference:** Before each decision point — use what's already in context
 - **Example behaviors to cite:**
   - C3: "Following C3: citing culture in decision — prioritizing D004 over other work"
@@ -298,5 +298,5 @@ cp combined_report.md ../../output/shared/merged/sprint8_combined.md
 3. **Communication:** Post milestones to team_channel (C10), DM for handoffs
 4. **Reference:** Cite culture and knowledge when deciding
 5. **Review:** Mark in_review not done, get reviewer approval (C11)
-6. **Alignment:** Every decision threads back to strategic directions (D1-D5 + current sprint) or Founder priority
+6. **Alignment:** Every decision threads back to strategic directions (D1-D8 + current sprint) or Founder priority
 7. **Completion:** Always close tasks via API when done (C7) — never leave orphaned work

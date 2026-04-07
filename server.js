@@ -3339,22 +3339,47 @@ async function handleRequest(req, res) {
     const VALID_TYPES = new Set(["group", "authority", "culture", "decision", "relationship"]);
     if (!VALID_TYPES.has(String(type).toLowerCase())) return badRequest(res, "invalid type: must be group, authority, culture, decision, or relationship");
     const raw = safeRead(CONSENSUS_FILE) || "";
-    // Find highest ID
+    // Determine ID prefix based on type: culture/norm → "C", decision → "D", else numeric
+    const typeNorm = String(type).toLowerCase();
+    let idPrefix = "";
     let maxId = 0;
+    if (typeNorm === "culture" || typeNorm === "norm") {
+      idPrefix = "C";
+    } else if (typeNorm === "decision") {
+      idPrefix = "D";
+    }
+    // Scan existing IDs with the same prefix (or numeric IDs if no prefix)
     for (const line of raw.split("\n")) {
       if (!line.startsWith("|")) continue;
       const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
-      const idNum = parseInt(cols[0], 10);
-      if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
+      if (!cols[0]) continue;
+      const id = cols[0];
+      if (idPrefix) {
+        // Match "C18", "D4", etc.
+        if (id.startsWith(idPrefix)) {
+          const n = parseInt(id.slice(idPrefix.length), 10);
+          if (!isNaN(n) && n > maxId) maxId = n;
+        }
+      } else {
+        const idNum = parseInt(id, 10);
+        if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
+      }
     }
-    const newId = maxId + 1;
+    const newId = idPrefix ? `${idPrefix}${maxId + 1}` : maxId + 1;
     const today = new Date().toISOString().slice(0, 10);
     const authorSafe = (author || "agent").replace(/[^a-zA-Z0-9_-]/g, "");
     const typeSafe = String(type).replace(/\|/g, "-").replace(/\n/g, " ").trim();
     const contentSafe = String(content).replace(/\|/g, "-").replace(/\n/g, " ").trim();
-    const newRow = `| ${newId} | ${typeSafe} | ${contentSafe} | ${today} |`;
-    // Append to "Evolving Relationships" or end of file (before the footer)
-    const targetSection = section || "Evolving Relationships";
+    // For culture/norm, use NORM as the type label to match existing table format
+    const typeLabel = (typeNorm === "culture" || typeNorm === "norm") ? "NORM"
+                    : typeNorm === "decision" ? "DECISION"
+                    : typeSafe.toUpperCase();
+    const newRow = `| ${newId} | ${typeLabel} | ${contentSafe} | ${today} |`;
+    // Route to correct section based on type if section not specified
+    const defaultSection = (typeNorm === "culture" || typeNorm === "norm") ? "Core Behavioral Norms (Must Follow)"
+                         : typeNorm === "decision" ? "Strategic Decisions & Commitments"
+                         : "Core Behavioral Norms (Must Follow)";
+    const targetSection = section || defaultSection;
     const lines = raw.split("\n");
     let insertAt = lines.length - 1;
     // Find the section header and insert after the last table row in that section

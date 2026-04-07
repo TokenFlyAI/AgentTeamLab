@@ -551,7 +551,7 @@ test.describe("Social Consensus Board", () => {
     });
     expect(status).toBe(201);
     expect(body.ok).toBe(true);
-    expect(typeof body.id).toBe("number");
+    expect(body.id).toBeTruthy(); // id can be string (e.g. "C22") or number
     if (body.id) _consensusIds.push(body.id);
   });
 

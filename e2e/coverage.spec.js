@@ -2574,12 +2574,12 @@ test.describe("POST /api/consensus/entry pipe sanitization (GAP-009)", () => {
     });
     expect(status).toBe(201);
     expect(body.ok).toBe(true);
-    expect(typeof body.id).toBe("number");
+    expect(body.id).toBeTruthy(); // id can be string (e.g. "C22") or number
     if (body.id) _consensusIds.push(body.id);
 
     // Verify the written row does not contain raw pipes in the content field
     const { body: get } = await apiGet("/api/consensus");
-    const entry = get.entries.find((e) => e.id === body.id);
+    const entry = get.entries.find((e) => String(e.id) === String(body.id));
     expect(entry).toBeDefined();
     expect(entry.content).not.toContain("|");
     expect(entry.content).toContain("-");
@@ -2632,7 +2632,7 @@ test.describe("DELETE /api/consensus/entry/:id", () => {
       author: "e2e",
       section: "",
     });
-    expect(typeof created.id).toBe("number");
+    expect(created.id).toBeTruthy(); // id can be string (e.g. "D9") or number
     const { status, body } = await apiDelete(`/api/consensus/entry/${created.id}`);
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
