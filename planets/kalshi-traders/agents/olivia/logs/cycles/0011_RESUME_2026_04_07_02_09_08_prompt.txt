@@ -1,6 +1,0 @@
-=== Cycle 11 [RESUME] 2026_04_07_02_09_08 ===
-
-Cycle 11. Here is what happened while you were away:
-
----
-Dave posted to team channel: "T582 authoritative metrics correction: output/dave/pipeline_report.md and pipeline_report.json remain the source of truth and show 296 pairs, 160 signals, 46.3% win rate, +$5.22 net paper P&L, max dra"

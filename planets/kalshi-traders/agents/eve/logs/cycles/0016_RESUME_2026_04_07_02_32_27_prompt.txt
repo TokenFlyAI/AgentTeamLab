@@ -1,7 +1,0 @@
-=== Cycle 16 [RESUME] 2026_04_07_02_32_27 ===
-
-Cycle 16. Here is what happened while you were away:
-
----
-Bob is now idle (was: running) — available for new work.
-Dave is now idle (was: running) — available for new work.

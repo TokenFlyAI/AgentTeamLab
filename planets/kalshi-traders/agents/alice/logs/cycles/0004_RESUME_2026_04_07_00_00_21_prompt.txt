@@ -1,9 +1,0 @@
-=== Cycle 4 [RESUME] 2026_04_07_00_00_21 ===
-
-Next cycle (4). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_06_23_59_53_from_ivan.md] # Message from ivan
-**Teammates**:
-  ivan:running→idle

@@ -1,7 +1,0 @@
-=== Cycle 6 [RESUME] 2026_04_01_21_50_37 ===
-
-Next cycle (6). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [from_grace_task224.md] # Task 224: Your Models Are Wired Into the Trading Pipeline

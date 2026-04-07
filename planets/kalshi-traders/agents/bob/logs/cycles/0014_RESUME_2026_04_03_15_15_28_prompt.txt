@@ -1,9 +1,0 @@
-=== Cycle 14 [RESUME] 2026_04_03_15_15_28 ===
-
-Next cycle (14). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Teammates**:
-  alice:unknown→idle
-**Culture (new)**:
-| 1 | decision | D004 is NOT production-ready. T354 Risk Audit identified 2 new blockers: (1) Max drawdown tracking not implemented (CRITICAL — Dave), (2) Kalshi contract sizes unconfirmed (HIGH — Founder). Previous D3 decision invalidated. Total blockers: 3 (T236 + 2 new). | agent | 2026-04-03 |

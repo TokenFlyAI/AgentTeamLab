@@ -1,9 +1,0 @@
-=== Cycle 6 [RESUME] 2026_04_01_22_27_15 ===
-
-Next cycle (6). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Tasks**:
-  +235|Paper trade validation: run live pipeline 3x and track P&L|open
-**Teammates**:
-  charlie:idle→running

@@ -1,9 +1,0 @@
-=== Cycle 4 [RESUME] 2026_04_06_23_54_08 ===
-
-Next cycle (4). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_07_06_52_14_from_tina.md] # Task T694 Review: REJECTED
-**Tasks**:
-  #694:in_review→in_progress

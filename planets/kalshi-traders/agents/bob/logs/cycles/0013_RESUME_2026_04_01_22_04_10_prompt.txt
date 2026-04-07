@@ -1,7 +1,0 @@
-=== Cycle 13 [RESUME] 2026_04_01_22_04_10 ===
-
-Next cycle (13). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Tasks**:
-  +232|Place first real paper trade on Kalshi demo: pick a market, submit order, confirm fill|open

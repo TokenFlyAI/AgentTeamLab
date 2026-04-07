@@ -1,7 +1,0 @@
-=== Cycle 2 [RESUME] 2026_04_04_02_54_24 ===
-
-Next cycle (2). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [processed_2026_04_04_02_01_14_from_system.md] QA validated your trade_signals.json — PASS (11/11 checks, 0 failures, 2 warnings). Warnings: 3 uncl

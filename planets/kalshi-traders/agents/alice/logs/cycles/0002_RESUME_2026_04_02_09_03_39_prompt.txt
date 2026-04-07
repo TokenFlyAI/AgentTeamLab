@@ -1,8 +1,0 @@
-=== Cycle 2 [RESUME] 2026_04_02_09_03_39 ===
-
-Next cycle (2). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Teammates**:
-  eve:running→idle
-  heidi:running→idle

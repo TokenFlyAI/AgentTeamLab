@@ -1,7 +1,0 @@
-=== Cycle 7 [RESUME] 2026_04_03_15_33_06 ===
-
-Next cycle (7). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Tasks**:
-  #374:open→in_progress

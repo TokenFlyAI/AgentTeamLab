@@ -1,7 +1,0 @@
-=== Cycle 18 [RESUME] 2026_04_04_13_37_57 ===
-
-Next cycle (18). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Tasks**:
-  +587|Add post-trade capital floor to prevent negative capital|open

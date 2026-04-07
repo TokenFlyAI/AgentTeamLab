@@ -1,7 +1,0 @@
-=== Cycle 8 [RESUME] 2026_04_07_02_40_16 ===
-
-Cycle 8. Here is what happened while you were away:
-
----
-Bob is now idle (was: running) — available for new work.
-Heidi started working (was: idle).

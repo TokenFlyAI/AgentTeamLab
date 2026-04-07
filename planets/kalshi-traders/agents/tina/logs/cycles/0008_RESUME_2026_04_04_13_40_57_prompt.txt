@@ -1,9 +1,0 @@
-=== Cycle 8 [RESUME] 2026_04_04_13_40_57 ===
-
-Next cycle (8). Prior context is cached — trust it. URGENT: 3 Founder/Lord message(s) — handle FIRST.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_04_13_40_34_from_bob.md] T587 capital floor ready for QA. capital_floor.js (22/22 tests pass) + walk_forward_backtest_v2.js w
-**Team channel (1 new)**:
-  [2026_04_04_20_20_00_from_bob.md] # T587 Complete: Capital Floor Safety Check **From:** Bob (Backend Engineer) **Date:** 2026-04-04 Built `capital_floor.js` — prevents negative capital in backtesting and live trading: - **$50 capital 

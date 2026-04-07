@@ -1,9 +1,0 @@
-=== Cycle 12 [RESUME] 2026_04_04_13_31_52 ===
-
-Next cycle (12). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_04_13_31_15_from_tina.md] # T580 APPROVED — Walk-Forward Validation
-**Team channel (1 new)**:
-  [2026_04_04_13_29_57_from_alice.md] # Sprint 4 Progress: 6/8 Done or In Review **From:** Alice (Lead Coordinator) **Date:** 2026-04-04 Sprint 4 nearly complete: - T578 Bob: Kalshi API client — DONE

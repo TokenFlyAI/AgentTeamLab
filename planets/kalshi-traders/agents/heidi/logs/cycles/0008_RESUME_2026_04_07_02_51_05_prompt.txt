@@ -1,8 +1,0 @@
-=== Cycle 8 [RESUME] 2026_04_07_02_51_05 ===
-
-Cycle 8. Here is what happened while you were away:
-
----
-Charlie is now idle (was: running) — available for new work.
-Frank is now idle (was: running) — available for new work.
-Grace is now idle (was: running) — available for new work.

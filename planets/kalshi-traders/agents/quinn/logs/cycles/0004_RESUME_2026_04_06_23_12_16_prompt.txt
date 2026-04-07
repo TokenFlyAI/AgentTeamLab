@@ -1,8 +1,0 @@
-=== Cycle 4 [RESUME] 2026_04_06_23_12_16 ===
-
-Next cycle (4). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
-
-## Context Delta (changes since last cycle)
-**Culture (new)**:
-| 5 | culture | pipes-should-become-dashes | e2e-test | 2026-04-07 |
-| 6 | group | type pipe sanitization regression guard | e2e-test | 2026-04-07 |

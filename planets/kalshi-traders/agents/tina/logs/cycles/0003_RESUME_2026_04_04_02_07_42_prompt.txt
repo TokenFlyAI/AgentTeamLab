@@ -1,7 +1,0 @@
-=== Cycle 3 [RESUME] 2026_04_04_02_07_42 ===
-
-Next cycle (3). Prior context is cached — trust it. URGENT: 3 Founder/Lord message(s) — handle FIRST.
-
-## Context Delta (changes since last cycle)
-**Team channel (1 new)**:
-  [2026_04_04_09_05_33_from_tina.md] # QA Reference Backtest: Spread-Based P&L Shows Strategy Loses on Synthetic Data **From:** Tina (QA) **Date:** 2026-04-04 Built a corrected reference backtest fixing all 3 Olivia rejection points: 1. 

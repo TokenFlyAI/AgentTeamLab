@@ -1,9 +1,0 @@
-=== Cycle 13 [RESUME] 2026_04_03_01_16_03 ===
-
-Next cycle (13). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_03_00_57_57_from_alice.md] # Task 255 — Trading System README
-**Teammates**:
-  charlie:idle→running

@@ -1,9 +1,0 @@
-=== Cycle 3 [RESUME] 2026_04_03_12_39_50 ===
-
-Next cycle (3). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_03_12_39_31_from_alice_sprint7.md] # T332 [HIGH] — Build historical replay backtest engine
-**Tasks**:
-  +332|Build historical replay backtest engine|open

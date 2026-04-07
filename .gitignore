@@ -11,14 +11,20 @@ agents/*/status.md
 agents/*/memory.md
 agents/*/session_id.txt
 agents/*/session_cycle.txt
+agents/*/session_id_*.txt
+agents/*/session_cycle_*.txt
 agents/*/context_snapshot.json
+agents/*/logs/cycles/
 planets/*/agents/*/heartbeat.md
 planets/*/agents/*/last_context.md
 planets/*/agents/*/status.md
 planets/*/agents/*/memory.md
 planets/*/agents/*/session_id.txt
 planets/*/agents/*/session_cycle.txt
+planets/*/agents/*/session_id_*.txt
+planets/*/agents/*/session_cycle_*.txt
 planets/*/agents/*/context_snapshot.json
+planets/*/agents/*/logs/cycles/
 
 # Agent inboxes & processed (ephemeral messages)
 agents/*/chat_inbox/
@@ -49,6 +55,16 @@ backend/metrics_queue.jsonl
 planets/*/data/messages.db-shm
 planets/*/data/messages.db-wal
 planets/*/data/metrics_queue.jsonl
+
+# Agent runtime output (generated each run — not source)
+planets/*/output/*/paper_trade_log.json
+planets/*/output/*/paper_trades.db
+planets/*/output/*/run_counter.txt
+planets/*/output/*/trade_signals.json
+planets/*/output/shared/reports/heartbeat_status.json
+planets/*/output/shared/reports/health_check_log.jsonl
+planets/*/agents/*/tests/integration/*_results.json
+planets/*/agents/public/
 
 # Temp config dirs
 /tmp/aicompany_config/

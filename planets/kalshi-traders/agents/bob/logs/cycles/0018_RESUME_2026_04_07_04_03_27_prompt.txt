@@ -1,7 +1,0 @@
-=== Cycle 18 [RESUME] 2026_04_07_04_03_27 ===
-
-Cycle 18. Here is what happened while you were away:
-
----
-Alice is now idle (was: running) — available for new work.
-Dave is now idle (was: running) — available for new work.

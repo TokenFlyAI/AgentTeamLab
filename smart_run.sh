@@ -8,6 +8,7 @@
 #   1. Alice: if there are ANY open/in_progress/in_review tasks OR unread inbox msgs
 #   2. Task-assigned agents: ONLY if they have assigned open/in_progress tasks
 #      (in_review tasks do NOT start the assignee — they're waiting for reviewer DM)
+#   2.5. Reviewers (tina, olivia): auto-started when any task is in_review
 #   3. Unassigned tasks: add 1 agent per unassigned task (cap 3 extra)
 #   4. Inbox-only agents: added LAST, only if under --max cap
 #   5. Skip already-running agents
@@ -266,10 +267,11 @@ build_selection_list() {
         echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && under_max && add_agent "$ag"
     done
     
-    # Priority 2.5: Auto-start QA reviewer (tina) when tasks are in_review
+    # Priority 2.5: Auto-start reviewers (tina, olivia) when tasks are in_review
     # This ensures reviews don't stall if the assignee forgot to DM the reviewer
     if [ "$IN_REVIEW_COUNT" -gt 0 ]; then
         under_max && add_agent "tina"
+        under_max && add_agent "olivia"
     fi
 
     # Priority 3: Unassigned task claimers

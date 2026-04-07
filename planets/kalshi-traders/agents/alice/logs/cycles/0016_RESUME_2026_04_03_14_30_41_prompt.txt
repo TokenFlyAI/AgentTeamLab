@@ -1,3 +1,0 @@
-=== Cycle 16 [RESUME] 2026_04_03_14_30_41 ===
-
-Next cycle (16). Prior context is cached — trust it. Nothing changed — continue your current work.

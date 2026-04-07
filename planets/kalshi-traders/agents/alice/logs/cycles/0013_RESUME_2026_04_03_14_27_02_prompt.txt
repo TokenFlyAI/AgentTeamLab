@@ -1,7 +1,0 @@
-=== Cycle 13 [RESUME] 2026_04_03_14_27_02 ===
-
-Next cycle (13). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Teammates**:
-  dave:running→unknown

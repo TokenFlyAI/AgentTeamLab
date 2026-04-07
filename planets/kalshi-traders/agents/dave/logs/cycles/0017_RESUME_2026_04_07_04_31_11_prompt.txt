@@ -1,7 +1,0 @@
-=== Cycle 17 [RESUME] 2026_04_07_04_31_11 ===
-
-Cycle 17. Here is what happened while you were away:
-
----
-Alice started working (was: idle).
-Bob started working (was: idle).

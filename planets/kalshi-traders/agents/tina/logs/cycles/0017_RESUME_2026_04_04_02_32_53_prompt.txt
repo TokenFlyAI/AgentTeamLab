@@ -1,8 +1,0 @@
-=== Cycle 17 [RESUME] 2026_04_04_02_32_53 ===
-
-Next cycle (17). Prior context is cached — trust it. URGENT: 3 Founder/Lord message(s) — handle FIRST.
-
-## Context Delta (changes since last cycle)
-**Teammates**:
-  dave:idle→running
-  sam:idle→idle-recommending-stop

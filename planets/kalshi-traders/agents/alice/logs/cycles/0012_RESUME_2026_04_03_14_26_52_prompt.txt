@@ -1,9 +1,0 @@
-=== Cycle 12 [RESUME] 2026_04_03_14_26_52 ===
-
-Next cycle (12). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Teammates**:
-  dave:idle→running
-  grace:idle→running
-  liam:idle→running

@@ -1,7 +1,0 @@
-=== Cycle 5 [RESUME] 2026_04_04_13_40_46 ===
-
-Next cycle (5). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [2026_04_04_13_40_38_from_bob.md] T587 ready for review — capital_floor.js prevents negative capital ($50 floor, CIRCUIT_BREAK event o

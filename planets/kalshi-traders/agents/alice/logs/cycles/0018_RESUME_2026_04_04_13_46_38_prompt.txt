@@ -1,7 +1,0 @@
-=== Cycle 18 [RESUME] 2026_04_04_13_46_38 ===
-
-Next cycle (18). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Tasks**:
-  +586|Add per-trade stop-loss to walk-forward backtest|in_review

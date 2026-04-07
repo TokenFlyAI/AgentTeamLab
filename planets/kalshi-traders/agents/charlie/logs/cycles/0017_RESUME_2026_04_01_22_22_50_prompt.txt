@@ -1,9 +1,0 @@
-=== Cycle 17 [RESUME] 2026_04_01_22_22_50 ===
-
-Next cycle (17). Prior context is cached — trust it.
-
-## Context Delta (changes since last cycle)
-**Inbox (1 new)**:
-  [from_alice_task234_assignment.md] # Task 234: Integrate Crypto Edge Analysis into Live Trading Pipeline
-**Tasks**:
-  +234|Integrate crypto edge analysis into live trading pipeline|open

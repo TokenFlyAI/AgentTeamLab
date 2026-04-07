@@ -1,7 +1,0 @@
-=== Cycle 11 [RESUME] 2026_04_07_04_55_14 ===
-
-Cycle 11. Here is what happened while you were away:
-
----
-Culture updated:
-| C4 | NORM | **Read a teammate's status.md only when the delta reports they changed, or when actively coordinating a handoff.** Do NOT scan all peer status.md files every cycle — the resume delta delivers teammate changes automatically. | 2026-04-03 |
