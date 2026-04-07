@@ -698,32 +698,34 @@ extract_session_id() {
     local raw_log="$1"
     local executor="$2"
     # Only process bytes written during this cycle (avoids scanning the full 33MB daily log)
+    # _RAW_LOG_OFFSET is set before the executor runs; use tail -c +N to skip prior cycles.
     local _log_offset="${_RAW_LOG_OFFSET:-0}"
-    local _log_cmd
-    if [ "$_log_offset" -gt 0 ] 2>/dev/null; then
-        _log_cmd="tail -c +$((_log_offset + 1)) \"$raw_log\""
-    else
-        _log_cmd="cat \"$raw_log\""
-    fi
+    _read_log_from_offset() {
+        if [ "${_log_offset:-0}" -gt 0 ] 2>/dev/null; then
+            tail -c +"$((_log_offset + 1))" "$raw_log" 2>/dev/null
+        else
+            cat "$raw_log" 2>/dev/null
+        fi
+    }
     case "$executor" in
         kimi)
-            if eval "$_log_cmd" 2>/dev/null | grep -q 'TurnEnd\|StatusUpdate'; then
+            if _read_log_from_offset | grep -q 'TurnEnd\|StatusUpdate'; then
                 echo "kimi"
             fi
             ;;
         claude)
-            eval "$_log_cmd" 2>/dev/null | jq -r 'select(.type == "result") | .session_id // ""' 2>/dev/null \
+            _read_log_from_offset | jq -r 'select(.type == "result") | .session_id // ""' 2>/dev/null \
                 | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true
             ;;
         codex)
             # Handle both JSONL and JSON array output from codex
-            eval "$_log_cmd" 2>/dev/null | jq -r 'if type == "array" then .[] else . end | (.session_id // .conversation_id // .thread_id // .session.id // "")' 2>/dev/null \
+            _read_log_from_offset | jq -r 'if type == "array" then .[] else . end | (.session_id // .conversation_id // .thread_id // .session.id // "")' 2>/dev/null \
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
             # Primary: parse sessionId directly from this agent's raw output stream.
             # This is agent-specific and has no race conditions with concurrent agents.
-            _GEMINI_SID=$(eval "$_log_cmd" 2>/dev/null | jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' 2>/dev/null \
+            _GEMINI_SID=$(_read_log_from_offset | jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' 2>/dev/null \
                 | grep -v '^null$' | grep -v '^$' | tail -1 || true)
             if [ -n "$_GEMINI_SID" ]; then echo "$_GEMINI_SID"; return; fi
             # Fallback: scan ~/.gemini/tmp/ for the newest session file.
