@@ -760,7 +760,7 @@ function computeAgentHealth(agent, velocityData) {
 function buildVelocityData() {
   const velocity = {};
   const cutoff = new Date(Date.now() - 3 * 24 * 3600000).toISOString().slice(0, 10);
-  const tasks = parseTaskBoard();
+  const tasks = cached("task_board", 10_000, () => parseTaskBoard());
   for (const t of tasks) {
     const ag = (t.assignee || "").toLowerCase();
     if (!ag) continue;
@@ -914,7 +914,7 @@ function parseTaskArchive() {
 
 function findTaskById(id, options) {
   const includeArchive = !options || options.includeArchive !== false;
-  const activeTask = parseTaskBoard().find((t) => String(t.id) === String(id));
+  const activeTask = cached("task_board", 10_000, () => parseTaskBoard()).find((t) => String(t.id) === String(id));
   if (activeTask) return activeTask;
   if (!includeArchive) return null;
   return parseTaskArchive().find((t) => String(t.id) === String(id)) || null;
@@ -2812,7 +2812,7 @@ async function handleRequest(req, res) {
 
   // GET /api/tasks/export.csv — download task board as CSV
   if (method === "GET" && pathname === "/api/tasks/export.csv") {
-    const tasks = parseTaskBoard();
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard());
     const header = ["ID", "Title", "Description", "Priority", "Group", "Assignee", "Status", "Created", "Updated", "Notes"];
     const escape = (v) => `"${String(v || "").replace(/"/g, '""')}"`;
     const rows = [
@@ -2888,28 +2888,30 @@ async function handleRequest(req, res) {
 
   // ---- Communication ----
   if (method === "GET" && pathname === "/api/team-channel") {
-    const dir = path.join(PUBLIC_DIR, "team_channel");
-    const files = listDir(dir)
-      .filter((f) => f.endsWith(".md"))
-      .map((f) => {
-        const content = safeRead(path.join(dir, f));
-        // Extract timestamp: YYYY_MM_DD_HH_MM_SS
-        const tsMatch = f.match(/^(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/);
-        const timestamp = tsMatch
-          ? `${tsMatch[1]}-${tsMatch[2]}-${tsMatch[3]}T${tsMatch[4]}:${tsMatch[5]}:${tsMatch[6]}`
-          : null;
-        // Extract sender from filename: ..._from_<name>.md
-        const fromM = f.match(/_from_([^.]+)\.md$/i);
-        return {
-          filename: f,
-          content,
-          message: content,
-          from: fromM ? fromM[1] : null,
-          date: timestamp,
-          timestamp,
-        };
-      })
-      .sort((a, b) => (b.filename || "").localeCompare(a.filename || "")); // sort by full filename (includes HH_MM_SS)
+    const files = cached("team_channel_full", 10_000, () => {
+      const dir = path.join(PUBLIC_DIR, "team_channel");
+      return listDir(dir)
+        .filter((f) => f.endsWith(".md"))
+        .map((f) => {
+          const content = safeRead(path.join(dir, f));
+          // Extract timestamp: YYYY_MM_DD_HH_MM_SS
+          const tsMatch = f.match(/^(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/);
+          const timestamp = tsMatch
+            ? `${tsMatch[1]}-${tsMatch[2]}-${tsMatch[3]}T${tsMatch[4]}:${tsMatch[5]}:${tsMatch[6]}`
+            : null;
+          // Extract sender from filename: ..._from_<name>.md
+          const fromM = f.match(/_from_([^.]+)\.md$/i);
+          return {
+            filename: f,
+            content,
+            message: content,
+            from: fromM ? fromM[1] : null,
+            date: timestamp,
+            timestamp,
+          };
+        })
+        .sort((a, b) => (b.filename || "").localeCompare(a.filename || "")); // sort by full filename (includes HH_MM_SS)
+    });
     return json(res, files);
   }
 
@@ -2922,32 +2924,35 @@ async function handleRequest(req, res) {
     const filename = `${nowStamp()}_from_${from}.md`;
     try { fs.writeFileSync(path.join(dir, filename), body.message); } catch (e) { return json(res, { error: "failed to write message" }, 500); }
     cacheInvalidate("team_channel");
+    cacheInvalidate("team_channel_full");
     return json(res, { ok: true, filename });
   }
 
   if (method === "GET" && pathname === "/api/announcements") {
-    const dir = path.join(PUBLIC_DIR, "announcements");
-    const files = listDir(dir)
-      .filter((f) => f.endsWith(".md"))
-      .map((f) => {
-        const content = safeRead(path.join(dir, f)) || "";
-        const dateM = f.match(/(\d{4}[-_]\d{2}[-_]\d{2})/);
-        // Parse title from first # heading, body from rest
-        const lines = content.split("\n");
-        const titleLine = lines.find((l) => l.startsWith("#"));
-        const title = titleLine ? titleLine.replace(/^#+\s*/, "").trim() : f.replace(/_/g, " ").replace(".md", "");
-        const body = lines.filter((l) => !l.startsWith("#")).join("\n").trim();
-        const fromM = content.match(/\*\*From:\*\*\s*(.+)/);
-        return {
-          filename: f,
-          content,
-          title,
-          body,
-          from: fromM ? fromM[1].trim() : null,
-          date: dateM ? dateM[1].replace(/_/g, "-") : null,
-        };
-      })
-      .sort((a, b) => (b.filename || "").localeCompare(a.filename || ""));
+    const files = cached("announcements_full", 20_000, () => {
+      const dir = path.join(PUBLIC_DIR, "announcements");
+      return listDir(dir)
+        .filter((f) => f.endsWith(".md"))
+        .map((f) => {
+          const content = safeRead(path.join(dir, f)) || "";
+          const dateM = f.match(/(\d{4}[-_]\d{2}[-_]\d{2})/);
+          // Parse title from first # heading, body from rest
+          const lines = content.split("\n");
+          const titleLine = lines.find((l) => l.startsWith("#"));
+          const title = titleLine ? titleLine.replace(/^#+\s*/, "").trim() : f.replace(/_/g, " ").replace(".md", "");
+          const body = lines.filter((l) => !l.startsWith("#")).join("\n").trim();
+          const fromM = content.match(/\*\*From:\*\*\s*(.+)/);
+          return {
+            filename: f,
+            content,
+            title,
+            body,
+            from: fromM ? fromM[1].trim() : null,
+            date: dateM ? dateM[1].replace(/_/g, "-") : null,
+          };
+        })
+        .sort((a, b) => (b.filename || "").localeCompare(a.filename || ""));
+    });
     return json(res, files);
   }
 
@@ -2965,6 +2970,7 @@ async function handleRequest(req, res) {
     const filename = `${nowStamp()}_announcement.md`;
     try { fs.writeFileSync(path.join(dir, filename), content); } catch (e) { return json(res, { error: "failed to write announcement" }, 500); }
     cacheInvalidate("announcements");
+    cacheInvalidate("announcements_full");
     return json(res, { ok: true, filename });
   }
 
