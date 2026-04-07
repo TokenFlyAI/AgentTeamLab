@@ -663,6 +663,7 @@ trap '_write_idle_heartbeat' EXIT
 codex_stream_log() {
     python3 -u -c '
 import json, sys
+MAX_RAW = 500  # max chars for unrecognized event dump — prevents 100KB events bloating clean log
 for raw in sys.stdin:
     raw = raw.rstrip("\n")
     if not raw:
@@ -670,7 +671,7 @@ for raw in sys.stdin:
     try:
         event = json.loads(raw)
     except Exception:
-        print(raw)
+        print(raw[:MAX_RAW])
         continue
     if isinstance(event, dict):
         text = event.get("text") or event.get("message") or event.get("content")
@@ -682,13 +683,15 @@ for raw in sys.stdin:
             sid = event.get("session_id") or event.get("conversation_id") or event.get("thread_id") or "?"
             print("[DONE] session=" + str(sid))
             continue
-    print(json.dumps(event, ensure_ascii=True))
+    dumped = json.dumps(event, ensure_ascii=True)
+    print(dumped[:MAX_RAW] + ("…" if len(dumped) > MAX_RAW else ""))
 '
 }
 
 gemini_stream_log() {
     python3 -u -c '
 import json, sys
+MAX_RAW = 500  # max chars for unrecognized event dump — prevents 100KB events bloating clean log
 for raw in sys.stdin:
     raw = raw.rstrip("\n")
     if not raw:
@@ -696,7 +699,7 @@ for raw in sys.stdin:
     try:
         event = json.loads(raw)
     except Exception:
-        print(raw)
+        print(raw[:MAX_RAW])
         continue
     if isinstance(event, dict):
         msg = event.get("message") or event.get("text") or event.get("content")
@@ -708,7 +711,8 @@ for raw in sys.stdin:
             sid = event.get("sessionId") or event.get("session_id") or event.get("session") or "?"
             print("[DONE] session=" + str(sid))
             continue
-    print(json.dumps(event, ensure_ascii=True))
+    dumped = json.dumps(event, ensure_ascii=True)
+    print(dumped[:MAX_RAW] + ("…" if len(dumped) > MAX_RAW else ""))
 '
 }
 
@@ -811,7 +815,7 @@ for line in sys.stdin:
                 print('[ASSISTANT] ' + display)
             in_tp = False; buf = []
     elif not re.match(r'^(TurnBegin|StepBegin|TurnEnd|StatusUpdate|ThinkPart|\s)', line) and line.strip():
-        print(line)
+        print(line[:500] + ('…' if len(line) > 500 else ''))
 sys.stdout.flush()
 " >> "$DAILY_LOG" 2>/dev/null || true
             echo "[DONE] kimi cycle complete" >> "$DAILY_LOG"
