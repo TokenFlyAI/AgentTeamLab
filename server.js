@@ -408,6 +408,28 @@ function safeRead(p) {
   try { return fs.readFileSync(p, "utf8"); } catch (_) { return null; }
 }
 
+// ---------------------------------------------------------------------------
+// Short-lived in-memory cache — reduces synchronous I/O on hot paths like
+// /api/agents/:name/context, which reads 19+ files per call and blocks the
+// Node.js event loop when called concurrently by multiple running agents.
+// ---------------------------------------------------------------------------
+const _cache = new Map(); // key → { value, expiresAt }
+function cached(key, ttlMs, fn) {
+  const now = Date.now();
+  const hit = _cache.get(key);
+  if (hit && hit.expiresAt > now) return hit.value;
+  const value = fn();
+  _cache.set(key, { value, expiresAt: now + ttlMs });
+  return value;
+}
+// Invalidate a single cache key (call after writes that should be visible immediately)
+function cacheInvalidate(key) { _cache.delete(key); }
+// Prune expired entries (called periodically to prevent unbounded growth)
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of _cache) { if (v.expiresAt <= now) _cache.delete(k); }
+}, 60_000);
+
 function fileMtime(p) {
   try { return fs.statSync(p).mtimeMs; } catch (_) { return null; }
 }
@@ -2136,17 +2158,19 @@ async function handleRequest(req, res) {
     const agentDir = path.join(EMPLOYEES_DIR, name);
     if (!fs.existsSync(agentDir)) return notFound(res, "agent not found");
 
-    // Company mode
-    const modeRaw = safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "";
+    // Company mode (cached 30s — changes rarely)
+    const modeRaw = cached("company_mode", 30_000, () => safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "");
     const modeMatch = modeRaw.match(/\*\*(\w+)\*\*/);
     const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
 
-    // Active SOP
-    const sopPath = path.join(PUBLIC_DIR, "sops", `${mode}_mode.md`);
-    const sop = safeRead(sopPath) || null;
+    // Active SOP (cached 60s)
+    const sop = cached(`sop:${mode}`, 60_000, () => {
+      const sopPath = path.join(PUBLIC_DIR, "sops", `${mode}_mode.md`);
+      return safeRead(sopPath) || null;
+    });
 
-    // Culture / consensus
-    const culture = safeRead(path.join(PUBLIC_DIR, "consensus.md")) || null;
+    // Culture / consensus (cached 60s — large file, rarely changes mid-sprint)
+    const culture = cached("consensus", 60_000, () => safeRead(path.join(PUBLIC_DIR, "consensus.md")) || null);
 
     // Inbox — unread files (not in processed/)
     const inboxDir = path.join(agentDir, "chat_inbox");
@@ -2174,42 +2198,48 @@ async function handleRequest(req, res) {
       .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
                && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()));
 
-    // Recent team channel (last 5 messages, skip heading lines in preview)
-    const tcDir = path.join(PUBLIC_DIR, "team_channel");
-    const teamChannel = listDir(tcDir)
-      .filter(f => f.endsWith(".md"))
-      .sort().reverse().slice(0, 5)
-      .map(f => {
-        const raw = safeRead(path.join(tcDir, f)) || "";
-        const lines = raw.split("\n");
-        const preview = lines
-          .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
-          .slice(0, 3).join(" ").slice(0, 200);
-        return { filename: f, preview };
-      });
+    // Recent team channel (cached 20s — new posts appear within one agent cycle anyway)
+    const teamChannel = cached("team_channel", 20_000, () => {
+      const tcDir = path.join(PUBLIC_DIR, "team_channel");
+      return listDir(tcDir)
+        .filter(f => f.endsWith(".md"))
+        .sort().reverse().slice(0, 5)
+        .map(f => {
+          const raw = safeRead(path.join(tcDir, f)) || "";
+          const lines = raw.split("\n");
+          const preview = lines
+            .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
+            .slice(0, 3).join(" ").slice(0, 200);
+          return { filename: f, preview };
+        });
+    });
 
-    // Recent announcements (last 3, skip mode-switch files, skip heading lines)
-    const annDir = path.join(PUBLIC_DIR, "announcements");
-    const announcements = listDir(annDir)
-      .filter(f => f.endsWith(".md") && !f.includes("mode_switch"))
-      .sort().reverse().slice(0, 3)
-      .map(f => {
-        const raw = safeRead(path.join(annDir, f)) || "";
-        const lines = raw.split("\n");
-        const preview = lines
-          .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
-          .slice(0, 2).join(" ").slice(0, 200);
-        return { filename: f, preview };
-      });
+    // Recent announcements (cached 60s)
+    const announcements = cached("announcements", 60_000, () => {
+      const annDir = path.join(PUBLIC_DIR, "announcements");
+      return listDir(annDir)
+        .filter(f => f.endsWith(".md") && !f.includes("mode_switch"))
+        .sort().reverse().slice(0, 3)
+        .map(f => {
+          const raw = safeRead(path.join(annDir, f)) || "";
+          const lines = raw.split("\n");
+          const preview = lines
+            .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
+            .slice(0, 2).join(" ").slice(0, 200);
+          return { filename: f, preview };
+        });
+    });
 
-    // Teammate statuses from heartbeats
-    const teammates = listAgentNames()
-      .filter(n => n !== name)
-      .map(n => {
+    // Teammate statuses from heartbeats (cached 20s — updates every ~60s per agent cycle)
+    // This is the hottest path: 19 readFileSync calls per context request, blocking the event loop.
+    const allAgents = cached("agent_names", 60_000, () => listAgentNames());
+    const teammates = cached("teammate_statuses", 20_000, () =>
+      allAgents.map(n => {
         const hb = safeRead(path.join(EMPLOYEES_DIR, n, "heartbeat.md")) || "";
         const stMatch = hb.match(/^status:\s*(.+)$/m);
         return { name: n, status: stMatch ? stMatch[1].trim() : "unknown" };
-      });
+      })
+    ).filter(t => t.name !== name);
 
     return json(res, {
       agent: name,
@@ -3026,6 +3056,7 @@ async function handleRequest(req, res) {
           "",
         ].join("\n");
         fs.writeFileSync(path.join(PUBLIC_DIR, "company_mode.md"), modeContent);
+        cacheInvalidate("company_mode");
         return json(res, { ok: true, action: "mode_switched", mode: newMode });
       } catch (e) {
         console.error("[ceo/command mode_switch] error:", e);
@@ -3227,6 +3258,7 @@ async function handleRequest(req, res) {
     const args = [script, body.mode, safeWho, safeReason];
     execFile("bash", args, { cwd: DIR }, (err, stdout, stderr) => {
       if (err) { console.error("[POST /api/mode] script error:", stderr || err.message); return json(res, { ok: false, error: "Script execution failed" }, 500); }
+      cacheInvalidate("company_mode");
       broadcastWS("mode_changed", { mode: body.mode });
       json(res, { ok: true, output: stdout });
     });
