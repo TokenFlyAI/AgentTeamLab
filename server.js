@@ -825,6 +825,20 @@ function buildVelocityData() {
       if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
     }
   }
+  // Also count recently archived done tasks — agents who completed sprint work
+  // shouldn't show zero velocity just because their tasks were archived
+  const archiveCutoff = new Date(Date.now() - 7 * 24 * 3600000).toISOString().slice(0, 10);
+  for (const t of cached("task_archive", 30_000, () => parseTaskArchive())) {
+    const ag = (t.assignee || "").toLowerCase();
+    if (!ag) continue;
+    if ((t.updated || "").trim() < archiveCutoff) continue;
+    if (!velocity[ag]) velocity[ag] = { done: 0, inProgress: 0, total: 0, recentDone: 0 };
+    const st = (t.status || "").toLowerCase();
+    if (st === "done" || st === "in_review") {
+      velocity[ag].done++;
+      if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
+    }
+  }
   return velocity;
 }
 
@@ -1407,17 +1421,27 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/dashboard") {
-    const agents = listAgentNames().map(getAgentSummary);
+    const agents = cached("agent_list", 5_000, () => {
+      const velocityData = buildVelocityData();
+      return listAgentNames().map((name) => {
+        const summary = getAgentSummary(name);
+        const d = path.join(EMPLOYEES_DIR, name);
+        const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
+        const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
+        const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
+        const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+        const health = computeAgentHealth(agentData, velocityData);
+        const executor = getExecutorForAgent(name);
+        return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
+      });
+    });
     const tasks = cached("task_board", 10_000, () => parseTaskBoard());
-    const modeMd = safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "";
+    const modeMd = cached("company_mode", 30_000, () => safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "");
     const modeMatch = modeMd.match(/##\s*Current Mode\s*\n\*\*(\w+)\*\*/i);
     const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
     const activeCount = agents.filter((a) => a.status === "running").length;
-    // Include archive stats so dashboard can show real done count
-    const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
-    const archiveRaw = safeRead(archivePath) || "";
-    const archiveLines = archiveRaw.split("\n").filter((l) => l.trim().startsWith("|") && !/\|\s*id\s*\|/i.test(l) && !/\|[-\s]+\|/.test(l));
-    const archivedDoneCount = archiveLines.length;
+    // Archive count from cache
+    const archivedDoneCount = cached("task_archive", 30_000, () => parseTaskArchive()).length;
     return json(res, { agents, tasks, mode, activeCount, archivedDoneCount });
   }
 
