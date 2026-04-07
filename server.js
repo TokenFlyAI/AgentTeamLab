@@ -835,6 +835,44 @@ function parseTaskBoard() {
   return tasks;
 }
 
+function parseTaskArchive() {
+  const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
+  const raw = safeRead(archivePath) || "";
+  const lines = raw.split("\n").filter((l) => l.trim().startsWith("|"));
+  const tasks = [];
+  for (const line of lines) {
+    if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
+    const cols = line.split("|").slice(1, -1).map((c) => c.trim());
+    if (cols.length < 6) continue;
+    const hasGroup = cols.length >= 9;
+    const group = hasGroup ? cols[4] : "";
+    const off = hasGroup ? 1 : 0;
+    tasks.push({
+      id: cols[0],
+      title: cols[1] || "",
+      description: cols[2] || "",
+      priority: cols[3] || "",
+      group,
+      assignee: cols[4 + off] || "",
+      status: cols[5 + off] || "done",
+      created: cols[6 + off] || "",
+      updated: cols[7 + off] || "",
+      notes: cols[8 + off] || "",
+      archived: true,
+      task_type: "task",
+    });
+  }
+  return tasks;
+}
+
+function findTaskById(id, options) {
+  const includeArchive = !options || options.includeArchive !== false;
+  const activeTask = parseTaskBoard().find((t) => String(t.id) === String(id));
+  if (activeTask) return activeTask;
+  if (!includeArchive) return null;
+  return parseTaskArchive().find((t) => String(t.id) === String(id)) || null;
+}
+
 function archiveDoneTasks() {
   const tbPath = path.join(PUBLIC_DIR, "task_board.md");
   const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
@@ -2198,16 +2236,27 @@ async function handleRequest(req, res) {
 
     // Open tasks for this agent (task board cached 10s — task updates are critical, keep TTL short)
     const allTasks = cached("task_board", 10_000, () => parseTaskBoard());
+    const truncateDesc = t => ({
+      ...t,
+      // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
+      description: t.description && t.description.length > 300
+        ? t.description.slice(0, 300) + "…"
+        : t.description,
+    });
     const tasks = allTasks
       .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
                && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()))
-      .map(t => ({
-        ...t,
-        // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
-        description: t.description && t.description.length > 300
-          ? t.description.slice(0, 300) + "…"
-          : t.description,
-      }));
+      .map(truncateDesc);
+
+    // For reviewer agents (tina, olivia, alice): also include in_review tasks from all agents
+    // so they can proactively pick them up without running task_list each cycle
+    const REVIEWER_AGENTS = new Set(["tina", "olivia", "alice"]);
+    const pending_review = REVIEWER_AGENTS.has(name.toLowerCase())
+      ? allTasks
+          .filter(t => (t.status || "").toLowerCase() === "in_review"
+                    && (t.assignee || "").toLowerCase() !== name.toLowerCase())
+          .map(truncateDesc)
+      : [];
 
     // Recent team channel (cached 20s — new posts appear within one agent cycle anyway)
     const teamChannel = cached("team_channel", 20_000, () => {
@@ -2265,6 +2314,7 @@ async function handleRequest(req, res) {
         more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),
       },
       tasks,
+      pending_review,
       team_channel: teamChannel,
       announcements,
       teammates,
@@ -2385,32 +2435,11 @@ async function handleRequest(req, res) {
 
     // Include archived done tasks if requested
     if (includeArchive) {
-      const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
-      const raw = safeRead(archivePath) || "";
-      const lines = raw.split("\n").filter((l) => l.trim().startsWith("|"));
-      for (const line of lines) {
-        if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
-        const cols = line.split("|").slice(1, -1).map((c) => c.trim());
-        if (cols.length >= 6) {
-          // Detect if Group column is present (newer format has 10 cols, older had 9)
-          const hasGroup = cols.length >= 9;
-          const g = hasGroup ? cols[4] : "";
-          const off = hasGroup ? 1 : 0;
-          taskList.push({
-            id: parseInt(cols[0], 10) || cols[0],
-            title: cols[1] || "",
-            description: cols[2] || "",
-            priority: cols[3] || "",
-            group: g,
-            assignee: cols[4 + off] || "",
-            status: cols[5 + off] || "done",
-            created: cols[6 + off] || "",
-            updated: cols[7 + off] || "",
-            archived: true,
-            notesList: [],
-          });
-        }
-      }
+      taskList.push(...parseTaskArchive().map((t) => ({
+        ...t,
+        id: parseInt(t.id, 10) || t.id,
+        notesList: (t.notes || "").split(" ;; ").filter(Boolean),
+      })));
     }
 
     const assigneeFilter = query.assignee;
@@ -2463,7 +2492,7 @@ async function handleRequest(req, res) {
   // GET /api/tasks/:id
   if (method === "GET" && taskIdMatch) {
     const id = taskIdMatch[1];
-    const task = parseTaskBoard().find((t) => String(t.id) === String(id));
+    const task = findTaskById(id);
     if (!task) return notFound(res, "task not found");
     return json(res, { ...task, id: parseInt(task.id, 10), notesList: (task.notes || "").split(" ;; ").filter(Boolean) });
   }
@@ -2557,7 +2586,7 @@ async function handleRequest(req, res) {
   const taskResultMatch = pathname.match(/^\/api\/tasks\/(\d+)\/result$/);
   if (method === "GET" && taskResultMatch) {
     const id = taskResultMatch[1];
-    const task = parseTaskBoard().find((t) => String(t.id) === String(id));
+    const task = findTaskById(id);
     if (!task) return notFound(res, "task not found");
 
     // 1. Check shared task_outputs folder first: public/task_outputs/task-{id}-*.md
@@ -2701,24 +2730,17 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/tasks/archive") {
-    const archivePath = path.join(PUBLIC_DIR, "task_board_archive.md");
-    const raw = safeRead(archivePath) || "";
-    const lines = raw.split("\n").filter((l) => l.trim().startsWith("|"));
-    const tasks = [];
-    for (const line of lines) {
-      // Skip header row (contains "ID") and separator row (contains "---")
-      if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
-      const cols = line.split("|").slice(1, -1).map((c) => c.trim());
-      // Archive rows: ID|Title|Desc|Priority|[Group?|]Assignee|Status|Created|Updated
-      // Group may be absent in older archives — default to ""
-      if (cols.length >= 6) {
-        // Detect if Group column is present: if cols.length >= 9, newer format with group
-        const hasGroup = cols.length >= 9;
-        const g = hasGroup ? cols[4] : "";
-        const off = hasGroup ? 1 : 0;
-        tasks.push({ id: cols[0], title: cols[1], description: cols[2], priority: cols[3], group: g, assignee: cols[4 + off], status: cols[5 + off], created: cols[6 + off] || "", updated: cols[7 + off] || "" });
-      }
-    }
+    const tasks = parseTaskArchive().map((t) => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      group: t.group,
+      assignee: t.assignee,
+      status: t.status,
+      created: t.created,
+      updated: t.updated,
+    }));
     return json(res, tasks);
   }
 

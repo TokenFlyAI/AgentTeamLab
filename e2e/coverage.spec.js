@@ -3230,6 +3230,25 @@ test.describe("GET /api/agents/:name/context", () => {
       expect(typeof t.updated).toBe("string");
     }
   });
+
+  test("reviewer agents (tina, olivia, alice) get pending_review array", async () => {
+    for (const reviewer of ["tina", "olivia", "alice"]) {
+      const { body } = await apiGet(`/api/agents/${reviewer}/context`);
+      expect(Array.isArray(body.pending_review)).toBe(true);
+      for (const t of body.pending_review || []) {
+        expect(t.status).toBe("in_review");
+        expect(typeof t.id === "number" || typeof t.id === "string").toBe(true);
+        expect(typeof t.title).toBe("string");
+      }
+    }
+  });
+
+  test("non-reviewer agents get empty pending_review array", async () => {
+    const { body } = await apiGet("/api/agents/bob/context");
+    // Non-reviewers get an empty pending_review (no in_review tasks to pick up)
+    expect(Array.isArray(body.pending_review)).toBe(true);
+    expect(body.pending_review.length).toBe(0);
+  });
 });
 
 test.describe("GET /api/events (SSE)", () => {

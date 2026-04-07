@@ -306,6 +306,15 @@ for t in changed_tasks:
     new_s = t.get("status","")
     lines.append("T{} ({}) moved: {} → {}".format(t.get("id",""), t.get("title",""), old_s, new_s))
 
+# New tasks pending review (for reviewer agents — tina/olivia/alice)
+prev_pr = {t["id"]: t for t in prev.get("pending_review", [])}
+curr_pr = {t["id"]: t for t in curr.get("pending_review", [])}
+new_pr_ids = set(curr_pr) - set(prev_pr)
+for tid in new_pr_ids:
+    t = curr_pr[tid]
+    lines.append("T{} ({}) is now in_review — assigned to {}, awaiting your review.".format(
+        t.get("id",""), t.get("title",""), t.get("assignee","")))
+
 # Teammate status changes
 prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
 curr_tm = {t["name"]: t["status"] for t in curr.get("teammates", [])}
@@ -453,6 +462,15 @@ if tasks:
 else:
     out.append("**Your open tasks**: none assigned")
 out.append("")
+
+# Pending review (for tina/olivia/alice — tasks waiting for their review)
+pending = d.get("pending_review", [])
+if pending:
+    out.append("**Tasks awaiting your review** (in_review, assigned to others):")
+    for t in pending:
+        out.append("  T{} [in_review] {}: {} (assignee: {})".format(
+            t.get("id",""), t.get("priority","medium"), t.get("title",""), t.get("assignee","")))
+    out.append("")
 
 # Team channel (last 5)
 tc = d.get("team_channel", [])
