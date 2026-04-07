@@ -2925,6 +2925,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function startFleetDaemon() {
   try {
+    // Always save current UI settings before starting so daemon uses the latest config
+    await applyFleetConfig({ silent: true });
     const res = await apiFetch('/api/smart-run/start', { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
@@ -2953,7 +2955,7 @@ async function stopFleetDaemon() {
   }
 }
 
-async function applyFleetConfig() {
+async function applyFleetConfig({ silent = false } = {}) {
   const maxAgents = parseInt(document.getElementById('fleet-max-agents').value, 10);
   const selectionMode = document.querySelector('input[name="fleet-selection-mode"]:checked')?.value || 'deterministic';
   const maxTotalCycles = parseInt(document.getElementById('fleet-max-total-cycles')?.value || '0', 10);
@@ -2967,13 +2969,14 @@ async function applyFleetConfig() {
     const data = await res.json();
     if (data.ok) {
       _selectionModeUserEdited = false; // Clear dirty flag — API now reflects user's choice
-      showToast('Settings applied');
-      loadFleetStatus();
+      if (!silent) { showToast('Settings applied'); loadFleetStatus(); }
     } else {
       showToast('Error: ' + (data.error || 'Failed to apply'), 'error');
+      throw new Error(data.error || 'Failed to apply');
     }
   } catch (e) {
-    showToast('Error applying settings', 'error');
+    if (!silent) showToast('Error applying settings', 'error');
+    throw e;
   }
 }
 

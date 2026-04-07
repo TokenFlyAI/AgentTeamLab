@@ -304,12 +304,20 @@ build_selection_list() {
         under_max && add_agent "$ag"
     done
     
-    # Apply selection mode shuffle if random
+    # Apply selection mode shuffle if random.
+    # FORCE_ALICE: preserve alice at position 1 so she always starts even if max_agents < total candidates.
     if [ "$SELECTION_MODE" = "random" ]; then
+        _ALICE_PRESENT=$(echo "$TO_START" | tr ' ' '\n' | grep -c '^alice$' 2>/dev/null || echo 0)
+        _OTHERS=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^alice$' | grep -v '^$')
         if command -v shuf >/dev/null 2>&1; then
-            TO_START=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | shuf | tr '\n' ' ')
+            _SHUFFLED=$(printf '%s\n' $_OTHERS | shuf | tr '\n' ' ')
         else
-            TO_START=$(echo "$TO_START" | tr ' ' '\n' | grep -v '^$' | awk 'BEGIN{srand()} {lines[NR]=$0} END{for(i=NR;i>1;i--){j=int(rand()*i)+1; t=lines[i]; lines[i]=lines[j]; lines[j]=t} for(i=1;i<=NR;i++) print lines[i]}' | tr '\n' ' ')
+            _SHUFFLED=$(printf '%s\n' $_OTHERS | awk 'BEGIN{srand()} {lines[NR]=$0} END{for(i=NR;i>1;i--){j=int(rand()*i)+1; t=lines[i]; lines[i]=lines[j]; lines[j]=t} for(i=1;i<=NR;i++) print lines[i]}' | tr '\n' ' ')
+        fi
+        if [ "$_ALICE_PRESENT" -gt 0 ]; then
+            TO_START="alice $_SHUFFLED"
+        else
+            TO_START="$_SHUFFLED"
         fi
     fi
 

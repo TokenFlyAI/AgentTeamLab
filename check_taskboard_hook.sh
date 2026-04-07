@@ -6,6 +6,8 @@
 # Uses a temp stamp file keyed by agent + session PID to silence repeated identical output.
 TASKBOARD="../../public/task_board.md"
 AGENT_NAME=$(basename "$(pwd)")
+# Prune stale stamp files older than 24h (they accumulate per-cycle; PPID changes every run)
+find /tmp -maxdepth 1 -name ".taskboard_hook_${AGENT_NAME}_*" -mtime +1 -delete 2>/dev/null || true
 
 [ ! -f "$TASKBOARD" ] && exit 0
 

@@ -692,9 +692,14 @@ extract_session_id() {
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
-            # Gemini stores sessions in ~/.gemini/tmp/{project}/chats/session-{ts}-{uuid}.json
-            # Find the newest session file written during/after this run and extract its UUID.
-            # This ensures each agent resumes its OWN session, not another agent's.
+            # Primary: parse sessionId directly from this agent's raw output stream.
+            # This is agent-specific and has no race conditions with concurrent agents.
+            _GEMINI_SID=$(jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' "$raw_log" 2>/dev/null \
+                | grep -v '^null$' | grep -v '^$' | tail -1 || true)
+            if [ -n "$_GEMINI_SID" ]; then echo "$_GEMINI_SID"; return; fi
+            # Fallback: scan ~/.gemini/tmp/ for the newest session file.
+            # CAUTION: race condition when multiple gemini agents run concurrently —
+            # the newest file might belong to another agent. Use only as last resort.
             _GEMINI_PROJ=$(ls -t ~/.gemini/tmp/ 2>/dev/null | head -1)
             if [ -n "$_GEMINI_PROJ" ]; then
                 _NEWEST=$(ls -t ~/.gemini/tmp/"$_GEMINI_PROJ"/chats/session-*.json 2>/dev/null | head -1)
@@ -703,7 +708,7 @@ extract_session_id() {
                     if [ -n "$_GEMINI_UUID" ]; then echo "$_GEMINI_UUID"; return; fi
                 fi
             fi
-            # Fallback: if session file not found but output exists, save marker
+            # Final fallback: if output exists but no session ID, save generic marker
             if grep -q '"type":"message"' "$raw_log" 2>/dev/null || grep -q '"role":"assistant"' "$raw_log" 2>/dev/null; then
                 echo "gemini"
             fi

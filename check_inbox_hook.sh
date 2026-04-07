@@ -6,6 +6,8 @@
 # or a message is processed). Silences on repeated identical tool calls.
 INBOX_DIR="chat_inbox"
 AGENT_NAME=$(basename "$(pwd)")
+# Prune stale stamp files older than 24h (they accumulate per-cycle; PPID changes every run)
+find /tmp -maxdepth 1 -name ".inbox_hook_${AGENT_NAME}_*" -mtime +1 -delete 2>/dev/null || true
 shopt -s nullglob
 
 UNREAD_FILES=()
