@@ -17,7 +17,8 @@ printf "%-12s %-10s %5s %8s %7s  %-50s\n" "------------" "----------" "-----" "-
 for AGENT_DIR in "${AGENTS_DIR:-${COMPANY_DIR}/agents}"/*/; do
     [ ! -d "$AGENT_DIR" ] && continue
     AGENT_NAME=$(basename "$AGENT_DIR")
-    [ ! -f "${AGENT_DIR}/prompt.md" ] && continue
+    # Accept persona.md (current) or prompt.md (legacy fallback)
+    [ ! -f "${AGENT_DIR}/persona.md" ] && [ ! -f "${AGENT_DIR}/prompt.md" ] && continue
     
     HB_FILE="${AGENT_DIR}/heartbeat.md"
     RAW_LOG="${AGENT_DIR}/logs/${TODAY}_raw.log"
