@@ -5,16 +5,23 @@
 # Provides simple one-liner tools for common agent operations:
 #   task_claim <id>              — Atomically claim a task
 #   task_done <id> "result"      — Mark task done with result note
+#   task_inreview <id> "note"    — Mark task in_review (request approval)
+#   task_review <id> approve|reject "comment" — Approve or reject a task (reviewers)
 #   task_progress <id> "update"  — Update task progress note
-#   task_list [assignee]         — List open/in-progress tasks
+#   task_list [assignee]         — List open/in-progress/in-review tasks
+#   my_tasks                     — Show tasks assigned to me
+#   read_task <id>               — Read full details of a specific task
+#   create_task "title" [assignee] [priority] ["desc"] — Create a new task
 #   dm <agent> "message"         — Send a DM to another agent
 #   broadcast "message"          — Send message to all agents
+#   post "message"               — Post milestone to team_channel
+#   announce "message"           — Post civilization-wide announcement
+#   read_inbox                   — Show unread messages from chat_inbox
 #   read_peer <agent>            — Read another agent's status.md
 #   read_knowledge               — Read shared knowledge base
 #   read_culture                 — Read consensus norms and decisions
-#   my_tasks                     — Show tasks assigned to me
 #   pipeline_status              — Show D004 pipeline phase status
-#   log_progress "message"       — Append progress to status.md with timestamp
+#   log_progress "message"       — Append timestamped note to logs/progress.log
 
 # Handle both bash and zsh
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
