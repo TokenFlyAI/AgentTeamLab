@@ -21,8 +21,15 @@ MY_P0=$(echo "$ACTIVE" | grep -iE "critical|p0" | grep -i "| *${AGENT_NAME} *|" 
 MY_TASKS=$(echo "$ACTIVE" | grep -i "| *${AGENT_NAME} *|" | tail -10)
 
 # Latest unassigned tasks (for self-assignment), max 3
-# Match rows where assignee column (col 5) is empty, a dash variant, or "unassigned"
-UNASSIGNED=$(echo "$ACTIVE" | grep -E "\| *(—|-+|unassigned) *\|" | tail -10)
+# Use awk to check the Assignee column (field 7 when split by |) precisely.
+# Only show regular task rows (numeric IDs) — not Directions (D...) or Instructions (I...).
+# Matches: empty, dash variants, "unassigned", "undefined".
+UNASSIGNED=$(echo "$ACTIVE" | awk -F'|' '{
+    id = $2; gsub(/^[ \t]+|[ \t]+$/, "", id)
+    if (id !~ /^[0-9]/) next
+    a = $7; gsub(/^[ \t]+|[ \t]+$/, "", a)
+    if (a == "" || a == "—" || a ~ /^-+$/ || a == "unassigned" || a == "undefined") print
+}' | tail -10)
 
 # Truncate long rows to avoid description column blowing up token count
 truncate_rows() {

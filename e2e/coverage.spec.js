@@ -2348,6 +2348,11 @@ test.describe("POST /api/agents/:name/stop", () => {
 // POST /api/agents/:name/start — functional tests (GAP-012)
 // ---------------------------------------------------------------------------
 test.describe("POST /api/agents/:name/start", () => {
+  test.afterAll(async () => {
+    // Stop bob to prevent background context API calls from blocking the event loop in later tests
+    await apiPost("/api/agents/bob/stop").catch(() => {});
+  });
+
   test("returns 401 without auth header", async () => {
     const res = await fetch(`${BASE}/api/agents/bob/start`, { method: "POST" });
     expect(res.status).toBe(401);
@@ -2658,6 +2663,11 @@ test.describe("Task #155 GAP-001: POST /api/agents/:name/stop auth", () => {
 });
 
 test.describe("Task #155 GAP-002: POST /api/agents/:name/start auth", () => {
+  test.afterAll(async () => {
+    // Stop bob to prevent background context API calls from blocking the event loop in later tests
+    await apiPost("/api/agents/bob/stop").catch(() => {});
+  });
+
   test("returns 401 without auth header", async () => {
     const res = await fetch(`${BASE}/api/agents/bob/start`, { method: "POST" });
     expect(res.status).toBe(401);
@@ -2720,7 +2730,24 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
   const net = require("net");
   const crypto = require("crypto");
 
-  function wsHandshake({ withAuth, badKey } = {}) {
+  // Wait for server to be responsive before each WS test.
+  // Agents running in the background make context API calls that do synchronous
+  // file I/O, which blocks the Node.js event loop. Poll until the server responds
+  // quickly, then the WS upgrade will succeed without timing out.
+  test.beforeEach(async () => {
+    const deadline = Date.now() + 15000;
+    while (Date.now() < deadline) {
+      const t = Date.now();
+      try {
+        const r = await fetch(`${BASE}/api/health`, { headers: AUTH_HEADERS });
+        if (r.ok && Date.now() - t < 500) break; // server responsive and fast
+      } catch (_) {}
+      await new Promise(r => setTimeout(r, 100));
+    }
+  });
+
+  // Attempt a single WS handshake, resolving with HTTP status code (0 = timeout/error)
+  function wsHandshakeOnce({ withAuth, badKey, path = "/api/ws" } = {}) {
     return new Promise((resolve) => {
       const socket = net.connect(3199, "127.0.0.1", () => {
         const wsKey = crypto.randomBytes(16).toString("base64");
@@ -2728,7 +2755,7 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
           ? `Authorization: Bearer ${badKey ? "wrongkey" : "test"}\r\n`
           : "";
         socket.write(
-          `GET /api/ws HTTP/1.1\r\n` +
+          `GET ${path} HTTP/1.1\r\n` +
           `Host: localhost:3199\r\n` +
           `Upgrade: websocket\r\n` +
           `Connection: Upgrade\r\n` +
@@ -2738,7 +2765,8 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
         );
       });
       let data = "";
-      socket.setTimeout(2000);
+      // 3s per attempt — server may be briefly busy under agent load
+      socket.setTimeout(3000);
       socket.on("data", (chunk) => {
         data += chunk.toString();
         if (data.includes("\r\n\r\n")) {
@@ -2750,6 +2778,14 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
       socket.on("timeout", () => { socket.destroy(); resolve(0); });
       socket.on("error", () => resolve(0));
     });
+  }
+
+  // Retry once on timeout — the beforeEach health check should ensure server is ready
+  async function wsHandshake(opts) {
+    const status = await wsHandshakeOnce(opts);
+    if (status !== 0) return status;
+    await new Promise(r => setTimeout(r, 500));
+    return wsHandshakeOnce(opts);
   }
 
   test("WS-001: rejects unauthenticated upgrade with 401", async () => {
@@ -2768,31 +2804,7 @@ test.describe("WebSocket /api/ws — WS-001 auth (Task #153)", () => {
   });
 
   test("WS-004: non-/api/ws path returns 404", async () => {
-    const status = await new Promise((resolve) => {
-      const socket = net.connect(3199, "127.0.0.1", () => {
-        const wsKey = crypto.randomBytes(16).toString("base64");
-        socket.write(
-          `GET /api/wrong-path HTTP/1.1\r\n` +
-          `Host: localhost:3199\r\n` +
-          `Upgrade: websocket\r\n` +
-          `Connection: Upgrade\r\n` +
-          `Sec-WebSocket-Key: ${wsKey}\r\n` +
-          `Sec-WebSocket-Version: 13\r\n` +
-          `Authorization: Bearer test\r\n\r\n`
-        );
-      });
-      let data = "";
-      socket.setTimeout(2000);
-      socket.on("data", (chunk) => {
-        data += chunk.toString();
-        if (data.includes("\r\n\r\n")) {
-          socket.destroy();
-          resolve(parseInt(data.split(" ")[1], 10));
-        }
-      });
-      socket.on("timeout", () => { socket.destroy(); resolve(0); });
-      socket.on("error", () => resolve(0));
-    });
+    const status = await wsHandshake({ withAuth: true, path: "/api/wrong-path" });
     expect(status).toBe(404);
   });
 });
