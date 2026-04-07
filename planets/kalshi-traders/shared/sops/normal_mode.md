@@ -19,11 +19,10 @@ The team maintains a shared knowledge base at `public/consensus.md`. **It is pre
 
 **How to post:**
 ```bash
-curl -X POST http://localhost:3199/api/consensus/entry \
-  -H "Content-Type: application/json" \
-  -d '{"type":"culture","content":"What you learned","section":"Core Behavioral Norms (Must Follow)"}'
+source ../../scripts/agent_tools.sh
+add_culture norm "What you learned"        # adds to Core Behavioral Norms
+add_culture decision "What was decided"    # adds to Strategic Decisions
 ```
-Types: `culture` (norms), `decision` (explicit choices). Sections: `"Core Behavioral Norms (Must Follow)"` or `"Strategic Decisions & Commitments"`.
 
 **Also use your `knowledge/` folder** for agent-specific notes you want to persist across sessions:
 - Write important findings to `agents/{your-name}/knowledge/{topic}.md`

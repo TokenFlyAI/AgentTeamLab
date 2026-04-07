@@ -244,6 +244,7 @@ source ../../scripts/agent_tools.sh
 | `read_peer ivan` | Read another agent's status.md |
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
+| `add_culture norm "What you learned"` | Add norm to consensus.md (use `decision` for decisions) |
 | `pipeline_status` | Check D004 phase file status (per-agent output paths) |
 | `log_progress "Fixed bug X"` | Write timestamped note to logs/progress.log (NOT status.md — C18) |
 

@@ -20,6 +20,7 @@
 #   read_peer <agent>            — Read another agent's status.md
 #   read_knowledge               — Read shared knowledge base
 #   read_culture                 — Read consensus norms and decisions
+#   add_culture norm|decision "text" — Append new entry to consensus.md
 #   pipeline_status              — Show D004 pipeline phase status
 #   log_progress "message"       — Append timestamped note to logs/progress.log
 
@@ -291,6 +292,30 @@ read_culture() {
   cat "${_SHARED}/consensus.md" 2>/dev/null || echo "consensus.md not found"
 }
 
+add_culture() {
+  # Usage: add_culture norm|decision "Content text"
+  # Appends a new entry to the shared culture board (consensus.md)
+  local kind="$1" content="$2"
+  if [ -z "$kind" ] || [ -z "$content" ]; then
+    echo "Usage: add_culture norm|decision \"Content text\""
+    return 1
+  fi
+  local api_type section
+  case "$kind" in
+    norm|culture) api_type="culture"; section="Core Behavioral Norms (Must Follow)" ;;
+    decision) api_type="decision"; section="Strategic Decisions & Commitments" ;;
+    *) api_type="culture"; section="Core Behavioral Norms (Must Follow)" ;;
+  esac
+  local json_content
+  json_content=$(echo "$content" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')
+  curl -sf -X POST "${_API}/api/consensus/entry" \
+    -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
+    -d "{\"type\":\"${api_type}\",\"content\":${json_content},\"section\":\"${section}\"}" \
+    | python3 -c "import json,sys; d=json.load(sys.stdin); print('Culture entry added: id=' + str(d.get('id','?')))" 2>/dev/null \
+    || echo "Failed to add culture entry"
+}
+
 pipeline_status() {
   echo "=== D004 Pipeline Status (Sprint 6 COMPLETE — Sprint 7: E2E live-fixture run) ==="
   echo ""
@@ -342,4 +367,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress"
