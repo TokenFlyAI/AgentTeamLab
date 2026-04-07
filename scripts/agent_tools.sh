@@ -332,7 +332,7 @@ add_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 6 COMPLETE — Sprint 7: E2E live-fixture run) ==="
+  echo "=== D004 Pipeline Status (Sprint 6 COMPLETE — Sprint 7: Live pipeline run + verification) ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
@@ -359,12 +359,20 @@ pipeline_status() {
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
-  echo "Sprint 6 Readiness:"
+  echo "Sprint 6 Infrastructure (all complete):"
   _check_file "T814 normalization report (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/live_market_normalization_report.md"
   _check_file "T815 cluster stability audit (ivan)" "${PLANET_DIR:-${_AGENTS}/..}/output/ivan/cluster_stability_audit.md"
   _check_file "T817 replay harness (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/t817/replay_report.json"
   _check_file "T818 QA acceptance gates (tina)" "${PLANET_DIR:-${_AGENTS}/..}/output/tina/sprint6_qa_acceptance_gates.md"
   _check_file "T819 readiness dashboard (charlie)" "${PLANET_DIR:-${_AGENTS}/..}/output/charlie/sprint6_readiness_dashboard.html"
+  echo ""
+  echo "Sprint 7 Live Pipeline Run (T851-T854):"
+  _check_file "T851 retro report (alice)" "${PLANET_DIR:-${_AGENTS}/..}/output/alice/sprint7_retro.md"
+  _check_file "T852 E2E run with live fixtures (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/sprint7_e2e_run.md"
+  _check_file "T853 replay harness live signals (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/sprint7_replay_live.md"
+  _check_file "T854 velocity metrics (sam)" "${PLANET_DIR:-${_AGENTS}/..}/output/sam/sprint7_metrics.md"
+  echo ""
+  echo "Blocker: T236 (Kalshi API credentials) — live trading pending"
 }
 
 # ── Logging ──────────────────────────────────────────────────────────────────

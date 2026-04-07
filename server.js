@@ -969,7 +969,7 @@ function findTaskById(id, options) {
   const activeTask = cached("task_board", 10_000, () => parseTaskBoard()).find((t) => String(t.id) === String(id));
   if (activeTask) return activeTask;
   if (!includeArchive) return null;
-  return parseTaskArchive().find((t) => String(t.id) === String(id)) || null;
+  return cached("task_archive", 30_000, () => parseTaskArchive()).find((t) => String(t.id) === String(id)) || null;
 }
 
 function archiveDoneTasks() {
@@ -2538,7 +2538,7 @@ async function handleRequest(req, res) {
 
     // Include archived done tasks if requested
     if (includeArchive) {
-      taskList.push(...parseTaskArchive().map((t) => ({
+      taskList.push(...cached("task_archive", 30_000, () => parseTaskArchive()).map((t) => ({
         ...t,
         id: parseInt(t.id, 10) || t.id,
         notesList: (t.notes || "").split(" ;; ").filter(Boolean),
@@ -2842,7 +2842,7 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/tasks/archive") {
-    const tasks = parseTaskArchive().map((t) => ({
+    const tasks = cached("task_archive", 30_000, () => parseTaskArchive()).map((t) => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -2859,6 +2859,8 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/tasks/archive") {
     let archived = 0;
     await withTaskLock(() => { archived = archiveDoneTasks(); });
+    cacheInvalidate("task_archive");
+    cacheInvalidate("task_board");
     return json(res, { ok: true, archived });
   }
 
@@ -3477,33 +3479,34 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/stats") {
-    const agentNames = listAgentNames();
-    const stats = agentNames.map((name) => ({
-      agent: name,
-      ...getAgentCostFromLogs(name, 7),
+    return json(res, cached("stats_7d", 60_000, () => {
+      const agentNames = listAgentNames();
+      const stats = agentNames.map((name) => ({
+        agent: name,
+        ...getAgentCostFromLogs(name, 7),
+      }));
+      const totals = stats.reduce(
+        (acc, s) => ({
+          totalCost: Math.round((acc.totalCost + s.totalCost) * 100) / 100,
+          totalCycles: acc.totalCycles + s.cycles,
+        }),
+        { totalCost: 0, totalCycles: 0 }
+      );
+      const cycles_per_agent = {};
+      const cost_per_agent = {};
+      stats.forEach((s) => {
+        cycles_per_agent[s.agent] = s.cycles;
+        cost_per_agent[s.agent] = s.totalCost;
+      });
+      return {
+        agents: stats,
+        totals,
+        total_cycles: totals.totalCycles,
+        total_cost: totals.totalCost,
+        cycles_per_agent,
+        cost_per_agent,
+      };
     }));
-    const totals = stats.reduce(
-      (acc, s) => ({
-        totalCost: Math.round((acc.totalCost + s.totalCost) * 100) / 100,
-        totalCycles: acc.totalCycles + s.cycles,
-      }),
-      { totalCost: 0, totalCycles: 0 }
-    );
-    // Build per-agent maps for frontend charts
-    const cycles_per_agent = {};
-    const cost_per_agent = {};
-    stats.forEach((s) => {
-      cycles_per_agent[s.agent] = s.cycles;
-      cost_per_agent[s.agent] = s.totalCost;
-    });
-    return json(res, {
-      agents: stats,
-      totals,
-      total_cycles: totals.totalCycles,
-      total_cost: totals.totalCost,
-      cycles_per_agent,
-      cost_per_agent,
-    });
   }
 
   if (method === "GET" && pathname === "/api/digest") {
