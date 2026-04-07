@@ -447,7 +447,9 @@ if tasks:
         out.append("  T{} [{}] {}: {}".format(t.get("id",""), t.get("status",""), t.get("priority","medium"), t.get("title","")))
         desc = (t.get("description") or "").strip()
         if desc:
-            out.append("    {}".format(desc))
+            # Truncate long descriptions (D004 is 2000+ chars) — agents read full spec from knowledge.md
+            desc_preview = desc[:200] + "…" if len(desc) > 200 else desc
+            out.append("    {}".format(desc_preview))
 else:
     out.append("**Your open tasks**: none assigned")
 out.append("")

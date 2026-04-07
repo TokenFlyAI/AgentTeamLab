@@ -2200,7 +2200,14 @@ async function handleRequest(req, res) {
     const allTasks = cached("task_board", 10_000, () => parseTaskBoard());
     const tasks = allTasks
       .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
-               && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()));
+               && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()))
+      .map(t => ({
+        ...t,
+        // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
+        description: t.description && t.description.length > 300
+          ? t.description.slice(0, 300) + "…"
+          : t.description,
+      }));
 
     // Recent team channel (cached 20s — new posts appear within one agent cycle anyway)
     const teamChannel = cached("team_channel", 20_000, () => {
