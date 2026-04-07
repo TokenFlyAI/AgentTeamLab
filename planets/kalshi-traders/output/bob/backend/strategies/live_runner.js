@@ -10,6 +10,7 @@
 const fs = require("fs");
 const path = require("path");
 const { KalshiClient } = require("../kalshi_client");
+const { computeMidPrice, normalizeMarket } = require("../lib/live_market_normalizer");
 const { SignalEngine } = require("./signal_engine");
 const { PositionSizer } = require("./position_sizer");
 const { MeanReversionStrategy } = require("./strategies/mean_reversion");
@@ -151,44 +152,20 @@ const FALLBACK_MARKETS = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-function computeMidPrice(bid, ask) {
-  if (bid != null && ask != null) return Math.round((bid + ask) / 2);
-  if (bid != null) return bid;
-  if (ask != null) return ask;
-  return 50;
-}
-
-function normalizeMarket(m) {
-  const yesMid = computeMidPrice(m.yes_bid, m.yes_ask);
-  const noMid = computeMidPrice(m.no_bid, m.no_ask);
-  return {
-    id: m.id || m.ticker,
-    ticker: m.ticker,
-    title: m.title,
-    category: m.category || "Unknown",
-    status: m.status || "active",
-    yes_bid: m.yes_bid,
-    yes_ask: m.yes_ask,
-    no_bid: m.no_bid,
-    no_ask: m.no_ask,
-    yes_mid: yesMid,
-    no_mid: noMid,
-    volume: m.volume || 0,
-    volume24h: m.volume || 0,
-    open_interest: m.open_interest || 0,
-  };
-}
-
 async function fetchMarkets(client) {
   if (USE_MOCK_FALLBACK) {
     console.log("[FALLBACK] No KALSHI_API_KEY set — using realistic mock market data");
-    return FALLBACK_MARKETS.map(normalizeMarket);
+    return FALLBACK_MARKETS.map((market) =>
+      normalizeMarket(market, { strict: true, source: "fallback_live_runner" })
+    );
   }
 
   const response = await client.getMarkets({ status: "active", limit: 20 });
   const markets = response.data?.markets || [];
   console.log(`Fetched ${markets.length} live markets from Kalshi`);
-  return markets.map(normalizeMarket);
+  return markets.map((market) =>
+    normalizeMarket(market, { strict: true, source: "kalshi_api:live_runner" })
+  );
 }
 
 async function fetchCandles(client, ticker, currentPriceHint) {

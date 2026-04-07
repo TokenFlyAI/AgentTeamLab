@@ -14,10 +14,12 @@
     "strategies:snapshot": "node strategies/cli.js snapshot",
     "strategies:list": "node strategies/cli.js list",
     "strategies:live": "node strategies/live_runner.js",
+    "verify:live-normalization": "node scripts/verify_live_market_normalization.js",
+    "test:live-normalization": "node tests/unit/live_market_normalizer.test.js",
     "cli:markets": "node kalshi_data_fetcher.js markets",
     "cli:categories": "node kalshi_data_fetcher.js categories",
     "cli:stats": "node kalshi_data_fetcher.js stats",
-    "test": "node smoke_test.js && node tests/unit/screener/screener.test.js"
+    "test": "node smoke_test.js && node tests/unit/screener/screener.test.js && node tests/unit/live_market_normalizer.test.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

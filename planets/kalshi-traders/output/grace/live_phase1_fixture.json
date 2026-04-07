@@ -1,0 +1,202 @@
+{
+  "generatedAt": "2026-04-07T15:10:00.000Z",
+  "task": "T816",
+  "phase": "Sprint 6 Phase 1 Live-Data Fixture",
+  "source": "grace_t816_live_fixture",
+  "notes": "Sanitized Kalshi-shaped fixture pack for Phase 1 validation. Numeric thresholds are intentionally plausible for live-readiness checks.",
+  "cases": [
+    {
+      "name": "crypto_middle_range_excluded",
+      "expectedOutcome": "excluded_middle_range",
+      "input": {
+        "id": "live-phase1-001",
+        "ticker": "KXBTC-26DEC31-T110000",
+        "title": "Will Bitcoin close above $110,000 on Dec 31, 2026?",
+        "category": "Crypto",
+        "status": "active",
+        "yes_bid": 42,
+        "yes_ask": 46,
+        "no_bid": 54,
+        "no_ask": 58,
+        "volume": 125000,
+        "open_interest": 4800,
+        "series_ticker": "KXBTC-26DEC31",
+        "event_ticker": "KXBTC",
+        "floor_strike": 110000,
+        "strike_type": "greater_than",
+        "close_date": "2026-12-31T15:00:00Z"
+      }
+    },
+    {
+      "name": "economics_low_yes_qualifies",
+      "expectedOutcome": "qualifying",
+      "input": {
+        "marketId": "live-phase1-002",
+        "marketTicker": "KXINF-26JUN-T030",
+        "name": "Will CPI print above 3.0% in June 2026?",
+        "marketCategory": "Economics",
+        "marketStatus": "open",
+        "yesBid": "27",
+        "yesAsk": "31",
+        "volume24h": "88000",
+        "openInterest": "7000",
+        "closeDate": "2026-06-12T15:00:00Z"
+      }
+    },
+    {
+      "name": "unemployment_high_yes_qualifies",
+      "expectedOutcome": "qualifying",
+      "input": {
+        "id": "live-phase1-003",
+        "ticker": "KXUNEMP-26SEP05-T072",
+        "title": "Will US unemployment be above 7.2% in September 2026?",
+        "category": "Economics",
+        "status": "active",
+        "yes_bid": 72,
+        "yes_ask": 76,
+        "no_bid": 24,
+        "no_ask": 28,
+        "volume": 143500,
+        "open_interest": 6200,
+        "close_date": "2026-09-05T15:00:00Z"
+      }
+    },
+    {
+      "name": "btc_dominance_low_yes_qualifies",
+      "expectedOutcome": "qualifying",
+      "input": {
+        "id": "live-phase1-004",
+        "ticker": "KXBTCDOM-26OCT15-T068",
+        "title": "Will Bitcoin dominance close above 68% on Oct 15, 2026?",
+        "category": "Crypto",
+        "status": "active",
+        "yes_bid": 24,
+        "yes_ask": 28,
+        "no_bid": 72,
+        "no_ask": 76,
+        "volume": 114300,
+        "open_interest": 5500,
+        "close_date": "2026-10-15T15:00:00Z"
+      }
+    },
+    {
+      "name": "solana_low_yes_qualifies",
+      "expectedOutcome": "qualifying",
+      "input": {
+        "id": "live-phase1-005",
+        "ticker": "KXSOL-27APR16-T450",
+        "title": "Will Solana trade above $450 on Apr 16, 2027?",
+        "category": "Crypto",
+        "status": "active",
+        "yes_bid": 18,
+        "yes_ask": 22,
+        "no_bid": 78,
+        "no_ask": 82,
+        "volume": 96750,
+        "open_interest": 4100,
+        "close_date": "2027-04-16T15:00:00Z"
+      }
+    },
+    {
+      "name": "fed_middle_range_excluded",
+      "expectedOutcome": "excluded_middle_range",
+      "input": {
+        "marketId": "live-phase1-006",
+        "marketTicker": "KXFED-26DEC16-CUT075",
+        "name": "Will the Fed cut rates by at least 75 bps before Dec 16, 2026?",
+        "marketCategory": "Rates",
+        "marketStatus": "open",
+        "yesBid": "48",
+        "yesAsk": "52",
+        "noBid": "48",
+        "noAsk": "52",
+        "volume24h": "134200",
+        "openInterest": "9800",
+        "closeDate": "2026-12-16T19:00:00Z"
+      }
+    },
+    {
+      "name": "weather_low_volume_excluded",
+      "expectedOutcome": "excluded_low_volume",
+      "input": {
+        "id": "live-phase1-007",
+        "ticker": "KXRAIN-LA-26JAN15-T005",
+        "title": "Will downtown Los Angeles record more than 5 inches of rain by Jan 15, 2026?",
+        "category": "Weather",
+        "status": "active",
+        "yes_bid": 73,
+        "yes_ask": 77,
+        "no_bid": 23,
+        "no_ask": 27,
+        "volume": 8500,
+        "open_interest": 1200,
+        "close_date": "2026-01-15T19:00:00Z"
+      }
+    },
+    {
+      "name": "dogecoin_extreme_low_review",
+      "expectedOutcome": "extreme_ratio",
+      "input": {
+        "id": "live-phase1-008",
+        "ticker": "KXDOGE-26DEC31-T150",
+        "title": "Will Dogecoin trade above $1.50 on Dec 31, 2026?",
+        "category": "Crypto",
+        "status": "active",
+        "yes_bid": 10,
+        "yes_ask": 14,
+        "no_bid": 86,
+        "no_ask": 90,
+        "volume": 90500,
+        "open_interest": 5100,
+        "close_date": "2026-12-31T15:00:00Z"
+      }
+    },
+    {
+      "name": "house_extreme_high_review",
+      "expectedOutcome": "extreme_ratio",
+      "input": {
+        "id": "live-phase1-009",
+        "ticker": "KXHOUSE-26NOV03-REP",
+        "title": "Will Republicans control the House after Nov 3, 2026?",
+        "category": "Politics",
+        "status": "active",
+        "yes_bid": 88,
+        "yes_ask": 92,
+        "no_bid": 8,
+        "no_ask": 12,
+        "volume": 151250,
+        "open_interest": 11000,
+        "close_date": "2026-11-03T23:00:00Z"
+      }
+    },
+    {
+      "name": "invalid_missing_title",
+      "expectedOutcome": "rejected_invalid_market",
+      "input": {
+        "id": "live-phase1-010",
+        "ticker": "BAD-NO-TITLE",
+        "category": "Economics",
+        "yes_bid": 26,
+        "yes_ask": 30,
+        "no_bid": 70,
+        "no_ask": 74,
+        "volume": 22000
+      },
+      "expectError": true
+    },
+    {
+      "name": "invalid_missing_yes_quote",
+      "expectedOutcome": "rejected_invalid_market",
+      "input": {
+        "id": "live-phase1-011",
+        "ticker": "BAD-NO-YES",
+        "title": "Will CPI print above 5.0% in January 2027?",
+        "category": "Economics",
+        "no_bid": 61,
+        "no_ask": 65,
+        "volume": 26000
+      },
+      "expectError": true
+    }
+  ]
+}

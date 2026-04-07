@@ -1,0 +1,41 @@
+{
+  "task": "T816",
+  "phase": "Sprint 6 Phase 1 Live-Data Fixture",
+  "expectedSummary": {
+    "total_markets": 9,
+    "after_volume_filter": 8,
+    "qualifying_markets": 4,
+    "excluded_low_volume": 1,
+    "excluded_middle_range": 2,
+    "extreme_ratio": 2,
+    "rejected_invalid_markets": 2
+  },
+  "expectedQualifyingTickers": [
+    "KXINF-26JUN-T030",
+    "KXUNEMP-26SEP05-T072",
+    "KXBTCDOM-26OCT15-T068",
+    "KXSOL-27APR16-T450"
+  ],
+  "expectedExcluded": [
+    {
+      "ticker": "KXBTC-26DEC31-T110000",
+      "reason": "middle_range_excluded"
+    },
+    {
+      "ticker": "KXFED-26DEC16-CUT075",
+      "reason": "middle_range_excluded"
+    },
+    {
+      "ticker": "KXDOGE-26DEC31-T150",
+      "reason": "extreme_ratio"
+    },
+    {
+      "ticker": "KXHOUSE-26NOV03-REP",
+      "reason": "extreme_ratio"
+    }
+  ],
+  "expectedRejectedTickers": [
+    "BAD-NO-TITLE",
+    "BAD-NO-YES"
+  ]
+}

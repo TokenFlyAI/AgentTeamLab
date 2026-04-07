@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-04-07T14:49:20.803Z",
+  "source": "bob_t814_live_market_normalization_fixture",
+  "cases": [
+    {
+      "name": "snake_case_full_market",
+      "input": {
+        "id": "live-1",
+        "ticker": "KXBTC-26DEC31-T110000",
+        "title": "Will Bitcoin close above $110,000 on Dec 31, 2026?",
+        "category": "Crypto",
+        "status": "active",
+        "yes_bid": 42,
+        "yes_ask": 46,
+        "no_bid": 54,
+        "no_ask": 58,
+        "volume": 125000,
+        "open_interest": 4800,
+        "series_ticker": "KXBTC-26DEC31",
+        "event_ticker": "KXBTC",
+        "floor_strike": 110000,
+        "strike_type": "greater_than",
+        "close_date": "2026-12-31T15:00:00Z"
+      }
+    },
+    {
+      "name": "camel_case_partial_market",
+      "input": {
+        "marketId": "live-2",
+        "marketTicker": "KXINF-26JUN-T030",
+        "name": "Will CPI print above 3.0% in June 2026?",
+        "marketCategory": "Economics",
+        "marketStatus": "open",
+        "yesBid": "31",
+        "yesAsk": "35",
+        "volume24h": "88000",
+        "openInterest": "7000",
+        "closeDate": "2026-06-12T15:00:00Z"
+      }
+    },
+    {
+      "name": "malformed_missing_title",
+      "input": {
+        "ticker": "BAD-1",
+        "yes_bid": 20,
+        "yes_ask": 25
+      },
+      "expectError": true
+    }
+  ]
+}

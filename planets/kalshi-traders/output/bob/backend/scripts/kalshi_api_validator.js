@@ -91,34 +91,7 @@ async function main() {
     const { SignalEngine } = require(path.join(BACKEND_DIR, "strategies", "signal_engine"));
     const { PositionSizer } = require(path.join(BACKEND_DIR, "strategies", "position_sizer"));
     const { MeanReversionStrategy } = require(path.join(BACKEND_DIR, "strategies", "strategies", "mean_reversion"));
-
-    function computeMidPrice(bid, ask) {
-      if (bid != null && ask != null) return Math.round((bid + ask) / 2);
-      if (bid != null) return bid;
-      if (ask != null) return ask;
-      return 50;
-    }
-
-    function normalizeMarket(m) {
-      const yesMid = computeMidPrice(m.yes_bid, m.yes_ask);
-      const noMid = computeMidPrice(m.no_bid, m.no_ask);
-      return {
-        id: m.id || m.ticker,
-        ticker: m.ticker,
-        title: m.title,
-        category: m.category || "Unknown",
-        status: m.status || "active",
-        yes_bid: m.yes_bid,
-        yes_ask: m.yes_ask,
-        no_bid: m.no_bid,
-        no_ask: m.no_ask,
-        yes_mid: yesMid,
-        no_mid: noMid,
-        volume: m.volume || 0,
-        volume24h: m.volume || 0,
-        open_interest: m.open_interest || 0,
-      };
-    }
+    const { normalizeMarket } = require(path.join(BACKEND_DIR, "lib", "live_market_normalizer"));
 
     function computeHistoryMetrics(candles) {
       if (!candles || candles.length < 2) return { mean: 50, stddev: 10, priceChange: 0 };
@@ -128,7 +101,9 @@ async function main() {
       return { mean, stddev: Math.sqrt(variance), priceChange: prices[prices.length - 1] - prices[0] };
     }
 
-    const normalized = markets.slice(0, 5).map(normalizeMarket);
+    const normalized = markets.slice(0, 5).map((market) =>
+      normalizeMarket(market, { strict: true, source: "kalshi_api:validator" })
+    );
     const enrichedMarkets = [];
     for (const market of normalized) {
       const to = Date.now();

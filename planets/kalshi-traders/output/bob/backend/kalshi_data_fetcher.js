@@ -16,6 +16,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const { KalshiClient } = require("./kalshi_client");
+const { normalizeMarket, normalizeMarkets } = require("./lib/live_market_normalizer");
 
 // ---------------------------------------------------------------------------
 // Data Fetcher Class
@@ -114,8 +115,21 @@ class KalshiDataFetcher {
       cursor = response.data?.cursor;
     } while (cursor);
 
-    this._setCached(cacheKey, allMarkets);
-    return allMarkets;
+    const { normalized, errors } = normalizeMarkets(allMarkets, {
+      strict: opts.strict !== false,
+      source: "kalshi_api:getMarkets",
+    });
+
+    if (errors.length > 0) {
+      const summary = errors.map((entry) => `${entry.ticker}: ${entry.error}`).join("; ");
+      if (opts.strict !== false) {
+        throw new Error(`Market normalization failed: ${summary}`);
+      }
+      console.warn(`[KalshiDataFetcher] Skipped ${errors.length} malformed market(s): ${summary}`);
+    }
+
+    this._setCached(cacheKey, normalized);
+    return normalized;
   }
 
   /**
@@ -131,7 +145,13 @@ class KalshiDataFetcher {
 
     if (!market) {
       const response = await this.client.getMarket(ticker);
-      market = response.data?.market;
+      const rawMarket = response.data?.market;
+      market = rawMarket
+        ? normalizeMarket(rawMarket, {
+            strict: opts.strict !== false,
+            source: "kalshi_api:getMarket",
+          })
+        : rawMarket;
       if (market) {
         this._setCached(cacheKey, market);
       }

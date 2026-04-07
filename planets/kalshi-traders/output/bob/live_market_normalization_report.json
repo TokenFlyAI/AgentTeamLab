@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-04-07T14:49:20.803Z",
+  "task": "T814",
+  "artifactPaths": {
+    "fixture": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/live_market_normalization_fixture.json",
+    "jsonReport": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/live_market_normalization_report.json",
+    "markdownReport": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/live_market_normalization_report.md"
+  },
+  "inputs": {
+    "fixture": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/live_market_normalization_fixture.json",
+    "gracePhase1Reference": {
+      "available": true,
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets.json",
+      "mtime": "2026-04-07T06:25:48.160Z",
+      "generatedAt": "2026-04-07T06:25:48.158Z",
+      "phase": "Sprint 4 Phase 1",
+      "qualifyingMarkets": 50
+    }
+  },
+  "assumptions": [
+    "Assume Kalshi contract payout remains 100 cents ($1) per contract until Founder confirms live contract metadata.",
+    "Accept both snake_case and camelCase market fields because prior internal adapters emit both shapes.",
+    "Derive NO-side bid/ask from YES-side ask/bid complement only when explicit NO-side quotes are missing."
+  ],
+  "fixtureResults": {
+    "passed": [
+      {
+        "name": "snake_case_full_market",
+        "ticker": "KXBTC-26DEC31-T110000",
+        "yes_mid": 44,
+        "no_mid": 56,
+        "warnings": []
+      },
+      {
+        "name": "camel_case_partial_market",
+        "ticker": "KXINF-26JUN-T030",
+        "yes_mid": 33,
+        "no_mid": 67,
+        "warnings": [
+          "Derived missing NO-side quotes from YES-side complement assumption"
+        ]
+      },
+      {
+        "name": "malformed_missing_title",
+        "expectedError": "Market BAD-1 missing title"
+      }
+    ],
+    "failed": []
+  },
+  "batchResults": {
+    "normalizedCount": 2,
+    "errorCount": 2,
+    "errors": [
+      {
+        "ticker": "BAD-1",
+        "error": "Market BAD-1 missing title"
+      },
+      {
+        "ticker": "BAD-2",
+        "error": "Market BAD-2 missing core fields: yes_quote"
+      }
+    ]
+  },
+  "summary": {
+    "passedCases": 3,
+    "failedCases": 0,
+    "malformedPayloadsRejected": 2,
+    "verifierStatus": "pass"
+  }
+}

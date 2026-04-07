@@ -16,6 +16,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { normalizeMarkets } = require(path.join(__dirname, "..", "bob", "backend", "lib", "live_market_normalizer"));
 
 // Configuration
 const CONFIG = {
@@ -34,6 +35,9 @@ const CONFIG = {
   // Preferred handoff paths for Sprint 4 dry-run pipeline
   inputPath: path.join(__dirname, "../../agents/bob/output/mock_kalshi_markets.json"),
   outputPath: path.join(__dirname, "filtered_markets.json"),
+  task: "T579",
+  phase: "Sprint 4 Phase 1",
+  source: "market_filter_default",
 };
 
 // Expanded fallback markets for testing (when API unavailable)
@@ -303,16 +307,113 @@ function filterByYesNoRatio(markets) {
   return results;
 }
 
+function loadMarketsFromFile(filePath) {
+  const raw = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  if (Array.isArray(raw.markets)) {
+    return raw.markets;
+  }
+
+  if (Array.isArray(raw.cases)) {
+    return raw.cases.map((entry) => entry.input);
+  }
+
+  throw new Error(`Unsupported market fixture shape in ${filePath}`);
+}
+
+function normalizeInputMarkets(rawMarkets, options = {}) {
+  const strict = options.strict !== false;
+  return normalizeMarkets(rawMarkets, {
+    strict,
+    source: options.source || CONFIG.source,
+  });
+}
+
+function buildOutput({
+  inputPath,
+  outputPath,
+  task,
+  phase,
+  source,
+  markets,
+  volumeFiltered,
+  ratioFiltered,
+  normalizationErrors,
+}) {
+  const qualifying = ratioFiltered.filter((market) => !market.filtered);
+  const excludedMiddle = ratioFiltered.filter((market) => market.filtered && market.filter_reason === "excluded_range");
+  const extremeRatio = ratioFiltered.filter((market) => market.filtered && market.filter_reason === "extreme_ratio");
+
+  return {
+    generated_at: new Date().toISOString(),
+    task,
+    phase,
+    source,
+    config: {
+      minVolume: CONFIG.minVolume,
+      targetRanges: CONFIG.targetRanges,
+      excludedRange: CONFIG.excludedRange,
+      inputPath,
+      outputPath,
+    },
+    summary: {
+      total_markets: markets.length,
+      after_volume_filter: volumeFiltered.length,
+      qualifying_markets: qualifying.length,
+      excluded_low_volume: markets.length - volumeFiltered.length,
+      excluded_middle_range: excludedMiddle.length,
+      extreme_ratio: extremeRatio.length,
+      rejected_invalid_markets: normalizationErrors.length,
+    },
+    qualifying_markets: qualifying.map((market) => ({
+      id: market.id,
+      ticker: market.ticker,
+      title: market.title,
+      category: market.category,
+      volume: market.volume,
+      yes_bid: market.yes_bid,
+      yes_ask: market.yes_ask,
+      no_bid: market.no_bid,
+      no_ask: market.no_ask,
+      yes_ratio: parseFloat(market.yes_ratio.toFixed(2)),
+      recommendation: market.recommendation,
+    })),
+    excluded_markets: [
+      ...excludedMiddle.map((market) => ({
+        ticker: market.ticker,
+        title: market.title,
+        reason: "middle_range_excluded",
+        yes_ratio: parseFloat(market.yes_ratio.toFixed(2)),
+      })),
+      ...extremeRatio.map((market) => ({
+        ticker: market.ticker,
+        title: market.title,
+        reason: "extreme_ratio",
+        yes_ratio: parseFloat(market.yes_ratio.toFixed(2)),
+      })),
+    ],
+    rejected_markets: normalizationErrors,
+    next_phase: {
+      recipient: "Ivan",
+      task: "Clustering analysis on qualifying markets",
+      markets_count: qualifying.length,
+    },
+  };
+}
+
 /**
  * Fetch markets from Kalshi API or use fallback
  * T579: Prefer Bob's mock_kalshi_markets.json handoff, then fall back to API/mock client
  */
-async function fetchMarkets() {
-  if (fs.existsSync(CONFIG.inputPath)) {
-    const raw = JSON.parse(fs.readFileSync(CONFIG.inputPath, "utf8"));
-    const markets = Array.isArray(raw) ? raw : raw.markets;
+async function fetchMarkets(inputPath = CONFIG.inputPath) {
+  if (fs.existsSync(inputPath)) {
+    const markets = loadMarketsFromFile(inputPath);
     if (Array.isArray(markets) && markets.length > 0) {
-      console.log(`Loaded ${markets.length} markets from ${CONFIG.inputPath}`);
+      console.log(`Loaded ${markets.length} markets from ${inputPath}`);
       return markets;
     }
   }
@@ -362,19 +463,30 @@ async function fetchMarkets() {
  * Main filtering pipeline
  */
 async function runFilter() {
-  console.log("=== Market Filtering Engine — T579 Sprint 4 Phase 1 ===\n");
+  const options = arguments[0] || {};
+  const inputPath = options.inputPath || CONFIG.inputPath;
+  const outputPath = options.outputPath || CONFIG.outputPath;
+  const task = options.task || CONFIG.task;
+  const phase = options.phase || CONFIG.phase;
+  const source = options.source || CONFIG.source;
+
+  console.log(`=== Market Filtering Engine — ${task} ${phase} ===\n`);
   
   // Step 1: Fetch markets
   console.log("Step 1: Fetching markets...");
-  const markets = await fetchMarkets();
-  console.log(`  Total markets: ${markets.length}\n`);
+  const rawMarkets = await fetchMarkets(inputPath);
+  console.log(`  Raw markets: ${rawMarkets.length}`);
+
+  const { normalized, errors } = normalizeInputMarkets(rawMarkets, { source });
+  console.log(`  Normalized valid markets: ${normalized.length}`);
+  console.log(`  Rejected invalid markets: ${errors.length}\n`);
   
   // Step 2: Filter by volume
   console.log("Step 2: Filtering by volume...");
   console.log(`  Minimum volume: ${CONFIG.minVolume.toLocaleString()}`);
-  const volumeFiltered = filterByVolume(markets);
+  const volumeFiltered = filterByVolume(normalized);
   console.log(`  After volume filter: ${volumeFiltered.length} markets`);
-  console.log(`  Excluded: ${markets.length - volumeFiltered.length} markets (low volume)\n`);
+  console.log(`  Excluded: ${normalized.length - volumeFiltered.length} markets (low volume)\n`);
   
   // Step 3: Filter by YES/NO ratio
   console.log("Step 3: Filtering by YES/NO ratio...");
@@ -392,56 +504,23 @@ async function runFilter() {
   console.log(`  Extreme ratios (manual review): ${extremeRatio.length}\n`);
   
   // Step 4: Build output
-  const output = {
-    generated_at: new Date().toISOString(),
-    task: "T579",
-    phase: "Sprint 4 Phase 1",
-    config: CONFIG,
-    summary: {
-      total_markets: markets.length,
-      after_volume_filter: volumeFiltered.length,
-      qualifying_markets: qualifying.length,
-      excluded_low_volume: markets.length - volumeFiltered.length,
-      excluded_middle_range: excludedMiddle.length,
-      extreme_ratio: extremeRatio.length,
-    },
-    qualifying_markets: qualifying.map(m => ({
-      id: m.id,
-      ticker: m.ticker,
-      title: m.title,
-      category: m.category,
-      volume: m.volume,
-      yes_bid: m.yes_bid,
-      yes_ask: m.yes_ask,
-      no_bid: m.no_bid,
-      no_ask: m.no_ask,
-      yes_ratio: parseFloat(m.yes_ratio.toFixed(2)),
-      recommendation: m.recommendation,
-    })),
-    excluded_markets: [
-      ...excludedMiddle.map(m => ({
-        ticker: m.ticker,
-        reason: "middle_range_excluded",
-        yes_ratio: parseFloat(m.yes_ratio.toFixed(2)),
-      })),
-      ...extremeRatio.map(m => ({
-        ticker: m.ticker,
-        reason: "extreme_ratio",
-        yes_ratio: parseFloat(m.yes_ratio.toFixed(2)),
-      })),
-    ],
-    next_phase: {
-      recipient: "Ivan (T580)",
-      task: "Clustering analysis on qualifying markets",
-      markets_count: qualifying.length,
-    },
-  };
+  const output = buildOutput({
+    inputPath,
+    outputPath,
+    task,
+    phase,
+    source,
+    markets: normalized,
+    volumeFiltered,
+    ratioFiltered,
+    normalizationErrors: errors,
+  });
   
   // Step 5: Write output
   console.log("Step 4: Writing output...");
-  fs.mkdirSync(path.dirname(CONFIG.outputPath), { recursive: true });
-  fs.writeFileSync(CONFIG.outputPath, JSON.stringify(output, null, 2));
-  console.log(`  Output written to: ${CONFIG.outputPath}\n`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+  console.log(`  Output written to: ${outputPath}\n`);
   
   // Print summary table
   console.log("=== QUALIFYING MARKETS ===");
@@ -452,7 +531,7 @@ async function runFilter() {
   }
   
   console.log("\n=== SUMMARY ===");
-  console.log(`Total markets analyzed: ${markets.length}`);
+  console.log(`Total markets analyzed: ${normalized.length}`);
   console.log(`Qualifying for clustering: ${qualifying.length}`);
   console.log("Next: Hand off to Ivan (T580) for clustering analysis");
   
@@ -472,4 +551,12 @@ if (require.main === module) {
     });
 }
 
-module.exports = { runFilter, filterByVolume, filterByYesNoRatio, calculateYesRatio };
+module.exports = {
+  buildOutput,
+  calculateYesRatio,
+  filterByVolume,
+  filterByYesNoRatio,
+  loadMarketsFromFile,
+  normalizeInputMarkets,
+  runFilter,
+};
