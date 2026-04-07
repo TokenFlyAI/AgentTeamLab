@@ -2826,6 +2826,7 @@ async function handleRequest(req, res) {
     try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
     const filename = `${nowStamp()}_from_${from}.md`;
     try { fs.writeFileSync(path.join(dir, filename), body.message); } catch (e) { return json(res, { error: "failed to write message" }, 500); }
+    cacheInvalidate("team_channel");
     return json(res, { ok: true, filename });
   }
 
@@ -2868,6 +2869,7 @@ async function handleRequest(req, res) {
     try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
     const filename = `${nowStamp()}_announcement.md`;
     try { fs.writeFileSync(path.join(dir, filename), content); } catch (e) { return json(res, { error: "failed to write announcement" }, 500); }
+    cacheInvalidate("announcements");
     return json(res, { ok: true, filename });
   }
 
@@ -3145,6 +3147,7 @@ async function handleRequest(req, res) {
     lines.splice(insertAt, 0, newRow);
     try {
       fs.writeFileSync(CONSENSUS_FILE, lines.join("\n"));
+      cacheInvalidate("consensus");
       return json(res, { ok: true, id: newId }, 201);
     } catch (e) {
       console.error("[POST /api/consensus] error:", e);
@@ -3169,6 +3172,7 @@ async function handleRequest(req, res) {
     if (filtered.length === lines.length) return notFound(res, "entry not found");
     try {
       fs.writeFileSync(CONSENSUS_FILE, filtered.join("\n"));
+      cacheInvalidate("consensus");
       // Return as number if purely numeric, otherwise string
       const deletedVal = /^\d+$/.test(targetId) ? parseInt(targetId, 10) : targetId;
       return json(res, { ok: true, deleted: deletedVal });
