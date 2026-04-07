@@ -1,0 +1,101 @@
+{
+  "validator": "qa_signal_validator.js",
+  "input": "../../agents/bob/output/trade_signals.json",
+  "timestamp": "2026-04-04T09:00:44.717Z",
+  "verdict": "PASS",
+  "signals_analyzed": 47,
+  "signal_breakdown": {
+    "entries": 25,
+    "exits": 16,
+    "stops": 6
+  },
+  "unique_pairs": 4,
+  "config_used": {
+    "zScoreEntry": 1.2,
+    "zScoreExit": 0.5,
+    "zScoreStop": 3,
+    "lookbackPeriod": 10,
+    "minLookback": 5,
+    "maxPositionSize": 5,
+    "basePositionSize": 2,
+    "confidenceScaling": true,
+    "minConfidence": 0.65,
+    "maxOpenPositions": 6,
+    "maxDrawdownPct": 10,
+    "initialCapital": 100,
+    "priceHistoryLength": 50,
+    "tradingFee": 0.01
+  },
+  "checks": [
+    {
+      "name": "Structure: top-level fields",
+      "status": "PASS",
+      "detail": "All 5 required fields present"
+    },
+    {
+      "name": "Structure: signal count matches",
+      "status": "PASS",
+      "detail": "Declared 47, actual 47"
+    },
+    {
+      "name": "Structure: signal fields",
+      "status": "PASS",
+      "detail": "All 47 signals have required fields"
+    },
+    {
+      "name": "Pairing: entry/exit balance",
+      "status": "WARN",
+      "detail": "3 imbalances: SOLW-26-JUN30-300|INXW-26-DEC31-7000: 1 unclosed; ETHW-26-JUN30-4K|FEDW-26-JUN-CUT: 1 unclosed; INXW-26-DEC31-7000|KXNF-20260501-T250000: 1 unclosed"
+    },
+    {
+      "name": "Z-Score: entry thresholds",
+      "status": "PASS",
+      "detail": "All entries have |z| >= 1.2"
+    },
+    {
+      "name": "Z-Score: exit consistency",
+      "status": "PASS",
+      "detail": "All exits have |z| <= 0.5 (mean reversion)"
+    },
+    {
+      "name": "Duplicates: no exact duplicates",
+      "status": "PASS",
+      "detail": "No duplicate signals found"
+    },
+    {
+      "name": "Duplicates: no over-represented pairs",
+      "status": "WARN",
+      "detail": "2 pairs with >5 entries: INXW-26-DEC31-7000|SOLW-26-JUN30-300(7), ETHW-26-JUN30-4K|FEDW-26-JUN-CUT(8)"
+    },
+    {
+      "name": "Diversity: multiple market pairs",
+      "status": "PASS",
+      "detail": "4 unique market pairs"
+    },
+    {
+      "name": "Confidence: entries meet minimum",
+      "status": "PASS",
+      "detail": "All entries have confidence >= 0.65"
+    },
+    {
+      "name": "Ordering: chronological per pair",
+      "status": "PASS",
+      "detail": "All signals chronologically ordered per pair"
+    },
+    {
+      "name": "Sizing: within max position",
+      "status": "PASS",
+      "detail": "All entries <= 5 contracts"
+    },
+    {
+      "name": "Anomaly: no extreme z-scores (>10)",
+      "status": "PASS",
+      "detail": "No anomalous z-scores detected"
+    }
+  ],
+  "summary": {
+    "pass": 11,
+    "fail": 0,
+    "warn": 2
+  }
+}

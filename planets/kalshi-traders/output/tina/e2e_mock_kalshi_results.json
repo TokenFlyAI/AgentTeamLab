@@ -1,0 +1,236 @@
+{
+  "test": "E2E Pipeline Test — Mock Kalshi API (T583)",
+  "agent": "tina",
+  "timestamp": "2026-04-04T19:31:58.217Z",
+  "summary": {
+    "pass": 41,
+    "fail": 0,
+    "warn": 0
+  },
+  "pipeline_trace": {
+    "filtered_markets": 5,
+    "clusters": 3,
+    "correlation_pairs": 3,
+    "arbitrage_opportunities": 1,
+    "signals": 6,
+    "trades": 3
+  },
+  "backtest": {
+    "winRate": 0.3333,
+    "totalPnl": -1.5166,
+    "maxDrawdownPct": 1.7,
+    "finalCapital": 98.48
+  },
+  "mock_data": {
+    "markets": 8,
+    "price_periods": 60,
+    "btc_eth_correlation": 0.4649
+  },
+  "details": [
+    {
+      "name": "Mock markets response has 8 markets",
+      "status": "PASS",
+      "detail": "Got: 8"
+    },
+    {
+      "name": "Markets have required Kalshi fields",
+      "status": "PASS",
+      "detail": "Checking ticker, title, yes_bid, yes_ask, volume, status, close_time"
+    },
+    {
+      "name": "Orderbook has yes/no sides",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Orderbook prices are valid (0-1)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Price data generated for 6 tickers",
+      "status": "PASS",
+      "detail": "Tickers: 6"
+    },
+    {
+      "name": "Each price series has 60 periods",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "All prices in valid range (1-99)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "BTC-ETH correlation > 0.3 (positive, divergence-adjusted)",
+      "status": "PASS",
+      "detail": "r = 0.465"
+    },
+    {
+      "name": "Filtered markets exclude low volume (<10K)",
+      "status": "PASS",
+      "detail": "MOONW excluded"
+    },
+    {
+      "name": "Filtered markets exclude middle range (40-60%)",
+      "status": "PASS",
+      "detail": "FEDW-HOLD excluded"
+    },
+    {
+      "name": "Filtered markets include high-volume + mispriced",
+      "status": "PASS",
+      "detail": "Kept: 5"
+    },
+    {
+      "name": "BTC-80K passes filter",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "ETH-5K passes filter",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "At least 1 cluster formed",
+      "status": "PASS",
+      "detail": "Clusters: Crypto, Economics, Climate"
+    },
+    {
+      "name": "Crypto cluster has >= 2 markets",
+      "status": "PASS",
+      "detail": "Crypto: 3"
+    },
+    {
+      "name": "Correlation pairs computed",
+      "status": "PASS",
+      "detail": "Pairs: 3"
+    },
+    {
+      "name": "At least 1 arbitrage opportunity detected",
+      "status": "PASS",
+      "detail": "Arb opps: 1"
+    },
+    {
+      "name": "All Pearson r in [-1, 1]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "BTC-ETH pair has positive correlation",
+      "status": "PASS",
+      "detail": "r = 0.4649"
+    },
+    {
+      "name": "Signals generated",
+      "status": "PASS",
+      "detail": "Count: 6"
+    },
+    {
+      "name": "Signal count = total_signals field",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Has entry signals",
+      "status": "PASS",
+      "detail": "Entries: 3"
+    },
+    {
+      "name": "Has exit/stop signals",
+      "status": "PASS",
+      "detail": "Exits: 3"
+    },
+    {
+      "name": "All signals have required fields",
+      "status": "PASS",
+      "detail": "All 9 fields present"
+    },
+    {
+      "name": "No anomalous z-scores (|z| > 10)",
+      "status": "PASS",
+      "detail": "All in range"
+    },
+    {
+      "name": "All signal markets come from filtered set",
+      "status": "PASS",
+      "detail": "All verified"
+    },
+    {
+      "name": "All entry signals meet min confidence (0.65)",
+      "status": "PASS",
+      "detail": "All >= 0.65"
+    },
+    {
+      "name": "Backtest produced trades",
+      "status": "PASS",
+      "detail": "Trades: 3"
+    },
+    {
+      "name": "Backtest has P&L figure",
+      "status": "PASS",
+      "detail": "P&L: $-1.5166"
+    },
+    {
+      "name": "Win rate is valid (0-1)",
+      "status": "PASS",
+      "detail": "WR: 33.3%"
+    },
+    {
+      "name": "Max drawdown tracked",
+      "status": "PASS",
+      "detail": "DD: 1.7%"
+    },
+    {
+      "name": "Uses spread-based P&L model",
+      "status": "PASS",
+      "detail": "spread-based (entry spread vs exit spread, per contract, minus fees)"
+    },
+    {
+      "name": "Final capital is positive",
+      "status": "PASS",
+      "detail": "$98.48"
+    },
+    {
+      "name": "All trades have pnl and pair",
+      "status": "PASS",
+      "detail": "3 trades verified"
+    },
+    {
+      "name": "P&L sum matches totalPnl",
+      "status": "PASS",
+      "detail": "Calc: -1.5166, Reported: -1.5166"
+    },
+    {
+      "name": "Wins + losses = totalTrades",
+      "status": "PASS",
+      "detail": "1 + 2 = 3"
+    },
+    {
+      "name": "All signal pairs trace to correlation pairs",
+      "status": "PASS",
+      "detail": "All traced"
+    },
+    {
+      "name": "All backtest trade pairs trace to signals",
+      "status": "PASS",
+      "detail": "All traced"
+    },
+    {
+      "name": "Pipeline chain intact: filter → cluster → correlate → signal → trade",
+      "status": "PASS",
+      "detail": "5 markets → 3 clusters → 3 pairs → 6 signals → 3 trades"
+    },
+    {
+      "name": "T577 regression test exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/tina/pipeline_regression_test.js"
+    },
+    {
+      "name": "T577 results file exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/tina/pipeline_regression_results.json"
+    }
+  ]
+}

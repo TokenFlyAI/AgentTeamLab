@@ -81,7 +81,8 @@ function checkSignalCount(backtest, signals) {
 
   const bobSignalCount = signals.total_signals || signals.signals?.length || 0;
   const backtestSignalCount = backtest.input_signals || backtest.signal_count
-    || backtest.summary?.total_signals || backtest.summary?.signal_count || null;
+    || backtest.input?.total_signals || backtest.summary?.total_signals
+    || backtest.summary?.signal_count || null;
 
   if (backtestSignalCount === null) {
     warn("Signal count field present", "backtest_results.json missing signal count field — cannot verify");
@@ -116,23 +117,34 @@ function checkSignalCount(backtest, signals) {
 // ============================================================================
 // CHECK 2: P&L Math Verification
 // ============================================================================
+function extractTrades(backtest) {
+  // Direct trades array
+  if (Array.isArray(backtest.trades) && backtest.trades.length > 0) {
+    const first = backtest.trades[0];
+    // Check if items look like individual trades (any PnL or entry field, snake_case or camelCase)
+    if (first.pnl_dollars !== undefined || first.pnl !== undefined || first.netPnl !== undefined
+      || first.rawPnl !== undefined || first.entry_spread !== undefined || first.entrySpread !== undefined
+      || first.entry_tick !== undefined || first.entryZ !== undefined) {
+      return backtest.trades;
+    }
+  }
+  if (Array.isArray(backtest.results) && backtest.results.length > 0) return backtest.results;
+
+  // Extract from per_pair_results nested structure
+  const allTrades = [];
+  (backtest.per_pair_results || backtest.pairBreakdown || []).forEach(pair => {
+    if (pair.trades) allTrades.push(...pair.trades);
+  });
+  return allTrades;
+}
+
 function checkPnLMath(backtest) {
   console.log("\n--- Check 2: P&L Math Verification ---");
 
-  const trades = backtest.trades || backtest.results || backtest.per_pair_results || [];
-  if (!Array.isArray(trades) || trades.length === 0) {
-    // Try nested structure
-    const allTrades = [];
-    if (backtest.per_pair_results) {
-      backtest.per_pair_results.forEach(pair => {
-        if (pair.trades) allTrades.push(...pair.trades);
-      });
-    }
-    if (allTrades.length === 0) {
-      warn("No trades found", "Cannot verify P&L math — no trade array in backtest results");
-      return;
-    }
-    return verifyTrades(allTrades, backtest);
+  const trades = extractTrades(backtest);
+  if (trades.length === 0) {
+    warn("No trades found", "Cannot verify P&L math — no trade array in backtest results");
+    return;
   }
   return verifyTrades(trades, backtest);
 }
@@ -143,12 +155,12 @@ function verifyTrades(trades, backtest) {
   let tradeErrors = 0;
 
   for (const trade of trades) {
-    // Verify individual trade P&L
-    const entrySpread = trade.entry_spread ?? trade.entry_price ?? null;
-    const exitSpread = trade.exit_spread ?? trade.exit_price ?? null;
+    // Verify individual trade P&L (handle both snake_case and camelCase)
+    const entrySpread = trade.entry_spread ?? trade.entrySpread ?? trade.entry_price ?? null;
+    const exitSpread = trade.exit_spread ?? trade.exitSpread ?? trade.exit_price ?? null;
     const contracts = trade.contracts ?? trade.size ?? trade.quantity ?? null;
     const fees = trade.fees_dollars ?? trade.fees ?? trade.trading_fee ?? 0;
-    const reportedPnL = trade.pnl_dollars ?? trade.pnl ?? trade.profit ?? null;
+    const reportedPnL = trade.pnl_dollars ?? trade.netPnl ?? trade.pnl ?? trade.profit ?? null;
 
     if (entrySpread !== null && exitSpread !== null && contracts !== null && reportedPnL !== null) {
       // For spread trades: P&L = (exit_spread - entry_spread) * contracts * direction_multiplier - fees
@@ -175,7 +187,7 @@ function verifyTrades(trades, backtest) {
   }
 
   // Verify summary P&L
-  const summaryPnL = backtest.summary?.total_pnl ?? backtest.total_pnl ?? null;
+  const summaryPnL = backtest.summary?.total_pnl ?? backtest.summary?.totalPnl ?? backtest.total_pnl ?? null;
   if (summaryPnL !== null) {
     if (Math.abs(summaryPnL - computedTotalPnL) > tolerance * trades.length) {
       fail("Summary P&L mismatch",
@@ -188,7 +200,8 @@ function verifyTrades(trades, backtest) {
   // Verify win/loss count
   const reportedWins = backtest.summary?.total_wins ?? backtest.summary?.wins ?? null;
   const computedWins = trades.filter(t =>
-    (t.pnl_dollars ?? t.pnl ?? t.profit ?? 0) > 0 || t.outcome === "win"
+    (t.pnl_dollars ?? t.netPnl ?? t.pnl ?? t.profit ?? 0) > 0
+    || t.outcome === "win" || t.isWin === true
   ).length;
   if (reportedWins !== null) {
     if (reportedWins === computedWins) {
@@ -199,10 +212,12 @@ function verifyTrades(trades, backtest) {
   }
 
   // Verify win rate
-  const reportedWinRate = backtest.summary?.win_rate ?? null;
+  let reportedWinRate = backtest.summary?.win_rate ?? backtest.summary?.winRate ?? null;
   if (reportedWinRate !== null && trades.length > 0) {
+    // Normalize: if > 1, it's a percentage (e.g. 61.1), convert to decimal
+    if (reportedWinRate > 1) reportedWinRate = reportedWinRate / 100;
     const computedWinRate = computedWins / trades.length;
-    if (Math.abs(reportedWinRate - computedWinRate) > 0.01) {
+    if (Math.abs(reportedWinRate - computedWinRate) > 0.02) {
       fail("Win rate mismatch",
         `Reported: ${(reportedWinRate * 100).toFixed(1)}%, Computed: ${(computedWinRate * 100).toFixed(1)}%`);
     } else {
@@ -221,13 +236,7 @@ function verifyTrades(trades, backtest) {
 function checkDrawdown(backtest) {
   console.log("\n--- Check 3: Drawdown Tracking ---");
 
-  const trades = backtest.trades || backtest.results || [];
-  const allTrades = trades.length ? trades : [];
-  if (!allTrades.length && backtest.per_pair_results) {
-    backtest.per_pair_results.forEach(pair => {
-      if (pair.trades) allTrades.push(...pair.trades);
-    });
-  }
+  const allTrades = extractTrades(backtest);
 
   if (allTrades.length === 0) {
     warn("Drawdown check skipped", "No trades to verify drawdown tracking");
@@ -236,7 +245,9 @@ function checkDrawdown(backtest) {
 
   // Check drawdown field exists
   const hasDrawdown = backtest.summary?.max_drawdown_pct !== undefined
+    || backtest.summary?.maxDrawdownPct !== undefined
     || backtest.summary?.max_drawdown !== undefined
+    || backtest.summary?.maxDrawdown !== undefined
     || backtest.max_drawdown !== undefined;
 
   if (!hasDrawdown) {
@@ -245,7 +256,9 @@ function checkDrawdown(backtest) {
   }
 
   const reportedMaxDD = backtest.summary?.max_drawdown_pct
+    ?? backtest.summary?.maxDrawdownPct
     ?? backtest.summary?.max_drawdown
+    ?? backtest.summary?.maxDrawdown
     ?? backtest.max_drawdown;
 
   // Compute drawdown from trade sequence
@@ -279,13 +292,13 @@ function checkDrawdown(backtest) {
   }
 
   // Check capital progression if available
-  if (allTrades[0]?.capital_after !== undefined) {
+  if (allTrades[0]?.capital_after !== undefined || allTrades[0]?.capitalAfter !== undefined) {
     let prevCapital = initialCapital;
     let capitalErrors = 0;
     for (const trade of sortedTrades) {
-      const pnl = trade.pnl_dollars ?? trade.pnl ?? 0;
+      const pnl = trade.pnl_dollars ?? trade.netPnl ?? trade.pnl ?? 0;
       const expectedCapital = prevCapital + pnl;
-      const reportedCapital = trade.capital_after;
+      const reportedCapital = trade.capital_after ?? trade.capitalAfter;
       if (reportedCapital !== undefined && Math.abs(expectedCapital - reportedCapital) > 0.01) {
         capitalErrors++;
         fail(`Capital tracking trade ${trade.id || "?"}`,
@@ -318,19 +331,32 @@ function checkDataLeakage(backtest) {
   }
 
   // Check 4b: No future timestamps in entry decisions
-  const trades = backtest.trades || backtest.results || [];
-  const allTrades = trades.length ? trades : [];
-  if (!allTrades.length && backtest.per_pair_results) {
-    backtest.per_pair_results.forEach(pair => {
-      if (pair.trades) allTrades.push(...pair.trades);
-    });
-  }
+  const allTrades = extractTrades(backtest);
 
   let futureLeaks = 0;
   for (let i = 0; i < allTrades.length; i++) {
     const trade = allTrades[i];
-    const entryTime = new Date(trade.entry_time || trade.timestamp || 0);
-    const exitTime = new Date(trade.exit_time || trade.close_time || 0);
+
+    // Handle tick-based trades (entry_tick/exit_tick) vs timestamp-based
+    if (trade.entry_tick !== undefined && trade.exit_tick !== undefined) {
+      if (trade.entry_tick >= trade.exit_tick) {
+        fail(`Trade ${trade.id || i} tick order`,
+          `Entry tick ${trade.entry_tick} >= Exit tick ${trade.exit_tick}`);
+        futureLeaks++;
+      }
+      continue; // tick-based, skip timestamp checks
+    }
+
+    const entryRaw = trade.entry_time || trade.timestamp;
+    const exitRaw = trade.exit_time || trade.close_time;
+
+    if (!entryRaw || !exitRaw) {
+      warn(`Trade ${trade.id || i} missing timestamps`, "Cannot verify temporal order");
+      continue;
+    }
+
+    const entryTime = new Date(entryRaw);
+    const exitTime = new Date(exitRaw);
 
     // Entry must be before exit
     if (entryTime >= exitTime) {

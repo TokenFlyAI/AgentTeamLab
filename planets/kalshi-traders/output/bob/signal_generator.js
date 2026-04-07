@@ -1,16 +1,26 @@
 #!/usr/bin/env node
 /**
- * Signal Generator — T567
+ * Signal Generator — T567 (Sprint 2 Optimized)
  * Generates paper trade signals from correlation pairs using z-score mean reversion.
+ *
+ * AUTHORITATIVE P&L MODEL (Q1 fix):
+ *   This file's simulatePaperTrades() is the single source of truth for backtest results.
+ *   - run_pipeline.js Phase 4 uses a DIFFERENT simplified simulation — NOT authoritative.
+ *   - Only paper_trade_results.json (written by this file) should be cited.
+ *   Dave's backtest pipeline should consume signals.json and use its own execution model,
+ *   but this file's paper_trade_results.json is the reference benchmark.
  *
  * Strategy:
  *   For each correlated pair (from Phase 3), compute the rolling price spread.
  *   When the spread z-score exceeds thresholds, generate BUY/SELL signals.
- *   Mean-reversion: if spread is too wide (z > 2), bet on convergence.
+ *   Mean-reversion: if spread is wide (|z| > 1.2), bet on convergence.
+ *
+ * Deduplication (Q2 fix):
+ *   Same market pair only generates signals once, even if it appears in multiple clusters.
  *
  * Usage:
- *   node signal_generator.js                    # standalone
- *   node run_pipeline.js --with-signals         # integrated
+ *   node signal_generator.js                    # standalone (authoritative)
+ *   node run_pipeline.js --with-signals         # integrated (non-authoritative sim)
  *
  * Following: D5 (runnable system), C8 (verify output), C6 (knowledge.md ref)
  */
@@ -95,6 +105,7 @@ function calculateSpreadZScores(pricesA, pricesB, lookback) {
 function generateSignals(correlationPairs, priceData) {
   const signals = [];
   const pairs = correlationPairs.pairs || [];
+  const seenPairs = new Set(); // Deduplicate: one signal set per market pair (Q2 fix)
 
   for (const pair of pairs) {
     if (!pair.is_arbitrage_opportunity) continue;
@@ -112,6 +123,11 @@ function generateSignals(correlationPairs, priceData) {
 
     const tickerA = pair.market_a;
     const tickerB = pair.market_b;
+
+    // Deduplicate: skip if we've already generated signals for this pair (Q2 fix)
+    const pairKey = [tickerA, tickerB].sort().join(":");
+    if (seenPairs.has(pairKey)) continue;
+    seenPairs.add(pairKey);
 
     const pricesA = priceData[tickerA];
     const pricesB = priceData[tickerB];

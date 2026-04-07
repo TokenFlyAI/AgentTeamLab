@@ -1,0 +1,244 @@
+{
+  "generated_at": "2026-04-04T20:42:11.431Z",
+  "task": "T580/T587",
+  "config": {
+    "trainRatio": 0.6,
+    "windowCount": 3,
+    "kellyFraction": 0.25,
+    "maxKellyBet": 0.1,
+    "slippageBps": 50,
+    "tradingFeePct": 0.01,
+    "maxDrawdownPct": 15,
+    "capitalFloor": 50,
+    "initialCapital": 1000,
+    "contractValue": 1
+  },
+  "windows": [
+    {
+      "train": {
+        "label": "Window 1 Train",
+        "startCapital": "1000.00",
+        "endCapital": "784.98",
+        "returnPct": "-21.50",
+        "totalTrades": 1,
+        "wins": 0,
+        "losses": 1,
+        "winRate": "0.0",
+        "maxDrawdown": "215.02",
+        "maxDrawdownPct": "21.50",
+        "circuitBroken": true,
+        "circuitBreakReason": "MAX_DRAWDOWN: 21.50% >= 15%",
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": false,
+          "haltReason": null,
+          "tradeCount": 3,
+          "breachCount": 0,
+          "breachHistory": []
+        },
+        "trades": 1
+      },
+      "test": {
+        "label": "Window 1 Test",
+        "startCapital": "1000.00",
+        "endCapital": "276.88",
+        "returnPct": "-72.31",
+        "totalTrades": 2,
+        "wins": 1,
+        "losses": 1,
+        "winRate": "50.0",
+        "maxDrawdown": "730.00",
+        "maxDrawdownPct": "72.50",
+        "circuitBroken": true,
+        "circuitBreakReason": "MAX_DRAWDOWN: 72.50% >= 15%",
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": false,
+          "haltReason": null,
+          "tradeCount": 5,
+          "breachCount": 0,
+          "breachHistory": []
+        },
+        "trades": 2
+      }
+    },
+    {
+      "train": {
+        "label": "Window 2 Train",
+        "startCapital": "276.88",
+        "endCapital": "266.02",
+        "returnPct": "-3.92",
+        "totalTrades": 3,
+        "wins": 2,
+        "losses": 1,
+        "winRate": "66.7",
+        "maxDrawdown": "181.28",
+        "maxDrawdownPct": "40.53",
+        "circuitBroken": true,
+        "circuitBreakReason": "MAX_DRAWDOWN: 40.53% >= 15%",
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": false,
+          "haltReason": null,
+          "tradeCount": 7,
+          "breachCount": 0,
+          "breachHistory": []
+        },
+        "trades": 3
+      },
+      "test": {
+        "label": "Window 2 Test",
+        "startCapital": "276.88",
+        "endCapital": "254.03",
+        "returnPct": "-8.25",
+        "totalTrades": 1,
+        "wins": 0,
+        "losses": 1,
+        "winRate": "0.0",
+        "maxDrawdown": "22.85",
+        "maxDrawdownPct": "8.25",
+        "circuitBroken": false,
+        "circuitBreakReason": null,
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": false,
+          "haltReason": null,
+          "tradeCount": 5,
+          "breachCount": 0,
+          "breachHistory": []
+        },
+        "trades": 1
+      }
+    },
+    {
+      "train": {
+        "label": "Window 3 Train",
+        "startCapital": "254.03",
+        "endCapital": "214.06",
+        "returnPct": "-15.73",
+        "totalTrades": 2,
+        "wins": 1,
+        "losses": 1,
+        "winRate": "50.0",
+        "maxDrawdown": "83.24",
+        "maxDrawdownPct": "28.00",
+        "circuitBroken": true,
+        "circuitBreakReason": "MAX_DRAWDOWN: 28.00% >= 15%",
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": false,
+          "haltReason": null,
+          "tradeCount": 5,
+          "breachCount": 0,
+          "breachHistory": []
+        },
+        "trades": 2
+      },
+      "test": {
+        "label": "Window 3 Test",
+        "startCapital": "254.03",
+        "endCapital": "-243.91",
+        "returnPct": "-196.02",
+        "totalTrades": 1,
+        "wins": 0,
+        "losses": 1,
+        "winRate": "0.0",
+        "maxDrawdown": "497.94",
+        "maxDrawdownPct": "196.02",
+        "circuitBroken": true,
+        "circuitBreakReason": "CAPITAL_FLOOR: Capital $-243.91 below floor $50",
+        "capitalFloorStatus": {
+          "floor": 50,
+          "halted": true,
+          "haltReason": "Capital $-243.91 below floor $50",
+          "tradeCount": 2,
+          "breachCount": 1,
+          "breachHistory": [
+            {
+              "timestamp": "2026-04-04T20:42:11.431Z",
+              "capital": -243.91,
+              "floor": 50,
+              "tradeNumber": 2,
+              "label": "Window 3 Test",
+              "signal": "sig_39",
+              "pair": "INXW-26-DEC31-7000 / KXNF-20260501-T250000",
+              "postTrade": true
+            }
+          ]
+        },
+        "trades": 1
+      }
+    }
+  ],
+  "summary": {
+    "totalTestTrades": 4,
+    "overallWinRate": 25,
+    "initialCapital": 1000,
+    "finalCapital": -243.91,
+    "totalReturnPct": -124.39,
+    "worstDrawdownPct": 196.02,
+    "circuitBreakerTriggered": true,
+    "capitalFloorBreached": true,
+    "capitalFloor": 50,
+    "slippageBps": 50,
+    "positionSizing": "quarter-kelly"
+  },
+  "detailedTrades": [
+    {
+      "signal": "sig_9",
+      "pair": "BTCW-26-JUN30-80K / INXW-26-DEC31-7000",
+      "contracts": 50,
+      "z_score": 2.712,
+      "confidence": 0.6974,
+      "entrySpread": "-0.0145",
+      "exitSpread": "-0.0129",
+      "rawPnL": "7.88",
+      "fees": "1.00",
+      "netPnL": "6.88",
+      "capital": "1006.88",
+      "drawdownPct": "0.00"
+    },
+    {
+      "signal": "sig_11",
+      "pair": "SOLW-26-JUN30-300 / INXW-26-DEC31-7000",
+      "contracts": 100,
+      "z_score": 2.945,
+      "confidence": 0.7495,
+      "entrySpread": "0.1966",
+      "exitSpread": "0.1238",
+      "rawPnL": "-728.00",
+      "fees": "2.00",
+      "netPnL": "-730.00",
+      "capital": "276.88",
+      "drawdownPct": "72.50"
+    },
+    {
+      "signal": "sig_24",
+      "pair": "ETHW-26-JUN30-4K / FEDW-26-JUN-CUT",
+      "contracts": 13,
+      "z_score": 3.252,
+      "confidence": 0.6815,
+      "entrySpread": "0.1595",
+      "exitSpread": "0.1421",
+      "rawPnL": "-22.59",
+      "fees": "0.26",
+      "netPnL": "-22.85",
+      "capital": "254.03",
+      "drawdownPct": "8.25"
+    },
+    {
+      "signal": "sig_39",
+      "pair": "INXW-26-DEC31-7000 / KXNF-20260501-T250000",
+      "contracts": 12,
+      "z_score": -2.02,
+      "confidence": 0.6566,
+      "entrySpread": "-0.1562",
+      "exitSpread": "-0.5709",
+      "rawPnL": "-497.70",
+      "fees": "0.24",
+      "netPnL": "-497.94",
+      "capital": "-243.91",
+      "drawdownPct": "196.02"
+    }
+  ]
+}

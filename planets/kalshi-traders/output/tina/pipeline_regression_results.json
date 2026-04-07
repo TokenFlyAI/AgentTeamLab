@@ -1,0 +1,202 @@
+{
+  "test": "Pipeline Regression Test — T577",
+  "agent": "tina",
+  "timestamp": "2026-04-04T13:17:28.062Z",
+  "summary": {
+    "pass": 38,
+    "fail": 0,
+    "warn": 0
+  },
+  "details": [
+    {
+      "name": "Bob trade_signals.json exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/output/trade_signals.json"
+    },
+    {
+      "name": "Has signals array",
+      "status": "PASS",
+      "detail": "Type: object"
+    },
+    {
+      "name": "Has config object",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Has metadata (task, strategy)",
+      "status": "PASS",
+      "detail": "task=T567"
+    },
+    {
+      "name": "Signal count > 0",
+      "status": "PASS",
+      "detail": "Count: 47"
+    },
+    {
+      "name": "Signal count matches total_signals",
+      "status": "PASS",
+      "detail": "Array: 47, total_signals: 47"
+    },
+    {
+      "name": "Signals have all required fields",
+      "status": "PASS",
+      "detail": "All 11 present"
+    },
+    {
+      "name": "z-score entry threshold = 1.2",
+      "status": "PASS",
+      "detail": "Got: 1.2"
+    },
+    {
+      "name": "Lookback period = 10",
+      "status": "PASS",
+      "detail": "Got: 10"
+    },
+    {
+      "name": "Min confidence >= 0.65",
+      "status": "PASS",
+      "detail": "Got: 0.65"
+    },
+    {
+      "name": "Has entry signals",
+      "status": "PASS",
+      "detail": "Entries: 25"
+    },
+    {
+      "name": "Has exit signals",
+      "status": "PASS",
+      "detail": "Exits: 16"
+    },
+    {
+      "name": "No anomalous z-scores (|z| > 10)",
+      "status": "PASS",
+      "detail": "All z-scores within bounds"
+    },
+    {
+      "name": "Unique market pairs exist",
+      "status": "PASS",
+      "detail": "Pairs: 4"
+    },
+    {
+      "name": "All signals meet min confidence",
+      "status": "PASS",
+      "detail": "All >= 0.65"
+    },
+    {
+      "name": "Dave backtest_results.json exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/dave/output/backtest_results.json"
+    },
+    {
+      "name": "Has rework flag (fixes applied)",
+      "status": "PASS",
+      "detail": "rework: true"
+    },
+    {
+      "name": "Has fixes_applied array",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Has full results",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Has train/test split",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Has pnl_model description",
+      "status": "PASS",
+      "detail": "Model: [object Object]"
+    },
+    {
+      "name": "Uses spread-based P&L model",
+      "status": "PASS",
+      "detail": "Model: {\"type\":\"spread-based\",\"description\":\"Kalshi contracts $0-$1. P&L = spread convergence * contracts. "
+    },
+    {
+      "name": "Input source is Bob's signals",
+      "status": "PASS",
+      "detail": "Source: bob/output/trade_signals.json"
+    },
+    {
+      "name": "Full results have trade count",
+      "status": "PASS",
+      "detail": "Trades: 22"
+    },
+    {
+      "name": "Full results have win rate",
+      "status": "PASS",
+      "detail": "WR: 22.7"
+    },
+    {
+      "name": "Full results have P&L",
+      "status": "PASS",
+      "detail": "P&L: -1.3273"
+    },
+    {
+      "name": "Backtest signal count matches Bob's output",
+      "status": "PASS",
+      "detail": "Bob: 47, Dave input: 47"
+    },
+    {
+      "name": "All backtest pairs traced to signals",
+      "status": "PASS",
+      "detail": "4 pairs verified"
+    },
+    {
+      "name": "Grace data_chain_audit.js exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/grace/output/data_chain_audit.js"
+    },
+    {
+      "name": "Grace data_chain_audit.md report exists",
+      "status": "PASS",
+      "detail": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/grace/output/data_chain_audit.md"
+    },
+    {
+      "name": "QA backtest validator exists",
+      "status": "PASS",
+      "detail": "tina/output/qa_backtest_validator.js"
+    },
+    {
+      "name": "QA backtest report exists",
+      "status": "PASS",
+      "detail": "tina/output/qa_backtest_report.md"
+    },
+    {
+      "name": "QA signal validator exists",
+      "status": "PASS",
+      "detail": "tina/output/qa_signal_validator.js"
+    },
+    {
+      "name": "QA pipeline smoke test exists",
+      "status": "PASS",
+      "detail": "tina/output/qa_pipeline_smoke_test.js"
+    },
+    {
+      "name": "QA reference backtest exists",
+      "status": "PASS",
+      "detail": "tina/output/qa_reference_backtest.js"
+    },
+    {
+      "name": "Bob signal_generator.js syntax valid",
+      "status": "PASS",
+      "detail": "node --check passed"
+    },
+    {
+      "name": "Dave backtest_signals.js syntax valid",
+      "status": "PASS",
+      "detail": "node --check passed"
+    },
+    {
+      "name": "Grace data_chain_audit.js syntax valid",
+      "status": "PASS",
+      "detail": "node --check passed"
+    }
+  ]
+}

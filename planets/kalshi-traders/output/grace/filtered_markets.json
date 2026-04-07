@@ -1,0 +1,1441 @@
+{
+  "generated_at": "2026-04-07T06:25:48.158Z",
+  "task": "T579",
+  "phase": "Sprint 4 Phase 1",
+  "config": {
+    "minVolume": 10000,
+    "targetRanges": [
+      {
+        "min": 15,
+        "max": 30
+      },
+      {
+        "min": 70,
+        "max": 85
+      }
+    ],
+    "excludedRange": {
+      "min": 40,
+      "max": 60
+    },
+    "inputPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/output/mock_kalshi_markets.json",
+    "outputPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets.json"
+  },
+  "summary": {
+    "total_markets": 200,
+    "after_volume_filter": 200,
+    "qualifying_markets": 50,
+    "excluded_low_volume": 0,
+    "excluded_middle_range": 77,
+    "extreme_ratio": 73
+  },
+  "qualifying_markets": [
+    {
+      "id": "0bed8f27-223b-5b62-9bf3-dabd4923cc05",
+      "ticker": "WEA-RAIN-26MAY24-004",
+      "title": "LA rainfall above 110 inches in May 24, 2026?",
+      "category": "Weather",
+      "volume": 79211,
+      "yes_bid": 72,
+      "yes_ask": 74,
+      "no_bid": 26,
+      "no_ask": 28,
+      "yes_ratio": 73,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "20b72fea-d37e-5d01-b5e9-a5dc5cf8f9a5",
+      "ticker": "CRYP-BTCDOM-26MAY27-005",
+      "title": "Bitcoin dominance above 68% by May 27, 2026?",
+      "category": "Crypto",
+      "volume": 114143,
+      "yes_bid": 25,
+      "yes_ask": 27,
+      "no_bid": 73,
+      "no_ask": 75,
+      "yes_ratio": 26,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "5dcb5a66-6bde-543d-b93e-20b0cccdd417",
+      "ticker": "POL-SEN-26JUL29-026",
+      "title": "Democrats to control the Senate after Jul 29, 2026?",
+      "category": "Politics",
+      "volume": 235175,
+      "yes_bid": 18,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 82,
+      "yes_ratio": 20,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "2ae7d2ca-a412-5213-b750-cc7f63f9499f",
+      "ticker": "POL-APPROVAL-26SEP03-038",
+      "title": "President approval above 48% on Sep 3, 2026?",
+      "category": "Politics",
+      "volume": 254018,
+      "yes_bid": 27,
+      "yes_ask": 30,
+      "no_bid": 70,
+      "no_ask": 73,
+      "yes_ratio": 28.71,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "70461e76-4858-5451-b519-9e88929689ca",
+      "ticker": "ECON-UNEMP-26SEP06-039",
+      "title": "US unemployment above 250% in Sep 6, 2026?",
+      "category": "Economics",
+      "volume": 85031,
+      "yes_bid": 78,
+      "yes_ask": 80,
+      "no_bid": 20,
+      "no_ask": 22,
+      "yes_ratio": 79,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "3429102c-e9f9-5405-9b20-e00d73c77ffc",
+      "ticker": "POL-HOUSE-26SEP15-042",
+      "title": "Republicans to control the House after Sep 15, 2026?",
+      "category": "Politics",
+      "volume": 84730,
+      "yes_bid": 80,
+      "yes_ask": 82,
+      "no_bid": 18,
+      "no_ask": 20,
+      "yes_ratio": 81,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "d4510352-6c20-52d3-be19-6e0bcbd9a3b9",
+      "ticker": "ECON-FED-26SEP18-043",
+      "title": "Fed cuts rates by 225 bps before Sep 18, 2026?",
+      "category": "Economics",
+      "volume": 315071,
+      "yes_bid": 29,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 71,
+      "yes_ratio": 30,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "14d55d05-8ace-5e1f-9236-26a4b32c8252",
+      "ticker": "CRYP-BTCDOM-26SEP24-045",
+      "title": "Bitcoin dominance above 180% by Sep 24, 2026?",
+      "category": "Crypto",
+      "volume": 318784,
+      "yes_bid": 20,
+      "yes_ask": 24,
+      "no_bid": 76,
+      "no_ask": 80,
+      "yes_ratio": 22,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "7a52298f-a44d-55a0-b63e-2b3324835273",
+      "ticker": "POL-SEN-26SEP27-046",
+      "title": "Democrats to control the Senate after Sep 27, 2026?",
+      "category": "Politics",
+      "volume": 217892,
+      "yes_bid": 21,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 79,
+      "yes_ratio": 21.78,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "0dce82c8-32a6-54c4-abf7-0f7119753bd0",
+      "ticker": "ECON-UNEMP-26NOV05-059",
+      "title": "US unemployment above 2.4% in Nov 5, 2026?",
+      "category": "Economics",
+      "volume": 230647,
+      "yes_bid": 19,
+      "yes_ask": 23,
+      "no_bid": 77,
+      "no_ask": 81,
+      "yes_ratio": 21,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "e08b93f7-bea3-59db-a1f5-2efe602ce5db",
+      "ticker": "POL-HOUSE-26NOV14-062",
+      "title": "Republicans to control the House after Nov 14, 2026?",
+      "category": "Politics",
+      "volume": 106758,
+      "yes_bid": 83,
+      "yes_ask": 87,
+      "no_bid": 13,
+      "no_ask": 17,
+      "yes_ratio": 85,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "50e853c6-91b4-5349-938a-d996764957e0",
+      "ticker": "WEA-RAIN-26NOV20-064",
+      "title": "LA rainfall above 18 inches in Nov 20, 2026?",
+      "category": "Weather",
+      "volume": 148468,
+      "yes_bid": 20,
+      "yes_ask": 23,
+      "no_bid": 77,
+      "no_ask": 80,
+      "yes_ratio": 21.78,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "d70e6502-9387-54d0-819a-4ca943419954",
+      "ticker": "CRYP-DOGE-26DEC05-069",
+      "title": "Dogecoin above $150 by Dec 5, 2026?",
+      "category": "Crypto",
+      "volume": 347675,
+      "yes_bid": 17,
+      "yes_ask": 18,
+      "no_bid": 82,
+      "no_ask": 83,
+      "yes_ratio": 17.82,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "04814113-89a0-53bb-98f9-815635dea035",
+      "ticker": "ECON-CPI-26DEC11-071",
+      "title": "US CPI above 3.0% in Dec 11, 2026?",
+      "category": "Economics",
+      "volume": 212936,
+      "yes_bid": 23,
+      "yes_ask": 26,
+      "no_bid": 74,
+      "no_ask": 77,
+      "yes_ratio": 24.75,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "99b78c5c-9d38-5728-bbee-1cdbb83295f3",
+      "ticker": "WEA-HEAT-26DEC14-072",
+      "title": "Phoenix records 20 straight days above 24F by Dec 14, 2026?",
+      "category": "Weather",
+      "volume": 79602,
+      "yes_bid": 72,
+      "yes_ask": 74,
+      "no_bid": 26,
+      "no_ask": 28,
+      "yes_ratio": 73,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "26a283ad-2934-55c2-b0ec-45d30dabfa16",
+      "ticker": "POL-APPROVAL-27JAN01-078",
+      "title": "President approval above 52% on Jan 1, 2027?",
+      "category": "Politics",
+      "volume": 339062,
+      "yes_bid": 75,
+      "yes_ask": 77,
+      "no_bid": 23,
+      "no_ask": 25,
+      "yes_ratio": 76,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "868dbb6b-9774-5997-850b-6878d15a0bea",
+      "ticker": "ECON-UNEMP-27JAN04-079",
+      "title": "US unemployment above 225% in Jan 4, 2027?",
+      "category": "Economics",
+      "volume": 346227,
+      "yes_bid": 71,
+      "yes_ask": 73,
+      "no_bid": 27,
+      "no_ask": 29,
+      "yes_ratio": 72,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "0b97048c-f797-5bbe-bfea-ee3ef4973661",
+      "ticker": "WEA-ATL-27JAN07-080",
+      "title": "Atlantic named storms above 110 in Jan 7, 2027?",
+      "category": "Weather",
+      "volume": 114283,
+      "yes_bid": 17,
+      "yes_ask": 18,
+      "no_bid": 82,
+      "no_ask": 83,
+      "yes_ratio": 17.82,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "ceced126-07bf-5104-9539-b3eb672b909e",
+      "ticker": "CRYP-BTC-27JAN10-081",
+      "title": "Bitcoin above $180 by Jan 10, 2027?",
+      "category": "Crypto",
+      "volume": 116027,
+      "yes_bid": 17,
+      "yes_ask": 20,
+      "no_bid": 80,
+      "no_ask": 83,
+      "yes_ratio": 18.81,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "b1413c86-c20a-52d0-8e3a-efcc5105b671",
+      "ticker": "POL-HOUSE-27JAN13-082",
+      "title": "Republicans to control the House after Jan 13, 2027?",
+      "category": "Politics",
+      "volume": 139368,
+      "yes_bid": 76,
+      "yes_ask": 80,
+      "no_bid": 20,
+      "no_ask": 24,
+      "yes_ratio": 78,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "a2a71c37-1da1-5ff6-9102-0d12be0f3d66",
+      "ticker": "ECON-FED-27JAN16-083",
+      "title": "Fed cuts rates by 2.8 bps before Jan 16, 2027?",
+      "category": "Economics",
+      "volume": 446351,
+      "yes_bid": 81,
+      "yes_ask": 84,
+      "no_bid": 16,
+      "no_ask": 19,
+      "yes_ratio": 82.18,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "6b581d69-bc15-5fbe-bdf2-78942a519a11",
+      "ticker": "CRYP-BTCDOM-27JAN22-085",
+      "title": "Bitcoin dominance above 4,500% by Jan 22, 2027?",
+      "category": "Crypto",
+      "volume": 87939,
+      "yes_bid": 79,
+      "yes_ask": 83,
+      "no_bid": 17,
+      "no_ask": 21,
+      "yes_ratio": 81,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "6375b917-40a9-5db0-9867-77e349888458",
+      "ticker": "ECON-GDP-27JAN28-087",
+      "title": "US GDP growth above 2.4% in Jan 28, 2027?",
+      "category": "Economics",
+      "volume": 349446,
+      "yes_bid": 70,
+      "yes_ask": 71,
+      "no_bid": 29,
+      "no_ask": 30,
+      "yes_ratio": 70.3,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "51f3039c-840a-518b-90b5-93a29e36f328",
+      "ticker": "WEA-SNOW-27JAN31-088",
+      "title": "NYC snowfall above 8 inches by Jan 31, 2027?",
+      "category": "Weather",
+      "volume": 178596,
+      "yes_bid": 84,
+      "yes_ask": 86,
+      "no_bid": 14,
+      "no_ask": 16,
+      "yes_ratio": 85,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "dc688fa4-3520-50f8-b156-37b267a209c3",
+      "ticker": "POL-SCOTUS-27FEB06-090",
+      "title": "Supreme Court vacancy announced before Feb 6, 2027?",
+      "category": "Politics",
+      "volume": 87938,
+      "yes_bid": 74,
+      "yes_ask": 76,
+      "no_bid": 24,
+      "no_ask": 26,
+      "yes_ratio": 75,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "423083a5-0302-5f2d-bbb4-a2c545db45d7",
+      "ticker": "WEA-ATL-27MAR08-100",
+      "title": "Atlantic named storms above 110 in Mar 8, 2027?",
+      "category": "Weather",
+      "volume": 158622,
+      "yes_bid": 28,
+      "yes_ask": 29,
+      "no_bid": 71,
+      "no_ask": 72,
+      "yes_ratio": 28.71,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "654f16b6-b5ae-58c3-ab16-c4b5cfb6e007",
+      "ticker": "CRYP-DOGE-27APR04-109",
+      "title": "Dogecoin above $68 by Apr 4, 2027?",
+      "category": "Crypto",
+      "volume": 405611,
+      "yes_bid": 22,
+      "yes_ask": 25,
+      "no_bid": 75,
+      "no_ask": 78,
+      "yes_ratio": 23.76,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "737c87d2-87fe-54ec-a3ed-5090322b59d0",
+      "ticker": "ECON-CPI-27APR10-111",
+      "title": "US CPI above 2.4% in Apr 10, 2027?",
+      "category": "Economics",
+      "volume": 118397,
+      "yes_bid": 71,
+      "yes_ask": 72,
+      "no_bid": 28,
+      "no_ask": 29,
+      "yes_ratio": 71.29,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "3a2e5410-09aa-5b21-8860-597aca19e030",
+      "ticker": "CRYP-SOL-27APR16-113",
+      "title": "Solana above $95,000 by Apr 16, 2027?",
+      "category": "Crypto",
+      "volume": 439690,
+      "yes_bid": 78,
+      "yes_ask": 82,
+      "no_bid": 18,
+      "no_ask": 22,
+      "yes_ratio": 80,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "3aaf6192-be3b-5a75-a83d-59e09c619343",
+      "ticker": "POL-GOV-27APR19-114",
+      "title": "Government shutdown before Apr 19, 2027?",
+      "category": "Politics",
+      "volume": 147133,
+      "yes_bid": 18,
+      "yes_ask": 21,
+      "no_bid": 79,
+      "no_ask": 82,
+      "yes_ratio": 19.8,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "307c049c-c75e-5b24-95c8-fb660c2a78fd",
+      "ticker": "WEA-HURR-27APR25-116",
+      "title": "Major hurricane hits Florida before Apr 25, 2027?",
+      "category": "Weather",
+      "volume": 171969,
+      "yes_bid": 78,
+      "yes_ask": 80,
+      "no_bid": 20,
+      "no_ask": 22,
+      "yes_ratio": 79,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "d2bc441f-6683-5fc6-970c-3aab95a78981",
+      "ticker": "POL-APPROVAL-27MAY01-118",
+      "title": "President approval above 55% on May 1, 2027?",
+      "category": "Politics",
+      "volume": 330984,
+      "yes_bid": 23,
+      "yes_ask": 24,
+      "no_bid": 76,
+      "no_ask": 77,
+      "yes_ratio": 23.76,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "ae497dd9-a9ac-5818-8b25-ce6335b760e6",
+      "ticker": "CRYP-BTC-27MAY10-121",
+      "title": "Bitcoin above $4,500 by May 10, 2027?",
+      "category": "Crypto",
+      "volume": 359233,
+      "yes_bid": 69,
+      "yes_ask": 71,
+      "no_bid": 29,
+      "no_ask": 31,
+      "yes_ratio": 70,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "f32b941f-596e-52f2-8234-14d5e4e00c70",
+      "ticker": "WEA-RAIN-27MAY19-124",
+      "title": "LA rainfall above 110 inches in May 19, 2027?",
+      "category": "Weather",
+      "volume": 172406,
+      "yes_bid": 73,
+      "yes_ask": 74,
+      "no_bid": 26,
+      "no_ask": 27,
+      "yes_ratio": 73.27,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "16f85c6e-566a-5c54-aff6-78aa2751f3ad",
+      "ticker": "POL-GOV-27JUN18-134",
+      "title": "Government shutdown before Jun 18, 2027?",
+      "category": "Politics",
+      "volume": 260857,
+      "yes_bid": 22,
+      "yes_ask": 25,
+      "no_bid": 75,
+      "no_ask": 78,
+      "yes_ratio": 23.76,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "174bb0ad-85ac-5295-b0e1-4efa4e534f33",
+      "ticker": "WEA-HURR-27JUN24-136",
+      "title": "Major hurricane hits Florida before Jun 24, 2027?",
+      "category": "Weather",
+      "volume": 115955,
+      "yes_bid": 29,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 71,
+      "yes_ratio": 30,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "1d1b4be7-1efd-5999-a064-5bdda9356275",
+      "ticker": "CRYP-BTCDOM-27JUL21-145",
+      "title": "Bitcoin dominance above 0.18% by Jul 21, 2027?",
+      "category": "Crypto",
+      "volume": 196312,
+      "yes_bid": 78,
+      "yes_ask": 79,
+      "no_bid": 21,
+      "no_ask": 22,
+      "yes_ratio": 78.22,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "0a855e00-972f-5595-aebb-54468e61ba6a",
+      "ticker": "ECON-GDP-27JUL27-147",
+      "title": "US GDP growth above 2.8% in Jul 27, 2027?",
+      "category": "Economics",
+      "volume": 429914,
+      "yes_bid": 29,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 71,
+      "yes_ratio": 30,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "4f2b29a6-867b-554b-877b-a482720d5e45",
+      "ticker": "ECON-PAY-27AUG20-155",
+      "title": "Nonfarm payrolls above 50k in Aug 20, 2027?",
+      "category": "Economics",
+      "volume": 319624,
+      "yes_bid": 18,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 82,
+      "yes_ratio": 20,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "bc149503-1ce1-5b63-af37-d2ef2e03535f",
+      "ticker": "WEA-HURR-27AUG23-156",
+      "title": "Major hurricane hits Florida before Aug 23, 2027?",
+      "category": "Weather",
+      "volume": 87589,
+      "yes_bid": 77,
+      "yes_ask": 79,
+      "no_bid": 21,
+      "no_ask": 23,
+      "yes_ratio": 78,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "9c97debc-07e1-587b-9990-9b6031caddf5",
+      "ticker": "ECON-GDP-27SEP25-167",
+      "title": "US GDP growth above 3.0% in Sep 25, 2027?",
+      "category": "Economics",
+      "volume": 298484,
+      "yes_bid": 15,
+      "yes_ask": 19,
+      "no_bid": 81,
+      "no_ask": 85,
+      "yes_ratio": 17,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "715a6ea1-ab66-5fa2-a42b-a87fed75afd3",
+      "ticker": "POL-SCOTUS-27OCT04-170",
+      "title": "Supreme Court vacancy announced before Oct 4, 2027?",
+      "category": "Politics",
+      "volume": 282867,
+      "yes_bid": 28,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 72,
+      "yes_ratio": 29.7,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "bd471f84-984f-5f59-b3ea-f50157e23f97",
+      "ticker": "ECON-CPI-27OCT07-171",
+      "title": "US CPI above 2.8% in Oct 7, 2027?",
+      "category": "Economics",
+      "volume": 463763,
+      "yes_bid": 71,
+      "yes_ask": 75,
+      "no_bid": 25,
+      "no_ask": 29,
+      "yes_ratio": 73,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "92acc19f-f222-5bfa-9c8c-8dea892804b0",
+      "ticker": "ECON-UNEMP-27OCT31-179",
+      "title": "US unemployment above 3.4% in Oct 31, 2027?",
+      "category": "Economics",
+      "volume": 496357,
+      "yes_bid": 22,
+      "yes_ask": 26,
+      "no_bid": 74,
+      "no_ask": 78,
+      "yes_ratio": 24,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "22698787-2162-54ec-81df-4a37ad4d9d54",
+      "ticker": "WEA-ATL-27NOV03-180",
+      "title": "Atlantic named storms above 24 in Nov 3, 2027?",
+      "category": "Weather",
+      "volume": 151775,
+      "yes_bid": 24,
+      "yes_ask": 26,
+      "no_bid": 74,
+      "no_ask": 76,
+      "yes_ratio": 25,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "28772679-d662-54d4-8775-067f78c7b5e3",
+      "ticker": "POL-HOUSE-27NOV09-182",
+      "title": "Republicans to control the House after Nov 9, 2027?",
+      "category": "Politics",
+      "volume": 285557,
+      "yes_bid": 69,
+      "yes_ask": 72,
+      "no_bid": 28,
+      "no_ask": 31,
+      "yes_ratio": 70.3,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "d82ad889-1a4d-582a-9619-59912d02bb6e",
+      "ticker": "POL-SEN-27NOV21-186",
+      "title": "Democrats to control the Senate after Nov 21, 2027?",
+      "category": "Politics",
+      "volume": 69589,
+      "yes_bid": 29,
+      "yes_ask": 30,
+      "no_bid": 70,
+      "no_ask": 71,
+      "yes_ratio": 29.7,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "6c288a70-2093-55d1-af90-cffce949a2a7",
+      "ticker": "POL-GOV-27DEC15-194",
+      "title": "Government shutdown before Dec 15, 2027?",
+      "category": "Politics",
+      "volume": 227798,
+      "yes_bid": 74,
+      "yes_ask": 78,
+      "no_bid": 22,
+      "no_ask": 26,
+      "yes_ratio": 76,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "67db55ca-0141-52e7-9357-45f86d5db3d3",
+      "ticker": "CRYP-ETH-27DEC24-197",
+      "title": "Ethereum above $95,000 by Dec 24, 2027?",
+      "category": "Crypto",
+      "volume": 293243,
+      "yes_bid": 82,
+      "yes_ask": 83,
+      "no_bid": 17,
+      "no_ask": 18,
+      "yes_ratio": 82.18,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "fcabf877-3ef9-582c-b07f-f54a57b912a2",
+      "ticker": "ECON-UNEMP-27DEC30-199",
+      "title": "US unemployment above 175% in Dec 30, 2027?",
+      "category": "Economics",
+      "volume": 323804,
+      "yes_bid": 79,
+      "yes_ask": 80,
+      "no_bid": 20,
+      "no_ask": 21,
+      "yes_ratio": 79.21,
+      "recommendation": "proceed_to_clustering"
+    }
+  ],
+  "excluded_markets": [
+    {
+      "ticker": "POL-HOUSE-26MAY18-002",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 46.53
+    },
+    {
+      "ticker": "ECON-FED-26MAY21-003",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 46.53
+    },
+    {
+      "ticker": "ECON-GDP-26JUN02-007",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 44
+    },
+    {
+      "ticker": "WEA-SNOW-26JUN05-008",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 60
+    },
+    {
+      "ticker": "POL-SCOTUS-26JUN11-010",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 41.58
+    },
+    {
+      "ticker": "ECON-CPI-26JUN14-011",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 45
+    },
+    {
+      "ticker": "CRYP-SOL-26JUN20-013",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 50
+    },
+    {
+      "ticker": "ECON-PAY-26JUN26-015",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 57
+    },
+    {
+      "ticker": "WEA-HURR-26JUN29-016",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53
+    },
+    {
+      "ticker": "CRYP-ETH-26JUL02-017",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53
+    },
+    {
+      "ticker": "POL-APPROVAL-26JUL05-018",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 54
+    },
+    {
+      "ticker": "POL-HOUSE-26JUL17-022",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 47
+    },
+    {
+      "ticker": "ECON-FED-26JUL20-023",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 43.56
+    },
+    {
+      "ticker": "ECON-GDP-26AUG01-027",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 58.42
+    },
+    {
+      "ticker": "ECON-CPI-26AUG13-031",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 40
+    },
+    {
+      "ticker": "CRYP-SOL-26AUG19-033",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 47.52
+    },
+    {
+      "ticker": "POL-GOV-26AUG22-034",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 48.51
+    },
+    {
+      "ticker": "ECON-PAY-26AUG25-035",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 58.42
+    },
+    {
+      "ticker": "WEA-HURR-26AUG28-036",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 45
+    },
+    {
+      "ticker": "CRYP-ETH-26AUG31-037",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 46.53
+    },
+    {
+      "ticker": "WEA-ATL-26SEP09-040",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 40
+    },
+    {
+      "ticker": "CRYP-BTC-26SEP12-041",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53
+    },
+    {
+      "ticker": "WEA-RAIN-26SEP21-044",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53.47
+    },
+    {
+      "ticker": "WEA-SNOW-26OCT03-048",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 54
+    },
+    {
+      "ticker": "CRYP-DOGE-26OCT06-049",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 56
+    },
+    {
+      "ticker": "POL-SCOTUS-26OCT09-050",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 59
+    },
+    {
+      "ticker": "ECON-CPI-26OCT12-051",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 47
+    },
+    {
+      "ticker": "WEA-HEAT-26OCT15-052",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 55.45
+    },
+    {
+      "ticker": "CRYP-BTC-26NOV11-061",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 41.58
+    },
+    {
+      "ticker": "ECON-FED-26NOV17-063",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 57.43
+    },
+    {
+      "ticker": "POL-SEN-26NOV26-066",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 42.57
+    },
+    {
+      "ticker": "ECON-GDP-26NOV29-067",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 51.49
+    },
+    {
+      "ticker": "POL-GOV-26DEC20-074",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 44.55
+    },
+    {
+      "ticker": "WEA-HURR-26DEC26-076",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 60
+    },
+    {
+      "ticker": "WEA-RAIN-27JAN19-084",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 58
+    },
+    {
+      "ticker": "WEA-HEAT-27FEB12-092",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 41.58
+    },
+    {
+      "ticker": "POL-GOV-27FEB18-094",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 43.56
+    },
+    {
+      "ticker": "ECON-PAY-27FEB21-095",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 42.57
+    },
+    {
+      "ticker": "CRYP-ETH-27FEB27-097",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53.47
+    },
+    {
+      "ticker": "POL-APPROVAL-27MAR02-098",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 58.42
+    },
+    {
+      "ticker": "POL-HOUSE-27MAR14-102",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 48
+    },
+    {
+      "ticker": "ECON-FED-27MAR17-103",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 55
+    },
+    {
+      "ticker": "POL-SEN-27MAR26-106",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 56
+    },
+    {
+      "ticker": "ECON-GDP-27MAR29-107",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 51
+    },
+    {
+      "ticker": "POL-SCOTUS-27APR07-110",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53.47
+    },
+    {
+      "ticker": "WEA-HEAT-27APR13-112",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 54
+    },
+    {
+      "ticker": "POL-HOUSE-27MAY13-122",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 40
+    },
+    {
+      "ticker": "ECON-FED-27MAY16-123",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 52
+    },
+    {
+      "ticker": "CRYP-BTCDOM-27MAY22-125",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 59
+    },
+    {
+      "ticker": "POL-SEN-27MAY25-126",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 49.5
+    },
+    {
+      "ticker": "ECON-CPI-27JUN09-131",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 45
+    },
+    {
+      "ticker": "CRYP-SOL-27JUN15-133",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 47.52
+    },
+    {
+      "ticker": "CRYP-ETH-27JUN27-137",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 41
+    },
+    {
+      "ticker": "POL-HOUSE-27JUL12-142",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 54
+    },
+    {
+      "ticker": "WEA-RAIN-27JUL18-144",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 51.49
+    },
+    {
+      "ticker": "WEA-SNOW-27JUL30-148",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 50
+    },
+    {
+      "ticker": "ECON-CPI-27AUG08-151",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 50.5
+    },
+    {
+      "ticker": "POL-GOV-27AUG17-154",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 57.43
+    },
+    {
+      "ticker": "CRYP-ETH-27AUG26-157",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 55
+    },
+    {
+      "ticker": "POL-APPROVAL-27AUG29-158",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 48.51
+    },
+    {
+      "ticker": "ECON-UNEMP-27SEP01-159",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 50.5
+    },
+    {
+      "ticker": "WEA-ATL-27SEP04-160",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 55.45
+    },
+    {
+      "ticker": "CRYP-BTC-27SEP07-161",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 57.43
+    },
+    {
+      "ticker": "POL-HOUSE-27SEP10-162",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 56.44
+    },
+    {
+      "ticker": "WEA-SNOW-27SEP28-168",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 49
+    },
+    {
+      "ticker": "CRYP-DOGE-27OCT01-169",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 49.5
+    },
+    {
+      "ticker": "WEA-HEAT-27OCT10-172",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 60
+    },
+    {
+      "ticker": "CRYP-SOL-27OCT13-173",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 46
+    },
+    {
+      "ticker": "POL-GOV-27OCT16-174",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 59.41
+    },
+    {
+      "ticker": "WEA-HURR-27OCT22-176",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 52.48
+    },
+    {
+      "ticker": "CRYP-ETH-27OCT25-177",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 44
+    },
+    {
+      "ticker": "POL-APPROVAL-27OCT28-178",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 40.59
+    },
+    {
+      "ticker": "WEA-RAIN-27NOV15-184",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 43.56
+    },
+    {
+      "ticker": "ECON-GDP-27NOV24-187",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 49
+    },
+    {
+      "ticker": "WEA-SNOW-27NOV27-188",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53
+    },
+    {
+      "ticker": "POL-SCOTUS-27DEC03-190",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 53.47
+    },
+    {
+      "ticker": "ECON-PAY-27DEC18-195",
+      "reason": "middle_range_excluded",
+      "yes_ratio": 54.46
+    },
+    {
+      "ticker": "CRYP-BTC-26MAY15-001",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31
+    },
+    {
+      "ticker": "POL-SEN-26MAY30-006",
+      "reason": "extreme_ratio",
+      "yes_ratio": 63
+    },
+    {
+      "ticker": "CRYP-DOGE-26JUN08-009",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61
+    },
+    {
+      "ticker": "WEA-HEAT-26JUN17-012",
+      "reason": "extreme_ratio",
+      "yes_ratio": 36.63
+    },
+    {
+      "ticker": "POL-GOV-26JUN23-014",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61.39
+    },
+    {
+      "ticker": "ECON-UNEMP-26JUL08-019",
+      "reason": "extreme_ratio",
+      "yes_ratio": 62.38
+    },
+    {
+      "ticker": "WEA-ATL-26JUL11-020",
+      "reason": "extreme_ratio",
+      "yes_ratio": 65
+    },
+    {
+      "ticker": "CRYP-BTC-26JUL14-021",
+      "reason": "extreme_ratio",
+      "yes_ratio": 38.61
+    },
+    {
+      "ticker": "WEA-RAIN-26JUL23-024",
+      "reason": "extreme_ratio",
+      "yes_ratio": 9
+    },
+    {
+      "ticker": "CRYP-BTCDOM-26JUL26-025",
+      "reason": "extreme_ratio",
+      "yes_ratio": 33.66
+    },
+    {
+      "ticker": "WEA-SNOW-26AUG04-028",
+      "reason": "extreme_ratio",
+      "yes_ratio": 64.36
+    },
+    {
+      "ticker": "CRYP-DOGE-26AUG07-029",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31.68
+    },
+    {
+      "ticker": "POL-SCOTUS-26AUG10-030",
+      "reason": "extreme_ratio",
+      "yes_ratio": 69
+    },
+    {
+      "ticker": "WEA-HEAT-26AUG16-032",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35
+    },
+    {
+      "ticker": "ECON-GDP-26SEP30-047",
+      "reason": "extreme_ratio",
+      "yes_ratio": 67.33
+    },
+    {
+      "ticker": "CRYP-SOL-26OCT18-053",
+      "reason": "extreme_ratio",
+      "yes_ratio": 63
+    },
+    {
+      "ticker": "POL-GOV-26OCT21-054",
+      "reason": "extreme_ratio",
+      "yes_ratio": 32
+    },
+    {
+      "ticker": "ECON-PAY-26OCT24-055",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35
+    },
+    {
+      "ticker": "WEA-HURR-26OCT27-056",
+      "reason": "extreme_ratio",
+      "yes_ratio": 30.69
+    },
+    {
+      "ticker": "CRYP-ETH-26OCT30-057",
+      "reason": "extreme_ratio",
+      "yes_ratio": 37
+    },
+    {
+      "ticker": "POL-APPROVAL-26NOV02-058",
+      "reason": "extreme_ratio",
+      "yes_ratio": 36.63
+    },
+    {
+      "ticker": "WEA-ATL-26NOV08-060",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31
+    },
+    {
+      "ticker": "CRYP-BTCDOM-26NOV23-065",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61
+    },
+    {
+      "ticker": "WEA-SNOW-26DEC02-068",
+      "reason": "extreme_ratio",
+      "yes_ratio": 34
+    },
+    {
+      "ticker": "POL-SCOTUS-26DEC08-070",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31
+    },
+    {
+      "ticker": "CRYP-SOL-26DEC17-073",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61
+    },
+    {
+      "ticker": "ECON-PAY-26DEC23-075",
+      "reason": "extreme_ratio",
+      "yes_ratio": 68
+    },
+    {
+      "ticker": "CRYP-ETH-26DEC29-077",
+      "reason": "extreme_ratio",
+      "yes_ratio": 62.38
+    },
+    {
+      "ticker": "POL-SEN-27JAN25-086",
+      "reason": "extreme_ratio",
+      "yes_ratio": 38
+    },
+    {
+      "ticker": "CRYP-DOGE-27FEB03-089",
+      "reason": "extreme_ratio",
+      "yes_ratio": 60.4
+    },
+    {
+      "ticker": "ECON-CPI-27FEB09-091",
+      "reason": "extreme_ratio",
+      "yes_ratio": 65.35
+    },
+    {
+      "ticker": "CRYP-SOL-27FEB15-093",
+      "reason": "extreme_ratio",
+      "yes_ratio": 68.32
+    },
+    {
+      "ticker": "WEA-HURR-27FEB24-096",
+      "reason": "extreme_ratio",
+      "yes_ratio": 33.66
+    },
+    {
+      "ticker": "ECON-UNEMP-27MAR05-099",
+      "reason": "extreme_ratio",
+      "yes_ratio": 64
+    },
+    {
+      "ticker": "CRYP-BTC-27MAR11-101",
+      "reason": "extreme_ratio",
+      "yes_ratio": 69
+    },
+    {
+      "ticker": "WEA-RAIN-27MAR20-104",
+      "reason": "extreme_ratio",
+      "yes_ratio": 64
+    },
+    {
+      "ticker": "CRYP-BTCDOM-27MAR23-105",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35
+    },
+    {
+      "ticker": "WEA-SNOW-27APR01-108",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35.64
+    },
+    {
+      "ticker": "ECON-PAY-27APR22-115",
+      "reason": "extreme_ratio",
+      "yes_ratio": 37.62
+    },
+    {
+      "ticker": "CRYP-ETH-27APR28-117",
+      "reason": "extreme_ratio",
+      "yes_ratio": 39
+    },
+    {
+      "ticker": "ECON-UNEMP-27MAY04-119",
+      "reason": "extreme_ratio",
+      "yes_ratio": 62.38
+    },
+    {
+      "ticker": "WEA-ATL-27MAY07-120",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61.39
+    },
+    {
+      "ticker": "ECON-GDP-27MAY28-127",
+      "reason": "extreme_ratio",
+      "yes_ratio": 65
+    },
+    {
+      "ticker": "WEA-SNOW-27MAY31-128",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61.39
+    },
+    {
+      "ticker": "CRYP-DOGE-27JUN03-129",
+      "reason": "extreme_ratio",
+      "yes_ratio": 60.4
+    },
+    {
+      "ticker": "POL-SCOTUS-27JUN06-130",
+      "reason": "extreme_ratio",
+      "yes_ratio": 69
+    },
+    {
+      "ticker": "WEA-HEAT-27JUN12-132",
+      "reason": "extreme_ratio",
+      "yes_ratio": 87
+    },
+    {
+      "ticker": "ECON-PAY-27JUN21-135",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61
+    },
+    {
+      "ticker": "POL-APPROVAL-27JUN30-138",
+      "reason": "extreme_ratio",
+      "yes_ratio": 61
+    },
+    {
+      "ticker": "ECON-UNEMP-27JUL03-139",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35.64
+    },
+    {
+      "ticker": "WEA-ATL-27JUL06-140",
+      "reason": "extreme_ratio",
+      "yes_ratio": 35
+    },
+    {
+      "ticker": "CRYP-BTC-27JUL09-141",
+      "reason": "extreme_ratio",
+      "yes_ratio": 33.66
+    },
+    {
+      "ticker": "ECON-FED-27JUL15-143",
+      "reason": "extreme_ratio",
+      "yes_ratio": 37
+    },
+    {
+      "ticker": "POL-SEN-27JUL24-146",
+      "reason": "extreme_ratio",
+      "yes_ratio": 64.36
+    },
+    {
+      "ticker": "CRYP-DOGE-27AUG02-149",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31
+    },
+    {
+      "ticker": "POL-SCOTUS-27AUG05-150",
+      "reason": "extreme_ratio",
+      "yes_ratio": 62.38
+    },
+    {
+      "ticker": "WEA-HEAT-27AUG11-152",
+      "reason": "extreme_ratio",
+      "yes_ratio": 66
+    },
+    {
+      "ticker": "CRYP-SOL-27AUG14-153",
+      "reason": "extreme_ratio",
+      "yes_ratio": 39.6
+    },
+    {
+      "ticker": "ECON-FED-27SEP13-163",
+      "reason": "extreme_ratio",
+      "yes_ratio": 66
+    },
+    {
+      "ticker": "WEA-RAIN-27SEP16-164",
+      "reason": "extreme_ratio",
+      "yes_ratio": 38.61
+    },
+    {
+      "ticker": "CRYP-BTCDOM-27SEP19-165",
+      "reason": "extreme_ratio",
+      "yes_ratio": 60.4
+    },
+    {
+      "ticker": "POL-SEN-27SEP22-166",
+      "reason": "extreme_ratio",
+      "yes_ratio": 33
+    },
+    {
+      "ticker": "ECON-PAY-27OCT19-175",
+      "reason": "extreme_ratio",
+      "yes_ratio": 33
+    },
+    {
+      "ticker": "CRYP-BTC-27NOV06-181",
+      "reason": "extreme_ratio",
+      "yes_ratio": 86
+    },
+    {
+      "ticker": "ECON-FED-27NOV12-183",
+      "reason": "extreme_ratio",
+      "yes_ratio": 63
+    },
+    {
+      "ticker": "CRYP-BTCDOM-27NOV18-185",
+      "reason": "extreme_ratio",
+      "yes_ratio": 14
+    },
+    {
+      "ticker": "CRYP-DOGE-27NOV30-189",
+      "reason": "extreme_ratio",
+      "yes_ratio": 65.35
+    },
+    {
+      "ticker": "ECON-CPI-27DEC06-191",
+      "reason": "extreme_ratio",
+      "yes_ratio": 87
+    },
+    {
+      "ticker": "WEA-HEAT-27DEC09-192",
+      "reason": "extreme_ratio",
+      "yes_ratio": 69.31
+    },
+    {
+      "ticker": "CRYP-SOL-27DEC12-193",
+      "reason": "extreme_ratio",
+      "yes_ratio": 65.35
+    },
+    {
+      "ticker": "WEA-HURR-27DEC21-196",
+      "reason": "extreme_ratio",
+      "yes_ratio": 34
+    },
+    {
+      "ticker": "POL-APPROVAL-27DEC27-198",
+      "reason": "extreme_ratio",
+      "yes_ratio": 63
+    },
+    {
+      "ticker": "WEA-ATL-28JAN02-200",
+      "reason": "extreme_ratio",
+      "yes_ratio": 31.68
+    }
+  ],
+  "next_phase": {
+    "recipient": "Ivan (T580)",
+    "task": "Clustering analysis on qualifying markets",
+    "markets_count": 50
+  }
+}

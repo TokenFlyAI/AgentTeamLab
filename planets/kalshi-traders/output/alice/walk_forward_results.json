@@ -1,0 +1,190 @@
+{
+  "generated_at": "2026-04-04T20:44:34.508Z",
+  "task": "T580",
+  "config": {
+    "trainRatio": 0.6,
+    "windowCount": 3,
+    "kellyFraction": 0.25,
+    "maxKellyBet": 0.1,
+    "slippageBps": 50,
+    "tradingFeePct": 0.01,
+    "maxDrawdownPct": 15,
+    "maxLossPerTrade": 50,
+    "capitalFloor": 50,
+    "initialCapital": 1000,
+    "contractValue": 1
+  },
+  "windows": [
+    {
+      "train": {
+        "label": "Window 1 Train",
+        "startCapital": "1000.00",
+        "endCapital": "1015.26",
+        "returnPct": "1.53",
+        "totalTrades": 1,
+        "wins": 1,
+        "losses": 0,
+        "winRate": "100.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 3,
+        "trades": 1
+      },
+      "test": {
+        "label": "Window 1 Test",
+        "startCapital": "1000.00",
+        "endCapital": "1006.88",
+        "returnPct": "0.69",
+        "totalTrades": 1,
+        "wins": 1,
+        "losses": 0,
+        "winRate": "100.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 3,
+        "trades": 1
+      }
+    },
+    {
+      "train": {
+        "label": "Window 2 Train",
+        "startCapital": "1006.88",
+        "endCapital": "1647.90",
+        "returnPct": "63.66",
+        "totalTrades": 2,
+        "wins": 2,
+        "losses": 0,
+        "winRate": "100.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 2,
+        "trades": 2
+      },
+      "test": {
+        "label": "Window 2 Test",
+        "startCapital": "1006.88",
+        "endCapital": "1006.88",
+        "returnPct": "0.00",
+        "totalTrades": 0,
+        "wins": 0,
+        "losses": 0,
+        "winRate": "0.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 4,
+        "trades": 0
+      }
+    },
+    {
+      "train": {
+        "label": "Window 3 Train",
+        "startCapital": "1006.88",
+        "endCapital": "1187.17",
+        "returnPct": "17.91",
+        "totalTrades": 1,
+        "wins": 1,
+        "losses": 0,
+        "winRate": "100.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 3,
+        "trades": 1
+      },
+      "test": {
+        "label": "Window 3 Test",
+        "startCapital": "1006.88",
+        "endCapital": "3375.11",
+        "returnPct": "235.20",
+        "totalTrades": 3,
+        "wins": 3,
+        "losses": 0,
+        "winRate": "100.0",
+        "maxDrawdown": "0.00",
+        "maxDrawdownPct": "0.00",
+        "circuitBroken": false,
+        "capitalFloorHit": false,
+        "tradesSkippedStopLoss": 1,
+        "trades": 3
+      }
+    }
+  ],
+  "summary": {
+    "totalTestTrades": 4,
+    "overallWinRate": 100,
+    "initialCapital": 1000,
+    "finalCapital": 3375.11,
+    "totalReturnPct": 237.51,
+    "worstDrawdownPct": 0,
+    "circuitBreakerTriggered": false,
+    "slippageBps": 50,
+    "positionSizing": "quarter-kelly"
+  },
+  "detailedTrades": [
+    {
+      "signal": "sig_9",
+      "pair": "BTCW-26-JUN30-80K / INXW-26-DEC31-7000",
+      "contracts": 50,
+      "z_score": 2.712,
+      "confidence": 0.6974,
+      "entrySpread": "-0.0145",
+      "exitSpread": "-0.0129",
+      "rawPnL": "7.88",
+      "fees": "1.00",
+      "netPnL": "6.88",
+      "capital": "1006.88",
+      "drawdownPct": "0.00"
+    },
+    {
+      "signal": "sig_41",
+      "pair": "INXW-26-DEC31-7000 / KXNF-20260501-T250000",
+      "contracts": 50,
+      "z_score": -1.631,
+      "confidence": 0.6566,
+      "entrySpread": "-0.6257",
+      "exitSpread": "-0.5709",
+      "rawPnL": "273.91",
+      "fees": "1.00",
+      "netPnL": "272.91",
+      "capital": "1279.79",
+      "drawdownPct": "0.00"
+    },
+    {
+      "signal": "sig_43",
+      "pair": "INXW-26-DEC31-7000 / KXNF-20260501-T250000",
+      "contracts": 127,
+      "z_score": -2.039,
+      "confidence": 0.6566,
+      "entrySpread": "-0.6674",
+      "exitSpread": "-0.6327",
+      "rawPnL": "440.69",
+      "fees": "2.54",
+      "netPnL": "438.15",
+      "capital": "1717.94",
+      "drawdownPct": "0.00"
+    },
+    {
+      "signal": "sig_45",
+      "pair": "INXW-26-DEC31-7000 / KXNF-20260501-T250000",
+      "contracts": 171,
+      "z_score": -2.566,
+      "confidence": 0.6566,
+      "entrySpread": "-0.7298",
+      "exitSpread": "-0.6327",
+      "rawPnL": "1660.59",
+      "fees": "3.42",
+      "netPnL": "1657.17",
+      "capital": "3375.11",
+      "drawdownPct": "0.00"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "healthCheck": {
+    "lastSuccess": "2026-04-04T08:01:13.099Z",
+    "consecutiveFailures": 2598,
+    "totalChecks": 4013,
+    "failedChecks": 3212
+  },
+  "trades": {
+    "totalExecuted": 0,
+    "totalFailed": 0,
+    "totalRejected": 0,
+    "lastTradeAt": null
+  },
+  "pnl": {
+    "dailyRealizedCents": 0,
+    "dailyUnrealizedCents": 0,
+    "totalPnlCents": 0,
+    "maxDrawdownCents": 0,
+    "sharpeRatio": 0,
+    "lastUpdate": null
+  },
+  "pipelines": {
+    "econScanner": {
+      "lastRun": null,
+      "status": "unknown"
+    },
+    "cryptoScanner": {
+      "lastRun": null,
+      "status": "unknown"
+    }
+  }
+}

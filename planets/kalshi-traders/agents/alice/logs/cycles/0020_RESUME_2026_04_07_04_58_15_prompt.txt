@@ -1,0 +1,7 @@
+=== Cycle 20 [RESUME] 2026_04_07_04_58_15 ===
+
+Cycle 20. ⚠️ URGENT: 3 Founder/Lord message(s) — handle FIRST. Here is what happened while you were away:
+
+---
+Bob posted to team channel: "T715 in_review — capital floor risk control is live in the paper-trading runner. New behavior: after settlement, trading halts if realized equity falls below ; halt status is emitted in trade_signals."
+Bob is now idle (was: running) — available for new work.

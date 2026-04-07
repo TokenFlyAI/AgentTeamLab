@@ -1,35 +1,190 @@
 {
   "task": "T570",
   "validator": "tina",
-  "timestamp": "2026-04-04T07:43:43.742Z",
+  "timestamp": "2026-04-04T07:49:06.553Z",
   "target": "dave/backtest_results.json",
   "reference": "bob/trade_signals.json",
   "summary": {
-    "pass": 5,
-    "fail": 20,
-    "warn": 2
+    "pass": 13,
+    "fail": 27,
+    "warn": 19
   },
   "verdict": "FAIL",
   "findings": [
     {
-      "status": "WARN",
-      "check": "Signal count field present",
-      "detail": "backtest_results.json missing signal count field — cannot verify"
-    },
-    {
       "status": "FAIL",
-      "check": "Win count mismatch",
-      "detail": "Reported: 11, Computed: 0"
+      "check": "Signal count mismatch",
+      "detail": "Bob: 47 signals, Dave backtest: 38"
     },
     {
       "status": "PASS",
-      "check": "All trade P&L calculations",
-      "detail": "18 trades verified"
+      "check": "Trade trade_1 P&L",
+      "detail": "$-0.1200 correct"
     },
     {
       "status": "FAIL",
-      "check": "Drawdown tracking missing",
-      "detail": "No max_drawdown field in backtest results — CRITICAL for risk management"
+      "check": "Trade trade_2 P&L mismatch",
+      "detail": "Reported: $1.9110, Expected: $-0.0228 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_3 P&L mismatch",
+      "detail": "Reported: $1.9110, Expected: $-0.0228 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_4 P&L mismatch",
+      "detail": "Reported: $-0.8970, Expected: $0.0000 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_5 P&L mismatch",
+      "detail": "Reported: $1.5660, Expected: $-0.0800 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_6 P&L mismatch",
+      "detail": "Reported: $-2.0060, Expected: $-0.2400 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_7 P&L mismatch",
+      "detail": "Reported: $1.0540, Expected: $0.0652 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_8 P&L mismatch",
+      "detail": "Reported: $1.0540, Expected: $0.0652 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_9 P&L mismatch",
+      "detail": "Reported: $1.2910, Expected: $-0.1020 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_10 P&L mismatch",
+      "detail": "Reported: $1.2910, Expected: $-0.1020 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_11 P&L mismatch",
+      "detail": "Reported: $3.4905, Expected: $-0.2400 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "PASS",
+      "check": "Trade trade_12 P&L",
+      "detail": "$-0.1200 correct"
+    },
+    {
+      "status": "PASS",
+      "check": "Trade trade_13 P&L",
+      "detail": "$-0.1200 correct"
+    },
+    {
+      "status": "PASS",
+      "check": "Trade trade_14 P&L",
+      "detail": "$-0.1200 correct"
+    },
+    {
+      "status": "PASS",
+      "check": "Trade trade_15 P&L",
+      "detail": "$-0.1200 correct"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_16 P&L mismatch",
+      "detail": "Reported: $1.1250, Expected: $-0.1064 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_17 P&L mismatch",
+      "detail": "Reported: $1.1250, Expected: $-0.1064 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "FAIL",
+      "check": "Trade trade_18 P&L mismatch",
+      "detail": "Reported: $1.9440, Expected: $0.0800 (spread diff × contracts - fees)"
+    },
+    {
+      "status": "PASS",
+      "check": "Summary P&L consistent",
+      "detail": "$14.2595 matches sum of trades"
+    },
+    {
+      "status": "PASS",
+      "check": "Win count",
+      "detail": "11 wins matches trade data"
+    },
+    {
+      "status": "PASS",
+      "check": "Win rate",
+      "detail": "61.1% correct"
+    },
+    {
+      "status": "FAIL",
+      "check": "Drawdown calculation mismatch",
+      "detail": "Reported: 1.92%, Computed: 0.00%"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_1",
+      "detail": "Expected: $99.88, Got: $99.80"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_3",
+      "detail": "Expected: $103.62, Got: $103.66"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_4",
+      "detail": "Expected: $102.77, Got: $102.81"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_5",
+      "detail": "Expected: $104.37, Got: $104.29"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_7",
+      "detail": "Expected: $103.34, Got: $103.32"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_8",
+      "detail": "Expected: $104.37, Got: $104.41"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_9",
+      "detail": "Expected: $105.70, Got: $105.66"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_10",
+      "detail": "Expected: $106.95, Got: $107.00"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_11",
+      "detail": "Expected: $110.49, Got: $110.55"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_16",
+      "detail": "Expected: $111.19, Got: $111.11"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_17",
+      "detail": "Expected: $112.24, Got: $112.28"
+    },
+    {
+      "status": "FAIL",
+      "check": "Capital tracking trade trade_18",
+      "detail": "Expected: $114.22, Got: $114.14"
     },
     {
       "status": "WARN",
@@ -37,94 +192,99 @@
       "detail": "Backtest may use in-sample data for both training and testing"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_1 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_1 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_2 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_2 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_3 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_3 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_4 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_4 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_5 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_5 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_6 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_6 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_7 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_7 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_8 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_8 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_9 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_9 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_10 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_10 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_11 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_11 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_12 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_12 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_13 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_13 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_14 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_14 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_15 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_15 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_16 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_16 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_17 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_17 missing timestamps",
+      "detail": "Cannot verify temporal order"
     },
     {
-      "status": "FAIL",
-      "check": "Trade trade_18 temporal order",
-      "detail": "Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)"
+      "status": "WARN",
+      "check": "Trade trade_18 missing timestamps",
+      "detail": "Cannot verify temporal order"
+    },
+    {
+      "status": "PASS",
+      "check": "No temporal leakage",
+      "detail": "All entry times precede exit times"
     },
     {
       "status": "PASS",

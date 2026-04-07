@@ -1,0 +1,7 @@
+=== Cycle 9 [RESUME] 2026_04_07_04_57_19 ===
+
+Cycle 9. ⚠️ URGENT: 4 Founder/Lord message(s) — handle FIRST. Here is what happened while you were away:
+
+---
+Bob sent you a message: "T715 ready for QA review. Capital floor now halts new paper trades in agents/bob/backend/strategies/live_runner.js once paper equity falls below  and "
+Bob posted to team channel: "T715 in_review — capital floor risk control is live in the paper-trading runner. New behavior: after settlement, trading halts if realized equity falls below ; halt status is emitted in trade_signals."

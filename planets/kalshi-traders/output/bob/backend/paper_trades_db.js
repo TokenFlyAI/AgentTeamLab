@@ -11,7 +11,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Database path
-const DB_DIR = path.join(__dirname, "..", "output");
+const DB_DIR = path.join(__dirname, "..");
 const DB_PATH = path.join(DB_DIR, "paper_trades.db");
 
 // Ensure directory exists

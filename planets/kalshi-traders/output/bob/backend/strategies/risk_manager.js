@@ -9,7 +9,12 @@
 
 "use strict";
 
-const { Pool } = require("pg");
+let Pool = null;
+try {
+  ({ Pool } = require("pg"));
+} catch (e) {
+  console.warn("[RiskManager] Optional dependency 'pg' not installed, using in-memory risk tracking");
+}
 
 // Database configuration
 const dbConfig = {
@@ -23,7 +28,7 @@ const dbConfig = {
 let pool = null;
 
 try {
-  pool = new Pool(dbConfig);
+  pool = Pool ? new Pool(dbConfig) : null;
 } catch (e) {
   console.warn("[RiskManager] Database not available, using in-memory risk tracking");
 }
@@ -70,7 +75,7 @@ async function getCurrentPositions() {
  * Get today's P&L
  */
 async function getTodayPnL() {
-  if (!pool) return { realized: 0, unrealized: 0 };
+  if (!pool) return { realized: 0, unrealized: 0, total: 0 };
   try {
     const client = await pool.connect();
     try {

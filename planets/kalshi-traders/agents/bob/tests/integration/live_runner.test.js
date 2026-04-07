@@ -20,6 +20,7 @@ const STRATEGIES_DIR = path.join(BACKEND_DIR, "strategies");
 const LIVE_RUNNER = path.join(STRATEGIES_DIR, "live_runner.js");
 const TRADE_SIGNALS = path.join(OUTPUT_DIR, "trade_signals.json");
 const PAPER_TRADE_LOG = path.join(OUTPUT_DIR, "paper_trade_log.json");
+const PAPER_TRADES_DB = path.join(OUTPUT_DIR, "paper_trades.db");
 
 const results = {
   passed: 0,
@@ -52,6 +53,38 @@ function assert(condition, message) {
   if (!condition) throw new Error(message || "Assertion failed");
 }
 
+function backupFile(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  const backupPath = `${filePath}.bak-test`;
+  fs.copyFileSync(filePath, backupPath);
+  return backupPath;
+}
+
+function restoreFile(filePath, backupPath) {
+  if (backupPath && fs.existsSync(backupPath)) {
+    fs.copyFileSync(backupPath, filePath);
+    fs.unlinkSync(backupPath);
+    return;
+  }
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+}
+
+function runLiveRunner(args = "", extraEnv = {}) {
+  return execSync(`node "${LIVE_RUNNER}" ${args}`.trim(), {
+    encoding: "utf-8",
+    cwd: BACKEND_DIR,
+    env: {
+      ...process.env,
+      KALSHI_API_KEY: "",
+      PAPER_TRADING: "1",
+      ...extraEnv,
+    },
+    timeout: 30000,
+  });
+}
+
 async function main() {
 // Test 1: Live runner exists and is executable
 await runTest("Live runner script exists", () => {
@@ -60,12 +93,7 @@ await runTest("Live runner script exists", () => {
 
 // Test 2: Live runner executes without crashing (mock mode)
 await runTest("Live runner executes without crash", () => {
-  const output = execSync(`node "${LIVE_RUNNER}"`, {
-    encoding: "utf-8",
-    cwd: BACKEND_DIR,
-    env: { ...process.env, KALSHI_API_KEY: "" }, // Force mock mode
-    timeout: 30000,
-  });
+  const output = runLiveRunner("", { PAPER_TRADING: "0" });
   assert(output.includes("Live Strategy Runner"), "Expected output not found");
 });
 
@@ -102,16 +130,7 @@ await runTest("Signals have required fields", () => {
 
 // Test 6: Paper trading mode works
 await runTest("Paper trading mode works", () => {
-  const output = execSync(`node "${LIVE_RUNNER}" --execute`, {
-    encoding: "utf-8",
-    cwd: BACKEND_DIR,
-    env: { 
-      ...process.env, 
-      KALSHI_API_KEY: "",
-      PAPER_TRADING: "1"
-    },
-    timeout: 30000,
-  });
+  const output = runLiveRunner("--execute");
   assert(
     output.includes("PAPER TRADING MODE") || output.includes("paper trades"),
     "Paper trading mode not detected"
@@ -122,15 +141,7 @@ await runTest("Paper trading mode works", () => {
 await runTest("Paper trade log created", () => {
   // Run with paper trading to generate log
   try {
-    execSync(`node "${LIVE_RUNNER}" --execute`, {
-      cwd: BACKEND_DIR,
-      env: { 
-        ...process.env, 
-        KALSHI_API_KEY: "",
-        PAPER_TRADING: "1"
-      },
-      timeout: 30000,
-    });
+    runLiveRunner("--execute");
   } catch (e) {
     // May fail for other reasons, but log should still exist
   }
@@ -145,12 +156,7 @@ await runTest("Paper trade log created", () => {
 
 // Test 8: Mock fallback mode works without API key
 await runTest("Mock fallback mode works", () => {
-  const output = execSync(`node "${LIVE_RUNNER}"`, {
-    encoding: "utf-8",
-    cwd: BACKEND_DIR,
-    env: { ...process.env, KALSHI_API_KEY: "" },
-    timeout: 30000,
-  });
+  const output = runLiveRunner("", { PAPER_TRADING: "0" });
   assert(
     output.includes("mock") || output.includes("fallback") || output.includes("FALLBACK"),
     "Mock fallback mode not detected"
@@ -159,16 +165,7 @@ await runTest("Mock fallback mode works", () => {
 
 // Test 9: Risk manager is called (check for risk-related output)
 await runTest("Risk manager is invoked", () => {
-  const output = execSync(`node "${LIVE_RUNNER}" --execute`, {
-    encoding: "utf-8",
-    cwd: BACKEND_DIR,
-    env: { 
-      ...process.env, 
-      KALSHI_API_KEY: "",
-      PAPER_TRADING: "1"
-    },
-    timeout: 30000,
-  });
+  const output = runLiveRunner("--execute");
   assert(
     output.includes("Risk") || output.includes("risk"),
     "Risk manager not invoked"
@@ -180,6 +177,55 @@ await runTest("Execution report generated", () => {
   const data = JSON.parse(fs.readFileSync(TRADE_SIGNALS, "utf8"));
   // When --execute is passed, executed flag should be set
   assert(typeof data.executed === "boolean", "Missing executed flag");
+});
+
+// Test 11: Capital floor halts new paper trades after realized losses breach $50 floor
+await runTest("Capital floor breach halts trading", () => {
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  const dbBackup = backupFile(PAPER_TRADES_DB);
+  const signalsBackup = backupFile(TRADE_SIGNALS);
+  const logBackup = backupFile(PAPER_TRADE_LOG);
+
+  try {
+    const breachedDb = [
+      {
+        id: "pt_test_floor_breach",
+        timestamp: "2026-04-07T00:00:00.000Z",
+        market: "BTCW-26-JUN30-80K",
+        signal_type: "mean_reversion",
+        confidence: 0.72,
+        direction: "YES",
+        contracts: 10,
+        entry_price: 60,
+        exit_price: 1,
+        status: "CLOSED",
+        pnl: -496000,
+        outcome: "LOSS",
+        created_at: "2026-04-07T00:00:00.000Z",
+        updated_at: "2026-04-07T00:05:00.000Z",
+        metadata: { runNumber: 1, settledAtRun: 4 },
+      },
+    ];
+    fs.writeFileSync(PAPER_TRADES_DB, JSON.stringify(breachedDb, null, 2));
+
+    const output = runLiveRunner("--execute");
+    assert(output.includes("Capital floor breached"), "Expected capital floor breach log");
+    assert(output.includes("halting new trades"), "Expected halt log");
+
+    const report = JSON.parse(fs.readFileSync(TRADE_SIGNALS, "utf8"));
+    assert(report.halted === true, "Expected halted=true in report");
+    assert(report.haltReason && report.haltReason.includes("capital floor breached"), "Expected haltReason in report");
+    assert(report.capitalFloor, "Expected capitalFloor object in report");
+    assert(report.capitalFloor.breached === true, "Expected capitalFloor.breached=true");
+    assert(report.capitalFloor.currentCapitalCents === 4000, `Expected current capital 4000, got ${report.capitalFloor.currentCapitalCents}`);
+    assert(report.executionReport, "Expected executionReport in halted run");
+    assert(report.executionReport.executed === 0, "Expected no trades executed after halt");
+    assert(report.executionReport.halted === true, "Expected execution report to mark halt");
+  } finally {
+    restoreFile(PAPER_TRADES_DB, dbBackup);
+    restoreFile(TRADE_SIGNALS, signalsBackup);
+    restoreFile(PAPER_TRADE_LOG, logBackup);
+  }
 });
 
 // Summary

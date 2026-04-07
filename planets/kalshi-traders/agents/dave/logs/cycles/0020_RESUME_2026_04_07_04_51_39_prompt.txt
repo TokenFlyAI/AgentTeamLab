@@ -1,0 +1,7 @@
+=== Cycle 20 [RESUME] 2026_04_07_04_51_39 ===
+
+Cycle 20. Here is what happened while you were away:
+
+---
+Alice started working (was: idle).
+Bob started working (was: idle).

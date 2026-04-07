@@ -1,8 +1,22 @@
 {
-  "generatedAt": "2026-04-04T01:30:16.177Z",
+  "generatedAt": "2026-04-07T11:55:57.436Z",
   "source": "mock_fallback",
   "marketCount": 5,
   "signalCount": 1,
+  "approvedSignalCount": 0,
+  "rejectedSignalCount": 1,
+  "halted": false,
+  "haltReason": null,
+  "capitalFloor": {
+    "initialCapitalCents": 500000,
+    "floorCents": 5000,
+    "realizedPnLCents": 0,
+    "currentCapitalCents": 500000,
+    "breachAmountCents": 0,
+    "breached": false,
+    "closedTrades": 0,
+    "openTrades": 0
+  },
   "executed": false,
   "markets": [
     {

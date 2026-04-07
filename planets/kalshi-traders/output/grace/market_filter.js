@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Market Filtering Engine — Sprint 8 Phase 1 (T343)
+ * Market Filtering Engine — Sprint 4 Phase 1 (T579)
  * 
  * Filters Kalshi markets by:
  * 1. Volume (liquidity threshold)
  * 2. YES/NO ratio (target: 15-30% or 70-85% YES)
  * 
- * Output: agents/public/markets_filtered.json
+ * Output: output/filtered_markets.json
  * 
  * Author: Grace (Data Engineer)
- * Date: 2026-04-03
+ * Date: 2026-04-06
  */
 
 "use strict";
@@ -31,8 +31,9 @@ const CONFIG = {
   // Excluded middle range (too efficient, no edge)
   excludedRange: { min: 40, max: 60 },
   
-  // Output file
-  outputPath: path.join(__dirname, "../../public/markets_filtered.json"),
+  // Preferred handoff paths for Sprint 4 dry-run pipeline
+  inputPath: path.join(__dirname, "../../agents/bob/output/mock_kalshi_markets.json"),
+  outputPath: path.join(__dirname, "filtered_markets.json"),
 };
 
 // Expanded fallback markets for testing (when API unavailable)
@@ -304,29 +305,54 @@ function filterByYesNoRatio(markets) {
 
 /**
  * Fetch markets from Kalshi API or use fallback
+ * T579: Prefer Bob's mock_kalshi_markets.json handoff, then fall back to API/mock client
  */
 async function fetchMarkets() {
-  // Try to use Kalshi client if API key available
-  if (process.env.KALSHI_API_KEY) {
-    try {
-      const { KalshiClient } = require("../bob/backend/kalshi_client");
-      const client = new KalshiClient({
-        apiKey: process.env.KALSHI_API_KEY,
-        demo: process.env.KALSHI_DEMO !== "false",
-      });
-      
-      const response = await client.getMarkets({ status: "active", limit: 100 });
-      const markets = response.data?.markets || [];
-      
-      if (markets.length > 0) {
-        console.log(`Fetched ${markets.length} markets from Kalshi API`);
-        return markets;
-      }
-    } catch (e) {
-      console.warn("Failed to fetch from Kalshi API:", e.message);
+  if (fs.existsSync(CONFIG.inputPath)) {
+    const raw = JSON.parse(fs.readFileSync(CONFIG.inputPath, "utf8"));
+    const markets = Array.isArray(raw) ? raw : raw.markets;
+    if (Array.isArray(markets) && markets.length > 0) {
+      console.log(`Loaded ${markets.length} markets from ${CONFIG.inputPath}`);
+      return markets;
     }
   }
-  
+
+  try {
+    // Try credential manager first (loads .env, validates creds)
+    // Resolve paths relative to the actual file location (output/ is symlinked)
+    const bobOutput = path.join(__dirname, "..", "bob");
+    const { CredentialManager } = require(path.join(bobOutput, "credential_manager"));
+    const creds = new CredentialManager();
+    creds.validate();
+    const client = creds.createClient();
+    await client.login();
+
+    const response = await client.getMarkets({ status: "open", limit: 200 });
+    const markets = response.markets || [];
+
+    if (markets.length > 0) {
+      console.log(`Fetched ${markets.length} markets from Kalshi API via credential_manager`);
+      return markets;
+    }
+  } catch (e1) {
+    // Credential manager not available or no creds — try direct client in mock mode
+    try {
+      const { KalshiClient } = require(path.join(__dirname, "..", "bob", "kalshi_client"));
+      const client = new KalshiClient({ mock: true });
+      await client.login();
+
+      const response = await client.getMarkets({ status: "open", limit: 200 });
+      const markets = response.markets || [];
+
+      if (markets.length > 0) {
+        console.log(`Fetched ${markets.length} markets from Kalshi client (mock mode)`);
+        return markets;
+      }
+    } catch (e2) {
+      console.warn("Kalshi client unavailable:", e2.message);
+    }
+  }
+
   // Use fallback markets
   console.log("Using fallback markets (API unavailable)");
   return FALLBACK_MARKETS;
@@ -336,7 +362,7 @@ async function fetchMarkets() {
  * Main filtering pipeline
  */
 async function runFilter() {
-  console.log("=== Market Filtering Engine — T530 Phase 1 Revalidation ===\n");
+  console.log("=== Market Filtering Engine — T579 Sprint 4 Phase 1 ===\n");
   
   // Step 1: Fetch markets
   console.log("Step 1: Fetching markets...");
@@ -368,8 +394,8 @@ async function runFilter() {
   // Step 4: Build output
   const output = {
     generated_at: new Date().toISOString(),
-    task: "T530/T537",
-    phase: "Phase 1 Revalidation",
+    task: "T579",
+    phase: "Sprint 4 Phase 1",
     config: CONFIG,
     summary: {
       total_markets: markets.length,
@@ -405,7 +431,7 @@ async function runFilter() {
       })),
     ],
     next_phase: {
-      recipient: "Ivan (T344)",
+      recipient: "Ivan (T580)",
       task: "Clustering analysis on qualifying markets",
       markets_count: qualifying.length,
     },
@@ -428,7 +454,7 @@ async function runFilter() {
   console.log("\n=== SUMMARY ===");
   console.log(`Total markets analyzed: ${markets.length}`);
   console.log(`Qualifying for clustering: ${qualifying.length}`);
-  console.log(`Next: Hand off to Ivan (T344) for clustering analysis`);
+  console.log("Next: Hand off to Ivan (T580) for clustering analysis");
   
   return output;
 }

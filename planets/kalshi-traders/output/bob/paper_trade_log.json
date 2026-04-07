@@ -4,6 +4,8 @@
   "rejected": 0,
   "failed": 0,
   "persisted": 1,
+  "halted": false,
+  "haltReason": null,
   "trades": [
     {
       "ticker": "BTCW-26-JUN30-100K",
@@ -13,7 +15,7 @@
       "strategy": "mean_reversion",
       "confidence": 0.95,
       "expectedEdge": 6,
-      "timestamp": "2026-04-03T23:39:13.180Z"
+      "timestamp": "2026-04-07T12:00:32.850Z"
     }
   ]
 }

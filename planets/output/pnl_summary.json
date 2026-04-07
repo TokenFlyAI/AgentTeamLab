@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-04T07:12:01.839Z",
+  "generated_at": "2026-04-04T07:27:08.201Z",
   "phase": 4,
   "mode": "paper_trading",
-  "total_trades": 5,
-  "wins": 5,
+  "total_trades": 3,
+  "wins": 3,
   "losses": 0,
   "win_rate": 1,
-  "total_pnl": 1.65,
-  "avg_pnl_per_trade": 0.32999999999999996,
-  "total_contracts": 11
+  "total_pnl": 0.9,
+  "avg_pnl_per_trade": 0.3,
+  "total_contracts": 6
 }

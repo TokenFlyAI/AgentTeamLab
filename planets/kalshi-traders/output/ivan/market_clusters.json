@@ -1,233 +1,519 @@
 {
-  "generated_at": "2026-04-03T21:23:13.649918",
-  "method": "Economic domain knowledge + cross-category correlation rules",
-  "task": "T534",
-  "input_markets": 15,
+  "generated_at": "2026-04-07T06:26:09.037441+00:00",
+  "task": "T580",
+  "source": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/grace/output/filtered_markets.json",
+  "method": "Keyword/category clustering proxy for LLM embeddings",
   "clusters": [
     {
-      "id": "crypto_internal",
-      "label": "Crypto Markets",
+      "id": "macro_policy_growth",
+      "label": "Macro Policy and Growth",
       "markets": [
-        "BTCW-26-JUN30-80K",
-        "ETHW-26-DEC31-5K",
-        "BTCW-26-DEC31-120K",
-        "SOLW-26-JUN30-300",
-        "ETHW-26-JUN30-4K"
+        "ECON-UNEMP-26SEP06-039",
+        "ECON-FED-26SEP18-043",
+        "ECON-UNEMP-26NOV05-059",
+        "ECON-CPI-26DEC11-071",
+        "ECON-UNEMP-27JAN04-079",
+        "ECON-FED-27JAN16-083",
+        "ECON-GDP-27JAN28-087",
+        "ECON-CPI-27APR10-111",
+        "ECON-GDP-27JUL27-147",
+        "ECON-PAY-27AUG20-155",
+        "ECON-GDP-27SEP25-167",
+        "ECON-CPI-27OCT07-171",
+        "ECON-UNEMP-27OCT31-179",
+        "ECON-UNEMP-27DEC30-199"
       ],
-      "correlation_strength": 0.95,
-      "description": "Internal Crypto market correlations based on shared underlying drivers",
-      "correlation_type": "internal"
+      "correlation_strength": 0.73,
+      "description": "Fed policy and GDP growth markets share the same macro driver set.",
+      "domains": [
+        "growth",
+        "inflation",
+        "labor",
+        "rates"
+      ],
+      "cluster_type": "keyword_theme"
     },
     {
-      "id": "economics_internal",
-      "label": "Economics Markets",
+      "id": "digital_assets",
+      "label": "Digital Assets",
       "markets": [
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000",
-        "GDPW-26-Q2-3PCT",
-        "CPIW-26-MAY-3PCT"
+        "CRYP-BTCDOM-26MAY27-005",
+        "CRYP-BTCDOM-26SEP24-045",
+        "CRYP-DOGE-26DEC05-069",
+        "CRYP-BTC-27JAN10-081",
+        "CRYP-BTCDOM-27JAN22-085",
+        "CRYP-DOGE-27APR04-109",
+        "CRYP-SOL-27APR16-113",
+        "CRYP-BTC-27MAY10-121",
+        "CRYP-BTCDOM-27JUL21-145",
+        "CRYP-ETH-27DEC24-197"
       ],
-      "correlation_strength": 0.8999999999999999,
-      "description": "Internal Economics market correlations based on shared underlying drivers",
-      "correlation_type": "internal"
+      "correlation_strength": 0.58,
+      "description": "Crypto markets grouped by blockchain asset exposure.",
+      "domains": [
+        "crypto"
+      ],
+      "cluster_type": "keyword_theme"
     },
     {
-      "id": "financial_internal",
-      "label": "Financial Markets",
+      "id": "political_control",
+      "label": "Political Control and Approval",
       "markets": [
-        "KXNF-20260501-T200000",
-        "KXNF-20260501-T250000"
+        "POL-SEN-26JUL29-026",
+        "POL-APPROVAL-26SEP03-038",
+        "POL-HOUSE-26SEP15-042",
+        "POL-SEN-26SEP27-046",
+        "POL-HOUSE-26NOV14-062",
+        "POL-APPROVAL-27JAN01-078",
+        "POL-HOUSE-27JAN13-082",
+        "POL-SCOTUS-27FEB06-090",
+        "POL-GOV-27APR19-114",
+        "POL-APPROVAL-27MAY01-118",
+        "POL-GOV-27JUN18-134",
+        "POL-SCOTUS-27OCT04-170",
+        "POL-HOUSE-27NOV09-182",
+        "POL-SEN-27NOV21-186",
+        "POL-GOV-27DEC15-194"
       ],
-      "correlation_strength": 0.7999999999999999,
-      "description": "Internal Financial market correlations based on shared underlying drivers",
-      "correlation_type": "internal"
+      "correlation_strength": 0.69,
+      "description": "Approval and chamber-control markets cluster around the same electoral sentiment drivers.",
+      "domains": [
+        "politics"
+      ],
+      "cluster_type": "keyword_theme"
     },
     {
-      "id": "rates_macro",
-      "label": "Rates-Macro Inverse Correlation",
+      "id": "weather_events",
+      "label": "Weather and Climate Events",
       "markets": [
-        "FEDW-26-JUN-CUT",
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000"
+        "WEA-RAIN-26MAY24-004",
+        "WEA-RAIN-26NOV20-064",
+        "WEA-HEAT-26DEC14-072",
+        "WEA-ATL-27JAN07-080",
+        "WEA-SNOW-27JAN31-088",
+        "WEA-ATL-27MAR08-100",
+        "WEA-HURR-27APR25-116",
+        "WEA-RAIN-27MAY19-124",
+        "WEA-HURR-27JUN24-136",
+        "WEA-HURR-27AUG23-156",
+        "WEA-ATL-27NOV03-180"
       ],
-      "correlation_strength": 0.7,
-      "description": "Fed rate cuts inversely correlate with strong NFP/GDP data",
-      "correlation_type": "cross_category"
-    },
-    {
-      "id": "crypto_macro",
-      "label": "Crypto-Macro Correlation",
-      "markets": [
-        "BTCW-26-JUN30-80K",
-        "ETHW-26-DEC31-5K",
-        "BTCW-26-DEC31-120K",
-        "SOLW-26-JUN30-300",
-        "ETHW-26-JUN30-4K",
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000",
-        "GDPW-26-Q2-3PCT",
-        "CPIW-26-MAY-3PCT",
-        "KXNF-20260501-T200000",
-        "KXNF-20260501-T250000"
+      "correlation_strength": 0.64,
+      "description": "Rain, heat, snow, and hurricane contracts share event-driven weather exposure.",
+      "domains": [
+        "weather"
       ],
-      "correlation_strength": 0.65,
-      "description": "Crypto assets inversely correlate with strong economic data (NFP/GDP) due to risk-off flows and Fed policy",
-      "correlation_type": "cross_category"
-    },
-    {
-      "id": "equity_macro",
-      "label": "Equity-Macro Correlation",
-      "markets": [
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000",
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000",
-        "GDPW-26-Q2-3PCT",
-        "CPIW-26-MAY-3PCT",
-        "KXNF-20260501-T200000",
-        "KXNF-20260501-T250000"
-      ],
-      "correlation_strength": 0.6,
-      "description": "Equity indices positively correlate with GDP growth and employment data",
-      "correlation_type": "cross_category"
-    },
-    {
-      "id": "risk_sentiment",
-      "label": "Risk Sentiment Cluster",
-      "markets": [
-        "BTCW-26-JUN30-80K",
-        "ETHW-26-DEC31-5K",
-        "INXW-26-DEC31-6000",
-        "INXW-26-DEC31-7000"
-      ],
-      "correlation_strength": 0.55,
-      "description": "Crypto and equities co-move during risk-on/risk-off regimes",
-      "correlation_type": "cross_category"
-    },
-    {
-      "id": "commodities_inflation",
-      "label": "Commodities-Inflation Link",
-      "markets": [
-        "OILW-26-DEC31-100",
-        "CPIW-26-MAY-3PCT"
-      ],
-      "correlation_strength": 0.5,
-      "description": "Oil prices correlate with CPI through energy cost pass-through",
-      "correlation_type": "cross_category"
+      "cluster_type": "keyword_theme"
     }
   ],
-  "hidden_correlations": [
-    {
-      "market_a": "BTCW-26-JUN30-80K",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "crypto_macro_inverse",
-      "strength": 0.65,
-      "rationale": "BTCW-26-JUN30-80K inversely correlates with INXW-26-DEC31-6000: strong economic data \u2192 risk-off from crypto"
+  "hidden_correlations": [],
+  "market_domains": {
+    "WEA-RAIN-26MAY24-004": {
+      "title": "LA rainfall above 110 inches in May 24, 2026?",
+      "volume": 79211,
+      "yes_ratio": 73,
+      "domains": [
+        "weather"
+      ]
     },
-    {
-      "market_a": "BTCW-26-JUN30-80K",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "crypto_macro_inverse",
-      "strength": 0.65,
-      "rationale": "BTCW-26-JUN30-80K inversely correlates with INXW-26-DEC31-7000: strong economic data \u2192 risk-off from crypto"
+    "CRYP-BTCDOM-26MAY27-005": {
+      "title": "Bitcoin dominance above 68% by May 27, 2026?",
+      "volume": 114143,
+      "yes_ratio": 26,
+      "domains": [
+        "crypto"
+      ]
     },
-    {
-      "market_a": "ETHW-26-DEC31-5K",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "crypto_macro_inverse",
-      "strength": 0.65,
-      "rationale": "ETHW-26-DEC31-5K inversely correlates with INXW-26-DEC31-6000: strong economic data \u2192 risk-off from crypto"
+    "POL-SEN-26JUL29-026": {
+      "title": "Democrats to control the Senate after Jul 29, 2026?",
+      "volume": 235175,
+      "yes_ratio": 20,
+      "domains": [
+        "politics"
+      ]
     },
-    {
-      "market_a": "ETHW-26-DEC31-5K",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "crypto_macro_inverse",
-      "strength": 0.65,
-      "rationale": "ETHW-26-DEC31-5K inversely correlates with INXW-26-DEC31-7000: strong economic data \u2192 risk-off from crypto"
+    "POL-APPROVAL-26SEP03-038": {
+      "title": "President approval above 48% on Sep 3, 2026?",
+      "volume": 254018,
+      "yes_ratio": 28.71,
+      "domains": [
+        "politics"
+      ]
     },
-    {
-      "market_a": "INXW-26-DEC31-6000",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "equity_macro_positive",
-      "strength": 0.6,
-      "rationale": "INXW-26-DEC31-6000 positively correlates with INXW-26-DEC31-6000: economic growth drives equity performance"
+    "ECON-UNEMP-26SEP06-039": {
+      "title": "US unemployment above 250% in Sep 6, 2026?",
+      "volume": 85031,
+      "yes_ratio": 79,
+      "domains": [
+        "labor"
+      ]
     },
-    {
-      "market_a": "INXW-26-DEC31-6000",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "equity_macro_positive",
-      "strength": 0.6,
-      "rationale": "INXW-26-DEC31-6000 positively correlates with INXW-26-DEC31-7000: economic growth drives equity performance"
+    "POL-HOUSE-26SEP15-042": {
+      "title": "Republicans to control the House after Sep 15, 2026?",
+      "volume": 84730,
+      "yes_ratio": 81,
+      "domains": [
+        "politics"
+      ]
     },
-    {
-      "market_a": "INXW-26-DEC31-7000",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "equity_macro_positive",
-      "strength": 0.6,
-      "rationale": "INXW-26-DEC31-7000 positively correlates with INXW-26-DEC31-6000: economic growth drives equity performance"
+    "ECON-FED-26SEP18-043": {
+      "title": "Fed cuts rates by 225 bps before Sep 18, 2026?",
+      "volume": 315071,
+      "yes_ratio": 30,
+      "domains": [
+        "rates"
+      ]
     },
-    {
-      "market_a": "INXW-26-DEC31-7000",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "equity_macro_positive",
-      "strength": 0.6,
-      "rationale": "INXW-26-DEC31-7000 positively correlates with INXW-26-DEC31-7000: economic growth drives equity performance"
+    "CRYP-BTCDOM-26SEP24-045": {
+      "title": "Bitcoin dominance above 180% by Sep 24, 2026?",
+      "volume": 318784,
+      "yes_ratio": 22,
+      "domains": [
+        "crypto"
+      ]
     },
-    {
-      "market_a": "FEDW-26-JUN-CUT",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "rates_macro_inverse",
-      "strength": 0.7,
-      "rationale": "FEDW-26-JUN-CUT inversely correlates with INXW-26-DEC31-6000: weak data \u2192 rate cut probability"
+    "POL-SEN-26SEP27-046": {
+      "title": "Democrats to control the Senate after Sep 27, 2026?",
+      "volume": 217892,
+      "yes_ratio": 21.78,
+      "domains": [
+        "politics"
+      ]
     },
-    {
-      "market_a": "FEDW-26-JUN-CUT",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "rates_macro_inverse",
-      "strength": 0.7,
-      "rationale": "FEDW-26-JUN-CUT inversely correlates with INXW-26-DEC31-7000: weak data \u2192 rate cut probability"
+    "ECON-UNEMP-26NOV05-059": {
+      "title": "US unemployment above 2.4% in Nov 5, 2026?",
+      "volume": 230647,
+      "yes_ratio": 21,
+      "domains": [
+        "labor"
+      ]
     },
-    {
-      "market_a": "BTCW-26-JUN30-80K",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "crypto_equity_risk",
-      "strength": 0.55,
-      "rationale": "BTCW-26-JUN30-80K and INXW-26-DEC31-6000 co-move during risk regime shifts"
+    "POL-HOUSE-26NOV14-062": {
+      "title": "Republicans to control the House after Nov 14, 2026?",
+      "volume": 106758,
+      "yes_ratio": 85,
+      "domains": [
+        "politics"
+      ]
     },
-    {
-      "market_a": "BTCW-26-JUN30-80K",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "crypto_equity_risk",
-      "strength": 0.55,
-      "rationale": "BTCW-26-JUN30-80K and INXW-26-DEC31-7000 co-move during risk regime shifts"
+    "WEA-RAIN-26NOV20-064": {
+      "title": "LA rainfall above 18 inches in Nov 20, 2026?",
+      "volume": 148468,
+      "yes_ratio": 21.78,
+      "domains": [
+        "weather"
+      ]
     },
-    {
-      "market_a": "ETHW-26-DEC31-5K",
-      "market_b": "INXW-26-DEC31-6000",
-      "correlation_type": "crypto_equity_risk",
-      "strength": 0.55,
-      "rationale": "ETHW-26-DEC31-5K and INXW-26-DEC31-6000 co-move during risk regime shifts"
+    "CRYP-DOGE-26DEC05-069": {
+      "title": "Dogecoin above $150 by Dec 5, 2026?",
+      "volume": 347675,
+      "yes_ratio": 17.82,
+      "domains": [
+        "crypto"
+      ]
     },
-    {
-      "market_a": "ETHW-26-DEC31-5K",
-      "market_b": "INXW-26-DEC31-7000",
-      "correlation_type": "crypto_equity_risk",
-      "strength": 0.55,
-      "rationale": "ETHW-26-DEC31-5K and INXW-26-DEC31-7000 co-move during risk regime shifts"
+    "ECON-CPI-26DEC11-071": {
+      "title": "US CPI above 3.0% in Dec 11, 2026?",
+      "volume": 212936,
+      "yes_ratio": 24.75,
+      "domains": [
+        "inflation"
+      ]
     },
-    {
-      "market_a": "OILW-26-DEC31-100",
-      "market_b": "CPIW-26-MAY-3PCT",
-      "correlation_type": "commodities_inflation",
-      "strength": 0.5,
-      "rationale": "OILW-26-DEC31-100 correlates with CPIW-26-MAY-3PCT: energy costs drive inflation"
+    "WEA-HEAT-26DEC14-072": {
+      "title": "Phoenix records 20 straight days above 24F by Dec 14, 2026?",
+      "volume": 79602,
+      "yes_ratio": 73,
+      "domains": [
+        "weather"
+      ]
+    },
+    "POL-APPROVAL-27JAN01-078": {
+      "title": "President approval above 52% on Jan 1, 2027?",
+      "volume": 339062,
+      "yes_ratio": 76,
+      "domains": [
+        "politics"
+      ]
+    },
+    "ECON-UNEMP-27JAN04-079": {
+      "title": "US unemployment above 225% in Jan 4, 2027?",
+      "volume": 346227,
+      "yes_ratio": 72,
+      "domains": [
+        "labor"
+      ]
+    },
+    "WEA-ATL-27JAN07-080": {
+      "title": "Atlantic named storms above 110 in Jan 7, 2027?",
+      "volume": 114283,
+      "yes_ratio": 17.82,
+      "domains": [
+        "weather"
+      ]
+    },
+    "CRYP-BTC-27JAN10-081": {
+      "title": "Bitcoin above $180 by Jan 10, 2027?",
+      "volume": 116027,
+      "yes_ratio": 18.81,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "POL-HOUSE-27JAN13-082": {
+      "title": "Republicans to control the House after Jan 13, 2027?",
+      "volume": 139368,
+      "yes_ratio": 78,
+      "domains": [
+        "politics"
+      ]
+    },
+    "ECON-FED-27JAN16-083": {
+      "title": "Fed cuts rates by 2.8 bps before Jan 16, 2027?",
+      "volume": 446351,
+      "yes_ratio": 82.18,
+      "domains": [
+        "rates"
+      ]
+    },
+    "CRYP-BTCDOM-27JAN22-085": {
+      "title": "Bitcoin dominance above 4,500% by Jan 22, 2027?",
+      "volume": 87939,
+      "yes_ratio": 81,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "ECON-GDP-27JAN28-087": {
+      "title": "US GDP growth above 2.4% in Jan 28, 2027?",
+      "volume": 349446,
+      "yes_ratio": 70.3,
+      "domains": [
+        "growth"
+      ]
+    },
+    "WEA-SNOW-27JAN31-088": {
+      "title": "NYC snowfall above 8 inches by Jan 31, 2027?",
+      "volume": 178596,
+      "yes_ratio": 85,
+      "domains": [
+        "weather"
+      ]
+    },
+    "POL-SCOTUS-27FEB06-090": {
+      "title": "Supreme Court vacancy announced before Feb 6, 2027?",
+      "volume": 87938,
+      "yes_ratio": 75,
+      "domains": [
+        "politics"
+      ]
+    },
+    "WEA-ATL-27MAR08-100": {
+      "title": "Atlantic named storms above 110 in Mar 8, 2027?",
+      "volume": 158622,
+      "yes_ratio": 28.71,
+      "domains": [
+        "weather"
+      ]
+    },
+    "CRYP-DOGE-27APR04-109": {
+      "title": "Dogecoin above $68 by Apr 4, 2027?",
+      "volume": 405611,
+      "yes_ratio": 23.76,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "ECON-CPI-27APR10-111": {
+      "title": "US CPI above 2.4% in Apr 10, 2027?",
+      "volume": 118397,
+      "yes_ratio": 71.29,
+      "domains": [
+        "inflation"
+      ]
+    },
+    "CRYP-SOL-27APR16-113": {
+      "title": "Solana above $95,000 by Apr 16, 2027?",
+      "volume": 439690,
+      "yes_ratio": 80,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "POL-GOV-27APR19-114": {
+      "title": "Government shutdown before Apr 19, 2027?",
+      "volume": 147133,
+      "yes_ratio": 19.8,
+      "domains": [
+        "politics"
+      ]
+    },
+    "WEA-HURR-27APR25-116": {
+      "title": "Major hurricane hits Florida before Apr 25, 2027?",
+      "volume": 171969,
+      "yes_ratio": 79,
+      "domains": [
+        "weather"
+      ]
+    },
+    "POL-APPROVAL-27MAY01-118": {
+      "title": "President approval above 55% on May 1, 2027?",
+      "volume": 330984,
+      "yes_ratio": 23.76,
+      "domains": [
+        "politics"
+      ]
+    },
+    "CRYP-BTC-27MAY10-121": {
+      "title": "Bitcoin above $4,500 by May 10, 2027?",
+      "volume": 359233,
+      "yes_ratio": 70,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "WEA-RAIN-27MAY19-124": {
+      "title": "LA rainfall above 110 inches in May 19, 2027?",
+      "volume": 172406,
+      "yes_ratio": 73.27,
+      "domains": [
+        "weather"
+      ]
+    },
+    "POL-GOV-27JUN18-134": {
+      "title": "Government shutdown before Jun 18, 2027?",
+      "volume": 260857,
+      "yes_ratio": 23.76,
+      "domains": [
+        "politics"
+      ]
+    },
+    "WEA-HURR-27JUN24-136": {
+      "title": "Major hurricane hits Florida before Jun 24, 2027?",
+      "volume": 115955,
+      "yes_ratio": 30,
+      "domains": [
+        "weather"
+      ]
+    },
+    "CRYP-BTCDOM-27JUL21-145": {
+      "title": "Bitcoin dominance above 0.18% by Jul 21, 2027?",
+      "volume": 196312,
+      "yes_ratio": 78.22,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "ECON-GDP-27JUL27-147": {
+      "title": "US GDP growth above 2.8% in Jul 27, 2027?",
+      "volume": 429914,
+      "yes_ratio": 30,
+      "domains": [
+        "growth"
+      ]
+    },
+    "ECON-PAY-27AUG20-155": {
+      "title": "Nonfarm payrolls above 50k in Aug 20, 2027?",
+      "volume": 319624,
+      "yes_ratio": 20,
+      "domains": [
+        "labor"
+      ]
+    },
+    "WEA-HURR-27AUG23-156": {
+      "title": "Major hurricane hits Florida before Aug 23, 2027?",
+      "volume": 87589,
+      "yes_ratio": 78,
+      "domains": [
+        "weather"
+      ]
+    },
+    "ECON-GDP-27SEP25-167": {
+      "title": "US GDP growth above 3.0% in Sep 25, 2027?",
+      "volume": 298484,
+      "yes_ratio": 17,
+      "domains": [
+        "growth"
+      ]
+    },
+    "POL-SCOTUS-27OCT04-170": {
+      "title": "Supreme Court vacancy announced before Oct 4, 2027?",
+      "volume": 282867,
+      "yes_ratio": 29.7,
+      "domains": [
+        "politics"
+      ]
+    },
+    "ECON-CPI-27OCT07-171": {
+      "title": "US CPI above 2.8% in Oct 7, 2027?",
+      "volume": 463763,
+      "yes_ratio": 73,
+      "domains": [
+        "inflation"
+      ]
+    },
+    "ECON-UNEMP-27OCT31-179": {
+      "title": "US unemployment above 3.4% in Oct 31, 2027?",
+      "volume": 496357,
+      "yes_ratio": 24,
+      "domains": [
+        "labor"
+      ]
+    },
+    "WEA-ATL-27NOV03-180": {
+      "title": "Atlantic named storms above 24 in Nov 3, 2027?",
+      "volume": 151775,
+      "yes_ratio": 25,
+      "domains": [
+        "weather"
+      ]
+    },
+    "POL-HOUSE-27NOV09-182": {
+      "title": "Republicans to control the House after Nov 9, 2027?",
+      "volume": 285557,
+      "yes_ratio": 70.3,
+      "domains": [
+        "politics"
+      ]
+    },
+    "POL-SEN-27NOV21-186": {
+      "title": "Democrats to control the Senate after Nov 21, 2027?",
+      "volume": 69589,
+      "yes_ratio": 29.7,
+      "domains": [
+        "politics"
+      ]
+    },
+    "POL-GOV-27DEC15-194": {
+      "title": "Government shutdown before Dec 15, 2027?",
+      "volume": 227798,
+      "yes_ratio": 76,
+      "domains": [
+        "politics"
+      ]
+    },
+    "CRYP-ETH-27DEC24-197": {
+      "title": "Ethereum above $95,000 by Dec 24, 2027?",
+      "volume": 293243,
+      "yes_ratio": 82.18,
+      "domains": [
+        "crypto"
+      ]
+    },
+    "ECON-UNEMP-27DEC30-199": {
+      "title": "US unemployment above 175% in Dec 30, 2027?",
+      "volume": 323804,
+      "yes_ratio": 79.21,
+      "domains": [
+        "labor"
+      ]
     }
-  ],
+  },
   "summary": {
-    "total_clusters": 8,
-    "internal_clusters": 3,
-    "cross_category_clusters": 5,
-    "total_markets_clustered": 13,
-    "hidden_correlations_found": 15
+    "total_markets": 50,
+    "total_clusters": 4,
+    "total_markets_clustered": 50,
+    "singleton_clusters": 0,
+    "hidden_correlations_found": 0
   }
 }

@@ -1,61 +1,108 @@
 # QA Backtest Report — T570
 
-**Validator:** Tina (QA)
+**Validator:** Tina (QA Engineer)
 **Date:** 2026-04-04
-**Target:** dave/backtest_results.json
-**Reference:** bob/trade_signals.json
+**Target:** Dave's `output/dave/backtest_results.json` (T568)
+**Reference:** Bob's `output/bob/trade_signals.json` (T555/T567)
+**Culture refs:** Following C8 (verify code), C11 (review), D5 (runnable system)
 
-## Verdict: FAIL
+## Verdict: FAIL — 5 Critical Issues Found
 
-| Metric | Count |
-|--------|-------|
-| PASS | 5 |
-| FAIL | 20 |
-| WARN | 2 |
+| Category | PASS | FAIL | WARN |
+|----------|------|------|------|
+| Signal Count | 0 | 1 | 0 |
+| P&L Math | 7 | 14 | 0 |
+| Drawdown | 0 | 14 | 0 |
+| Data Leakage | 1 | 0 | 19 |
+| Config | 4 | 0 | 0 |
+| **Total** | **12** | **29** | **19** |
 
-## Findings
+---
 
-- **WARN**: Signal count field present — backtest_results.json missing signal count field — cannot verify
-- **FAIL**: Win count mismatch — Reported: 11, Computed: 0
-- **PASS**: All trade P&L calculations — 18 trades verified
-- **FAIL**: Drawdown tracking missing — No max_drawdown field in backtest results — CRITICAL for risk management
-- **WARN**: No walk-forward detected — Backtest may use in-sample data for both training and testing
-- **FAIL**: Trade trade_1 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_2 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_3 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_4 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_5 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_6 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_7 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_8 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_9 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_10 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_11 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_12 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_13 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_14 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_15 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_16 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_17 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **FAIL**: Trade trade_18 temporal order — Entry (1970-01-01T00:00:00.000Z) >= Exit (1970-01-01T00:00:00.000Z)
-- **PASS**: Config maxDrawdownPct — Both use 10
-- **PASS**: Config initialCapital — Both use 100
-- **PASS**: Config tradingFee — Both use 0.01
-- **PASS**: Config consistency — Signal generator and backtest configs aligned
+## Critical Finding 1: Duplicate Trades (BUG)
+
+4 pairs of identical trades detected in the BTC/ETH pair:
+
+| Trade A | Trade B | entryZ | exitZ | netPnl |
+|---------|---------|--------|-------|--------|
+| trade_2 | trade_3 | -2.188 | -0.197 | $1.911 |
+| trade_7 | trade_8 | 1.614 | 0.48 | $1.054 |
+| trade_9 | trade_10 | 1.385 | -0.014 | $1.291 |
+| trade_16 | trade_17 | 1.656 | 0.451 | $1.125 |
+
+**Impact:** These duplicates inflate the BTC/ETH pair's win count (8 wins, but 4 are duplicates) and P&L by ~$5.38. The 61.1% win rate drops to ~50% if duplicates are removed.
+
+**Root cause:** Likely the same BTC/ETH pair appearing in two different clusters (`crypto_internal` and `crypto_macro` in Bob's signals), causing the backtester to process the same trade twice.
+
+## Critical Finding 2: Anomalous Z-Score (trade_1)
+
+- `trade_1` has `entryZ: 40, exitZ: 40` — a z-score of 40 is statistically impossible (~10^-350 probability)
+- This looks like a sentinel/default value, not a real z-score
+- The trade correctly shows 0 improvement and -$0.12 loss (fees only)
+- **Risk:** If this represents uninitialized data, other trades may have subtle data integrity issues
+
+## Critical Finding 3: P&L Model Is Not Spread-Based
+
+Dave uses: `rawPnl = zImprovement * $0.50/contract/z-point * contracts`
+
+This is a **synthetic P&L model** that estimates profit from z-score improvement, NOT from actual spread changes. While creative, this has problems:
+- The $0.50/z-point conversion factor is arbitrary — no calibration against real Kalshi spreads
+- P&L numbers ($14.26 total, 14.14% return) are **not reflective of real trading economics**
+- For Kalshi binary contracts ($0-$1 range), a z-score-based model overstates returns
+
+Bob's signal data includes actual `entry_spread` and `exit_spread` values, which should be used for P&L calculation. The spread-based P&L would likely show much smaller (and more realistic) returns.
+
+## Critical Finding 4: Signal Count Mismatch
+
+- Bob's current `trade_signals.json`: **47 signals**
+- Dave's backtest consumed: **38 signals** (from an earlier version)
+- 9 signals were added after Dave started his backtest
+
+**Impact:** The backtest doesn't cover all available signals. This isn't necessarily wrong (Dave used the data available at time of run), but the results are not comprehensive.
+
+## Critical Finding 5: No Walk-Forward / Out-of-Sample Testing
+
+- No train/test split detected in the methodology
+- The backtest generates and tests signals on the same price history
+- **Risk:** Overfitting — the strategy may look profitable on historical data but fail on new data
+- **Recommendation:** Implement walk-forward validation (70/30 train/test split as Bob's backtest_signals.js does)
+
+## Minor Issues
+
+1. **No timestamps on trades** — cannot verify temporal ordering or data leakage through time
+2. **Drawdown tracking discrepancy** — reported 1.92%, my independent calculation differs (likely due to the duplicate trade issue distorting capital progression)
+3. **Capital progression errors** — 13 of 18 trades show small discrepancies in `capitalAfter`, likely from cumulative floating-point drift caused by duplicates
+
+## What Passes
+
+- Config consistency (maxDrawdownPct, initialCapital, tradingFee match)
+- Win count matches trade data (11 wins)
+- Win rate (61.1%) matches
+- Summary P&L is consistent with sum of individual trades
+- 5 of 18 trades have correct spread-based P&L
 
 ## Bob's Signal Data Summary
 
-- Total signals: 47
+- Total signals: 47 (updated from 38)
 - Strategy: z_score_mean_reversion
-- Config: z_entry=1.2, z_exit=0.5, z_stop=3
+- Config: z_entry=1.2, z_exit=0.5, z_stop=3.0
+- Pairs: 6 correlation pairs, 3 arbitrage opportunities
 
-## Bob's Paper Trade Summary
+## Recommendations
 
-- Trades: 22
-- Win rate: 40.9%
-- Total P&L: $-0.7673
-- Max drawdown: 0.99%
-- Final capital: $99.23
+1. **Fix duplicate trade bug** — deduplicate signals by market pair before backtesting (ignore cluster assignment for same pair)
+2. **Fix z=40 anomaly** — add z-score bounds check (reject |z| > 10 as data error)
+3. **Use spread-based P&L** — calculate P&L from actual spread changes, not z-score improvement
+4. **Add walk-forward testing** — train on 70% of history, test on remaining 30%
+5. **Add timestamps** — enable temporal ordering verification
+6. **Re-run on latest signals** — Bob now has 47 signals vs 38 used
+
+## Runnable Artifact
+
+```bash
+cd agents/tina/output && node qa_backtest_validator.js
+```
 
 ---
-*Generated by qa_backtest_validator.js — run: `node qa_backtest_validator.js`*
+*Generated by qa_backtest_validator.js (T570) — Tina, QA Engineer*
+*Run: `node qa_backtest_validator.js [path_to_backtest_results.json]`*

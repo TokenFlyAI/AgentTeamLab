@@ -1,5 +1,5 @@
 {
-  "passed": 10,
+  "passed": 11,
   "failed": 0,
   "tests": [
     {
@@ -10,7 +10,7 @@
     {
       "name": "Live runner executes without crash",
       "status": "PASS",
-      "duration": 106
+      "duration": 44
     },
     {
       "name": "Trade signals file created",
@@ -30,27 +30,32 @@
     {
       "name": "Paper trading mode works",
       "status": "PASS",
-      "duration": 108
+      "duration": 40
     },
     {
       "name": "Paper trade log created",
       "status": "PASS",
-      "duration": 115
+      "duration": 39
     },
     {
       "name": "Mock fallback mode works",
       "status": "PASS",
-      "duration": 109
+      "duration": 39
     },
     {
       "name": "Risk manager is invoked",
       "status": "PASS",
-      "duration": 112
+      "duration": 40
     },
     {
       "name": "Execution report generated",
       "status": "PASS",
-      "duration": 1
+      "duration": 0
+    },
+    {
+      "name": "Capital floor breach halts trading",
+      "status": "PASS",
+      "duration": 41
     }
   ]
 }

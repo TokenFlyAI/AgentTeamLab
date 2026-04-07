@@ -1,0 +1,5 @@
+
+# Kalshi credentials — never commit
+.env
+.env.*
+audit_log.jsonl

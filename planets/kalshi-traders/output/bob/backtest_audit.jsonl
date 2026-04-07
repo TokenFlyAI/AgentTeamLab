@@ -1,0 +1,15 @@
+{"timestamp":"2026-04-04T20:40:25.776Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":21.5,"threshold":15,"capital":784.98,"label":"Window 1 Train"}
+{"timestamp":"2026-04-04T20:40:25.777Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":72.5,"threshold":15,"capital":276.88,"label":"Window 1 Test"}
+{"timestamp":"2026-04-04T20:40:25.777Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":40.53,"threshold":15,"capital":266.02,"label":"Window 2 Train"}
+{"timestamp":"2026-04-04T20:40:25.777Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":28,"threshold":15,"capital":214.06,"label":"Window 3 Train"}
+{"timestamp":"2026-04-04T20:40:25.777Z","event":"CIRCUIT_BREAK_CAPITAL_FLOOR","capital":-243.91,"floor":50,"tradeNumber":2,"reason":"Capital $-243.91 below floor $50","label":"Window 3 Test","signal":"sig_39","pair":"INXW-26-DEC31-7000 / KXNF-20260501-T250000","postTrade":true}
+{"timestamp":"2026-04-04T20:41:27.301Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":21.5,"threshold":15,"capital":784.98,"label":"Window 1 Train"}
+{"timestamp":"2026-04-04T20:41:27.302Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":72.5,"threshold":15,"capital":276.88,"label":"Window 1 Test"}
+{"timestamp":"2026-04-04T20:41:27.302Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":40.53,"threshold":15,"capital":266.02,"label":"Window 2 Train"}
+{"timestamp":"2026-04-04T20:41:27.303Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":28,"threshold":15,"capital":214.06,"label":"Window 3 Train"}
+{"timestamp":"2026-04-04T20:41:27.303Z","event":"CIRCUIT_BREAK_CAPITAL_FLOOR","capital":-243.91,"floor":50,"tradeNumber":2,"reason":"Capital $-243.91 below floor $50","label":"Window 3 Test","signal":"sig_39","pair":"INXW-26-DEC31-7000 / KXNF-20260501-T250000","postTrade":true}
+{"timestamp":"2026-04-04T20:42:11.430Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":21.5,"threshold":15,"capital":784.98,"label":"Window 1 Train"}
+{"timestamp":"2026-04-04T20:42:11.430Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":72.5,"threshold":15,"capital":276.88,"label":"Window 1 Test"}
+{"timestamp":"2026-04-04T20:42:11.431Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":40.53,"threshold":15,"capital":266.02,"label":"Window 2 Train"}
+{"timestamp":"2026-04-04T20:42:11.431Z","event":"CIRCUIT_BREAK_MAX_DRAWDOWN","drawdownPct":28,"threshold":15,"capital":214.06,"label":"Window 3 Train"}
+{"timestamp":"2026-04-04T20:42:11.431Z","event":"CIRCUIT_BREAK_CAPITAL_FLOOR","capital":-243.91,"floor":50,"tradeNumber":2,"reason":"Capital $-243.91 below floor $50","label":"Window 3 Test","signal":"sig_39","pair":"INXW-26-DEC31-7000 / KXNF-20260501-T250000","postTrade":true}

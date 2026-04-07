@@ -182,6 +182,42 @@ def cosine_similarity(a: List[float], b: List[float]) -> float:
     return dot / (na * nb)
 
 
+def infer_category(item: Dict) -> str:
+    """Backfill Phase 1 mock outputs that omit category fields."""
+    raw_category = (item.get("category") or "").strip()
+    if raw_category and raw_category.lower() != "undefined":
+        return raw_category
+
+    text = f"{item.get('ticker', '')} {item.get('title', '')}".lower()
+    if any(token in text for token in ["btc", "bitcoin", "eth", "ethereum", "sol", "solana", "crypto"]):
+        return "Crypto"
+    if any(token in text for token in ["fed", "rate", "fomc", "cut", "hold"]):
+        return "Rates"
+    if any(token in text for token in ["gdp", "cpi", "inflation", "unemployment", "nfp", "jobs", "economy"]):
+        return "Economics"
+    if any(token in text for token in ["oil", "gold", "commodity", "crude"]):
+        return "Commodities"
+    if any(token in text for token in ["temperature", "climate", "weather", "hurricane"]):
+        return "Climate"
+    if any(token in text for token in ["china", "war", "geopolitical", "chip"]):
+        return "Geopolitical"
+    return "Uncategorized"
+
+
+def semantic_family(category: str) -> str:
+    """Broader grouping for sparse mock titles where direct keyword overlap is weak."""
+    family_map = {
+        "Crypto": "crypto",
+        "Economics": "macro",
+        "Rates": "macro",
+        "Financial": "macro",
+        "Commodities": "real_assets",
+        "Climate": "real_assets",
+        "Geopolitical": "policy",
+    }
+    return family_map.get(category, "other")
+
+
 def load_markets(filepath: str) -> List[Market]:
     with open(filepath, 'r') as f:
         data = json.load(f)
@@ -192,7 +228,7 @@ def load_markets(filepath: str) -> List[Market]:
         m = Market(
             ticker=item.get('ticker', ''),
             title=item.get('title', ''),
-            category=item.get('category', ''),
+            category=infer_category(item),
             volume=item.get('volume', 0),
             yes_bid=item.get('yes_bid', 0),
             yes_ask=item.get('yes_ask', 0),
@@ -371,7 +407,14 @@ def cluster_markets(markets: List[Market], threshold: float = 0.65) -> List[Clus
             # Check similarity to all current group members (complete linkage)
             min_sim = min(cosine_similarity(embeddings[candidate], embeddings[g])
                          for g in group)
-            if min_sim >= threshold:
+            seed_family = semantic_family(market_map[group[0]].category)
+            candidate_family = semantic_family(market_map[candidate].category)
+            same_family_fallback = (
+                seed_family != "other" and
+                seed_family == candidate_family and
+                min_sim >= 0.25
+            )
+            if min_sim >= threshold or same_family_fallback:
                 group.append(candidate)
                 assigned.add(candidate)
 
@@ -407,17 +450,14 @@ def cluster_markets(markets: List[Market], threshold: float = 0.65) -> List[Clus
                 avg_sentiment=round(avg_sent, 3),
                 cross_category=cross_cat,
             ))
-
-    # Markets not in any cluster (singletons) — add as single-market clusters
-    for ticker in tickers_sorted:
-        if ticker not in assigned:
-            m = market_map[ticker]
+        else:
+            m = market_map[group[0]]
             clusters.append(Cluster(
-                id=f"singleton_{ticker}",
-                label=f"{m.category}: {ticker}",
-                markets=[ticker],
+                id=f"singleton_{m.ticker}",
+                label=f"{m.category} Singleton",
+                markets=[m.ticker],
                 strength=0.0,
-                description=f"Unclustered market: {m.title}",
+                description=f"Standalone market with no same-theme match: {m.title}",
                 avg_volatility=round(m.volatility, 3),
                 avg_sentiment=round(m.sentiment, 3),
                 cross_category=False,
@@ -558,7 +598,8 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_path = os.path.join(script_dir, "..", "..", "public", "markets_filtered.json")
-    output_path = os.path.join(script_dir, "..", "..", "public", "market_clusters.json")
+    public_output_path = os.path.join(script_dir, "..", "..", "public", "market_clusters.json")
+    local_output_path = os.path.join(script_dir, "market_clusters.json")
 
     # Load markets and raw data for cross-validation
     with open(input_path, 'r') as f:
@@ -629,11 +670,14 @@ def main():
 
     # Save output
     output = generate_output(markets, clusters, hidden, grace_validation)
-    with open(output_path, 'w') as f:
+    with open(public_output_path, 'w') as f:
+        json.dump(output, f, indent=2)
+    with open(local_output_path, 'w') as f:
         json.dump(output, f, indent=2)
 
     print(f"\n{'=' * 60}")
-    print(f"Output saved: {output_path}")
+    print(f"Output saved: {public_output_path}")
+    print(f"Output saved: {local_output_path}")
     print(f"  Clusters: {output['summary']['total_clusters']}")
     print(f"  Markets clustered: {output['summary']['total_markets_clustered']}")
     print(f"  Avg confidence: {output['summary']['avg_confidence']}")

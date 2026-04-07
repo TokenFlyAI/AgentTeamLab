@@ -30,9 +30,12 @@ const { runSettlement } = require("../paper_trade_settlement");
 const USE_MOCK_FALLBACK = !process.env.KALSHI_API_KEY;
 const MIN_MARKETS = 3;
 const CANDLE_DAYS = 10;  // T334 optimized: lookback=10
-const OUTPUT_FILE = path.join(__dirname, "../../output/trade_signals.json");
+const OUTPUT_ROOT = path.join(__dirname, "../..");
+const OUTPUT_FILE = path.join(OUTPUT_ROOT, "trade_signals.json");
 const EXECUTE_TRADES = process.argv.includes("--execute");
 const PAPER_TRADING = process.env.PAPER_TRADING !== 'false';
+const PAPER_TRADING_INITIAL_CAPITAL_CENTS = parseInt(process.env.PAPER_TRADING_INITIAL_CAPITAL_CENTS || "500000", 10);
+const PAPER_TRADING_CAPITAL_FLOOR_CENTS = parseInt(process.env.PAPER_TRADING_CAPITAL_FLOOR_CENTS || "5000", 10);
 
 // Realistic fallback markets when API key is unavailable
 const FALLBACK_MARKETS = [
@@ -246,6 +249,35 @@ function computeHistoryMetrics(candles) {
   return { mean, stddev, priceChange };
 }
 
+function getCapitalFloorStatus(paperTradesDB) {
+  const summary = paperTradesDB.getSummary();
+  const realizedPnL = summary.total_pnl || 0;
+  const currentCapital = PAPER_TRADING_INITIAL_CAPITAL_CENTS + realizedPnL;
+
+  return {
+    initialCapitalCents: PAPER_TRADING_INITIAL_CAPITAL_CENTS,
+    floorCents: PAPER_TRADING_CAPITAL_FLOOR_CENTS,
+    realizedPnLCents: realizedPnL,
+    currentCapitalCents: currentCapital,
+    breachAmountCents: Math.max(0, PAPER_TRADING_CAPITAL_FLOOR_CENTS - currentCapital),
+    breached: currentCapital < PAPER_TRADING_CAPITAL_FLOOR_CENTS,
+    closedTrades: summary.closed_trades || 0,
+    openTrades: summary.open_trades || 0,
+  };
+}
+
+function logCapitalFloorStatus(status, contextLabel) {
+  const capitalDollars = (status.currentCapitalCents / 100).toFixed(2);
+  const floorDollars = (status.floorCents / 100).toFixed(2);
+  const realizedPnLDollars = (status.realizedPnLCents / 100).toFixed(2);
+  const prefix = contextLabel ? `${contextLabel}: ` : "";
+
+  console.log(`  ${prefix}Capital: $${capitalDollars} (realized P&L $${realizedPnLDollars}, floor $${floorDollars})`);
+  if (status.breached) {
+    console.log(`  🛑 Capital floor breached by $${(status.breachAmountCents / 100).toFixed(2)} — halting new trades`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -288,6 +320,12 @@ async function main() {
   }
 
   // 3.5. Settlement check (T330) — settle old trades before generating new signals
+  const paperTradesDB = getPaperTradesDB();
+  let capitalFloorStatus = PAPER_TRADING ? getCapitalFloorStatus(paperTradesDB) : null;
+  let finalCapitalFloorStatus = capitalFloorStatus;
+  let tradingHalted = false;
+  let haltReason = null;
+
   if (PAPER_TRADING && EXECUTE_TRADES) {
     console.log("\n📋 Checking for trades to settle...");
     const settlementResult = runSettlement(enrichedMarkets, Date.now());
@@ -296,6 +334,15 @@ async function main() {
       console.log(`  Total P&L: $${(settlementResult.totalPnL / 100).toFixed(2)}`);
     } else {
       console.log("  No trades ready for settlement");
+    }
+
+    capitalFloorStatus = getCapitalFloorStatus(paperTradesDB);
+    finalCapitalFloorStatus = capitalFloorStatus;
+    console.log("\n💵 Post-settlement capital check...");
+    logCapitalFloorStatus(capitalFloorStatus, "Pre-trade");
+    if (capitalFloorStatus.breached) {
+      tradingHalted = true;
+      haltReason = `capital floor breached: current capital $${(capitalFloorStatus.currentCapitalCents / 100).toFixed(2)} below $${(capitalFloorStatus.floorCents / 100).toFixed(2)}`;
     }
   }
 
@@ -339,55 +386,72 @@ async function main() {
   let approvedSignals = allSignals;
   let rejectedSignals = [];
   
-  try {
-    console.log("\n🔒 Running risk checks...");
-    const riskSummary = await getRiskSummary();
-    console.log(`  Risk Status: ${riskSummary.status}`);
-    console.log(`  Daily P&L: $${(riskSummary.current.dailyPnL.total / 100).toFixed(2)}`);
-    console.log(`  Total Exposure: $${(riskSummary.current.totalExposure / 100).toFixed(2)} / $${(riskSummary.limits.maxTotalExposure / 100).toFixed(2)}`);
-    
-    // Validate each signal against risk limits
+  if (tradingHalted) {
     approvedSignals = [];
-    
-    for (const signal of allSignals) {
-      const trade = {
-        marketTicker: signal.ticker || signal.marketId,
-        side: signal.side,
-        quantity: signal.sizing?.contracts || 1,
-        price: signal.currentPrice || 50,
-      };
+    rejectedSignals = allSignals.map((signal) => ({ signal, reason: haltReason }));
+    console.log(`\n🛑 Trading halted before risk checks — ${haltReason}`);
+  } else {
+    try {
+      console.log("\n🔒 Running risk checks...");
+      const riskSummary = await getRiskSummary();
+      console.log(`  Risk Status: ${riskSummary.status}`);
+      console.log(`  Daily P&L: $${(riskSummary.current.dailyPnL.total / 100).toFixed(2)}`);
+      console.log(`  Total Exposure: $${(riskSummary.current.totalExposure / 100).toFixed(2)} / $${(riskSummary.limits.maxTotalExposure / 100).toFixed(2)}`);
       
-      const validation = await validateTrade(trade);
-      if (validation.approved) {
-        approvedSignals.push(signal);
-      } else {
-        rejectedSignals.push({ signal, reason: validation.reasons[0] });
+      // Validate each signal against risk limits
+      approvedSignals = [];
+      
+      for (const signal of allSignals) {
+        const trade = {
+          marketTicker: signal.ticker || signal.marketId,
+          side: signal.side,
+          quantity: signal.sizing?.contracts || 1,
+          price: signal.currentPrice || 50,
+        };
+        
+        const validation = await validateTrade(trade);
+        if (validation.approved) {
+          approvedSignals.push(signal);
+        } else {
+          rejectedSignals.push({ signal, reason: validation.reasons[0] });
+        }
       }
+      
+      if (rejectedSignals.length > 0) {
+        console.log(`  ⚠️  Risk rejected ${rejectedSignals.length} signals:`);
+        rejectedSignals.forEach(r => console.log(`    - ${r.signal.ticker || r.signal.marketId}: ${r.reason}`));
+      }
+      console.log(`  ✅ Risk approved ${approvedSignals.length} signals`);
+    } catch (riskErr) {
+      console.log(`  ⚠️  Risk manager unavailable (${riskErr.message}) — approving all ${allSignals.length} signals`);
+      approvedSignals = allSignals;
+      rejectedSignals = [];
     }
-    
-    if (rejectedSignals.length > 0) {
-      console.log(`  ⚠️  Risk rejected ${rejectedSignals.length} signals:`);
-      rejectedSignals.forEach(r => console.log(`    - ${r.signal.ticker || r.signal.marketId}: ${r.reason}`));
-    }
-    console.log(`  ✅ Risk approved ${approvedSignals.length} signals`);
-  } catch (riskErr) {
-    console.log(`  ⚠️  Risk manager unavailable (${riskErr.message}) — approving all ${allSignals.length} signals`);
-    approvedSignals = allSignals;
-    rejectedSignals = [];
   }
 
   // 8. Execute trades if requested (only approved signals)
   let executionReport = null;
-  const paperTradesDB = getPaperTradesDB();
   
   // Get current run number for trade tracking (T330)
-  const runNumberFile = path.join(__dirname, "../../output/run_counter.txt");
+  const runNumberFile = path.join(OUTPUT_ROOT, "run_counter.txt");
   let currentRunNumber = 0;
   try {
     currentRunNumber = parseInt(fs.readFileSync(runNumberFile, "utf8")) || 0;
   } catch (_) {}
   
-  if (EXECUTE_TRADES && approvedSignals.length > 0) {
+  if (EXECUTE_TRADES && tradingHalted) {
+    console.log("\n🧯 Capital floor halt active — skipping trade execution");
+    executionReport = {
+      mode: PAPER_TRADING ? "paper_trading" : "live_trading",
+      executed: 0,
+      rejected: approvedSignals.length,
+      failed: 0,
+      persisted: 0,
+      halted: true,
+      haltReason,
+      trades: [],
+    };
+  } else if (EXECUTE_TRADES && approvedSignals.length > 0) {
     if (PAPER_TRADING) {
       console.log("\n📝 PAPER TRADING MODE — logging trades without execution");
       
@@ -433,6 +497,8 @@ async function main() {
         rejected: 0,
         failed: 0,
         persisted: persistedTrades.length,
+        halted: false,
+        haltReason: null,
         trades: approvedSignals.map(s => ({
           ticker: s.ticker || s.marketId,
           side: s.side,
@@ -446,7 +512,7 @@ async function main() {
       };
       
       // Write paper trade log (legacy format for backward compatibility)
-      const paperTradeLogFile = path.join(__dirname, "../../output/paper_trade_log.json");
+      const paperTradeLogFile = path.join(OUTPUT_ROOT, "paper_trade_log.json");
       fs.mkdirSync(path.dirname(paperTradeLogFile), { recursive: true });
       fs.writeFileSync(paperTradeLogFile, JSON.stringify(executionReport, null, 2));
       console.log(`  Logged ${executionReport.executed} paper trades to paper_trade_log.json`);
@@ -470,7 +536,7 @@ async function main() {
     console.log("\n💰 Running paper trade settlement...");
     try {
       // Get run number from file or default to 0
-      const runNumberFile = path.join(__dirname, "../../output/run_counter.txt");
+      const runNumberFile = path.join(OUTPUT_ROOT, "run_counter.txt");
       let runNumber = 0;
       try {
         runNumber = parseInt(fs.readFileSync(runNumberFile, "utf8")) || 0;
@@ -490,6 +556,18 @@ async function main() {
       } else {
         console.log(`  No trades ready for settlement (${settlement.skipped} skipped)`);
       }
+
+      finalCapitalFloorStatus = getCapitalFloorStatus(paperTradesDB);
+      console.log("\n💵 Capital floor status after settlement...");
+      logCapitalFloorStatus(finalCapitalFloorStatus, "Post-run");
+      if (!tradingHalted && finalCapitalFloorStatus.breached) {
+        tradingHalted = true;
+        haltReason = `capital floor breached: current capital $${(finalCapitalFloorStatus.currentCapitalCents / 100).toFixed(2)} below $${(finalCapitalFloorStatus.floorCents / 100).toFixed(2)}`;
+        if (executionReport && executionReport.halted == null) {
+          executionReport.halted = true;
+          executionReport.haltReason = haltReason;
+        }
+      }
     } catch (settleErr) {
       console.log(`  ⚠️  Settlement error: ${settleErr.message}`);
     }
@@ -500,7 +578,12 @@ async function main() {
     source: USE_MOCK_FALLBACK ? "mock_fallback" : "kalshi_live",
     marketCount: enrichedMarkets.length,
     signalCount: allSignals.length,
-    executed: executionReport ? true : false,
+    approvedSignalCount: approvedSignals.length,
+    rejectedSignalCount: rejectedSignals.length,
+    halted: tradingHalted,
+    haltReason,
+    capitalFloor: finalCapitalFloorStatus,
+    executed: executionReport ? executionReport.executed > 0 : false,
     executionReport: executionReport || undefined,
     markets: enrichedMarkets.map((m) => ({
       id: m.id,
@@ -540,7 +623,19 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  computeMidPrice,
+  normalizeMarket,
+  fetchMarkets,
+  fetchCandles,
+  computeHistoryMetrics,
+  getCapitalFloorStatus,
+  main,
+};

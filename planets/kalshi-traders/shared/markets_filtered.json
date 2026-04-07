@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-04T04:19:57.775Z",
+  "generated_at": "2026-04-07T06:23:05.764Z",
   "task": "T530/T537",
   "phase": "Phase 1 Revalidation",
   "config": {
@@ -21,240 +21,73 @@
     "outputPath": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/public/markets_filtered.json"
   },
   "summary": {
-    "total_markets": 20,
-    "after_volume_filter": 20,
-    "qualifying_markets": 15,
-    "excluded_low_volume": 0,
-    "excluded_middle_range": 3,
+    "total_markets": 8,
+    "after_volume_filter": 7,
+    "qualifying_markets": 3,
+    "excluded_low_volume": 1,
+    "excluded_middle_range": 2,
     "extreme_ratio": 2
   },
   "qualifying_markets": [
     {
-      "id": "m1",
-      "ticker": "BTCW-26-JUN30-80K",
-      "title": "Will Bitcoin exceed $80,000 by June 30, 2026?",
-      "category": "Crypto",
-      "volume": 720000,
-      "yes_bid": 82,
-      "yes_ask": 86,
-      "no_bid": 14,
-      "no_ask": 18,
-      "yes_ratio": 84,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m3",
-      "ticker": "ETHW-26-DEC31-5K",
-      "title": "Will Ethereum exceed $5,000 by December 31, 2026?",
-      "category": "Crypto",
-      "volume": 540000,
-      "yes_bid": 28,
-      "yes_ask": 32,
-      "no_bid": 68,
-      "no_ask": 72,
-      "yes_ratio": 30,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m4",
-      "ticker": "BTCW-26-DEC31-120K",
-      "title": "Will Bitcoin exceed $120,000 by December 31, 2026?",
-      "category": "Crypto",
-      "volume": 410000,
-      "yes_bid": 22,
-      "yes_ask": 26,
-      "no_bid": 74,
-      "no_ask": 78,
-      "yes_ratio": 24,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m5",
-      "ticker": "SOLW-26-JUN30-300",
-      "title": "Will Solana exceed $300 by June 30, 2026?",
-      "category": "Crypto",
-      "volume": 320000,
-      "yes_bid": 18,
-      "yes_ask": 22,
-      "no_bid": 78,
-      "no_ask": 82,
-      "yes_ratio": 20,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m6",
-      "ticker": "ETHW-26-JUN30-4K",
-      "title": "Will Ethereum exceed $4,000 by June 30, 2026?",
-      "category": "Crypto",
-      "volume": 480000,
-      "yes_bid": 72,
-      "yes_ask": 76,
-      "no_bid": 24,
-      "no_ask": 28,
-      "yes_ratio": 74,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m7",
-      "ticker": "INXW-26-DEC31-6000",
-      "title": "S&P 500 to close above 6000 by Dec 31, 2026",
-      "category": "Economics",
-      "volume": 350000,
-      "yes_bid": 73,
-      "yes_ask": 77,
-      "no_bid": 23,
-      "no_ask": 27,
-      "yes_ratio": 75,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m8",
-      "ticker": "INXW-26-DEC31-7000",
-      "title": "S&P 500 to close above 7000 by Dec 31, 2026",
-      "category": "Economics",
-      "volume": 280000,
-      "yes_bid": 18,
-      "yes_ask": 22,
-      "no_bid": 78,
-      "no_ask": 82,
-      "yes_ratio": 20,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m10",
-      "ticker": "GDPW-26-Q2-3PCT",
-      "title": "US GDP growth above 3% in Q2 2026",
-      "category": "Economics",
-      "volume": 195000,
+      "ticker": "KXETH-25APR-5K",
+      "title": "Ethereum above $5K by April 2025?",
+      "volume": 18000,
       "yes_bid": 25,
-      "yes_ask": 29,
-      "no_bid": 71,
-      "no_ask": 75,
-      "yes_ratio": 27,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m11",
-      "ticker": "CPIW-26-MAY-3PCT",
-      "title": "CPI year-over-year above 3% in May 2026",
-      "category": "Economics",
-      "volume": 230000,
-      "yes_bid": 72,
-      "yes_ask": 78,
-      "no_bid": 22,
-      "no_ask": 28,
-      "yes_ratio": 75,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m14",
-      "ticker": "KXNF-20260501-T200000",
-      "title": "NFP above 200k",
-      "category": "Financial",
-      "volume": 180000,
-      "yes_bid": 26,
       "yes_ask": 28,
       "no_bid": 72,
-      "no_ask": 74,
-      "yes_ratio": 27,
+      "no_ask": 75,
+      "yes_ratio": 26.73,
       "recommendation": "proceed_to_clustering"
     },
     {
-      "id": "m15",
-      "ticker": "KXNF-20260501-T250000",
-      "title": "NFP above 250k",
-      "category": "Financial",
-      "volume": 120000,
-      "yes_bid": 14,
-      "yes_ask": 18,
-      "no_bid": 82,
-      "no_ask": 86,
-      "yes_ratio": 16,
+      "ticker": "KXFED-25MAY-HOLD",
+      "title": "Fed holds rates in May 2025?",
+      "volume": 32000,
+      "yes_bid": 72,
+      "yes_ask": 75,
+      "no_bid": 25,
+      "no_ask": 28,
+      "yes_ratio": 73.27,
       "recommendation": "proceed_to_clustering"
     },
     {
-      "id": "m16",
-      "ticker": "FEDW-26-JUN-CUT",
-      "title": "Fed to cut rates at June 2026 meeting",
-      "category": "Rates",
-      "volume": 510000,
-      "yes_bid": 27,
-      "yes_ask": 31,
-      "no_bid": 69,
-      "no_ask": 73,
-      "yes_ratio": 29,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m18",
-      "ticker": "TEMPW-26-JUL-RECORD",
-      "title": "July 2026 hottest month on record globally",
-      "category": "Climate",
-      "volume": 85000,
-      "yes_bid": 28,
-      "yes_ask": 32,
-      "no_bid": 68,
-      "no_ask": 72,
-      "yes_ratio": 30,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m19",
-      "ticker": "CHIPT-26-DEC31",
-      "title": "US-China chip export restrictions expanded by Dec 2026",
-      "category": "Geopolitical",
-      "volume": 175000,
-      "yes_bid": 74,
-      "yes_ask": 78,
-      "no_bid": 22,
-      "no_ask": 26,
-      "yes_ratio": 76,
-      "recommendation": "proceed_to_clustering"
-    },
-    {
-      "id": "m20",
-      "ticker": "OILW-26-DEC31-100",
-      "title": "Oil above $100/barrel by December 31, 2026",
-      "category": "Commodities",
-      "volume": 290000,
-      "yes_bid": 20,
-      "yes_ask": 24,
-      "no_bid": 76,
-      "no_ask": 80,
-      "yes_ratio": 22,
+      "ticker": "KXGDP-25Q2-3PCT",
+      "title": "GDP growth above 3% in Q2 2025?",
+      "volume": 15000,
+      "yes_bid": 18,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 82,
+      "yes_ratio": 20,
       "recommendation": "proceed_to_clustering"
     }
   ],
   "excluded_markets": [
     {
-      "ticker": "UNEMP-26-JUN",
+      "ticker": "KXBTC-25APR-100K",
       "reason": "middle_range_excluded",
-      "yes_ratio": 56
+      "yes_ratio": 43
     },
     {
-      "ticker": "KXNF-20260501-T150000",
+      "ticker": "KXSNP-25APR-5500",
       "reason": "middle_range_excluded",
-      "yes_ratio": 51
+      "yes_ratio": 56.44
     },
     {
-      "ticker": "FEDW-26-SEP-CUT",
-      "reason": "middle_range_excluded",
-      "yes_ratio": 46
-    },
-    {
-      "ticker": "BTCW-26-JUN30-100K",
+      "ticker": "KXCPI-25APR-LT3",
       "reason": "extreme_ratio",
-      "yes_ratio": 64
+      "yes_ratio": 69.31
     },
     {
-      "ticker": "KXNF-20260501-T100000",
+      "ticker": "KXTSLA-25Q2-200",
       "reason": "extreme_ratio",
-      "yes_ratio": 66
+      "yes_ratio": 36.63
     }
   ],
   "next_phase": {
     "recipient": "Ivan (T344)",
     "task": "Clustering analysis on qualifying markets",
-    "markets_count": 15
+    "markets_count": 3
   }
 }
