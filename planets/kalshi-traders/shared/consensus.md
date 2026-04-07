@@ -10,6 +10,7 @@
 | C1 | NORM | Paper trading mode required before live orders. Use PAPER_TRADING env flag. Never submit real orders without explicit Founder approval. | 2026-04-03 |
 | C2 | NORM | API endpoints must require auth via Authorization header. No open POST endpoints in production. Check Bearer token before processing. | 2026-04-03 |
 | C3 | NORM | **Always cite culture norms when making decisions.** Example: "Following culture C1: starting in paper mode" or "Culture D5 prioritizes Kalshi strategy." | 2026-04-03 |
+| C4 | NORM | **Read a teammate's status.md only when the delta reports they changed, or when actively coordinating a handoff.** Do NOT scan all peer status.md files every cycle — the resume delta delivers teammate changes automatically. | 2026-04-03 |
 | C5 | NORM | **Tasks MUST progress through states: pending → claimed (in_progress) → done.** Show your work. Atomic claim via POST /api/tasks/:id/claim. If you claim a task, move it to in_progress immediately and keep it visible. | 2026-04-03 |
 | C6 | NORM | **Reference public/knowledge.md for technical facts.** When starting a phase or task, read the relevant Knowledge section first. Example: "Reading knowledge.md Phase 3 spec before implementing correlation detection." | 2026-04-03 |
 
