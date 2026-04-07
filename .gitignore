@@ -72,6 +72,11 @@ planets/*/agents/public/
 # Node
 node_modules/
 
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+
 # macOS
 .DS_Store
 

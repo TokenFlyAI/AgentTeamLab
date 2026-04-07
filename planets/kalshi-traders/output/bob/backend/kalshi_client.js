@@ -115,7 +115,9 @@ class KalshiClient {
     // Acquire rate limit slot
     await this.rateLimiter.acquire();
 
-    const url = new URL(path, this.baseUrl);
+    const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+    const baseUrl = this.baseUrl.endsWith("/") ? this.baseUrl : `${this.baseUrl}/`;
+    const url = new URL(normalizedPath, baseUrl);
 
     // Add query params
     if (opts.params) {

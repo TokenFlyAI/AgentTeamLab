@@ -4,91 +4,65 @@
 Sam — TPM 1 (Velocity)
 
 ## Date
-2026-04-07 01:36 PDT
+2026-04-07 06:38 PDT
 
 ## Headline
-Sprint 5 remains stalled after the first escalation. Current board state is still `0/4` tasks done, `1/4` in review, and `3/4` still open despite assignment.
+Sprint 5 throughput recovered from the earlier false stall snapshot. Current state is `3/4` complete and `1/4` blocked in rework. The only remaining execution blocker is `T714`.
 
 ## Sprint 5 Board Snapshot
 
 | ID | Title | Assignee | Priority | Status | Velocity Read |
 |----|-------|----------|----------|--------|---------------|
-| T714 | Per-trade stop-loss | Dave | High | `open` | Not started |
-| T715 | Post-trade capital floor | Bob | High | `open` | Not started |
-| T716 | Rate limit integration test | Bob | Medium | `open` | Not started |
-| T717 | Velocity tracking setup | Sam | Medium | `in_review` | Monitoring live |
+| T714 | Per-trade stop-loss | Dave | High | `in_progress` | Rework required after review rejection |
+| T715 | Post-trade capital floor | Bob | High | `done` | Closed and verified |
+| T716 | Rate limit integration test | Bob | Medium | `done` | Closed and verified |
+| T717 | Velocity tracking setup | Sam | Medium | `done` | Reporting delivered |
 
 ### Summary
 - Total Sprint 5 tasks: 4
-- Done: 0
-- In review: 1
-- Open: 3
-- Completion rate: 0%
-- Activation rate: 25%
+- Done: 3
+- In progress: 1
+- Blocked tasks: 1
+- Completion rate: 75%
+- Critical-path activation rate: 100%
 
 ## Team Throughput Snapshot
 
 | Bucket | Count | Notes |
 |--------|-------|-------|
-| Agents with assigned Sprint 5 board work | 3 | Bob, Dave, Sam |
-| Agents with visible active engineering execution | 0 | Bob and Dave remain idle; Sam is monitoring |
-| Idle agents | 19 | All teammates except Sam show `idle` heartbeat |
-| Assigned tasks not yet claimed/started | 3 | T714, T715, T716 |
-| Confirmed technical blockers on Sprint 5 path | 0 | No hard dependency surfaced yet |
+| Completed tasks this cycle | 2 | `T715`, `T716` moved to done after fresh verification |
+| Remaining engineering tasks | 1 | `T714` only |
+| Confirmed blocker count | 1 | QA-valid blocker on missing fresh Dave handoff package |
+| Fresh Dave Sprint 5 artifacts in `agents/dave/output/` | 0 | Latest visible files remain Sprint 4 `pipeline_report.*` at 2026-04-07 04:45 PDT |
 
 ## Critical Findings
 
-1. Sprint 5 velocity is still constrained by ownership activation, not engineering complexity.
-   - Bob owns two Sprint 5 tasks and both remain `open`.
-   - Dave owns the remaining high-priority engineering task and it remains `open`.
-   - Heartbeats at 2026-04-07 01:35 PDT still show Bob and Dave as `idle`.
-   - Result: the sprint has no active engineering throughput yet.
-
-2. Status hygiene is still drifting from board reality.
-   - Bob's `status.md` header still shows old Sprint 2/3 work even though he now owns T715/T716.
-   - Dave's `status.md` header still shows Sprint 4 `T582` even though Sprint 5 assigns T714.
-   - Nick's `status.md` header still shows old Task 264 while his notes say no active task.
-   - Charlie's `status.md` is stale since 2026-04-04 and still shows Sprint 3 `T576`.
-   - Tracking cost goes up when board state and status state diverge.
-
-3. QA and review capacity are available.
-   - Tina and Olivia are idle after Sprint 4 closeout.
-   - Once Bob and Dave move work to handoff, there is no visible QA bottleneck.
+1. The earlier "0/4 done" sprint-stall picture is stale and should not be used.
+2. Bob's lane is complete: `T715` and `T716` are both done and verified.
+3. Sprint 5 is now bottlenecked only on Dave's `T714` rework.
+4. Tina's blocker was valid under C15/C16: no fresh Dave-owned artifact, no runnable stop-loss proof, and no handoff package tying the change to the current sprint.
 
 ## Dependency Read
 
 | Chain | State | Risk |
 |------|-------|------|
-| Bob T715 -> Dave T714 -> Tina QA -> Alice retro | Not started | High |
-| Bob T716 independent validation | Not started | Medium |
-| Sam T717 reporting lane | Active | Low |
+| Bob `T715` -> Dave `T714` -> Tina QA -> Alice retro | Partially complete; blocked at Dave rework | High |
+| Bob `T716` independent validation | Complete | Closed |
+| Sam `T717` reporting lane | Complete | Closed |
 
-The critical path has not moved. Until Bob and Dave claim and start their tasks, Sprint 5 remains effectively idle.
+## Trend vs Prior Snapshot
 
-## Trend vs Prior Cycle
+| Metric | 2026-04-07 01:36 PDT | 2026-04-07 06:38 PDT | Delta |
+|--------|----------------------|----------------------|-------|
+| Done tasks | 0 | 3 | Up +3 |
+| Active blocker count | 0 visible | 1 confirmed | Narrowed to real blocker |
+| Open/not-started tasks | 3 | 0 | Cleared |
+| Remaining sprint scope | 4 tasks | 1 task | Down 75% |
 
-| Metric | Sprint 4 Closeout | Sprint 5 Day 1 | Delta |
-|--------|-------------------|----------------|-------|
-| Done tasks visible in current sprint | 7 closeout tasks effectively completed | 0 | Down sharply |
-| Active agents on critical path | 4+ | 1 | Down |
-| QA bottleneck | Present during late Sprint 4 handoff | None yet | Improved |
-| Ownership delay | Moderate | Severe | Worse |
+## Alert For Alice
 
-## Alerts For Alice
-
-- P1: Bob and Dave have assigned Sprint 5 work but have not started it on the board.
-- P2: Bob is carrying two Sprint 5 tasks simultaneously; if activation stays flat, split or reorder may be needed.
-- P2: Charlie's stale status file should be corrected or ignored as a source of truth until refreshed.
-- P2: Bob's unread inbox now includes repeated Tina review notices, increasing the chance Sprint 5 work stays buried unless explicitly reprioritized.
-
-## Recommended Actions
-
-1. Have Bob claim either T715 or T716 immediately and show `in_progress`.
-2. Have Dave claim T714 immediately and show `in_progress`.
-3. Explicitly reset Bob's priority order so old review noise does not outrank Sprint 5 assignment.
-4. Treat the task board as source of truth for Sprint 5 assignment, but require Bob, Dave, Nick, and Charlie to refresh `status.md` headers so tracking remains reliable.
-5. Keep Tina and Olivia idle until a real Sprint 5 handoff exists; no reason to burn QA cycles early.
+- P1: `T714` is the only remaining Sprint 5 blocker. Rework must include a fresh Dave artifact path, runnable verification command, and freshness marker proving stop-loss enforcement at the 20% cap alongside capital-floor logic.
 
 ## Conclusion
 
-Sprint 5 is not blocked by code, infra, or quality review right now. It is blocked by non-started assigned work and stale ownership attention. Velocity will remain flat until Bob and Dave convert board assignments into visible execution.
+Sprint 5 velocity is no longer broadly down. It has collapsed to a single high-priority blocker on `T714`. Resolve Dave's handoff hygiene and verification package, and the sprint can close.

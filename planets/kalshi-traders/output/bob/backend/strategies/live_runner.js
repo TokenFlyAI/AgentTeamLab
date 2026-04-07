@@ -280,6 +280,27 @@ function logCapitalFloorStatus(status, contextLabel) {
   }
 }
 
+function getTradeCostCents(signal) {
+  const priceCents = signal.currentPrice != null ? signal.currentPrice : 0;
+  const contracts = signal.sizing?.contracts || 1;
+  return Math.round(priceCents * contracts);
+}
+
+function getStopLossStatus(capitalFloorStatus) {
+  const referenceCapitalCents = Math.max(
+    0,
+    capitalFloorStatus?.currentCapitalCents ?? PAPER_TRADING_INITIAL_CAPITAL_CENTS
+  );
+  const maxTradeCostCents = Math.round(referenceCapitalCents * PAPER_TRADING_MAX_TRADE_PCT);
+
+  return {
+    enabled: PAPER_TRADING,
+    maxTradePct: PAPER_TRADING_MAX_TRADE_PCT,
+    referenceCapitalCents,
+    maxTradeCostCents,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -325,6 +346,7 @@ async function main() {
   const paperTradesDB = getPaperTradesDB();
   let capitalFloorStatus = PAPER_TRADING ? getCapitalFloorStatus(paperTradesDB) : null;
   let finalCapitalFloorStatus = capitalFloorStatus;
+  let stopLossStatus = PAPER_TRADING ? getStopLossStatus(capitalFloorStatus) : null;
   let tradingHalted = false;
   let haltReason = null;
 
@@ -340,6 +362,7 @@ async function main() {
 
     capitalFloorStatus = getCapitalFloorStatus(paperTradesDB);
     finalCapitalFloorStatus = capitalFloorStatus;
+    stopLossStatus = getStopLossStatus(capitalFloorStatus);
     console.log("\n💵 Post-settlement capital check...");
     logCapitalFloorStatus(capitalFloorStatus, "Pre-trade");
     if (capitalFloorStatus.breached) {
@@ -440,6 +463,10 @@ async function main() {
   try {
     currentRunNumber = parseInt(fs.readFileSync(runNumberFile, "utf8")) || 0;
   } catch (_) {}
+
+  if (EXECUTE_TRADES && PAPER_TRADING) {
+    console.log("\n📝 PAPER TRADING MODE — execution constrained to paper ledger");
+  }
   
   if (EXECUTE_TRADES && tradingHalted) {
     console.log("\n🧯 Capital floor halt active — skipping trade execution");
@@ -461,6 +488,7 @@ async function main() {
       // T331: Skip trades with NULL confidence (Grace's finding)
       const persistedTrades = [];
       let skippedNullConfidence = 0;
+      const stopLossRejectedTrades = [];
       for (const s of approvedSignals) {
         // T331: Validate confidence before recording
         if (s.confidence == null || typeof s.confidence !== 'number' || isNaN(s.confidence)) {
@@ -471,10 +499,19 @@ async function main() {
 
         // T714: Per-trade stop-loss — reject trades that risk more than MAX_TRADE_PCT of capital
         if (PAPER_TRADING && s.currentPrice != null) {
-          const tradeCostCents = Math.round((s.currentPrice / 100) * (s.sizing?.contracts || 1) * 100);
-          const maxAllowedCents = Math.round(PAPER_TRADING_INITIAL_CAPITAL_CENTS * PAPER_TRADING_MAX_TRADE_PCT);
+          const tradeCostCents = getTradeCostCents(s);
+          const maxAllowedCents = stopLossStatus?.maxTradeCostCents ?? Math.round(PAPER_TRADING_INITIAL_CAPITAL_CENTS * PAPER_TRADING_MAX_TRADE_PCT);
           if (tradeCostCents > maxAllowedCents) {
             console.warn(`  🛑 T714 stop-loss: rejecting ${s.ticker || s.marketId} — trade cost $${(tradeCostCents/100).toFixed(2)} exceeds ${(PAPER_TRADING_MAX_TRADE_PCT*100).toFixed(0)}% cap ($${(maxAllowedCents/100).toFixed(2)})`);
+            stopLossRejectedTrades.push({
+              ticker: s.ticker || s.marketId,
+              side: s.side,
+              contracts: s.sizing?.contracts || 1,
+              currentPrice: s.currentPrice,
+              tradeCostCents,
+              maxAllowedCents,
+              reason: `trade cost ${tradeCostCents} exceeds stop-loss cap ${maxAllowedCents}`,
+            });
             continue;
           }
         }
@@ -505,21 +542,23 @@ async function main() {
       
       executionReport = {
         mode: "paper_trading",
-        executed: approvedSignals.length,
-        rejected: 0,
+        executed: persistedTrades.length,
+        rejected: stopLossRejectedTrades.length,
         failed: 0,
         persisted: persistedTrades.length,
         halted: false,
         haltReason: null,
-        trades: approvedSignals.map(s => ({
-          ticker: s.ticker || s.marketId,
-          side: s.side,
-          contracts: s.sizing?.contracts || 1,
-          price: s.currentPrice,
-          strategy: s.strategy,
-          confidence: s.confidence,
-          expectedEdge: s.expectedEdge,
-          timestamp: new Date().toISOString(),
+        stopLossRejected: stopLossRejectedTrades.length,
+        trades: persistedTrades.map((trade) => ({
+          ticker: trade.market,
+          side: trade.direction?.toLowerCase(),
+          contracts: trade.contracts,
+          price: trade.entry_price,
+          tradeCostCents: Math.round((trade.entry_price || 0) * (trade.contracts || 0)),
+          strategy: trade.signal_type,
+          confidence: trade.confidence,
+          expectedEdge: trade.metadata?.expectedEdge,
+          timestamp: trade.timestamp,
         })),
       };
       
@@ -570,6 +609,7 @@ async function main() {
       }
 
       finalCapitalFloorStatus = getCapitalFloorStatus(paperTradesDB);
+      stopLossStatus = getStopLossStatus(finalCapitalFloorStatus);
       console.log("\n💵 Capital floor status after settlement...");
       logCapitalFloorStatus(finalCapitalFloorStatus, "Post-run");
       if (!tradingHalted && finalCapitalFloorStatus.breached) {
@@ -595,6 +635,10 @@ async function main() {
     halted: tradingHalted,
     haltReason,
     capitalFloor: finalCapitalFloorStatus,
+    stopLoss: {
+      ...(stopLossStatus || getStopLossStatus(finalCapitalFloorStatus)),
+      maxTradePctLabel: `${(PAPER_TRADING_MAX_TRADE_PCT * 100).toFixed(0)}%`,
+    },
     executed: executionReport ? executionReport.executed > 0 : false,
     executionReport: executionReport || undefined,
     markets: enrichedMarkets.map((m) => ({
