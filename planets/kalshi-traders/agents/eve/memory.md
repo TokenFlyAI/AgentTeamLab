@@ -1,58 +1,20 @@
-# Agent Memory Snapshot — eve — 2026-04-03T17:21:11
+# Agent Memory Snapshot — eve — 2026-04-07T02:38:17
 
 *(Auto-saved at session boundary. Injected into fresh sessions.)*
 
+# Eve — Status
 
-### Done
-- [x] Inbox clear, no open tasks
+## Current Task
+Kalshi Alpha Dashboard — infra support for P0 founder priority.
 
-### Status
-Running. Systems nominal. Awaiting new assignments.
+## Progress
+- [x] Read CEO P0 message (Kalshi Alpha Dashboard)
+- [x] Archived CEO message
+- [x] Updated `run_all.sh` to use `--only dashboard,healthcheck,heartbeat-monitor` (safe to add new apps to ecosystem.config.js)
+- [x] Updated `ecosystem.config.js` with 3 new PM2 apps: kalshi-dashboard (port 3200), kalshi-scheduler, kalshi-monitor
 
----
-## Cycle: 2026-04-03T15:50:00-07:00
+## [Historical cycles trimmed to save tokens — see logs/ for full history]
 
-### Done
-- [x] Inbox clear, no open tasks
-
-### Status
-Running. Systems nominal. Awaiting new assignments.
-
----
-## Cycle: 2026-04-03T15:50:15-07:00
-
-### Done
-- [x] Inbox clear, no open tasks
-
-### Status
-Running. Systems nominal. Awaiting new assignments.
-
----
-## Cycle: 2026-04-03T15:50:30-07:00
-
-### Done
-- [x] Inbox clear, no open tasks
-
-### Status
-Running. Systems nominal. Awaiting new assignments.
-
----
-## Cycle: 2026-04-03T15:50:45-07:00
-
-### Done
-- [x] Inbox clear, no open tasks
-
-### Status
-Running. Systems nominal. Awaiting new assignments.
-
----
-## Cycle: 2026-04-03T15:51:00-07:00
-
-### Done
-- [x] Inbox clear, no open tasks
-
-### Status
-Running. Systems nominal. Awaiting new assignments.
 
 ---
 ## Cycle: 2026-04-03T15:51:15-07:00
@@ -152,3 +114,5 @@ Running. Systems nominal. CI/CD pipelines green. Awaiting new assignments.
 - [2026-04-03T16:25:19-07:00] Cycle: No inbox. No tasks. Frank running. Idle.
 - [2026-04-03T16:25:52-07:00] Cycle: No inbox. No tasks. Alice addressing Dave T429 issue. Idle.
 - [2026-04-03T16:26:25-07:00] Cycle: No inbox. No tasks. Idle.
+- [2026-04-03T21:14:22-0700] Cycle: No inbox. No tasks. Idle.
+- [2026-04-06T23:22:43-0700] Cycle: Processed and archived 2 CEO sprint-kickoff messages. Verified `my_tasks` is empty. No unread inbox items and no actionable Eve work; exiting cleanly.

@@ -1,0 +1,10 @@
+=== Cycle 17 [RESUME] 2026_04_04_13_26_07 ===
+
+Next cycle (17). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Team channel (1 new)**:
+  [2026_04_04_13_24_38_from_tina.md] # QA: Kalshi Client + Credential Manager — 107/107 PASS **From:** Tina (QA) **Date:** 2026-04-04 Proactive QA on Bob's Sprint 4 deliverables (T578 + T582): - **kalshi_client.js**: 68 tests — mock mode
+**Teammates**:
+  alice:idle→running
+  tina:running→idle

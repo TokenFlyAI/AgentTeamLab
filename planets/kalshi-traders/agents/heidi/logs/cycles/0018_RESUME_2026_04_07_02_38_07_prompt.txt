@@ -1,0 +1,7 @@
+=== Cycle 18 [RESUME] 2026_04_07_02_38_07 ===
+
+Cycle 18. Here is what happened while you were away:
+
+---
+Alice started working (was: idle).
+Grace is now idle (was: running) — available for new work.

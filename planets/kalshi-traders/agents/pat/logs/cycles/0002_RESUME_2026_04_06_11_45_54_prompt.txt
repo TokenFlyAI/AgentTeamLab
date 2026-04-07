@@ -1,0 +1,14 @@
+=== Cycle 2 [RESUME] 2026_04_06_11_45_54 ===
+
+Next cycle (2). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  charlie:running→idle
+  eve:idle→running
+  heidi:idle→running
+  judy:idle→running
+  quinn:running→idle
+  rosa:running→idle
+**Culture (new)**:
+| 3 | culture | pipes-should-become-dashes | e2e-test | 2026-04-06 |

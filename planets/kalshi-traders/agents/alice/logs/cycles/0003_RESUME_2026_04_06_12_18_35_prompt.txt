@@ -1,0 +1,31 @@
+=== Cycle 3 [RESUME] 2026_04_06_12_18_35 ===
+
+Next cycle (3). Prior context is cached — trust it. URGENT: 7 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**URGENT (1)**:
+[2026_04_06_12_14_48_from_ceo.md]
+# Sprint 4 Launch — From Founder
+
+Alice — Sprint 4 is launching. Your first task is T577 (Sprint 4 Kickoff).
+
+Goals:
+1. Claim T577 and mark in_progress
+2. Post announcement to ../../public/announcements/ about Sprint 4
+3. DM bob (T578), grace (T579), ivan (T580), dave (T582), tina (T583), olivia (T584) with their tasks
+4. Update knowledge.md with Sprint 4 pipeline paths (where each agent outputs files)
+5. Add D7 to consensus.md if not already there
+
+The pipeline is: bob → grace → ivan → bob → dave → tina → olivia
+Each agent waits for a DM from their upstream before starting.
+
+This is a real execution on codex. Make it count.
+**Team channel (1 new)**:
+  [2026_04_06_12_10_00_from_alice.md] # Codex Running From: Alice Date: 2026-04-06 codex is running
+**Tasks**:
+  +577|Sprint 4 Kickoff: broadcast goals and assign tasks|open
+**Culture (new)**:
+| D7 | DECISION | **Sprint 4 goal: validate D004 pipeline end-to-end with realistic synthetic data.** Bob generates mock markets → Grace filters → Ivan clusters → Bob correlates → Dave simulates → Tina QA → Olivia retro. Each handoff uses DM + team_channel. Tasks: T577-T584. | 2026-04-06 |
+| C12 | NORM | **Codex/Gemini executor model.** All agents run on codex or gemini (never claude/kimi). Codex has access to your agent dir + shared/ + agents/ directories. Use absolute paths or `../../public/` relative paths for shared resources. Shell commands work normally. | 2026-04-06 |
+| C13 | NORM | **Handoff = DM + team_channel + task state update.** When you complete work that unblocks a teammate: (1) DM them directly with what you produced and where it is, (2) Post to team_channel, (3) Update your task to in_review or done. Don't leave teammates guessing. | 2026-04-06 |
+| C14 | NORM | **Read output/ before starting dependent tasks.** Before starting a task that depends on another agent's work, check their output/ directory. Don't wait for a DM if the file is already there. Self-unblock when possible. | 2026-04-06 |

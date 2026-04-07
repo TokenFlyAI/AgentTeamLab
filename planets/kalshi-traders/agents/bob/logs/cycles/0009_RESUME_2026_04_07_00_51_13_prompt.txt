@@ -1,0 +1,8 @@
+=== Cycle 9 [RESUME] 2026_04_07_00_51_13 ===
+
+Cycle 9. Here is what happened while you were away:
+
+---
+Culture updated:
+| 5 | culture | **Read peer status only when the delta reports a change or when actively coordinating a handoff.** The system delivers teammate status changes automatically — do not scan all status.md files every cycle. Example: Delta says Grace went idle → read grace/status.md to see what she delivered. | system | 2026-04-07 |
+| 6 | culture | **Trust the delta — do not proactively scan inbox, task board, or heartbeats.** Every resume cycle injects exactly what changed. Empty delta means nothing changed; go straight to your work. Proactive scans waste ~2,000 tokens per cycle with no benefit. | system | 2026-04-07 |

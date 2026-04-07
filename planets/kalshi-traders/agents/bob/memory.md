@@ -1,154 +1,148 @@
-# Agent Memory Snapshot — bob — 2026-04-03T18:14:35
+# Agent Memory Snapshot — bob — 2026-04-07T02:38:49
 
 *(Auto-saved at session boundary. Injected into fresh sessions.)*
 
+# Bob — Status
 
----
+## Current Task
+T568 complete, in_review. All Sprint 2 deliverables done.
+- T555: DONE (signal generation)
+- T567: in_review (walk-forward backtest)
+- T568: in_review (parameter sweep)
 
-## T429 COMPLETE ✅ — Fix GET /api/tasks/:id Returning 404
+## T568 — Parameter Sweep: Z-Score Threshold Optimization
+**Status:** in_review
 
-**Timestamp:** 2026-04-03 16:30
+## [Old cycles trimmed to save tokens — see logs/ for history]
 
-### Investigation
-1. **Read task assignment** from Alice — T429 reassigned from Dave
-2. **Located route** in `/Users/chenyangcui/Documents/code/aicompany/server.js` lines 2153-2159
-3. **Verified implementation** — GET /api/tasks/:id already exists and works correctly
+## Cycle 181 — T588 APPROVED, Idle
+**Date:** 2026-04-04
+**Inbox:** Alice assigned T588 (already done), Tina QA 20/20 PASS, Olivia APPROVED.
+**T588 Status:** DONE (approved by all reviewers).
+**All tasks complete:** T555, T567, T578, T582, T587, T588 — all approved.
+**Current state:** No tasks assigned, no inbox. All teammates idle. Ready for next assignment.
 
-### Verification Steps
-```bash
-# Created test task
-curl -X POST http://localhost:3199/api/tasks -d '{"title":"Bug check","priority":"low","assignee":"alice"}'
-# → {"ok":true,"id":447,...}
+## Cycle 182 — Idle
+**Date:** 2026-04-04
+**Note:** Alice running (may assign new work). No tasks, no inbox.
+**Current state:** Ready for next assignment.
 
-# Fetched via GET
-curl http://localhost:3199/api/tasks/447
-# → {"task_type":"task","id":447,"title":"Bug check",...} ✓
+## Cycle 183 — Idle
+**Date:** 2026-04-04
+**Note:** Alice finished cycle (now idle). No new tasks or inbox.
+**Current state:** Ready for next assignment.
 
-# Ran E2E test #19
-npx playwright test e2e/ui_verify.spec.js -g "19"
-# → 1 passed (1.2s) ✓
-```
+## Cycle 184 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### Result
-- ✅ GET /api/tasks/:id route **already implemented** at server.js:2153-2159
-- ✅ Returns correct task object with 200 status
-- ✅ E2E test #19 passes
-- ✅ No code changes required — route was already present
+## Cycle 185 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### Cleanup
-- Test task 447 marked as cancelled
-- T429 tasks (431, 433) were already cancelled as duplicates
+## Cycle 186 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
----
+## Cycle 187 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-## Previous: T427 COMPLETE ✅ — Fix monitor.js Health Check Port
+## Cycle 188 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-**Timestamp:** 2026-04-03 16:20
+## Cycle 189 — Idle
+**Date:** 2026-04-04
+**Note:** Tina running (QA). No tasks, no inbox.
+**Current state:** Ready for next assignment.
 
-### Changes Made
-| Location | Before | After |
-|----------|--------|-------|
-| Line 20 | `strategyApiPort: 3100` | `strategyApiPort: 3200` |
-| Line 128 | `port 3100 is one-shot` | `port 3200 is one-shot` |
+## Cycle 190 — Idle
+**Date:** 2026-04-04
+**Note:** Tina finished cycle. No tasks, no inbox.
+**Current state:** Ready for next assignment.
 
----
+## Cycle 191 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-## Historical Tasks (Complete)
+## Cycle 192 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### T429 — Fix GET /api/tasks/:id 404 ✅
-**Status:** COMPLETE — Route already implemented, verified working
+## Cycle 193 — Idle
+**Date:** 2026-04-04
+**Note:** Alice running (may assign new work). No tasks, no inbox.
+**Current state:** Ready for next assignment.
 
-### T427 — Fix monitor.js Health Check Port ✅
-**Status:** COMPLETE  
-**Deliverable:** Updated `backend/dashboard/monitor.js` — port 3100 → 3200
+## Cycle 194 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### T423 — Paper Trade Simulation ✅
-**Status:** COMPLETE  
-**Deliverable:** `output/paper_trade_sim_correlation.js` + `output/paper_trade_results_20260403.json`
+## Cycle 195 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### T418 — Pearson Correlation Verification ✅
-**Status:** COMPLETE  
-**Deliverable:** Fresh `correlation_pairs.json` with 9 pairs, 6 arbitrage opportunities
+## Cycle 196 — Idle
+**Date:** 2026-04-04
+**Note:** Alice finished cycle. No new tasks or inbox.
+**Current state:** Ready for next assignment.
 
-### T413 — Harden Dashboard API ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/dashboard_api.js` — Production-hardened with rate limiting, validation, CORS, logging
+## Cycle 197 — Idle
+**Date:** 2026-04-04
+**Note:** Alice running. No tasks, no inbox.
+**Current state:** Ready for next assignment.
 
-### T360 — Verify Phase 3 knowledge, culture, coordination with Ivan ✅
-**Status:** COMPLETE
+## Cycle 198 — Idle
+**Date:** 2026-04-04
+**Note:** Alice finished cycle. No new tasks or inbox.
+**Current state:** Ready for next assignment.
 
-### T345/T348 — Pearson Correlation Detection ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/correlation/pearson_detector.js`
+## Cycle 199 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. Ready for next assignment.
 
-### T340 — Strategy Comparison Implementation Section ✅
-**Status:** COMPLETE  
-**Deliverable:** Implementation section in `agents/public/strategy_comparison.md`
+## Cycle 200 — Idle (session end)
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. All backend modules delivered and approved (T555, T567, T578, T582, T587, T588). Ready for next assignment.
 
-### T332 — Historical Replay Backtest Engine ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/backtest/replay_engine.js`
+## Cycle 201 — Idle
+**Date:** 2026-04-04
+**Note:** Tina running (no new work). No tasks, no inbox. All backend modules delivered (T555, T567, T578, T582, T587, T588).
+**Current state:** Ready for next assignment.
 
-### T325 — Strategy Optimization (Disable Poor Performers) ✅
-**Status:** COMPLETE  
-**Action:** Hard-disabled momentum, crypto_edge, nfp_nowcast, econ_edge strategies
+## Cycle 202 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. All teammates idle. Ready for next assignment.
 
-### T252 — E2E Integration Test ✅
-**Status:** COMPLETE  
-**Result:** 18/18 tests passed
+## Cycle 203 — Idle
+**Date:** 2026-04-04
+**Current state:** No tasks, no inbox. All idle. Ready for next assignment.
 
-### T246 — Risk Manager Integration ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/strategies/risk_manager.js`
+## Cycle 204 — T578 Delivered, Waiting On T581 Input
+**Date:** 2026-04-06
+**Inbox:** Founder assigned T578 first, then T581 later. Alice confirmed Sprint 4 start and Grace requested the T578 handoff.
+**This cycle:** Ran `python3 scripts/generate_mock_kalshi_data.py` and regenerated `output/mock_kalshi_markets.json`.
+**Verification:** Confirmed `market_count=200`, 4 categories x 50 markets, and basic bid/ask and price invariants pass.
+**Handoff:** DM'd Grace that `mock_kalshi_markets.json` is ready and posted Sprint 4 milestone to team_channel, following C9/C10.
+**Blocker:** Shared task API claim/update path is down. `curl http://localhost:3199/api/tasks/578` fails, and `logs/api_server.log` shows Postgres `ECONNREFUSED` on `127.0.0.1:5432` / `::1:5432`. Per Alice's Sprint 4 DM, proceed from assignment messages and board snapshot until task API is restored.
+**Current state:** T578 artifact is complete and handed off. Waiting for Ivan's `market_clusters.json` handoff to start T581.
 
-### T245 — Live Kalshi API Connection ✅
-**Status:** COMPLETE  
-**Deliverable:** Dashboard API with `/api/kalshi/status` and `/api/kalshi/configure`
+## Cycle 205 — T578 Delivered, Waiting On Phase 2
+**Date:** 2026-04-06
+**Inbox:** Alice confirmed Sprint 4 is active and explicitly assigned T578/T581. She also noted the shared task API is down, so work should proceed from DM/task-board state.
+**This cycle:** Added `scripts/generate_mock_kalshi_data.py`, generated `output/mock_kalshi_markets.json`, posted milestone to team_channel, and DM'd Grace the handoff in the requested format.
+**Verification:** Ran `python3 scripts/generate_mock_kalshi_data.py`, then validated 200 markets, balanced categories (Crypto/Politics/Economics/Weather = 50 each), `yes_price + no_price == 100`, valid bid/ask ordering, and volume bounds.
+**Blockers:** Task API unavailable from workspace, so `task_claim` / `task_inreview` could not update server state.
+**Current state:** T578 artifact delivered at `../../agents/bob/output/mock_kalshi_markets.json`. Waiting for Ivan's `market_clusters.json` handoff to start T581.
 
-### T242 — Dashboard API ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/dashboard_api.js` (Express on port 3200)
-
-### T239 — Pipeline Scheduler ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/pipeline/scheduler.js` with Python + Node.js support
-
-### T232 — First Paper Trade ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/strategies/first_paper_trade.js`
-
-### T226 — E2E Paper Trade ✅
-**Status:** COMPLETE  
-**Result:** Full signal-to-fill cycle documented
-
-### T225 — Paper Trading Execution Module ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/strategies/execution_engine.js`
-
-### T221 — Live Market Data Connection ✅
-**Status:** COMPLETE  
-**Deliverable:** `backend/strategies/live_runner.js`
-
-### T220 — Strategy Framework ✅
-**Status:** COMPLETE  
-**Deliverables:** signal_engine.js, position_sizer.js, pnl_tracker.js, strategy_runner.js
-
----
-
-## Decisions Log
-- [2026-04-03] T429: GET /api/tasks/:id route already implemented — no changes needed
-- [2026-04-03] T427: Fixed monitor.js port 3100 → 3200 to prevent false P0 alerts
-- [2026-04-03] T423: Ran 50-trade paper simulation on 6 arb pairs, results negative (-$11.90 P&L, 44% WR)
-
----
-
-## Blockers
-None
-
----
-
-## Current State
-- ✅ T429: done — Verified GET /api/tasks/:id works, E2E test passes
-- ✅ All assigned tasks complete
-- ✅ No unread messages
-- 🔄 Awaiting next assignment from Alice or task board
+## Cycle 206 — T581 Correlation Pairs Generated
+**Date:** 2026-04-06
+**Current Task:** T581 | Phase 3: Pearson correlation detection on market clusters
+**Status:** in_review
+**This cycle:** Following D2, C4, C5, C6, C8, C9, C10, C11, and C13, I read `public/knowledge.md` Phase 3, checked Grace's Phase 1 summary and Ivan's Sprint 4 `market_clusters.json`, claimed T581, ran `python3 agents/bob/scripts/generate_correlation_pairs.py`, and generated `agents/bob/output/correlation_pairs.json`.
+**Verification:** Output summary is 4 clusters processed, 296 pairs analyzed, 203 pairs above `r >= 0.75`, and 81 arbitrage candidates. Verified artifact fields include `market_a`, `market_b`, `pearson_r`, `expected_spread`, `current_spread`, `spread_pct`, and `confidence`.
+**Task state:** T581 moved to `in_review` with runnable artifact note. T578 also moved to `in_review` now that the shared task API is back up.
+**Coordination:** Read Ivan status/output and Grace inbox handoff note per C4/C14. DM'd Dave: `correlation_pairs.json ready — 203 pairs above threshold, 81 arbitrage candidates, 296 total pairs.` DM'd Olivia for T581 review. Posted Phase 3 completion to `team_channel`.
+**Inbox processed:** Read Alice T578 follow-up, Grace Phase 1 summary, Ivan's two T580 messages, and Tina's unrelated T683 rejection notice.
+**Current state:** Waiting on Olivia review for T581 and T578. Dave has the refreshed Phase 3 artifact for downstream simulation.

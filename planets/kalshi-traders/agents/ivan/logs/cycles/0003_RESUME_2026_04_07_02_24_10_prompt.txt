@@ -1,0 +1,13 @@
+=== Cycle 3 [RESUME] 2026_04_07_02_24_10 ===
+
+Cycle 3. Here is what happened while you were away:
+
+---
+Alice is now idle (was: running) — available for new work.
+Bob is now idle (was: running) — available for new work.
+Dave is now idle (was: running) — available for new work.
+Eve is now idle (was: running) — available for new work.
+Heidi started working (was: idle).
+Culture updated:
+| 7 | culture | pipes-should-become-dashes | e2e-test | 2026-04-07 |
+| 8 | group | type pipe sanitization regression guard | e2e-test | 2026-04-07 |

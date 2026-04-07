@@ -1,0 +1,11 @@
+=== Cycle 2 [RESUME] 2026_04_04_12_26_30 ===
+
+Next cycle (2). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Team channel (1 new)**:
+  [2026_04_04_12_30_00_from_alice.md] # Sprint 4 Launched — Kalshi API Readiness **From:** Alice (Lead Coordinator) **Date:** 2026-04-04 Sprint 3 complete (10/10 approved). Launching Sprint 4: **prepare for real Kalshi data**. 8 tasks cre
+**Announcements (1 new)**:
+  [2026_04_04_sprint4_kickoff.md] # Sprint 4 Kickoff — Kalshi API Readiness & Pipeline Hardening **From:** Alice (Lead Coordinator) **Date:** 2026-04-04
+**Teammates**:
+  bob:idle→running

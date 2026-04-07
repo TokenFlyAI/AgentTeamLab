@@ -1,28 +1,40 @@
-# Sprint 5 Plan — Paper Trade Validation & Signal Quality
+# Sprint 5 Plan — Live Pipeline with Real Data
 
 **Author:** Alice (Lead Coordinator)
-**Date:** 2026-04-03
+**Date:** 2026-04-04
+**Prerequisite:** T236 — Kalshi API credentials from Founder
 
 ## Context
 
-Sprint 4 complete. fetchCandles() now uses deterministic seeded PRNG (T326). Paper trading automation running every 15min (T323). Signal alerts live (T325). Backtest baseline: 55.9% win rate.
+Sprint 4 complete (6/6 engineering tasks done, all QA passed). Pipeline infrastructure validated:
+- Kalshi API client + credential manager (Bob)
+- Phase 1 filter with Kalshi API integration (Alice)
+- Walk-forward validation: mock signals correctly unprofitable (-124% return, 25% WR)
+- Pipeline monitoring dashboard on port 3460 (Alice)
+- E2E test with realistic mocks: 41/41 pass (Tina)
+- Total QA tests: 243 across all Sprint 4 deliverables
 
-Open issues going into Sprint 5:
-1. Paper trade win rate unvalidated with deterministic data — need 50+ trades to measure
-2. NULL signal_confidence bug — 4/11 trades had null confidence (filter not enforcing 0.80 on all paths)
-3. Parameter tuning (Ivan T324) untested against deterministic data
+**Key finding:** Pipeline works correctly. Mock data produces unprofitable signals as expected. Need real Kalshi API data to validate strategy viability.
 
-## Sprint 5 Tasks
+## Sprint 5 Theme
+Connect validated pipeline to real Kalshi data. Paper trade with real signals. Determine strategy viability.
 
-| ID | Owner | Priority | Title |
-|----|-------|----------|-------|
-| T327 | Bob | HIGH | Paper trade validation (50+ trades) + GET /api/pnl/live |
-| T328 | Grace | HIGH | NULL signal_confidence audit + fix |
-| T329 | Ivan | MED | Validate param tuning with deterministic data |
+## Proposed Tasks
 
-## Definition of Done
+### P0 — Critical Path (blocked on T236)
+1. **Connect pipeline to Kalshi demo API** (Grace) — Run full pipeline with real market data
+2. **Validate signal quality with real data** (Ivan) — Compare real vs mock signal characteristics
+3. **Paper trade with real signals** (Dave) — Run walk-forward with real data, compare to mock baseline
 
-- 50+ paper trades run; win rate measured and compared to 55.9% baseline
-- NULL confidence bug fixed — all trades have numeric confidence ≥ 0.80 or are rejected
-- Param tuning validated — know if Ivan's recommendations improve win rate
-- /api/pnl/live endpoint live and returning real data
+### P1 — Production Hardening (can start now)
+4. **Per-trade stop-loss** (Dave) — Tina finding: prevent single trade from exceeding max loss
+5. **Post-trade capital floor** (Bob) — Prevent capital going negative, halt at $50
+6. **Rate limit integration test** (Bob) — Verify rate limiter under load with real API
+
+### P2 — Monitoring
+7. **Extend pipeline monitor for real data** (Charlie) — Error alerting, real-time data
+8. **Sprint 5 velocity tracking** (Sam)
+
+## Blockers
+- **T236 — Kalshi API credentials** — blocks P0 tasks 1-3
+- **Contract sizes unconfirmed** — blocks production position sizing

@@ -1,0 +1,7 @@
+=== Cycle 15 [RESUME] 2026_04_06_13_25_58 ===
+
+Next cycle (15). Prior context is cached — trust it. URGENT: 1 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| 3 | culture | pipes-should-become-dashes | e2e-test | 2026-04-06 |

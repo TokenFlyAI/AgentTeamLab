@@ -1,0 +1,8 @@
+=== Cycle 11 [RESUME] 2026_04_04_12_43_59 ===
+
+Next cycle (11). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  bob:running→idle
+  tina:idle→running

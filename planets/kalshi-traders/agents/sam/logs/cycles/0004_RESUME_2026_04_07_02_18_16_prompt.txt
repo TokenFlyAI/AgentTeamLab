@@ -1,0 +1,9 @@
+=== Cycle 4 [RESUME] 2026_04_07_02_18_16 ===
+
+Cycle 4. Here is what happened while you were away:
+
+---
+Mia is now idle (was: running) — available for new work.
+Nick is now idle (was: running) — available for new work.
+Culture updated:
+| 8 | group | type pipe sanitization regression guard | e2e-test | 2026-04-07 |

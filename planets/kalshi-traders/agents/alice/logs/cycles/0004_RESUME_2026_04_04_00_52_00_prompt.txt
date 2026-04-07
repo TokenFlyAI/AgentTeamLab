@@ -1,0 +1,15 @@
+=== Cycle 4 [RESUME] 2026_04_04_00_52_00 ===
+
+Next cycle (4). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (2 new)**:
+  [2026_04_04_00_50_from_sam_chain_stall.md] # Sprint 3: Bob Fixed, Chain Stalled at Dave
+  [2026_04_04_00_47_from_sam_rework.md] # Sprint 3 Velocity: Quality Gate Rework Impact
+**Team channel (1 new)**:
+  [2026_04_04_00_51_03_from_tina.md] # Sprint 3 QA: Backtest Validation Complete — FAIL **From:** Tina (QA Engineer) **Date:** 2026-04-04 T570 QA of Dave's backtest (T568) complete. **VERDICT: FAIL** — 5 critical issues: 1. **Duplicate t
+**Teammates**:
+  ivan:running→idle
+  olivia:running→idle
+  sam:running→idle
+  tina:running→idle

@@ -1,71 +1,15 @@
 # Grace — Status
 
 ## Current Task
-Task 241: Set up pipeline scheduler for live trading — COMPLETE
+Awaiting next assignment; T579 handoff complete and duplicate Bob ping closed
 
 ## Progress
-- [x] Read CEO's P0 directive for Kalshi Alpha Dashboard
-- [x] Verified `run_scheduler.sh` exists at `agents/bob/backend/dashboard/run_scheduler.sh`
-- [x] Verified scheduler meets all requirements:
-  - ✅ Runs `node agents/bob/backend/strategies/live_runner.js` every 10 minutes (INTERVAL=600)
+- [x] Processed Founder message `chat_inbox/2026_04_06_12_14_48_from_ceo.md`
+- [x] Verified T579 dependency path: `../../agents/bob/output/mock_kalshi_markets.json`
+- [x] Updated `output/market_filter.js` to read Bob's handoff file when present and emit `output/filtered_markets.json`
+- [x] Verified filter script runs cleanly and writes the expected artifact path contract
 
-## [Historical cycles trimmed to save tokens — see logs/ for full history]
-
-- ✅ Output schema matches Phase 1 spec
-- ✅ At least 1 qualifying market exists (3 total)
-- ✅ Fresh timestamp generated
-- ✅ No errors or anomalies
-
-### Status
-
-**PROD-VERIFY-1 COMPLETE** — Market filter executed successfully, fresh output ready for Phase 2 clustering.
-
-
----
-
-## Cycle 7 — Idle Check
-
-**Time:** 2026-04-03  
-**Status:** No new inbox messages, no open tasks assigned.
-
-### Recent Completed Work
-
-1. **T417** — PROD-VERIFY-1: Market filter executed (Founder priority) ✅
-2. **T409** — Benchmark live_runner.js (p95: 89.7ms, target met) ✅
-3. **T414** — Pipeline freshness monitor built ✅
-4. **T376** — Phase 1 market filtering verified ✅
-5. **T370** — Validator integration with C++ engine verified ✅
-
-### Current Blockers
-
-- T236 (Kalshi API credentials from Founder) — blocking live trading
-- No active work until API credentials arrive or new tasks assigned
-
-### Self-Directed Options
-
-1. Optimize pipeline_freshness_monitor.js with additional metrics
-2. Document data lineage for D004 pipeline
-3. Create additional data quality checks
-4. Help teammates with data engineering needs
-
-**Decision:** Idle cleanly — no urgent self-directed work identified. Awaiting next assignment.
-
-
----
-
-## T530 COMPLETE — Backtest Correlation Pairs & Pipeline Validation ✅
-
-**Following C3 (cite decisions):** D002/D004 pipeline validation per production readiness requirements.
-**Following C5 (show in_progress):** Task 530 claimed → in_progress → done.
-**Following C6 (reference knowledge):** Validated all 3 phases of D004 pipeline data.
-
-### Pipeline Validation: 16/16 PASS
-
-| Phase | Owner | Checks | Status |
-|-------|-------|--------|--------|
-| Phase 1: Market Filtering | Grace | 6/6 | ✅ PASS |
-| Phase 2: LLM Clustering | Ivan | 4/4 | ✅ PASS |
-| Phase 3: Correlation Pairs | Bob | 6/6 | ✅ PASS |
+## [Old cycles trimmed to save tokens — see logs/ for history]
 
 ### Backtest Results (30-day simulated history)
 
@@ -164,3 +108,51 @@ Task 241: Set up pipeline scheduler for live trading — COMPLETE
 ### Deliverables
 - `output/data_chain_audit.js` — runnable audit script
 - `output/data_chain_audit.md` — full report
+
+---
+
+## T579 IN_REVIEW — Phase 1 Filter on Bob Mock Markets
+
+**Time:** 2026-04-06T23:24
+**Following C3 (cite decisions):** D7 Sprint 4 mock-data validation path, Founder priority handled first.
+**Following C5 (show in_progress):** T579 taken from open work to completed artifact this cycle.
+**Following C8 (run and verify):** Executed `node ../../output/grace/market_filter.js` against Bob's `mock_kalshi_markets.json`.
+**Following C13 (handoff = DM + team_channel + task state):** Ivan notified directly and milestone prepared for team visibility.
+
+### T579 Results
+- Input: `../../agents/bob/output/mock_kalshi_markets.json` with 200 markets
+- Output: `output/filtered_markets.json`
+- Filter config: volume >= 10000, YES ratio 15-30% or 70-85%, exclude 40-60%
+- Summary: 50 qualifying, 77 middle-range excluded, 73 extreme-ratio flagged, 0 low-volume exclusions
+
+### Verification
+- Command completed successfully with fresh artifact write
+- First qualifying tickers: `WEA-RAIN-26MAY24-004`, `CRYP-BTCDOM-26MAY27-005`, `POL-SEN-26JUL29-026`
+
+### Blockers
+- Local task API unavailable from this sandbox (`localhost:3199` connection failed), so task state could not be patched server-side this cycle
+
+---
+
+## Cycle — 2026-04-07T00:00 — T579 Task-State Reconciliation
+
+**Following C3 (cite decisions):** treated the stale task board entry as the highest remaining gap because the Sprint 4 artifact chain was already complete on disk.
+**Following C4 (read peers):** checked Ivan and Bob status files to confirm downstream consumption and upstream freshness before changing task state.
+**Following C6 (reference knowledge):** revalidated Phase 1 contract against `knowledge.md` volume and YES-ratio thresholds.
+**Following C11/C15/C16 (review + freshness):** moved T579 to `in_review` with artifact path, run command, and 2026-04-06 freshness marker; DM'd Olivia for review.
+
+### Reconciliation Results
+- API recovered: `GET/PATCH http://localhost:3199/api/tasks/579` succeeded
+- Task state now matches actual work: `in_review`
+- Notes now include runnable artifact contract:
+  - Artifact: `output/filtered_markets.json`
+  - Run: `node ../../output/grace/market_filter.js`
+  - Freshness: Bob mock input + Grace filtered output from 2026-04-06 Sprint 4
+
+### Peer Coordination
+- Ivan status confirms T580 already consumed Grace's `filtered_markets.json` and generated Sprint 4 clusters
+- Bob status confirms Sprint 4 upstream mock dataset was regenerated on 2026-04-06 and Phase 3 used the fresh handoff
+- Olivia DM sent with review-ready handoff details for T579
+
+### Recent Activity
+- 2026-04-07 00:00:24 PDT Reconciled T579 in the task API, verified freshness chain, and requested review from Olivia

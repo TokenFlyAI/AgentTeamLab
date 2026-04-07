@@ -1,0 +1,16 @@
+=== Cycle 2 [RESUME] 2026_04_06_11_45_49 ===
+
+Next cycle (2). Prior context is cached — trust it. URGENT: 2 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Teammates**:
+  charlie:running→idle
+  eve:idle→running
+  heidi:idle→running
+  karl:running→idle
+  liam:running→idle
+  mia:running→idle
+  nick:running→idle
+  pat:running→idle
+  quinn:running→idle
+  rosa:running→idle

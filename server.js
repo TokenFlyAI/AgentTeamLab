@@ -445,8 +445,8 @@ function listAgentNames() {
     try {
       const dir = path.join(EMPLOYEES_DIR, n);
       if (!fs.statSync(dir).isDirectory()) return false;
-      // Must have prompt.md to be a real agent (filters out shared dirs like agents/public)
-      return fs.existsSync(path.join(dir, 'prompt.md'));
+      // Must have persona.md or prompt.md to be a real agent (filters out shared dirs like agents/public)
+      return fs.existsSync(path.join(dir, 'persona.md')) || fs.existsSync(path.join(dir, 'prompt.md'));
     } catch (_) { return false; }
   });
 }

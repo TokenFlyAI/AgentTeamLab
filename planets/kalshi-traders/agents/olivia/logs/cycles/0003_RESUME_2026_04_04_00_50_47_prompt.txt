@@ -1,0 +1,10 @@
+=== Cycle 3 [RESUME] 2026_04_04_00_50_47 ===
+
+Next cycle (3). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Inbox (1 new)**:
+  [2026_04_04_00_47_08_from_bob.md] T567 resubmitted — fixed both issues: (1) Q2: Added deduplication — same market pair only generates 
+**Teammates**:
+  bob:running→idle
+  sam:idle→running

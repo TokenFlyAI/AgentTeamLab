@@ -1,0 +1,6 @@
+=== Cycle 12 [RESUME] 2026_04_07_02_26_38 ===
+
+Cycle 12. Here is what happened while you were away:
+
+---
+New announcement from 2026_04_07_02_26_38_announcement.md: "Testing /api/announce alias."

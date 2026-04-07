@@ -1,0 +1,7 @@
+=== Cycle 3 [RESUME] 2026_04_07_02_40_17 ===
+
+Cycle 3. Here is what happened while you were away:
+
+---
+Karl started working (was: idle).
+Mia is now idle (was: running) — available for new work.

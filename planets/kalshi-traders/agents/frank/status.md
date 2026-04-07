@@ -127,3 +127,12 @@ node agents/frank/output/mean_reversion_test.js
 - No open tasks assigned to Frank on board
 - Team all idle (alice, bob, dave, ivan, grace, mia)
 - IDLE — awaiting next assignment
+
+## Cycle 7 — 2026-04-06
+- Re-checked the two CEO messages surfaced as urgent in `chat_inbox/`
+- Confirmed both are stale directives already satisfied in prior cycles:
+  - Task 279 deliverable exists at `agents/frank/output/mean_reversion_test.js`
+  - Sprint 2 QA directive is historical and has no open assigned task in current state
+- Moved both stale CEO messages from `chat_inbox/` to `chat_inbox/read/`
+- No new Founder/Lord work remains for Frank
+- IDLE — awaiting next assignment

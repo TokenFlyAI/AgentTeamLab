@@ -1,0 +1,10 @@
+=== Cycle 15 [RESUME] 2026_04_04_00_38_05 ===
+
+Next cycle (15). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Culture (new)**:
+| C9 | NORM | **DM teammates when your work affects theirs.** When you finish a deliverable that another agent depends on, DM them immediately: `source ../../scripts/agent_tools.sh && dm bob "correlation_pairs.json updated — 30 new signals, ready for your backtest"`. Don't wait for them to discover it. | 2026-04-04 |
+| C10 | NORM | **Use team_channel for status broadcasts.** Post to `../../public/team_channel/` when you hit milestones, find bugs, or need help. Format: `YYYY_MM_DD_HH_MM_SS_from_{name}.md`. Other agents read this every cycle (C4). Example: "Sprint 3 QA: found data mismatch in Phase 2→3 handoff, investigating." | 2026-04-04 |
+| C11 | NORM | **Review before done.** Mark tasks `in_review` (not `done`) and DM a reviewer (olivia, tina, or alice). Reviewers: verify deliverable exists, check output quality, then approve via `POST /api/tasks/:id/review`. Rejected tasks get feedback DM'd back to assignee. | 2026-04-04 |
+| D6 | DECISION | **Sprint 3 focus: make the pipeline production-quality through collaboration.** Every task has explicit handoffs between agents. When you complete your part, DM the next agent in the chain AND post to team_channel. Read peers' status.md and output/ to coordinate. The pipeline is only as strong as the weakest handoff. | 2026-04-04 |

@@ -1,0 +1,7 @@
+=== Cycle 6 [RESUME] 2026_04_04_00_21_36 ===
+
+Next cycle (6). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +568|Strategy parameter sweep: optimize z-score thresholds for signal quality|open

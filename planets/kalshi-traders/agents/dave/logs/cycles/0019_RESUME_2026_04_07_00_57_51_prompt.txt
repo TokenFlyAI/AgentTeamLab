@@ -1,0 +1,7 @@
+=== Cycle 19 [RESUME] 2026_04_07_00_57_51 ===
+
+Cycle 19. Here is what happened while you were away:
+
+---
+New task assigned to you — T714: "Per-trade stop-loss: prevent single trade exceeding max loss" (open)
+  Add stop-loss logic to the paper trading simulation (output/pipeline_report). Tina flagged this during Sprint 4 QA. No single trade should exceed 20% of capital. See output/dave/pipeline_report.md for current simulation.

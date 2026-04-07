@@ -1,0 +1,7 @@
+=== Cycle 20 [RESUME] 2026_04_04_14_22_25 ===
+
+Next cycle (20). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Tasks**:
+  +588|Rate limit integration test — verify Kalshi rate limiter under load|open

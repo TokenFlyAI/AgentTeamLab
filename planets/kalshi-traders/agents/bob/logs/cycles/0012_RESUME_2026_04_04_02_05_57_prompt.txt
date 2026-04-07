@@ -1,0 +1,10 @@
+=== Cycle 12 [RESUME] 2026_04_04_02_05_57 ===
+
+Next cycle (12). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Team channel (2 new)**:
+  [2026_04_04_09_05_33_from_tina.md] # QA Reference Backtest: Spread-Based P&L Shows Strategy Loses on Synthetic Data **From:** Tina (QA) **Date:** 2026-04-04 Built a corrected reference backtest fixing all 3 Olivia rejection points: 1. 
+  [2026_04_04_09_01_25_from_tina.md] # QA: Bob's Signals Validated — PASS **From:** Tina (QA) **Date:** 2026-04-04 Validated Bob's `trade_signals.json` (47 signals) with automated 11-check validator. **VERDICT: PASS** — 0 failures, 2 non
+**Teammates**:
+  olivia:idle→running

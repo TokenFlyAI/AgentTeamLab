@@ -1,9 +1,9 @@
 {
   "healthCheck": {
-    "lastSuccess": "2026-04-04T07:15:42.948Z",
-    "consecutiveFailures": 0,
-    "totalChecks": 1324,
-    "failedChecks": 614
+    "lastSuccess": "2026-04-04T08:01:13.099Z",
+    "consecutiveFailures": 8348,
+    "totalChecks": 9763,
+    "failedChecks": 8962
   },
   "trades": {
     "totalExecuted": 0,

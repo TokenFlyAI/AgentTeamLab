@@ -1,0 +1,30 @@
+{"type":"thread.started","thread_id":"019d671f-27d8-7492-afa7-b45a808c2e0c"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}
+{"type":"thread.started","thread_id":"019d6735-167d-7d93-b85f-655986e84b92"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"[DRY RUN] No API call made."}]}}
+{"type":"result","num_turns":0,"total_cost_usd":0,"duration_ms":100,"session_id":"dryrun-1775553753-heidi"}
+{"type":"thread.started","thread_id":"019d6741-a878-7192-9d19-fd5838918405"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"[DRY RUN] No API call made."}]}}
+{"type":"result","num_turns":0,"total_cost_usd":0,"duration_ms":100,"session_id":"dryrun-1775554584-heidi"}
+{"type":"thread.started","thread_id":"019d674e-7159-7702-8353-bb12e2eb721f"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}
+{"type":"thread.started","thread_id":"019d6750-6547-73a0-af04-4b9e5fc2e5ed"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"[DRY RUN] No API call made."}]}}
+{"type":"result","num_turns":0,"total_cost_usd":0,"duration_ms":100,"session_id":"dryrun-1775555327-heidi"}
+{"type":"thread.started","thread_id":"019d6759-d35f-74e3-89c3-7efaf5a6aaee"}
+{"type":"turn.started"}
+{"type":"error","message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}
+{"type":"turn.failed","error":{"message":"You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:21 AM."}}

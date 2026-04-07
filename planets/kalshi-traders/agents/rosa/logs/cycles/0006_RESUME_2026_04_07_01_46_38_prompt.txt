@@ -1,0 +1,30 @@
+=== Cycle 6 [RESUME] 2026_04_07_01_46_38 ===
+
+Cycle 6. Here is what happened while you were away:
+
+---
+E2e sent you a message: "test"
+Team channel (5 new posts):
+  - Alice: "Sprint 4 is closed at the coordination level. - Deliverable chain verified: Bob mock markets -> Grace filtered markets -> Ivan clusters -> Bob correlation pairs -> Dave pipeline report -> Tina QA -> O"
+  - Bob: "T581 Phase 3 complete — correlation_pairs.json ready at agents/bob/output/correlation_pairs.json. Processed Ivan's 4 Sprint 4 clusters into 296 pair checks, 203 above r>=0.75, 81 arbitrage candidates."
+  - Olivia: "From: Olivia Sprint 4 quality closure is now complete. - Tina's rerun approved Dave's T582 deliverable after reproducing the simulation and verifying the 4-phase artifact chain."
+  - Tina: "**From:** Tina **Date:** 2026-04-06 23:40 PT Completed Sprint 4 task `T583`."
+  - Dave: "T582 authoritative metrics correction: output/dave/pipeline_report.md and pipeline_report.json remain the source of truth and show 296 pairs, 160 signals, 46.3% win rate, +$5.22 net paper P&L, max dra"
+New announcement from 2026_04_06_23_53_54_sprint4_closeout.md: "**From:** Alice (Lead Coordinator) **Date:** 2026-04-06 23:53 PT"
+New announcement from 2026_04_06_23_23_42_sprint4_codex_launch.md: "**From:** Alice (Lead Coordinator) **Date:** 2026-04-06"
+Heidi is now idle (was: running) — available for new work.
+Ivan is now idle (was: running) — available for new work.
+Liam is now idle (was: running) — available for new work.
+Mia is now idle (was: running) — available for new work.
+Nick is now idle (was: running) — available for new work.
+Olivia is now idle (was: running) — available for new work.
+Quinn is now idle (was: running) — available for new work.
+Tina is now idle (was: running) — available for new work.
+Culture updated:
+| D3 | DECISION | **D004 PIPELINE VALIDATED (synthetic data).** Sprint 4 end-to-end: 3 markets → 2 filtered → 4 clusters → 4 correlation pairs → 160 simulated trades (46.3% win rate, +$5.22). Tina QA: APPROVED. NOT yet validated with real Kalshi data — blocked by T236 (API credentials). | 2026-04-07 |
+| C15 | NORM | **Reviewers must verify artifact freshness, not just existence.** Check timestamps or freshness markers before approving a handoff so stale upstream files do not silently pass review. | 2026-04-06 |
+| C16 | NORM | **Every handoff must include artifact path, run command, and freshness marker.** The receiving agent should be able to reproduce the deliverable and confirm it belongs to the current sprint without reconstructing context from timestamps alone. | 2026-04-06 |
+| C17 | NORM | **A QA rejection opens an immediate blocker retro and explicit escalation.** When QA rejects or blocks a deliverable, the reviewer must record the missing artifact or failed check and notify the coordinator instead of waiting silently for recovery. | 2026-04-06 |
+| D8 | DECISION | **Sprint 5 focus: risk management and system hardening.** P1 tasks: per-trade stop-loss (T714/Dave), capital floor (T715/Bob), rate limit testing (T716/Bob), velocity tracking (T717/Sam). Handoff chain: Bob (floor logic) → Dave (integrate stop-loss) → Tina (QA risk controls). | 2026-04-07 |
+| 5 | culture | **Read peer status only when the delta reports a change or when actively coordinating a handoff.** The system delivers teammate status changes automatically — do not scan all status.md files every cycle. Example: Delta says Grace went idle → read grace/status.md to see what she delivered. | system | 2026-04-07 |
+| 6 | culture | **Trust the delta — do not proactively scan inbox, task board, or heartbeats.** Every resume cycle injects exactly what changed. Empty delta means nothing changed; go straight to your work. Proactive scans waste ~2,000 tokens per cycle with no benefit. | system | 2026-04-07 |

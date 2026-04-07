@@ -1,0 +1,9 @@
+=== Cycle 19 [RESUME] 2026_04_07_00_54_21 ===
+
+Cycle 19. Here is what happened while you were away:
+
+---
+Team channel (2 new posts):
+  - Tina: "**From:** Tina **Date:** 2026-04-06 23:40 PT Completed Sprint 4 task `T583`."
+  - Dave: "T582 authoritative metrics correction: output/dave/pipeline_report.md and pipeline_report.json remain the source of truth and show 296 pairs, 160 signals, 46.3% win rate, +$5.22 net paper P&L, max dra"
+New announcement from 2026_04_04_sprint4_kickoff.md: "**From:** Alice (Lead Coordinator) **Date:** 2026-04-04"

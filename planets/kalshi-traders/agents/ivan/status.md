@@ -11,6 +11,40 @@ Per Founder directive and Culture D2, all work orients toward the 4-phase arbitr
 
 ## [Old cycles trimmed to save tokens — see logs/ for history]
 
+## 2026-04-06 — T580 Complete (Sprint 4 Phase 2)
+
+**Action:** Processed Founder Sprint 4 handoff and delivered fresh Phase 2 clustering for Bob.
+
+**Following norms/decisions:**
+- **C4:** Read Grace and Bob status before resuming dependent pipeline work
+- **C6:** Used Phase 2 clustering guidance from the technical knowledge base
+- **C8:** Re-ran Phase 1 and Phase 2 executables instead of trusting stale artifacts
+- **D7:** Continued the Sprint 4 dry-run path Grace → Ivan → Bob
+
+**Execution:**
+```bash
+node ../../output/grace/market_filter.js
+python3 ../../output/ivan/llm_market_clustering.py
+```
+
+**Script fixes applied:**
+- Inferred missing categories from Phase 1 mock-mode records
+- Fixed singleton-drop bug so all qualifying markets appear in the output
+- Added broad semantic-family fallback so sparse macro titles can still cluster meaningfully
+- Wrote fresh JSON to both `output/market_clusters.json` and `public/market_clusters.json`
+
+**Results:**
+- Verified current Phase 1 mock filter returns **3 qualifying markets**
+- Found **1 multi-market cluster**: `Rates + Economics`
+  - `KXFED-25MAY-HOLD`
+  - `KXGDP-25Q2-3PCT`
+- Found **1 singleton**: `KXETH-25APR-5K`
+- Hidden correlations above threshold: **0**
+
+**Quality note:**
+- Cross-validation warning on the macro cluster: wide YES-ratio spread (`20` to `73.27`), but both markets passed Phase 1 and remain causally related for Phase 3 exploration
+
+**Notifications:** Founder message processed. Bob handoff sent. Team-channel post sent. Task API unavailable from this session (`localhost:3199` unreachable), so server-side task state could not be updated.
 
 ## 2026-04-03 — T422 Complete (URGENT/Founder Directive)
 
@@ -158,3 +192,7 @@ T546 DONE. Phase 2 clustering v2 shipped: added bid-ask volatility + news sentim
 **Handoffs:** DM'd Bob (updated clusters for re-correlation), DM'd Olivia (review). Posted team_channel.
 **Following:** C7 (close tasks), C8 (run & verify), C9 (DM handoffs), C10 (team_channel), C11 (in_review → reviewer)
 **Status:** Awaiting Olivia review.
+2026-04-04 cycle 2 — Idle. T575 in_review awaiting Olivia. DM'd Bob re: using confidence scores to fix T567 duplicate signal issue (Olivia rejection). No open tasks, no inbox. Checked team_channel: Olivia rejected T567/T568 for inconsistent backtest results. Ready to help if needed.
+2026-04-04 cycle 3 — Idle. T575 still in_review. Alice posted quality gate HOLD: Bob/Dave signals rejected, corrected chain Bob→Dave→Tina→Olivia. No inbox, no tasks. Not on critical path. Ready to assist if needed.
+2026-04-06 cycle 8 — Processed Founder T580 first. Read Grace's fresh Sprint 4 Phase 1 output (50 qualifying markets), built `output/generate_market_clusters.py`, generated `output/market_clusters.json` with 4 keyword clusters (macro 14, crypto 10, politics 15, weather 11), DM'd Bob for Phase 3, DM'd Olivia for review, posted team_channel. Task API was unreachable from this shell, so task state could not be patched.
+2026-04-06 cycle 9 — Following C4/C6, checked `../../public/knowledge.md` Sprint 4 spec plus Bob and Grace status files to confirm the Phase 2 handoff chain remained valid. Verified `output/market_clusters.json` freshness against `../grace/output/filtered_markets.json` (23:25:48 PT -> 23:26:09 PT), confirmed Bob T581 consumed the artifact successfully, and noted the schema uses `label` rather than `cluster_name`. `my_tasks` shows no active work, but T580 still shows `in_review` in the task API, so I DM'd Olivia and Alice with artifact path, run command, and freshness markers per C13/C16. Awaiting reviewer closure or next assignment.

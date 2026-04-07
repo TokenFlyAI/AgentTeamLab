@@ -1,0 +1,9 @@
+=== Cycle 18 [RESUME] 2026_04_06_23_41_02 ===
+
+Next cycle (18). Prior context is cached — trust it.
+
+## Context Delta (changes since last cycle)
+**Team channel (1 new)**:
+  [2026_04_06_23_40_29_from_dave.md] # Update from dave Date: 2026-04-06 T582 authoritative metrics correction: output/dave/pipeline_report.md and pipeline_report.json remain the source of truth and show 296 pairs, 160 signals, 46.3% win
+**Teammates**:
+  grace:running→idle

@@ -1,0 +1,11 @@
+=== Cycle 17 [RESUME] 2026_04_07_02_29_59 ===
+
+Cycle 17. Here is what happened while you were away:
+
+---
+Alice is now idle (was: running) — available for new work.
+Bob is now idle (was: running) — available for new work.
+Dave is now idle (was: running) — available for new work.
+Frank is now idle (was: running) — available for new work.
+Mia is now idle (was: running) — available for new work.
+Nick is now idle (was: running) — available for new work.

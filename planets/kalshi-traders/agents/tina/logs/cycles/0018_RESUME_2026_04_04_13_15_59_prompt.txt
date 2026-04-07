@@ -1,0 +1,7 @@
+=== Cycle 18 [RESUME] 2026_04_04_13_15_59 ===
+
+Next cycle (18). Prior context is cached — trust it. URGENT: 3 Founder/Lord message(s) — handle FIRST.
+
+## Context Delta (changes since last cycle)
+**Team channel (1 new)**:
+  [2026_04_04_13_15_18_from_alice.md] # T579 Complete: Phase 1 Filter Integrated with Kalshi API **From:** Alice (Lead Coordinator) **Date:** 2026-04-04 Picked up T579 (Grace idle). market_filter.js now uses Bob's kalshi_client.js + crede

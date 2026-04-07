@@ -1,7 +1,7 @@
 # Dave — Status
 
 ## Current Task
-T354: Production Readiness Code Review — COMPLETE
+T582: Phase 4 Signal Simulation and P&L Report — IN_REVIEW
 
 ## Recent Completed Tasks
 - T351: Phase 4 C++ Execution Engine Full Build — COMPLETE (24/24 tests passing)
@@ -45,3 +45,30 @@ T540 COMPLETE. Integration tested C++ engine with corrected correlation_pairs.js
 
 ### 2026-04-04 00:42 — Progress
 T568 COMPLETE (in_review). Backtest: 38 signals → 18 trades, 61.1% win, +$14.26 P&L (14.14%), Sharpe 9.90, DD 1.92%. DM'd tina (QA) + grace (data check). Following C9, C11, D6.
+
+### 2026-04-04 02:34 — Progress
+T568 REWORK COMPLETE (in_review). Fixed: spread-based P&L, Bob's 47 signals, pair dedup, z-score validation, 70/30 split. Full: 22 trades, 22.7% win, -$1.33 P&L, Sharpe -9.33. Test: 0% win. Matches Tina QA ref. DM'd tina+olivia+grace. Following C8, C9, C11, D6.
+
+### 2026-04-04 02:36 — Progress
+T568 DONE (approved by Olivia, QA pass by Tina). Checking for next work.
+
+### 2026-04-04 02:36 — Progress
+Cycle 3: T568 approved+closed. Inbox empty. No open tasks. Idle.
+
+### 2026-04-06 23:30 — Progress
+T582 IN_PROGRESS. Founder assigned Sprint 4 Phase 4 simulation. Local task API unavailable on `localhost:3199`, so proceeding from Bob's published `../../output/bob/correlation_pairs.json` per C14 and will hand off report to Tina + Olivia after verification.
+
+### 2026-04-06 23:31 — Progress
+T582 IN_REVIEW. Ran `node output/dave/simulate_pipeline.js` against Bob's latest Phase 3 output (`296` pairs). Deliverables: `output/dave/pipeline_report.md` + `output/dave/pipeline_report.json`. Result: `160` simulated signals, `74W / 86L`, `46.3%` win rate, `+$5.22` net P&L, max drawdown `$0.60`. DM'd Tina + Olivia for QA/review and posted team-channel handoff. Task API still unavailable locally, so review state is tracked in this status file.
+
+### 2026-04-06 23:30 — Progress
+T582 COMPLETE locally: built output/dave/simulate_pipeline.js against Bob's current T581 schema, generated output/dave/pipeline_report.md + pipeline_report.json, verified 296 pairs / 160 signals / +$5.22 simulated P&L / 46.3% win rate. DM'd tina+olivia and posted to team_channel. API task state update blocked: localhost:3199 unreachable from this session.
+
+### 2026-04-06 23:31 — Progress
+T582 COMPLETE locally: Bob DM received and current T581 artifact processed. Final deliverables: output/dave/pipeline_report.md + output/dave/pipeline_report.json. Verified metrics on current schema: 296 pairs tested, 160 signals, 74 wins / 86 losses, +$5.22 P&L, 46.3% win rate, $0.60 max drawdown. DM'd alice, tina, olivia. Shared task API remains unavailable.
+
+### 2026-04-06 23:39 — Progress
+T582 awaiting QA/review. Re-verified `node ../../output/dave/simulate_pipeline.js` regenerates `../../output/dave/pipeline_report.md` and `../../output/dave/pipeline_report.json` with the same `296` pairs / `160` signals / `46.3%` win rate / `+$5.22` net P&L. No new inbox feedback this cycle; `curl http://localhost:3199/api/tasks/582` still times out, so review state remains tracked locally per C5/C8.
+
+### 2026-04-06 23:38 — Progress
+T582 verification rerun clean: `node output/dave/simulate_pipeline.js` reproduced `296` pairs, `160` signals, `46.3%` win rate, `+$5.22` net P&L. Found one earlier team-channel/DM typo showing `+0.22`; correct value is `+$5.22`. Sent correction to Alice and posted corrected team update so reviewers use the report/JSON as source of truth.
