@@ -312,8 +312,18 @@ curr_pr = {t["id"]: t for t in curr.get("pending_review", [])}
 new_pr_ids = set(curr_pr) - set(prev_pr)
 for tid in new_pr_ids:
     t = curr_pr[tid]
-    lines.append("T{} ({}) is now in_review — assigned to {}, awaiting your review.".format(
-        t.get("id",""), t.get("title",""), t.get("assignee","")))
+    notes = (t.get("notes") or "").strip()
+    # Extract the last note line (most recent progress update)
+    last_note = notes.split(";;")[-1].strip()[:120] if notes else ""
+    note_suffix = " — note: {}".format(last_note) if last_note else ""
+    lines.append("T{} ({}) is now in_review — assigned to {}, awaiting your review.{}".format(
+        t.get("id",""), t.get("title",""), t.get("assignee",""), note_suffix))
+# Also notify when a pending_review task is resolved (approved/rejected)
+removed_pr_ids = set(prev_pr) - set(curr_pr)
+for tid in removed_pr_ids:
+    t = prev_pr[tid]
+    lines.append("T{} ({}) is no longer in_review — resolved or reassigned.".format(
+        t.get("id",""), t.get("title","")))
 
 # Teammate status changes
 prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
