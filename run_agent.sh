@@ -563,6 +563,24 @@ PYEOF
     fi
 fi
 
+# ── Executor failure warning ──────────────────────────────────────────────────
+# If the last 3+ cycles all failed with the current executor (raw_bytes=0),
+# warn the agent so they can decide to switch executors.
+_FAILURE_LOG="${AGENT_DIR}/logs/cycle_failures.log"
+if [ -f "$_FAILURE_LOG" ] && [ "$_EARLY_DRY_RUN" != "1" ]; then
+    _CONSEC_FAIL=$(tail -5 "$_FAILURE_LOG" 2>/dev/null | grep -c "FAIL executor=${EXECUTOR} raw_bytes=0" || true)
+    if [ "${_CONSEC_FAIL:-0}" -ge 3 ]; then
+        _FAIL_WARN="
+
+⚠️ EXECUTOR WARNING: Your last ${_CONSEC_FAIL} cycles failed with executor '${EXECUTOR}' (no output produced).
+The executor may be unauthenticated, rate-limited, or unavailable.
+To switch back to Claude: Write 'claude' to your executor.txt (e.g., use the Write tool: echo claude > executor.txt).
+Your next session will use the new executor."
+        PROMPT_TEXT="${PROMPT_TEXT}${_FAIL_WARN}"
+        echo "[executor-warn:${AGENT_NAME}] ${_CONSEC_FAIL} recent failures with ${EXECUTOR} — injected warning into prompt"
+    fi
+fi
+
 # ── Settings file ─────────────────────────────────────────────────────────────
 SETTINGS_FILE=$(get_settings_file "$AGENT_NAME" "$EXECUTOR")
 
