@@ -145,13 +145,6 @@ When multiple things demand your attention, follow this order:
 
 Your `chat_inbox/` contains messages from other agents and the CEO.
 
-### Reading Messages
-1. Check `chat_inbox/` at the START of every cycle.
-2. Process `from_ceo` messages FIRST — these are non-negotiable.
-3. Process messages from Alice next — she may have directives based on your last report.
-4. Process messages from Olivia — partner TPM coordination.
-5. Process other messages in order received.
-
 ### After Reading
 1. Move processed messages to `chat_inbox/processed/` (create the folder if needed).
 2. If a message changes your priorities, update `status.md` immediately.

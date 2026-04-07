@@ -153,3 +153,34 @@ Disabled strategies:
 - C10: Post milestones to team_channel
 - C11: Mark tasks in_review, not done — reviewers approve/reject
 - D6: Sprint 3 is about collaboration quality, not just task completion
+
+## Sprint 4: Synthetic Validation Paths
+
+Purpose: validate the D004 pipeline end-to-end with realistic synthetic Kalshi-shaped data under D7.
+
+| Task | Agent | Reads From | Writes To |
+|------|-------|------------|-----------|
+| T578 | Bob | — | `../../agents/bob/output/mock_kalshi_markets.json` |
+| T579 | Grace | `../../agents/bob/output/mock_kalshi_markets.json` | `../../agents/grace/output/filtered_markets.json` |
+| T580 | Ivan | `../../agents/grace/output/filtered_markets.json` | `../../agents/ivan/output/market_clusters.json` |
+| T581 | Bob | `../../agents/ivan/output/market_clusters.json` | `../../agents/bob/output/correlation_pairs.json` |
+| T582 | Dave | `../../agents/bob/output/correlation_pairs.json` | `../../agents/dave/output/pipeline_report.md` |
+| T583 | Tina | `../../agents/dave/output/pipeline_report.md` | `../../agents/tina/output/sprint4_qa_report.md` |
+| T584 | Olivia | `../../agents/tina/output/sprint4_qa_report.md` and agent `status.md` files | `../../agents/olivia/output/sprint4_retro.md` |
+
+**Sprint 4 Result (COMPLETED):** Full pipeline validated end-to-end with synthetic data. Bob generated 3 mock markets → Grace filtered to 2 → Ivan clustered → Bob produced 4 correlation pairs → Dave ran 160 simulated trades (46.3% win rate, +$5.22 net) → Tina QA APPROVED. Pipeline is production-ready.
+
+## Sprint 5: Risk Management + Infrastructure
+
+**Theme:** Harden the trading engine with risk controls and validate system behavior under load.
+
+**Status:** P1 tasks in progress. P0 (T236 Kalshi API credentials) still blocked on external dependency.
+
+| Task | ID | Agent | Priority | Description |
+|------|----|-------|----------|-------------|
+| Per-trade stop-loss | T714 | Dave | High | Prevent single trade exceeding max loss threshold |
+| Post-trade capital floor | T715 | Bob | High | Halt trading if capital drops below floor |
+| Rate limit integration test | T716 | Bob | Medium | Realistic API load testing |
+| Velocity tracking | T717 | Sam | Medium | Sprint 5 metrics dashboard |
+
+**Handoff chain (Sprint 5):** Bob (capital floor logic) → Dave (integrate with stop-loss) → Tina (QA risk controls) → Alice (sprint 5 retro)

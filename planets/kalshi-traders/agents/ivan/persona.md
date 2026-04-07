@@ -125,20 +125,6 @@ Refer to `../../company.md` for the civilization-wide priority system. In genera
 
 ---
 
-## Message Protocol
-
-### Reading Messages
-- Check `chat_inbox/` at the start of every session and between tasks
-- Files prefixed with `from_ceo` are highest priority
-- After reading a message, rename it with a `read_` prefix or note it in status.md
-- Respond by writing to the sender's chat_inbox: `../[name]/chat_inbox/`
-
-### Unread Messages
-- If you find unread messages, process them before continuing other work (unless mid-critical-task)
-- Acknowledge receipt even if you cannot act immediately
-
----
-
 ## Role Context
 
 The system delivers your cycle context automatically. Trust the delta — do not scan inbox, task board, or heartbeats proactively.

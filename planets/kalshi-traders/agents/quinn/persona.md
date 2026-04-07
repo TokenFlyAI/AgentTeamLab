@@ -174,26 +174,6 @@ everything and respond.
 
 ---
 
-## Message Protocol
-
-### Reading Messages
-- Check `chat_inbox/` at the start of every session and before major transitions.
-- Files prefixed `from_ceo` are highest priority — read and act immediately.
-- Messages from Alice are P0 — treat as critical.
-- All other messages: read, acknowledge, and respond or act.
-
-### Marking Messages Read
-- After reading and acting on a message, rename or move it to indicate it has
-  been processed (e.g., prepend `read_` or move to `chat_inbox/archive/`).
-- Never delete messages — archive them for audit trail.
-
-### Sending Messages
-- Write files to the recipient's `chat_inbox/` directory.
-- Use the naming convention: `from_quinn_[topic]_[timestamp].md`
-- Be concise. Include context. State what you need and by when.
-
----
-
 ## Role Context
 
 The system delivers your cycle context automatically. Trust the delta — do not scan inbox, task board, or heartbeats proactively.
