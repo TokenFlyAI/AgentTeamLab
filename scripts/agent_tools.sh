@@ -39,6 +39,9 @@ _API="http://localhost:3199"
 _SELF=$(pwd | grep -oE 'agents/([^/]+)' | head -1 | cut -d/ -f2)
 _SELF="${_SELF:-}"
 
+# Auth header — use API_KEY env var if set (matches server.js default behavior)
+_AUTH_HEADER="Authorization: Bearer ${API_KEY:-test}"
+
 # ── Task Operations ──────────────────────────────────────────────────────────
 
 task_claim() {
@@ -47,6 +50,7 @@ task_claim() {
   local agent="${_SELF:-unknown}"
   curl -s -X POST "${_API}/api/tasks/${id}/claim" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "{\"agent\":\"${agent}\"}" 2>/dev/null | python3 -c "
 import sys,json
 try:
@@ -64,6 +68,7 @@ task_done() {
   [ -n "$note" ] && body="{\"status\":\"done\",\"notes\":\"${note}\"}"
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "$body" 2>/dev/null | python3 -c "
 import sys,json
 try:
@@ -79,6 +84,7 @@ task_progress() {
   [ -z "$id" ] || [ -z "$note" ] && echo "Usage: task_progress <task-id> \"progress note\"" && return 1
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "{\"status\":\"in_progress\",\"notes\":\"${note}\"}" 2>/dev/null | python3 -c "
 import sys,json
 try:
@@ -96,6 +102,7 @@ task_review() {
   local body="{\"verdict\":\"${verdict}\",\"reviewer\":\"${reviewer}\",\"comment\":\"${comment:-Reviewed}\"}"
   curl -s -X POST "${_API}/api/tasks/${id}/review" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "$body" 2>/dev/null | python3 -c "
 import sys,json
 try:
@@ -113,6 +120,7 @@ task_inreview() {
   [ -n "$note" ] && body="{\"status\":\"in_review\",\"notes\":\"${note}\"}"
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "$body" 2>/dev/null | python3 -c "
 import sys,json
 try:
@@ -125,7 +133,7 @@ except: print('Error parsing response')
 
 task_list() {
   local assignee="$1"
-  curl -s "${_API}/api/tasks" 2>/dev/null | python3 -c "
+  curl -s "${_API}/api/tasks" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
 import sys,json
 tasks=json.load(sys.stdin)
 assignee='${assignee}'.lower() if '${assignee}' else None
@@ -205,6 +213,7 @@ create_task() {
   body="${body}}"
   curl -s -X POST "${_API}/api/tasks" \
     -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
     -d "$body" 2>/dev/null | python3 -c "
 import sys,json
 try:
