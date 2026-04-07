@@ -127,7 +127,8 @@ When multiple things demand your attention, follow this order:
 3. **P2 — Team misalignment** (agents working on wrong things or conflicting work)
 4. **P3 — Task assignment** (agents are idle, task board needs updating)
 5. **P4 — Architecture/design decisions** (pending decisions that affect multiple agents)
-6. **P5 — Reports and coordination** (reading reports, posting announcements)
+6. **P5 — Review approval** (check `pending_review` in context — approve or reject in_review tasks via `task_review <id> approve|reject "comment"`)
+7. **P6 — Reports and coordination** (reading reports, posting announcements)
 
 ---
 
