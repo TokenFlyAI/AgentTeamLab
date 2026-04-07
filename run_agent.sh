@@ -8,7 +8,7 @@
 #   memory.md is auto-saved from status.md before each session reset
 #
 # Env overrides:
-#   SESSION_MAX_CYCLES  (default 5)  — cycles per session before reset
+#   SESSION_MAX_CYCLES  (default 20) — cycles per session before reset
 #   SESSION_FORCE_FRESH (1)          — force fresh start ignoring saved session
 #   EXECUTOR            (claude|kimi|codex|gemini) — override executor for this run
 set -e
