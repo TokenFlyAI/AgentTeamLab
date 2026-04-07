@@ -49,6 +49,7 @@ Key API endpoints:
 | `/api/agents/:name/cycles/:n` | GET | Full log output for cycle N |
 | `/api/agents/:name/output` | GET | List deliverable files |
 | `/api/agents/:name/output/:file` | GET | Read a specific deliverable |
+| `/api/agents/:name/context` | GET | Live context snapshot (inbox, tasks, pending_review for reviewers, culture) |
 | `/api/tasks` | GET/POST | Task list / create task |
 | `/api/tasks/:id` | PATCH/DELETE | Update or delete task |
 | `/api/tasks/:id/claim` | POST | Atomically claim a task (409 if already claimed) |
@@ -91,8 +92,8 @@ Key API endpoints:
 
 1. **`smart_run.sh`** — only starts agents with assigned open/in_progress tasks OR unread inbox messages (no idle agents)
    - `--max N` flag caps total agents started (default 20, use 3 for testing: `bash smart_run.sh --max 3`)
-   - Priority: alice → task-assigned (open/in_progress) → unassigned tasks → inbox-only (added last)
-   - in_review tasks do NOT start the assignee — they're waiting for reviewer DM (already handled by inbox)
+   - Priority: alice → task-assigned (open/in_progress) → reviewers (tina, olivia) if any in_review → unassigned tasks → inbox-only (added last)
+   - in_review tasks do NOT start the assignee — they're waiting for reviewer DM; but tina+olivia are auto-started to review
 2. **`run_subset.sh`** — auto-stops agent after `MAX_IDLE_CYCLES=3` consecutive cycles with no work
 3. **Agent prompts** — resume prompt is ~15 tokens; fresh prompt is static (KV cached); no re-loading of files already in context
 4. **Task claims** — atomic `POST /api/tasks/:id/claim` with file locking to prevent race conditions
