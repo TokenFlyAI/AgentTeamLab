@@ -431,8 +431,12 @@ out = []
 out.append("## Your Starting Context")
 out.append("")
 
-# Mode
+# Mode + SOP together (agents need operating rules BEFORE seeing their work queue)
 out.append("**Company mode**: {}".format(d.get("mode","normal")))
+sop = d.get("sop")
+if sop:
+    out.append("### Active SOP ({} mode):".format(d.get("mode","normal")))
+    out.append(sop)
 out.append("")
 
 # Urgent messages (full content)
@@ -511,13 +515,6 @@ if teammates:
             "{} ({})".format(t["name"], t["status"]) for t in working)))
     if idle:
         out.append("**Idle teammates**: {}".format(", ".join(t["name"] for t in idle)))
-    out.append("")
-
-# Active SOP
-sop = d.get("sop")
-if sop:
-    out.append("### Active SOP ({} mode):".format(d.get("mode","normal")))
-    out.append(sop)
     out.append("")
 
 # Culture / consensus — agents need the full file to see all norms and sprint decisions
