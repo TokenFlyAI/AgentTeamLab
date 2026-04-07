@@ -956,7 +956,8 @@ if [ "$_DRY_RUN" = "1" ]; then
 elif [ "$EXECUTOR" = "kimi" ]; then
     # kimi uses --continue for resume (no explicit session ID needed).
     # Save "kimi" marker if the cycle succeeded (TurnEnd or StatusUpdate in text output).
-    if grep -q 'TurnEnd\|StatusUpdate' "$RAW_LOG" 2>/dev/null; then
+    # Use offset to check only THIS cycle's bytes — avoids false positives from old cycles in same log.
+    if tail -c +"$((_RAW_LOG_OFFSET + 1))" "$RAW_LOG" 2>/dev/null | grep -q 'TurnEnd\|StatusUpdate'; then
         NEW_SESSION_ID="kimi"
     else
         # kimi produced no output — likely --continue failed (session expired/missing in workdir).
