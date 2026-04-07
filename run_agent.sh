@@ -742,6 +742,7 @@ sys.stdout.flush()
             _CODEX_SHARED="${SHARED_DIR:-${COMPANY_DIR}/public}"
             _CODEX_AGENTS="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
             _CODEX_OUTPUT="${OUTPUT_DIR:-${COMPANY_DIR}/output}"
+            _CODEX_PORT="${DASHBOARD_PORT:-3199}"
             if [ $USE_RESUME -eq 1 ] && [ -n "$RESUME_FLAG" ]; then
                 $TIMEOUT_CMD codex exec resume "$RESUME_FLAG" "$PROMPT_TEXT" \
                     -C "$AGENT_DIR" \
@@ -749,6 +750,7 @@ sys.stdout.flush()
                     --add-dir "$_CODEX_AGENTS" \
                     --add-dir "$_CODEX_OUTPUT" \
                     --skip-git-repo-check \
+                    --dangerously-bypass-approvals-and-sandbox \
                     --json \
                     2>/dev/null \
                     | tee -a "$RAW_LOG" \
@@ -760,6 +762,7 @@ sys.stdout.flush()
                     --add-dir "$_CODEX_AGENTS" \
                     --add-dir "$_CODEX_OUTPUT" \
                     --skip-git-repo-check \
+                    --dangerously-bypass-approvals-and-sandbox \
                     --json \
                     2>/dev/null \
                     | tee -a "$RAW_LOG" \

@@ -1824,30 +1824,12 @@ body {
           </label>
         </div>
 
-        <h3>Enabled Executors</h3>
-        <div class="fleet-radio-group" id="fleet-enabled-executors">
-          <label class="fleet-radio-label">
-            <input type="checkbox" value="claude" checked>
-            <span>Claude</span>
-            <small>Default stable executor</small>
-          </label>
-          <label class="fleet-radio-label">
-            <input type="checkbox" value="kimi" checked>
-            <span>Kimi</span>
-            <small>Low-cost alternative</small>
-          </label>
-          <label class="fleet-radio-label">
-            <input type="checkbox" value="codex">
-            <span>Codex</span>
-            <small>Expose only when OpenAI credentials are ready</small>
-          </label>
-          <label class="fleet-radio-label">
-            <input type="checkbox" value="gemini">
-            <span>Gemini</span>
-            <small>Expose only when Gemini credentials are ready</small>
-          </label>
+        <h3>Run Budget</h3>
+        <div class="fleet-slider-container">
+          <input type="number" id="fleet-max-total-cycles" min="0" max="1000" value="0" style="width:80px;background:#0d1117;border:1px solid #30363d;color:#e0e0e0;padding:5px 8px;border-radius:6px;font-size:0.95rem;">
+          <span style="color:#888;font-size:0.85rem;margin-left:8px;">total cycles (0 = unlimited)</span>
         </div>
-        <p class="fleet-hint">This persists to <code>smart_run_config.json</code>. Environment variable <code>ENABLED_EXECUTORS</code> still overrides it for rollout or emergency rollback.</p>
+        <p class="fleet-hint">Stops all agents once the combined cycle count reaches this number. Example: 3 agents × 2 cycles = 6 total.</p>
 
         <h3>Actions</h3>
         <div class="fleet-actions">
@@ -2909,11 +2891,11 @@ function updateFleetUI(configData, statusData, agentList) {
       .forEach(r => { r.checked = r.value === selMode; });
   }
 
-  const enabledExecutors = Array.isArray(configData.config?.enabled_executors)
-    ? configData.config.enabled_executors
-    : ['claude', 'kimi'];
-  document.querySelectorAll('#fleet-enabled-executors input[type="checkbox"]')
-    .forEach(cb => { cb.checked = enabledExecutors.includes(cb.value); });
+  // Sync max_total_cycles
+  const totalCyclesInput = document.getElementById('fleet-max-total-cycles');
+  if (totalCyclesInput && document.activeElement !== totalCyclesInput) {
+    totalCyclesInput.value = configData.config?.max_total_cycles ?? 0;
+  }
 
   // Update agents list
   const agentsContainer = document.getElementById('fleet-agents');
@@ -2977,13 +2959,13 @@ async function stopFleetDaemon() {
 async function applyFleetConfig() {
   const maxAgents = parseInt(document.getElementById('fleet-max-agents').value, 10);
   const selectionMode = document.querySelector('input[name="fleet-selection-mode"]:checked')?.value || 'deterministic';
-  const enabledExecutors = getEnabledExecutorSelection();
+  const maxTotalCycles = parseInt(document.getElementById('fleet-max-total-cycles')?.value || '0', 10);
 
   try {
     const res = await apiFetch('/api/smart-run/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ max_agents: maxAgents, selection_mode: selectionMode, enabled_executors: enabledExecutors })
+      body: JSON.stringify({ max_agents: maxAgents, selection_mode: selectionMode, max_total_cycles: isNaN(maxTotalCycles) ? 0 : maxTotalCycles })
     });
     const data = await res.json();
     if (data.ok) {

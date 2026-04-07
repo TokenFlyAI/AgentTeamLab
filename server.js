@@ -1800,6 +1800,12 @@ async function handleRequest(req, res) {
       else return badRequest(res, "per_agent_cost_cap_usd must be a non-negative number (0 = disabled)");
     }
 
+    if (body.max_total_cycles !== undefined) {
+      const n = parseInt(body.max_total_cycles, 10);
+      if (!isNaN(n) && n >= 0) config.max_total_cycles = n;
+      else return badRequest(res, "max_total_cycles must be a non-negative integer (0 = unlimited)");
+    }
+
     // Update timestamp
     config.last_updated = new Date().toISOString();
     

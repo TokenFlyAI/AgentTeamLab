@@ -9,7 +9,7 @@ LOGDIR="/tmp/aicompany_runtime_logs"
 mkdir -p "$LOGDIR"
 MAX_IDLE_CYCLES=3   # Stop agent after this many consecutive no-work cycles
 
-# Read cycle sleep from config (env var overrides, default 2s)
+# Read cycle sleep and max_total_cycles from config
 _CONFIG="${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json"
 CYCLE_SLEEP="${CYCLE_SLEEP_SECONDS:-}"
 if [ -z "$CYCLE_SLEEP" ] && [ -f "$_CONFIG" ]; then
@@ -17,13 +17,22 @@ if [ -z "$CYCLE_SLEEP" ] && [ -f "$_CONFIG" ]; then
 fi
 CYCLE_SLEEP="${CYCLE_SLEEP:-2}"
 
+# Total cycle budget (0 = unlimited). Shared counter file tracks all agents.
+MAX_TOTAL_CYCLES="${MAX_TOTAL_CYCLES:-}"
+if [ -z "$MAX_TOTAL_CYCLES" ] && [ -f "$_CONFIG" ]; then
+    MAX_TOTAL_CYCLES=$(jq -r '.max_total_cycles // 0' "$_CONFIG" 2>/dev/null)
+fi
+MAX_TOTAL_CYCLES="${MAX_TOTAL_CYCLES:-0}"
+CYCLE_COUNTER_FILE="/tmp/run_subset_total_cycles_$$.txt"
+echo "0" > "$CYCLE_COUNTER_FILE"
+trap 'rm -f /tmp/run_subset_parent.pid /tmp/run_subset_*.lock "$CYCLE_COUNTER_FILE"; kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' INT TERM EXIT
+
 [ ${#AGENTS[@]} -eq 0 ] && echo "Usage: $0 <agent1> <agent2> ..." && exit 1
 
 echo "Launching ${#AGENTS[@]} agents: ${AGENTS[*]}"
 
 # Write parent PID so callers can send SIGTERM (not SIGKILL) to allow clean child shutdown
 echo "$$" > /tmp/run_subset_parent.pid
-trap 'rm -f /tmp/run_subset_parent.pid /tmp/run_subset_*.lock; kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' INT TERM EXIT
 
 agent_has_work() {
     local ag="$1"
@@ -82,7 +91,24 @@ for AGENT in "${AGENTS[@]}"; do
             fi
             IDLE_CYCLES=0  # reset idle counter when work found
 
-            echo "[$(date +%H:%M:%S)] ${AGENT} — cycle ${CYCLE} starting"
+            # Check total cycle budget (atomic increment with lock)
+            if [ "${MAX_TOTAL_CYCLES:-0}" -gt 0 ]; then
+                _LOCK="${CYCLE_COUNTER_FILE}.lock"
+                _TOTAL=0
+                # Spinlock for atomic read-increment-write
+                while ! (set -C; echo "$$" > "$_LOCK") 2>/dev/null; do sleep 0.1; done
+                _TOTAL=$(cat "$CYCLE_COUNTER_FILE" 2>/dev/null | tr -d '[:space:]'); _TOTAL=$((_TOTAL + 1))
+                echo "$_TOTAL" > "$CYCLE_COUNTER_FILE"
+                rm -f "$_LOCK"
+                if [ "$_TOTAL" -gt "$MAX_TOTAL_CYCLES" ]; then
+                    echo "[$(date +%H:%M:%S)] ${AGENT} — total cycle budget exhausted ($_TOTAL/$MAX_TOTAL_CYCLES), stopping all"
+                    kill -TERM "$(cat /tmp/run_subset_parent.pid 2>/dev/null)" 2>/dev/null
+                    exit 0
+                fi
+                echo "[$(date +%H:%M:%S)] ${AGENT} — cycle ${CYCLE} starting (total $_TOTAL/$MAX_TOTAL_CYCLES)"
+            else
+                echo "[$(date +%H:%M:%S)] ${AGENT} — cycle ${CYCLE} starting"
+            fi
             START_TIME=$(date +%s)
             EXECUTOR="${EXECUTOR:-}" bash "${COMPANY_DIR}/run_agent.sh" "$AGENT" 2>&1
             DURATION=$(( $(date +%s) - START_TIME ))
