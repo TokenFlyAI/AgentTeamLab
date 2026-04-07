@@ -3519,32 +3519,20 @@ async function handleRequest(req, res) {
   // ---- Stats & Monitoring ----
   // GET /api/cost — fast live cost summary (today + 7-day total)
   if (method === "GET" && pathname === "/api/cost") {
-    const result = cached("cost_summary", 300_000, () => { // 5-min cache: recomputing reads 171MB of logs
+    // Cost uses mtime-based cache per agent via getAgentCostFromLogs — only re-greps when log changes.
+    // Outer 60s cache prevents stampedes when multiple agents call /api/cost simultaneously.
+    const result = cached("cost_summary", 60_000, () => {
       const names = listAgentNames();
-      // "Today" means the most recent log file for each agent (avoids midnight rollover issues)
       let todayCost = 0, todayCycles = 0, total7dCost = 0, total7dCycles = 0;
       const perAgent = names.map((name) => {
-        const logsDir = path.join(EMPLOYEES_DIR, name, "logs");
-        let logPath = null;
-        try {
-          const lf = fs.existsSync(logsDir) ? fs.readdirSync(logsDir)
-            .filter(f => f.match(/^\d{4}_\d{2}_\d{2}\.log$/) && !f.includes("raw"))
-            .sort().reverse() : [];
-          if (lf.length) logPath = path.join(logsDir, lf[0]);
-        } catch (_) {}
-        const text = (logPath && safeRead(logPath)) || "";
-        let cost = 0, cycles = 0;
-        for (const line of text.split("\n")) {
-          const m = line.match(/\[DONE\].*cost=\$?([\d.]+)/i);
-          if (m) cost += parseFloat(m[1]) || 0;
-          if (/CYCLE\s*START/i.test(line)) cycles++;
-        }
-        todayCost += cost;
-        todayCycles += cycles;
+        // today = days=1; week = days=7. Both use mtime cache — only re-greps when log file changes.
+        const today = getAgentCostFromLogs(name, 1);
         const week = getAgentCostFromLogs(name, 7);
+        todayCost += today.totalCost;
+        todayCycles += today.cycles;
         total7dCost += week.totalCost;
         total7dCycles += week.cycles;
-        return { name, today_usd: Math.round(cost * 100) / 100, today_cycles: cycles };
+        return { name, today_usd: Math.round(today.totalCost * 100) / 100, today_cycles: today.cycles };
       });
       return {
         today_usd: Math.round(todayCost * 100) / 100,
