@@ -1,0 +1,11 @@
+{
+  "mode": "paper_trading",
+  "executed": 0,
+  "rejected": 0,
+  "failed": 0,
+  "persisted": 0,
+  "halted": true,
+  "haltReason": "capital floor breached: current capital $40.00 below $50.00",
+  "trades": [],
+  "stopLossRejected": 0
+}

@@ -229,11 +229,14 @@ await runTest("Capital floor breach halts trading", () => {
 });
 
 // T714: Per-trade stop-loss blocks oversized trades
-runTest("T714: per-trade stop-loss rejects trades exceeding max capital %", async () => {
+await runTest("T714: per-trade stop-loss rejects trades exceeding max capital %", async () => {
   const dbBackup = backupFile(PAPER_TRADES_DB);
   const signalsBackup = backupFile(TRADE_SIGNALS);
   const logBackup = backupFile(PAPER_TRADE_LOG);
   try {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    fs.writeFileSync(PAPER_TRADES_DB, JSON.stringify([], null, 2));
+
     // Run with 0.001% cap (so tiny that any real trade is rejected)
     const out = execSync(
       `node ${LIVE_RUNNER} --execute`,
@@ -243,9 +246,13 @@ runTest("T714: per-trade stop-loss rejects trades exceeding max capital %", asyn
         env: { ...process.env, PAPER_TRADING: "true", PAPER_TRADING_MAX_TRADE_PCT: "0.00001" },
       }
     ).toString();
-    // Should see T714 stop-loss message
-    assert(out.includes("T714 stop-loss") || out.includes("Persisted 0 trades"),
-      `Expected T714 stop-loss rejection, got: ${out.slice(-200)}`);
+    const report = JSON.parse(fs.readFileSync(TRADE_SIGNALS, "utf8"));
+    assert(report.stopLoss, "Expected stopLoss report section");
+    assert(report.stopLoss.maxTradeCostCents <= 5, `Expected tiny stop-loss cap, got ${report.stopLoss.maxTradeCostCents}`);
+    assert(report.executionReport, "Expected execution report");
+    assert(report.executionReport.executed === 0, `Expected 0 executed trades, got ${report.executionReport.executed}`);
+    assert(report.executionReport.rejected >= 1, `Expected at least 1 rejected trade, got ${report.executionReport.rejected}`);
+    assert(report.executionReport.stopLossRejected >= 1, `Expected at least 1 stop-loss rejection, got ${report.executionReport.stopLossRejected}`);
   } finally {
     restoreFile(PAPER_TRADES_DB, dbBackup);
     restoreFile(TRADE_SIGNALS, signalsBackup);
@@ -253,11 +260,14 @@ runTest("T714: per-trade stop-loss rejects trades exceeding max capital %", asyn
   }
 });
 
-runTest("T714: per-trade stop-loss allows normal trades within cap", async () => {
+await runTest("T714: per-trade stop-loss allows normal trades within cap", async () => {
   const dbBackup = backupFile(PAPER_TRADES_DB);
   const signalsBackup = backupFile(TRADE_SIGNALS);
   const logBackup = backupFile(PAPER_TRADE_LOG);
   try {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    fs.writeFileSync(PAPER_TRADES_DB, JSON.stringify([], null, 2));
+
     // Run with default 20% cap — trades should go through
     const out = execSync(
       `node ${LIVE_RUNNER} --execute`,
@@ -267,9 +277,12 @@ runTest("T714: per-trade stop-loss allows normal trades within cap", async () =>
         env: { ...process.env, PAPER_TRADING: "true", PAPER_TRADING_MAX_TRADE_PCT: "0.20" },
       }
     ).toString();
-    // Should NOT see T714 stop-loss rejection for normal sized trades
+    const report = JSON.parse(fs.readFileSync(TRADE_SIGNALS, "utf8"));
     assert(!out.includes("T714 stop-loss"),
-      `Expected no T714 rejection with 20% cap, but got rejection: ${out.slice(-200)}`);
+      `Expected no T714 rejection with 20% cap, but got rejection: ${out.slice(-400)}`);
+    assert(report.executionReport, "Expected execution report");
+    assert(report.executionReport.executed >= 1, `Expected at least 1 executed trade, got ${report.executionReport.executed}`);
+    assert((report.executionReport.stopLossRejected || 0) === 0, `Expected 0 stop-loss rejections, got ${report.executionReport.stopLossRejected}`);
   } finally {
     restoreFile(PAPER_TRADES_DB, dbBackup);
     restoreFile(TRADE_SIGNALS, signalsBackup);

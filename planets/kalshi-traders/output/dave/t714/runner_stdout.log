@@ -1,0 +1,32 @@
+=== Live Strategy Runner (Task 221) ===
+
+[FALLBACK] No KALSHI_API_KEY set — using realistic mock market data
+Selected 5 markets for signal generation
+  BTCW-26-JUN30-100K: yes_mid=64c, mean=69.8, stddev=1.9, change=4.0c
+  BTCW-26-JUN30-80K: yes_mid=84c, mean=82.8, stddev=1.7, change=-2.0c
+  ETHW-26-DEC31-5K: yes_mid=30c, mean=30.0, stddev=0.0, change=0.0c
+  INXW-25-DEC31: yes_mid=86c, mean=82.7, stddev=2.0, change=-6.0c
+  KXNF-20260501-T150000: yes_mid=51c, mean=52.5, stddev=0.8, change=2.0c
+
+📋 Checking for trades to settle...
+  No trades ready for settlement
+
+💵 Post-settlement capital check...
+  Pre-trade: Capital: $40.00 (realized P&L $-4960.00, floor $50.00)
+  🛑 Capital floor breached by $10.00 — halting new trades
+
+🛑 Trading halted before risk checks — capital floor breached: current capital $40.00 below $50.00
+
+📝 PAPER TRADING MODE — execution constrained to paper ledger
+
+🧯 Capital floor halt active — skipping trade execution
+
+💰 Running paper trade settlement...
+  No trades ready for settlement (0 skipped)
+
+💵 Capital floor status after settlement...
+  Post-run: Capital: $40.00 (realized P&L $-4960.00, floor $50.00)
+  🛑 Capital floor breached by $10.00 — halting new trades
+
+✅ Wrote 1 signals to /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/trade_signals.json
+  [mean_reversion] YES BTCW-26-JUN30-100K @ 64c — size=29 contracts (conf=95.0%)

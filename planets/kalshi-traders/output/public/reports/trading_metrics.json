@@ -1,0 +1,32 @@
+{
+  "healthCheck": {
+    "lastSuccess": null,
+    "consecutiveFailures": 16,
+    "totalChecks": 16,
+    "failedChecks": 16
+  },
+  "trades": {
+    "totalExecuted": 0,
+    "totalFailed": 0,
+    "totalRejected": 0,
+    "lastTradeAt": null
+  },
+  "pnl": {
+    "dailyRealizedCents": 0,
+    "dailyUnrealizedCents": 0,
+    "totalPnlCents": 0,
+    "maxDrawdownCents": 0,
+    "sharpeRatio": 0,
+    "lastUpdate": null
+  },
+  "pipelines": {
+    "econScanner": {
+      "lastRun": null,
+      "status": "unknown"
+    },
+    "cryptoScanner": {
+      "lastRun": null,
+      "status": "unknown"
+    }
+  }
+}

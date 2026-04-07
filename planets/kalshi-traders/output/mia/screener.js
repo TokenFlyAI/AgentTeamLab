@@ -24,7 +24,7 @@ try {
 }
 
 const OUTPUT_DIR = path.join(__dirname);
-const CACHE_DIR = path.join(__dirname, "../../bob/output");
+const CACHE_DIR = path.join(__dirname, "../bob");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,6 +32,9 @@ const CACHE_DIR = path.join(__dirname, "../../bob/output");
 
 function loadCachedMarkets() {
   const markets = new Map();
+  if (!fs.existsSync(CACHE_DIR)) {
+    return [];
+  }
   const files = [
     ...fs.readdirSync(CACHE_DIR).filter((f) => f.startsWith("run_") && f.endsWith(".json")),
     "trade_signals.json",

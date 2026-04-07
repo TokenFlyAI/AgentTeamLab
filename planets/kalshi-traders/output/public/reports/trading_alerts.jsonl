@@ -1,0 +1,2 @@
+{"id":"ALT-101-1775580299075","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 3 consecutive failures","details":{"consecutiveFailures":3,"totalFailed":3},"loggedAt":"2026-04-07T16:44:59.078Z"}
+{"id":"ALT-101-1775580599084","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 13 consecutive failures","details":{"consecutiveFailures":13,"totalFailed":13},"loggedAt":"2026-04-07T16:49:59.084Z"}

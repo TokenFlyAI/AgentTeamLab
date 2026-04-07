@@ -16,6 +16,9 @@
     "KXBTCDOM-26OCT15-T068",
     "KXSOL-27APR16-T450"
   ],
+  "expectedLowVolumeTickers": [
+    "KXRAIN-LA-26JAN15-T005"
+  ],
   "expectedExcluded": [
     {
       "ticker": "KXBTC-26DEC31-T110000",
@@ -37,5 +40,18 @@
   "expectedRejectedTickers": [
     "BAD-NO-TITLE",
     "BAD-NO-YES"
-  ]
+  ],
+  "expectedCaseOutcomes": {
+    "KXBTC-26DEC31-T110000": "excluded_middle_range",
+    "KXINF-26JUN-T030": "qualifying",
+    "KXUNEMP-26SEP05-T072": "qualifying",
+    "KXBTCDOM-26OCT15-T068": "qualifying",
+    "KXSOL-27APR16-T450": "qualifying",
+    "KXFED-26DEC16-CUT075": "excluded_middle_range",
+    "KXRAIN-LA-26JAN15-T005": "excluded_low_volume",
+    "KXDOGE-26DEC31-T150": "extreme_ratio",
+    "KXHOUSE-26NOV03-REP": "extreme_ratio",
+    "BAD-NO-TITLE": "rejected_invalid_market",
+    "BAD-NO-YES": "rejected_invalid_market"
+  }
 }

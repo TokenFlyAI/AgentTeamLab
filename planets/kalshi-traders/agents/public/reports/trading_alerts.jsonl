@@ -980,3 +980,4 @@
 {"id":"ALT-101-1775562232972","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 8543 consecutive failures","details":{"consecutiveFailures":8543,"totalFailed":9157},"loggedAt":"2026-04-07T11:43:52.972Z"}
 {"id":"ALT-101-1775562532982","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 8553 consecutive failures","details":{"consecutiveFailures":8553,"totalFailed":9167},"loggedAt":"2026-04-07T11:48:52.982Z"}
 {"id":"ALT-101-1775562832989","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 8563 consecutive failures","details":{"consecutiveFailures":8563,"totalFailed":9177},"loggedAt":"2026-04-07T11:53:52.989Z"}
+{"id":"ALT-101-1775571563300","type":"health_check_failure","severity":"P0-Critical","message":"Trade signals stale: 3 consecutive failures","details":{"consecutiveFailures":3,"totalFailed":9182},"loggedAt":"2026-04-07T14:19:23.300Z"}

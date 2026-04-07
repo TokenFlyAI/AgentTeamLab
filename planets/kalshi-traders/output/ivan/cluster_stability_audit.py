@@ -25,6 +25,13 @@ from llm_market_clustering import (  # noqa: E402
 
 THRESHOLDS = [0.55, 0.60, 0.65, 0.70, 0.75]
 BASELINE_THRESHOLD = 0.65
+DEFAULT_INPUT_PATH = Path("../grace/output/filtered_markets.json").resolve()
+
+
+def resolve_input_path() -> Path:
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1]).expanduser().resolve()
+    return DEFAULT_INPUT_PATH
 
 
 def pair_set(clusters):
@@ -128,13 +135,16 @@ def threshold_sweep(markets, baseline_pairs):
         clusters = cluster_markets(markets, threshold=threshold)
         multi = [cluster for cluster in clusters if len(cluster.markets) >= 2]
         pairs = pair_set(multi)
+        avg_confidence = round(sum(cluster.confidence for cluster in multi) / len(multi), 3) if multi else 0.0
+        avg_stability = round(sum(cluster.stability for cluster in multi) / len(multi), 3) if multi else 0.0
+        pair_retention = round(len(baseline_pairs & pairs) / len(baseline_pairs), 3) if baseline_pairs else 1.0
         rows.append({
             "threshold": threshold,
             "multi_cluster_count": len(multi),
             "singleton_count": len([cluster for cluster in clusters if len(cluster.markets) == 1]),
-            "avg_confidence": round(sum(cluster.confidence for cluster in multi) / len(multi), 3),
-            "avg_stability": round(sum(cluster.stability for cluster in multi) / len(multi), 3),
-            "pair_retention_vs_baseline": round(len(baseline_pairs & pairs) / len(baseline_pairs), 3),
+            "avg_confidence": avg_confidence,
+            "avg_stability": avg_stability,
+            "pair_retention_vs_baseline": pair_retention,
             "cluster_sizes": [len(cluster.markets) for cluster in multi],
             "labels": [cluster.label for cluster in multi],
         })
@@ -188,6 +198,16 @@ def build_failure_modes(cluster_metrics, duplicate_label_map, suspicious_values)
 
 
 def render_markdown(report):
+    cluster_count = report["baseline"]["multi_cluster_count"]
+    singleton_count = report["baseline"]["singleton_count"]
+    stable_clusters = [
+        cluster for cluster in report["baseline"]["clusters"]
+        if cluster["below_threshold_pairs"] == 0 and cluster["observed_pair_retention"] >= 0.95
+    ]
+    overbroad_clusters = [
+        cluster for cluster in report["baseline"]["clusters"]
+        if cluster["below_threshold_ratio"] >= 0.25
+    ]
     lines = [
         "# Sprint 6 T815 — Cluster Stability Audit",
         "",
@@ -199,19 +219,26 @@ def render_markdown(report):
         "## Headline Result",
         "",
         (
-            f"Baseline clustering on 50 live-shaped markets produced "
-            f"{report['baseline']['multi_cluster_count']} multi-market clusters and "
-            f"{report['baseline']['singleton_count']} singletons."
+            f"Baseline clustering on {report['input_fixture']['market_count']} live-shaped markets produced "
+            f"{cluster_count} multi-market clusters and {singleton_count} singletons."
         ),
-        (
-            f"Four clusters are internally stable; one 14-market economics cluster is "
-            "semantically over-broad and exposes a mismatch between the reported "
-            "stability metric and observed leave-one-out behavior."
-        ),
+    ]
+
+    if overbroad_clusters:
+        lines.append(
+            f"{len(stable_clusters)} clusters are internally stable; "
+            f"{len(overbroad_clusters)} cluster(s) are semantically over-broad or expose a stability-metric mismatch."
+        )
+    else:
+        lines.append(
+            f"All {len(stable_clusters)} baseline multi-market cluster(s) are internally stable with no below-threshold pairs."
+        )
+
+    lines.extend([
         "",
         "## Baseline Clusters",
         "",
-    ]
+    ])
 
     for cluster in report["baseline"]["clusters"]:
         lines.extend([
@@ -247,10 +274,13 @@ def render_markdown(report):
         "## Semantic Failure Modes",
         "",
     ])
-    for item in report["failure_modes"]:
-        cluster_id = item.get("cluster_id")
-        prefix = f"- `{cluster_id}` " if cluster_id else "- "
-        lines.append(prefix + item["summary"])
+    if report["failure_modes"]:
+        for item in report["failure_modes"]:
+            cluster_id = item.get("cluster_id")
+            prefix = f"- `{cluster_id}` " if cluster_id else "- "
+            lines.append(prefix + item["summary"])
+    else:
+        lines.append("- None observed on the provided fixture.")
 
     if report["suspicious_fixture_values"]:
         lines.extend([
@@ -268,21 +298,29 @@ def render_markdown(report):
         "## Recommendations",
         "",
         "- Keep the current 0.65 threshold for Sprint 6; threshold sweeps do not materially change the live-shaped output above 0.60.",
-        "- Split the economics family into sub-themes before Bob consumes correlations from live data; current family fallback groups CPI, GDP, payrolls, Fed, and unemployment into one loose cluster.",
-        "- Rework `compute_cluster_stability()` to use the same fallback semantics as `cluster_markets()` or replace it with pair-retention on leave-one-out reruns.",
-        "- Ask Grace to sanitize impossible percentage thresholds in the live fixture generator before T236 lands.",
+    ])
+    if overbroad_clusters:
+        lines.append("- Split macro/economics families into sub-themes before Bob consumes correlations from live data; current fallback can still merge loosely related themes.")
+    if any(item["type"] == "stability_metric_mismatch" for item in report["failure_modes"]):
+        lines.append("- Rework `compute_cluster_stability()` to use the same fallback semantics as `cluster_markets()` or replace it with pair-retention on leave-one-out reruns.")
+    if report["suspicious_fixture_values"]:
+        lines.append("- Ask Grace to sanitize impossible percentage thresholds in the live fixture generator before T236 lands.")
+    if not overbroad_clusters and not report["suspicious_fixture_values"]:
+        lines.append("- The sanitized Phase 1 fixture is suitable for Sprint 6 regression reruns; keep using it as the live-shaped baseline.")
+
+    lines.extend([
         "",
         "## Run Command",
         "",
         "```bash",
-        "python3 output/cluster_stability_audit.py",
+        "python3 output/ivan/cluster_stability_audit.py [path/to/filtered_markets.json]",
         "```",
     ])
     return "\n".join(lines) + "\n"
 
 
 def main():
-    input_path = Path("../grace/output/filtered_markets.json").resolve()
+    input_path = resolve_input_path()
     json_path = (SCRIPT_DIR / "cluster_stability_audit.json").resolve()
     md_path = (SCRIPT_DIR / "cluster_stability_audit.md").resolve()
 

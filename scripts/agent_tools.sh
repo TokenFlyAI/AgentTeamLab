@@ -297,7 +297,9 @@ pipeline_status() {
   _check_file() {
     local label="$1" path="$2"
     if [ -f "$path" ]; then
-      echo "  ✓ $label ($(wc -c < "$path" | tr -d ' ') bytes)"
+      local bytes
+      bytes=$(/usr/bin/wc -c < "$path" | /usr/bin/tr -d ' ')
+      echo "  ✓ $label (${bytes} bytes)"
     else
       echo "  ✗ $label MISSING: $path"
     fi

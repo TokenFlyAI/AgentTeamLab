@@ -1,6 +1,6 @@
 {
   "report": {
-    "generatedAt": "2026-04-07T14:20:20.184Z",
+    "generatedAt": "2026-04-07T16:17:56.276Z",
     "source": "mock_fallback",
     "marketCount": 5,
     "signalCount": 1,
@@ -119,7 +119,7 @@
       "artifactOwner": "dave",
       "basedOnRunner": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/agents/bob/backend/strategies/live_runner.js",
       "wrapperRunCommand": "node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/dave/backend/strategies/live_runner_t714.js --execute",
-      "freshnessMarker": "2026-04-07T14:20:20.186Z",
+      "freshnessMarker": "2026-04-07T16:17:56.278Z",
       "maxTradePct": 0.2,
       "maxTradeCostCents": 100000,
       "maxTradeCostDollars": 1000,

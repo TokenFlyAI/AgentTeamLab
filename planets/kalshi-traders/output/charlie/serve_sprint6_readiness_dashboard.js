@@ -157,10 +157,18 @@ function deriveArtifactState(lane) {
     if (audit?.generated_at) {
       result.freshness = audit.generated_at;
     }
+    if (audit?.input_fixture?.modified_at) {
+      result.details.push(`Audit input fixture freshness: ${audit.input_fixture.modified_at}.`);
+    }
+    if (audit?.input_fixture?.path) {
+      result.details.push(`Audit currently references ${path.basename(audit.input_fixture.path)} as upstream evidence.`);
+    }
     if (audit?.baseline?.clusters?.length) {
       result.details.push(`${audit.baseline.clusters.length} baseline clusters recorded.`);
     }
-    result.details.push("Audit artifact exists even though task lookup fails on the active API.");
+    if (audit?.recommendations?.length) {
+      result.details.push(`${audit.recommendations.length} follow-up recommendations documented.`);
+    }
   }
 
   if (lane.id === 816) {
@@ -184,27 +192,35 @@ function deriveArtifactState(lane) {
     if (replay?.generatedAt) {
       result.freshness = replay.generatedAt;
     }
-    const mismatches = [];
-    for (const scenario of replay?.scenarios || []) {
-      const observed = scenario.observed || {};
-      const expected = scenario.expected || {};
-      const keys = ["halted", "executed", "stopLossRejected", "capitalFloorBreached"];
-      const isMatch = keys.every((key) => observed[key] === expected[key]);
-      if (!isMatch) {
-        mismatches.push(scenario.scenario);
-      }
-    }
-    if (mismatches.length) {
+    if (replay?.error) {
       result.readiness = "warning";
-      result.details.push(`Scenario mismatches: ${mismatches.join(", ")}.`);
+      result.details.push(`Replay run failed: ${replay.error}`);
     } else {
-      result.details.push("Observed replay outputs match stated expectations.");
+      const mismatches = [];
+      for (const scenario of replay?.scenarios || []) {
+        const observed = scenario.observed || {};
+        const expected = scenario.expected || {};
+        const keys = ["halted", "executed", "stopLossRejected", "capitalFloorBreached"];
+        const isMatch = keys.every((key) => observed[key] === expected[key]);
+        if (!isMatch) {
+          mismatches.push(scenario.scenario);
+        }
+      }
+      if (mismatches.length) {
+        result.readiness = "warning";
+        result.details.push(`Scenario mismatches: ${mismatches.join(", ")}.`);
+      } else if (Array.isArray(replay?.scenarios) && replay.scenarios.length) {
+        result.details.push("Observed replay outputs match stated expectations.");
+      } else {
+        result.readiness = "warning";
+        result.details.push("Replay artifact is present, but no scenario results were recorded.");
+      }
     }
   }
 
   if (lane.id === 818) {
     result.details.push("QA gate definition present.");
-    result.details.push("Task lookup currently resolves as missing on the active API.");
+    result.details.push("Gate table G1-G7 is available for reviewer cross-checks.");
   }
 
   if (lane.id === 819) {
@@ -240,7 +256,7 @@ async function buildReadiness() {
       details: artifactState.details,
     };
 
-    if (!laneData.taskFound && (lane.id === 815 || lane.id === 818)) {
+    if (!laneData.taskFound) {
       blockers.push({
         level: "medium",
         title: `T${lane.id} missing from active task lookup`,
@@ -259,8 +275,8 @@ async function buildReadiness() {
     if (lane.id === 817 && laneData.artifactState === "warning") {
       blockers.push({
         level: "high",
-        title: "Replay expectations do not match observed counts",
-        message: "Two deterministic replay scenarios disagree with their stated expected values.",
+        title: "Replay harness evidence is currently degraded",
+        message: "The latest T817 artifact records a failed deterministic replay run and should be refreshed before claiming Sprint 6 risk replay is green.",
       });
     }
 

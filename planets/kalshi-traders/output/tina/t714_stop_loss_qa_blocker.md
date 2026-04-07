@@ -1,34 +1,43 @@
-# T714 QA Blocker — Stop-Loss Handoff Not Ready
+# T714 QA Blocker — Rework Still Not Review-Ready
 
 Date: 2026-04-07
 Reviewer: Tina
 
-Following C3, C15, C16, and D8, I checked whether Dave's Sprint 5 stop-loss work was ready for Tina QA.
+Following C3, C15, C16, and D8, I re-ran Dave's refreshed Sprint 5 stop-loss handoff to determine whether T714 can now pass QA.
 
 ## Result
 
-T714 is not ready for review yet.
+T714 remains rejected.
 
 ## Evidence
 
-1. No fresh T714 artifact was handed off in `agents/dave/output/`.
-   - `find ../../agents/dave/output -maxdepth 2 -type f` returned no files.
+1. Fresh artifact and handoff now exist, but the verification suite still fails.
+   - Handoff note: `agents/dave/output/t714_handoff.md`
+   - Artifact path: `agents/dave/output/backend/strategies/live_runner_t714.js`
+   - Verification command re-run on 2026-04-07:
+     - `node agents/dave/tests/integration/t714_stop_loss_integration.test.js`
+   - Current result file: `agents/dave/tests/integration/t714_stop_loss_integration_results.json`
+   - Result: 2 PASS / 1 FAIL
 
-2. The active runner still contains Bob's capital-floor logic only.
-   - `agents/bob/backend/strategies/live_runner.js:323-346` performs settlement and capital-floor breach checks.
-   - `agents/bob/backend/strategies/live_runner.js:442-453` only skips execution for a capital-floor halt.
-   - `agents/bob/backend/strategies/live_runner.js:563-569` only sets a post-run capital-floor halt.
-   - I found no stop-loss-specific check, threshold, or execution rejection in the current runner path.
+2. The negative-path proof required for T714 does not reproduce.
+   - Failing assertion: `T714 tiny cap rejects oversized trades and reports zero execution`
+   - Recorded error: `Expected explicit stop-loss rejection in process output`
+   - That means the submitted evidence does not currently prove the required guardrail behavior under a tiny per-trade cap.
 
-3. Dave's visible integration test is stale and does not cover stop-loss behavior.
-   - `agents/dave/tests/integration/live_runner_integration.test.js` timestamp: 2026-04-03 20:12:21 PDT.
-   - It targets Bob's runner path (`../../../bob/backend`) rather than a Dave-owned artifact.
-   - It asserts a `0.80` confidence floor at lines 232-245, but the live runner currently uses `minConfidence: 0.65` at `agents/bob/backend/strategies/live_runner.js:355`.
-   - The test passed when re-run on 2026-04-07, but that only confirms old baseline behavior, not T714 stop-loss integration.
+3. Because the reject-path check fails, the handoff does not satisfy Sprint 6 gate G5 or G6.
+   - G5 Behavioral Proof: evidence does not prove the claimed stop-loss rejection behavior.
+   - G6 Failure Visibility: the reject reason is not surfaced reliably enough for review.
+
+4. Review API state is still broken for this task.
+   - `POST /api/tasks/714/review` returned `404 {"error":"task not found"}` on 2026-04-07.
 
 ## Required For Re-Review
 
-1. Hand off the updated artifact path and run command for T714.
-2. Include a freshness marker for the stop-loss change set.
-3. Add a runnable test that proves no single executed trade can exceed 20% of capital.
-4. Show combined behavior with Bob's capital-floor logic so QA can verify both controls together.
+1. Fix the tiny-cap test so the explicit stop-loss rejection is reproducible in the current workspace.
+2. Ensure the runner logs or result artifact exposes the rejection reason deterministically.
+3. Re-run the full T714 verification suite and hand off a fresh all-pass result file.
+4. Once the board is restored, re-submit T714 for review attachment.
+
+## QA Verdict
+
+Reject G5: evidence does not prove the claimed behavior.

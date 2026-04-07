@@ -31,6 +31,30 @@ function assertArrayEqual(actual, expected, message) {
   }
 }
 
+function assertDateNotInFuture(isoString, message) {
+  const parsed = Date.parse(isoString);
+  if (Number.isNaN(parsed)) {
+    throw new Error(`${message}: invalid timestamp ${isoString}`);
+  }
+
+  if (parsed > Date.now()) {
+    throw new Error(`${message}: ${isoString} is in the future`);
+  }
+}
+
+function assertChronologicalOrder(earlier, later, message) {
+  const earlierMs = Date.parse(earlier);
+  const laterMs = Date.parse(later);
+
+  if (Number.isNaN(earlierMs) || Number.isNaN(laterMs)) {
+    throw new Error(`${message}: invalid timestamps ${earlier} -> ${later}`);
+  }
+
+  if (laterMs < earlierMs) {
+    throw new Error(`${message}: ${later} is earlier than ${earlier}`);
+  }
+}
+
 function validateTitleSanity(markets) {
   const problems = [];
 
@@ -69,7 +93,44 @@ function validateTitleSanity(markets) {
   return problems;
 }
 
-function writeReport({ fixture, output, expected, sanityProblems }) {
+function buildOutcomeLookup({ output, rawFixtureMarkets }) {
+  const outcomes = new Map();
+
+  for (const market of output.qualifying_markets) {
+    outcomes.set(market.ticker, "qualifying");
+  }
+
+  for (const market of output.excluded_markets) {
+    if (market.reason === "middle_range_excluded") {
+      outcomes.set(market.ticker, "excluded_middle_range");
+      continue;
+    }
+
+    if (market.reason === "extreme_ratio") {
+      outcomes.set(market.ticker, "extreme_ratio");
+    }
+  }
+
+  const lowVolumeTickers = rawFixtureMarkets
+    .filter((market) => {
+      const ticker = String(market.ticker || market.marketTicker || "");
+      return ticker && !outcomes.has(ticker) && !output.rejected_markets.some((entry) => entry.ticker === ticker);
+    })
+    .map((market) => String(market.ticker || market.marketTicker || ""))
+    .filter(Boolean);
+
+  for (const ticker of lowVolumeTickers) {
+    outcomes.set(ticker, "excluded_low_volume");
+  }
+
+  for (const market of output.rejected_markets) {
+    outcomes.set(market.ticker, "rejected_invalid_market");
+  }
+
+  return outcomes;
+}
+
+function writeReport({ fixture, output, expected, sanityProblems, lowVolumeTickers }) {
   const report = `# Sprint 6 T816 — Phase 1 Live-Data Fixture Validation
 
 Date: ${new Date().toISOString()}
@@ -97,6 +158,7 @@ Freshness: fixtureGeneratedAt=${fixture.generatedAt}; outputGeneratedAt=${output
 ## Expected Contract
 
 - Qualifying tickers: ${expected.expectedQualifyingTickers.join(", ")}
+- Low-volume excluded tickers: ${lowVolumeTickers.join(", ")}
 - Rejected tickers: ${expected.expectedRejectedTickers.join(", ")}
 
 ## Sanity Checks
@@ -122,15 +184,28 @@ async function main() {
   const rawFixtureMarkets = loadMarketsFromFile(FIXTURE_PATH);
   const validFixtureMarkets = rawFixtureMarkets.filter((market) => Boolean(market.title || market.name || market.question));
   const sanityProblems = validateTitleSanity(validFixtureMarkets);
+  const outcomeLookup = buildOutcomeLookup({ output, rawFixtureMarkets });
+  const lowVolumeTickers = [...outcomeLookup.entries()]
+    .filter(([, outcome]) => outcome === "excluded_low_volume")
+    .map(([ticker]) => ticker);
 
   for (const [key, value] of Object.entries(expected.expectedSummary)) {
     assertEqual(output.summary[key], value, `Summary field ${key}`);
   }
 
+  assertDateNotInFuture(fixture.generatedAt, "Fixture freshness");
+  assertChronologicalOrder(fixture.generatedAt, output.generated_at, "Fixture output freshness");
+
   assertArrayEqual(
     output.qualifying_markets.map((market) => market.ticker),
     expected.expectedQualifyingTickers,
     "Qualifying tickers"
+  );
+
+  assertArrayEqual(
+    lowVolumeTickers,
+    expected.expectedLowVolumeTickers,
+    "Low-volume excluded tickers"
   );
 
   assertArrayEqual(
@@ -146,8 +221,11 @@ async function main() {
   );
 
   assertEqual(sanityProblems.length, 0, "Fixture sanity checks");
+  for (const [ticker, expectedOutcome] of Object.entries(expected.expectedCaseOutcomes)) {
+    assertEqual(outcomeLookup.get(ticker), expectedOutcome, `Case outcome for ${ticker}`);
+  }
 
-  writeReport({ fixture, output, expected, sanityProblems });
+  writeReport({ fixture, output, expected, sanityProblems, lowVolumeTickers });
   console.log(`Verification passed. Output: ${OUTPUT_PATH}`);
   console.log(`Report written: ${REPORT_PATH}`);
 }

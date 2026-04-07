@@ -66,6 +66,13 @@ function restoreFiles(backups) {
   }
 }
 
+function seedRunnerState(trades = []) {
+  fs.mkdirSync(BOB_OUTPUT_ROOT, { recursive: true });
+  fs.mkdirSync(DAVE_ARTIFACT_ROOT, { recursive: true });
+  fs.writeFileSync(path.join(BOB_OUTPUT_ROOT, "paper_trades.db"), JSON.stringify(trades, null, 2));
+  fs.writeFileSync(path.join(BOB_OUTPUT_ROOT, "run_counter.txt"), "0\n");
+}
+
 function runRunner(extraEnv = {}) {
   const run = spawnSync("node", [RUNNER, "--execute"], {
     cwd: DAVE_ROOT,
@@ -115,6 +122,7 @@ async function runTest(name, fn) {
 
 async function main() {
   await runTest("T714 default cap keeps every executed trade within 20% of capital", async () => {
+    seedRunnerState([]);
     const { stdout } = runRunner({ PAPER_TRADING_MAX_TRADE_PCT: "0.20" });
     assert(stdout.includes("PAPER TRADING MODE"), "Expected paper trading mode output");
 
@@ -132,6 +140,7 @@ async function main() {
   });
 
   await runTest("T714 tiny cap rejects oversized trades and reports zero execution", async () => {
+    seedRunnerState([]);
     const { stdout, stderr } = runRunner({ PAPER_TRADING_MAX_TRADE_PCT: "0.00001" });
     assert(
       `${stdout}\n${stderr}`.includes("T714 stop-loss"),
@@ -166,7 +175,7 @@ async function main() {
         metadata: { runNumber: 1, settledAtRun: 4 },
       },
     ];
-    fs.writeFileSync(path.join(BOB_OUTPUT_ROOT, "paper_trades.db"), JSON.stringify(breachedDb, null, 2));
+    seedRunnerState(breachedDb);
 
     const { stdout } = runRunner();
     assert(stdout.includes("Capital floor breached"), "Expected capital floor breach log");

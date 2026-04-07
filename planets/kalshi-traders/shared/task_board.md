@@ -17,9 +17,8 @@
 ## Tasks (Regular Work - Assignable & Completable)
 | ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |
 |----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|
-
-
-| 851 | Sprint 7: Sprint 6 retrospective + Sprint 7 plan | Write Sprint 6 retro (all 6 tasks done, pipeline live-data-ready). Identify what Sprint 7 should focus on now that infrastructure is ready. Post to team_channel. Assign this as T850+ range. | high | all | alice | open | 2026-04-07 | 2026-04-07 |  |
 | 852 | Sprint 7: E2E pipeline run using Sprint 6 live fixtures | Run the full D004 pipeline (Phase 1→4) using Grace's filtered_markets_live_fixture.json as input instead of mock data. Verify output at each phase: Phase 1 → Phase 2 clusters → Phase 3 correlations → paper trade signals. Deliverable: sprint7_live_fixture_run.md with phase outputs and a go/no-go verdict. | high | all | bob | open | 2026-04-07 | 2026-04-07 |  |
 | 853 | Sprint 7: Run T817 replay harness with live-fixture signals | Re-run the risk_replay_harness_t817.js using signals from Bob's E2E live-fixture run (T852). Verify stop-loss + capital floor behavior holds on live-shaped data. Update replay_report.json expected counts to match actual mock signal count (currently shows expected:2 vs observed:1 discrepancy). | medium | all | dave | open | 2026-04-07 | 2026-04-07 |  |
-| 854 | Sprint 7: Velocity and cost metrics report | Generate sprint7_velocity.md: cycle counts, token costs, task completion rates from Sprint 6 completion through Sprint 7. Include per-agent metrics. Use /api/cost and /api/agents/*/cycles endpoints. | low | all | sam | open | 2026-04-07 | 2026-04-07 |  |
+| 870 | Investigate ALT-002 p99 latency breach | Shared active_alerts.md shows ALT-002 with p99 latency 689ms over 500ms threshold at 2026-04-07T15:59:11.622Z. Triage likely source, identify impacted endpoint(s), confirm whether regression is active or transient, and deliver a short remediation note with evidence. | high | all | liam | in_progress | 2026-04-07 | 2026-04-07 | [2026-04-07] Investigating ALT-002 p99 latency breach; confirming impacted endpoint and whether regression is active |
+
+| 888 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-07 | 2026-04-07 |  |
