@@ -1101,8 +1101,9 @@ async function handleRequest(req, res) {
   if (apiMiddleware(req, res, pathname, method)) return;
 
   // SEC-001: API key authentication for all /api/* routes
-  // /api/health is public — monitoring tools (healthcheck.js, load balancers, k8s probes) must reach it without auth
-  const PUBLIC_PATHS = new Set(["/api/health"]);
+  // /api/health is public — monitoring tools must reach it without auth
+  // /api/events is public — EventSource (SSE) cannot send custom headers; sends no sensitive data (only "refresh" signals)
+  const PUBLIC_PATHS = new Set(["/api/health", "/api/events"]);
   if (pathname.startsWith("/api/") && !PUBLIC_PATHS.has(pathname) && !isAuthorized(req)) {
     res.writeHead(401, { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" });
     return res.end(JSON.stringify({ error: "Unauthorized" }));
