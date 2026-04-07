@@ -409,6 +409,12 @@ function safeRead(p) {
   try { return fs.readFileSync(p, "utf8"); } catch (_) { return null; }
 }
 
+// Parse task ID: numeric strings → number, alphanumeric (D001, I001) → string
+function parseTaskId(id) {
+  const s = String(id || "");
+  return /^\d+$/.test(s) ? parseInt(s, 10) : s;
+}
+
 // ---------------------------------------------------------------------------
 // Short-lived in-memory cache — reduces synchronous I/O on hot paths like
 // /api/agents/:name/context, which reads 19+ files per call and blocks the
@@ -2669,17 +2675,18 @@ async function handleRequest(req, res) {
     }
   }
 
-  const taskIdMatch = pathname.match(/^\/api\/tasks\/(\d+)$/);
+  const taskIdMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)$/);
 
   // GET /api/tasks/:id
   if (method === "GET" && taskIdMatch) {
     const id = taskIdMatch[1];
     const task = findTaskById(id);
     if (!task) return notFound(res, "task not found");
-    return json(res, { ...task, id: parseInt(task.id, 10), notesList: (task.notes || "").split(" ;; ").filter(Boolean) });
+    const taskId = /^\d+$/.test(String(task.id)) ? parseInt(task.id, 10) : task.id;
+    return json(res, { ...task, id: taskId, notesList: (task.notes || "").split(" ;; ").filter(Boolean) });
   }
 
-  const taskPatchMatch = pathname.match(/^\/api\/tasks\/(\d+)$/);
+  const taskPatchMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)$/);
   if (method === "PATCH" && taskPatchMatch) {
     const id = taskPatchMatch[1];
     const body = await parseBody(req);
@@ -2698,13 +2705,13 @@ async function handleRequest(req, res) {
     if (!ok) return notFound(res, "task not found");
     const updatedTask = parseTaskBoard().find((t) => String(t.id) === String(id));
     if (!updatedTask) return notFound(res, "task not found");
-    broadcastWS("task_updated", { id: parseInt(updatedTask.id, 10), status: updatedTask.status, assignee: updatedTask.assignee, title: updatedTask.title });
-    return json(res, { ok: true, ...updatedTask, id: parseInt(updatedTask.id, 10), notesList: (updatedTask.notes || "").split(" ;; ").filter(Boolean) });
+    broadcastWS("task_updated", { id: parseTaskId(updatedTask.id), status: updatedTask.status, assignee: updatedTask.assignee, title: updatedTask.title });
+    return json(res, { ok: true, ...updatedTask, id: parseTaskId(updatedTask.id), notesList: (updatedTask.notes || "").split(" ;; ").filter(Boolean) });
   }
 
   // POST /api/tasks/:id/review — validate and approve a task (reviewer gate)
   // Checks: deliverable exists in output/ or task_outputs/, then marks done
-  const taskReviewMatch = pathname.match(/^\/api\/tasks\/(\d+)\/review$/);
+  const taskReviewMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)\/review$/);
   if (method === "POST" && taskReviewMatch) {
     const id = taskReviewMatch[1];
     const body = await parseBody(req);
@@ -2753,7 +2760,7 @@ async function handleRequest(req, res) {
           fs.writeFileSync(msgFile, `# Task T${id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
         }
       }
-      broadcastWS("task_updated", { id: parseInt(id, 10), status: "done", reviewer });
+      broadcastWS("task_updated", { id: parseTaskId(id), status: "done", reviewer });
       return json(res, { ok: true, verdict: "approved", deliverable_found: deliverableFound, deliverable_location: deliverableLocation, task: updated });
     } else {
       const noteText = `[REJECTED by ${reviewer || "unknown"}] ${comment || "Needs revision"}`;
@@ -2767,14 +2774,14 @@ async function handleRequest(req, res) {
           fs.writeFileSync(msgFile, `# Task T${id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
         }
       }
-      broadcastWS("task_updated", { id: parseInt(id, 10), status: "in_progress", reviewer });
+      broadcastWS("task_updated", { id: parseTaskId(id), status: "in_progress", reviewer });
       return json(res, { ok: true, verdict: "rejected", comment, task_id: id });
     }
   }
 
   // GET /api/tasks/:id/result — find task-specific result file
   // Looks first in public/task_outputs/task-{id}-*.md, then agent's output/ folder
-  const taskResultMatch = pathname.match(/^\/api\/tasks\/(\d+)\/result$/);
+  const taskResultMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)\/result$/);
   if (method === "GET" && taskResultMatch) {
     const id = taskResultMatch[1];
     const task = findTaskById(id);
@@ -2843,7 +2850,7 @@ async function handleRequest(req, res) {
   // Atomic task claim: POST /api/tasks/:id/claim?agent=alice
   // Sets status=in_progress + assignee=agent only if task is currently open/unassigned
   // Uses task board lock to prevent race conditions between parallel agents
-  const taskClaimMatch = pathname.match(/^\/api\/tasks\/(\d+)\/claim$/);
+  const taskClaimMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)\/claim$/);
   if (method === "POST" && taskClaimMatch) {
     const id = taskClaimMatch[1];
     const body = await parseBody(req);
@@ -2880,8 +2887,8 @@ async function handleRequest(req, res) {
       if (found) {
         fs.writeFileSync(tbPath, lines.join("\n"));
         cacheInvalidate("task_board");
-        result = { ok: true, id: parseInt(id, 10), status: "in_progress", assignee: claimant };
-        broadcastWS("task_claimed", { id: parseInt(id, 10), assignee: claimant });
+        result = { ok: true, id: parseTaskId(id), status: "in_progress", assignee: claimant };
+        broadcastWS("task_claimed", { id: parseTaskId(id), assignee: claimant });
       } else {
         result = { ok: false, error: "task row not found", status: 500 };
       }
@@ -2909,14 +2916,14 @@ async function handleRequest(req, res) {
       try {
         fs.writeFileSync(tbPath, filtered.join("\n"));
         cacheInvalidate("task_board");
-        deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseInt(taskToDelete.id, 10) } };
-        broadcastWS("task_deleted", { id: parseInt(id, 10) });
+        deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseTaskId(taskToDelete.id) } };
+        broadcastWS("task_deleted", { id: parseTaskId(id) });
       } catch (e) {
         deleteResult = { error: "failed to write task board", status: 500 };
       }
     });
     if (!deleteResult) deleteResult = { error: "lock timeout", status: 503 };
-    if (deleteResult.ok) broadcastWS("task_deleted", { id: parseInt(deleteResult.deleted.id, 10) });
+    if (deleteResult.ok) broadcastWS("task_deleted", { id: parseTaskId(deleteResult.deleted.id) });
     return json(res, deleteResult, deleteResult.status && !deleteResult.ok ? deleteResult.status : 200);
   }
 
