@@ -273,6 +273,20 @@ read_inbox() {
   [ $found -eq 0 ] && echo "No unread messages"
 }
 
+inbox_done() {
+  # inbox_done <filename> — move a processed inbox message to chat_inbox/processed/
+  # Usage: inbox_done 2026_04_07_12_30_from_alice.md
+  local fname="$1"
+  [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
+  [ -z "$fname" ] && echo "Usage: inbox_done <filename>" && return 1
+  local inbox="${_AGENTS}/${_SELF}/chat_inbox"
+  local src="${inbox}/${fname}"
+  local dest="${inbox}/processed/${fname}"
+  [ ! -f "$src" ] && echo "Message not found: $fname" && return 1
+  mkdir -p "${inbox}/processed"
+  mv "$src" "$dest" && echo "Moved to processed: $fname" || echo "Failed to move: $fname"
+}
+
 # ── Information ──────────────────────────────────────────────────────────────
 
 read_peer() {
@@ -367,4 +381,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress"

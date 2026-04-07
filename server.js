@@ -3179,22 +3179,23 @@ async function handleRequest(req, res) {
   const CONSENSUS_FILE = path.join(PUBLIC_DIR, "consensus.md");
 
   if (method === "GET" && pathname === "/api/consensus") {
-    const raw = safeRead(CONSENSUS_FILE) || "# Consensus Board\n\n(empty)\n";
-    // Parse table rows from all sections
-    // Format: | C1/id | NORM/type | content | date |
-    const entries = [];
-    let section = "";
-    for (const line of raw.split("\n")) {
-      const h2 = line.match(/^## (.+)$/);
-      if (h2) { section = h2[1].trim(); continue; }
-      if (!line.startsWith("|")) continue;
-      const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
-      if (cols.length < 4) continue;
-      const idStr = cols[0];
-      if (!idStr || idStr === "ID" || /^[-:]+$/.test(idStr)) continue; // header/separator row
-      const id = /^\d+$/.test(idStr) ? parseInt(idStr, 10) : idStr;
-      entries.push({ id, section, type: cols[1].toLowerCase(), content: cols[2], author: "", updated: cols[3] });
-    }
+    const { raw, entries } = cached("consensus_parsed", 60_000, () => {
+      const r = safeRead(CONSENSUS_FILE) || "# Consensus Board\n\n(empty)\n";
+      const ents = [];
+      let section = "";
+      for (const line of r.split("\n")) {
+        const h2 = line.match(/^## (.+)$/);
+        if (h2) { section = h2[1].trim(); continue; }
+        if (!line.startsWith("|")) continue;
+        const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+        if (cols.length < 4) continue;
+        const idStr = cols[0];
+        if (!idStr || idStr === "ID" || /^[-:]+$/.test(idStr)) continue;
+        const id = /^\d+$/.test(idStr) ? parseInt(idStr, 10) : idStr;
+        ents.push({ id, section, type: cols[1].toLowerCase(), content: cols[2], author: "", updated: cols[3] });
+      }
+      return { raw: r, entries: ents };
+    });
     return json(res, { raw, entries });
   }
 
@@ -3239,6 +3240,7 @@ async function handleRequest(req, res) {
     try {
       fs.writeFileSync(CONSENSUS_FILE, lines.join("\n"));
       cacheInvalidate("consensus");
+      cacheInvalidate("consensus_parsed");
       return json(res, { ok: true, id: newId }, 201);
     } catch (e) {
       console.error("[POST /api/consensus] error:", e);
@@ -3264,6 +3266,7 @@ async function handleRequest(req, res) {
     try {
       fs.writeFileSync(CONSENSUS_FILE, filtered.join("\n"));
       cacheInvalidate("consensus");
+      cacheInvalidate("consensus_parsed");
       // Return as number if purely numeric, otherwise string
       const deletedVal = /^\d+$/.test(targetId) ? parseInt(targetId, 10) : targetId;
       return json(res, { ok: true, deleted: deletedVal });

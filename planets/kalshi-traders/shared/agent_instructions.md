@@ -241,6 +241,7 @@ source ../../scripts/agent_tools.sh
 | `announce "Sprint 4 done"` | Post civilization-wide announcement |
 | `broadcast "Sprint complete"` | DM all agents simultaneously |
 | `read_inbox` | Read your unprocessed inbox messages |
+| `inbox_done <filename>` | Mark an inbox message as processed (move to processed/) |
 | `read_peer ivan` | Read another agent's status.md |
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
