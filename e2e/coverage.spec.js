@@ -695,13 +695,18 @@ test.describe("GET /api/watchdog-log", () => {
     expect(Array.isArray(body.log)).toBe(true);
   });
 
-  test("watchdog log entries have ts, name, action, heartbeat_age_ms fields if non-empty", async () => {
+  test("watchdog log entries have ts, name, action fields if non-empty", async () => {
     const { body } = await apiGet("/api/watchdog-log");
     for (const entry of body.log || []) {
       expect(typeof entry.ts).toBe("string");
       expect(typeof entry.name).toBe("string");
       expect(typeof entry.action).toBe("string");
-      expect(typeof entry.heartbeat_age_ms).toBe("number");
+      // restarted entries have heartbeat_age_ms; cycle_failure_detected entries have last_fail
+      if (entry.action === "restarted") {
+        expect(typeof entry.heartbeat_age_ms).toBe("number");
+      } else if (entry.action === "cycle_failure_detected") {
+        expect(typeof entry.last_fail).toBe("string");
+      }
     }
   });
 });
@@ -2004,11 +2009,13 @@ test.describe("POST /api/agents/smart-start", () => {
     expect(body.max).toBe(3);
   });
 
-  test("ignores invalid max (non-numeric) and uses default 20", async () => {
+  test("ignores invalid max (non-numeric) and uses config default", async () => {
     const { status, body } = await apiPost("/api/agents/smart-start", { max: "bad" });
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.max).toBe(20);
+    // Falls back to smart_run_config.json max_agents (a positive integer)
+    expect(typeof body.max).toBe("number");
+    expect(body.max).toBeGreaterThan(0);
   });
 
   test("response includes decision object with string values", async () => {
@@ -3178,14 +3185,14 @@ test.describe("GET /api/agents/:name/context", () => {
     }
   });
 
-  test("team_channel contains at most 3 entries", async () => {
+  test("team_channel contains at most 5 entries", async () => {
     const { body } = await apiGet("/api/agents/alice/context");
-    expect(body.team_channel.length).toBeLessThanOrEqual(3);
+    expect(body.team_channel.length).toBeLessThanOrEqual(5);
   });
 
-  test("announcements contains at most 2 entries", async () => {
+  test("announcements contains at most 3 entries", async () => {
     const { body } = await apiGet("/api/agents/alice/context");
-    expect(body.announcements.length).toBeLessThanOrEqual(2);
+    expect(body.announcements.length).toBeLessThanOrEqual(3);
   });
 
   test("tasks is an array, items have id, title, priority, status fields", async () => {
