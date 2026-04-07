@@ -1388,7 +1388,7 @@ async function handleRequest(req, res) {
     }
 
     // Search task board (title, description, notes, assignee)
-    const tasks = parseTaskBoard();
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard());
     const matchedTasks = tasks.filter((t) =>
       (t.title || "").toLowerCase().includes(q) ||
       (t.description || "").toLowerCase().includes(q) ||
@@ -2832,7 +2832,7 @@ async function handleRequest(req, res) {
 
   // GET /api/tasks/health — task health check: stale, unassigned, no-result
   if (method === "GET" && pathname === "/api/tasks/health") {
-    const tasks = parseTaskBoard();
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard());
     const now = Date.now();
     const STALE_MS = 60 * 60 * 1000; // 1 hour
     const stale = [];
@@ -3445,7 +3445,7 @@ async function handleRequest(req, res) {
   // ---- Metrics (Bob — Beta task) ----
   if (method === "GET" && pathname === "/api/metrics") {
     const agentNames = listAgentNames();
-    const tasks = parseTaskBoard();
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard());
 
     // Task stats
     const tasksByStatus = tasks.reduce((acc, t) => {
