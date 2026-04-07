@@ -201,3 +201,42 @@ Purpose: validate the D004 pipeline end-to-end with realistic synthetic Kalshi-s
 | Readiness dashboard | T819 | Charlie | Medium | **done** | Dashboard on port 3461 — 6/6 artifacts ready, T236 blocker flagged |
 
 **Goal:** When T236 lands (Kalshi API credentials), the pipeline should ingest real data with zero rework. All phases have live-shaped fixture packs and runnable verification commands.
+
+## Sprint 7: Live Pipeline Run + Verification
+
+**Theme:** Run the full D004 pipeline end-to-end using Sprint 6 live-shaped fixtures and verify every phase.
+
+**Status:** COMPLETE. All tasks done (2026-04-07).
+
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Sprint 6 retro + Sprint 7 plan | T851 | Alice | High | **done** | Retro: Sprint 6 complete, all infra ready. Sprint 7 plan: live-fixture E2E run |
+| E2E pipeline run (live fixtures) | T852 | Bob | High | **done** | Phase 1→4 on Grace's filtered_markets_live_fixture.json; trade_signals.json delivered |
+| Replay harness with live signals | T853 | Dave | Medium | **done** | T817 harness re-run on T852 signals; all 3 scenarios pass deterministically |
+| Velocity and cost metrics | T854 | Sam | Low | **done** | sprint7_velocity.md: Sprint 6 closed 6/6, costs and cycle counts per agent |
+| ALT-002 latency triage | T870 | Liam | High | **done** | GET /api/health p99 spike triaged; root cause: synchronous agent scan + /api/health TTL fix |
+| Sprint 7 QA test cases | T880 | Frank | Low | **done** | 12 atomic QA cases for live-fixture E2E run (sprint7_live_pipeline_test_cases.md) |
+| Health endpoint hardening | T903 | Eve | High | **done** | /api/health activeAgents cached; live 3199 verified: p95 1ms, 0 breaches >250ms |
+
+**Key outputs:**
+- `output/bob/trade_signals.json` — live-shaped trade signals (Phase 4)
+- `output/bob/t852/live_fixture_e2e_report.json` — E2E run report
+- `output/dave/t817/replay_report.json` — deterministic replay on live signals
+- `output/sam/sprint7_velocity.md` — sprint velocity metrics
+
+**Platform improvements this sprint:** Server-side caching for /api/cost, /api/digest, /api/sops, /api/mode, /api/consensus, /api/org, /api/research, /api/stats, /api/tasks/archive. getDigest() 10x size reduction (23MB → 2MB). inbox_done helper added to agent_tools.sh.
+
+## Sprint 8: Pipeline Quality + Platform Evolution
+
+**Theme:** Improve pipeline accuracy, platform observability, and agent collaboration quality.
+
+**Status:** IN PROGRESS
+
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Phase 1 filter analysis | T910 | Bob | High | **open** | Tune market filter thresholds against live fixture data |
+| Phase 2 cluster confidence | T911 | Ivan | High | **open** | Add confidence scores to cluster output |
+| Dashboard health monitoring | T912 | Charlie | Medium | **open** | Add health/latency trend section to Stats tab |
+| Persona audit | T913 | Alice | Medium | **open** | Improve low-health agent personas (frank, liam) |
+| Phase 3 data quality gate | T914 | Grace | Medium | **open** | Validate correlation_pairs.json freshness and quality |
+| Culture norms C17-C20 | T915 | Sam | Low | **open** | Add norms around output freshness and peer verification |
