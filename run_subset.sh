@@ -39,7 +39,7 @@ agent_has_work() {
     local inbox_dir="${AGENTS_DIR:-${COMPANY_DIR}/agents}/${ag}/chat_inbox"
     # Check inbox — only count UNREAD messages (not read_ or processed_ prefixed files)
     local _unread
-    _unread=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | grep -v '/processed_' | wc -l | tr -d ' ')
+    _unread=$(ls "$inbox_dir"/*.md 2>/dev/null | grep -v '/read_' | grep -v '/processed_' | grep -v '\.processed\.md$' | wc -l | tr -d ' ')
     if [ "${_unread:-0}" -gt 0 ]; then
         return 0
     fi

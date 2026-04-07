@@ -1317,7 +1317,7 @@ async function handleRequest(req, res) {
       const d = path.join(EMPLOYEES_DIR, name);
       const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
       const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
-      const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md"));
+      const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
       const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
       const health = computeAgentHealth(agentData, velocityData);
       const executor = getExecutorForAgent(name);
@@ -1339,7 +1339,7 @@ async function handleRequest(req, res) {
     // Return metadata only — no content to prevent unauthenticated data exposure (QI-003)
     const inbox = listDir(path.join(d, "chat_inbox")).filter((f) => f.endsWith(".md")).map((f) => ({
       filename: f,
-      read: f.startsWith("read_") || f.startsWith("processed_"),
+      read: f.startsWith("read_") || f.startsWith("processed_") || f.endsWith(".processed.md"),
     }));
     // Assigned tasks from task board
     const tasks = parseTaskBoard().filter(
@@ -2061,7 +2061,7 @@ async function handleRequest(req, res) {
     if (sub === "inbox") {
       const inboxDir = path.join(d, "chat_inbox");
       // Filter out read_* prefixed files (legacy marker) — same as /api/agents list endpoint
-      const unread = listDir(inboxDir).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md")).map((f) => ({
+      const unread = listDir(inboxDir).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md")).map((f) => ({
         filename: f, content: safeRead(path.join(inboxDir, f)) || "", unread: true,
       }));
       const processed = listDir(path.join(inboxDir, "processed")).filter((f) => f.endsWith(".md")).slice(-20).map((f) => ({
@@ -2151,7 +2151,7 @@ async function handleRequest(req, res) {
     // Inbox — unread files (not in processed/)
     const inboxDir = path.join(agentDir, "chat_inbox");
     const inboxFiles = listDir(inboxDir)
-      .filter(f => f.endsWith(".md") && !f.startsWith("read_") && !f.startsWith("processed_"))
+      .filter(f => f.endsWith(".md") && !f.endsWith(".processed.md") && !f.startsWith("read_") && !f.startsWith("processed_"))
       .sort().reverse();
     // Split into urgent (from_ceo / from_lord) and regular
     const urgentFiles = inboxFiles.filter(f => f.includes("from_ceo") || f.includes("from_lord"));
@@ -2330,7 +2330,7 @@ async function handleRequest(req, res) {
     const summary = getAgentSummary(name);
     const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
     const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
-    const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md"));
+    const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
     const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
     const velocityData = buildVelocityData();
     const health = computeAgentHealth(agentData, velocityData);
