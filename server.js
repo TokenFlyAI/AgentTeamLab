@@ -1218,15 +1218,17 @@ async function handleRequest(req, res) {
   if (method === "POST" && pathname === "/api/planets/create") {
     const body = await parseBody(req);
     const name = (body.name || "").replace(/[^a-zA-Z0-9_-]/g, "");
-    const agents = body.agents || "alice bob charlie dave eve";
+    // Accept agents as either a space-separated string or an array
+    const agentsRaw = body.agents || "alice bob charlie dave eve";
+    const agentsStr = Array.isArray(agentsRaw) ? agentsRaw.join(" ") : String(agentsRaw);
     if (!name) return json(res, { error: "planet name required" }, 400);
     const targetDir = path.join(DIR, "planets", name);
     if (fs.existsSync(targetDir)) return json(res, { error: `planet already exists: ${name}` }, 409);
     const { execFile: ef } = require("child_process");
     return new Promise((resolve) => {
-      ef("bash", [path.join(DIR, "init_planet.sh"), name, agents], { cwd: DIR, timeout: 30000 }, (err, stdout, stderr) => {
+      ef("bash", [path.join(DIR, "init_planet.sh"), name, agentsStr], { cwd: DIR, timeout: 30000 }, (err, stdout, stderr) => {
         if (err) return resolve(json(res, { error: "creation failed", details: (stderr || err.message).trim() }, 500));
-        resolve(json(res, { ok: true, planet: name, agents: agents.split(/\s+/), stdout: stdout.trim() }, 201));
+        resolve(json(res, { ok: true, planet: name, agents: agentsStr.split(/\s+/).filter(Boolean), stdout: stdout.trim() }, 201));
       });
     });
   }
