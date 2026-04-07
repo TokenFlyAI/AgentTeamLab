@@ -5,9 +5,11 @@
   "mode": "smart",
   "enabled_executors": [
     "codex",
-    "kimi"
+    "kimi",
+    "claude",
+    "gemini"
   ],
-  "last_updated": "2026-04-07T01:55:10Z",
+  "last_updated": "2026-04-07T06:20:00Z",
   "force_alice": 1,
   "dry_run": true,
   "dry_run_sleep": 120,

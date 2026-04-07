@@ -3021,6 +3021,9 @@ async function handleRequest(req, res) {
   if (method === "GET" && pathname === "/api/consensus") {
     const raw = safeRead(CONSENSUS_FILE) || "# Consensus Board\n\n(empty)\n";
     // Parse table rows from all sections
+    // Supports two formats:
+    //   4-col: | C1 | NORM | content | date |
+    //   5-col: | 1  | decision | content | author | date |
     const entries = [];
     let section = "";
     for (const line of raw.split("\n")) {
@@ -3028,10 +3031,19 @@ async function handleRequest(req, res) {
       if (h2) { section = h2[1].trim(); continue; }
       if (!line.startsWith("|")) continue;
       const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
-      if (cols.length < 5) continue;
-      const idNum = parseInt(cols[0], 10);
-      if (isNaN(idNum)) continue; // header row
-      entries.push({ id: idNum, section, type: cols[1], content: cols[2], author: cols[3], updated: cols[4] });
+      if (cols.length < 4) continue;
+      const idStr = cols[0];
+      if (!idStr || idStr === "ID" || /^[-:]+$/.test(idStr)) continue; // header/separator row
+      if (cols.length >= 5) {
+        // 5-col format: | id | type | content | author | date |
+        const idNum = parseInt(idStr, 10);
+        if (!isNaN(idNum)) {
+          entries.push({ id: idNum, section, type: cols[1].toLowerCase(), content: cols[2], author: cols[3], updated: cols[4] });
+          continue;
+        }
+      }
+      // 4-col format: | C1 | NORM | content | date |
+      entries.push({ id: idStr, section, type: cols[1].toLowerCase(), content: cols[2], author: "team", updated: cols[3] });
     }
     return json(res, { raw, entries });
   }
@@ -3083,22 +3095,26 @@ async function handleRequest(req, res) {
     }
   }
 
-  // DELETE /api/consensus/entry/:id — remove an entry by ID
-  const consensusDeleteMatch = pathname.match(/^\/api\/consensus\/entry\/(\d+)$/);
+  // DELETE /api/consensus/entry/:id — remove an entry by ID (supports C1, D1, or numeric)
+  const consensusDeleteMatch = pathname.match(/^\/api\/consensus\/entry\/([^/]+)$/);
   if (method === "DELETE" && consensusDeleteMatch) {
-    const targetId = parseInt(consensusDeleteMatch[1], 10);
+    const targetId = consensusDeleteMatch[1];
+    const targetIdNum = parseInt(targetId, 10);
     const raw = safeRead(CONSENSUS_FILE) || "";
     const lines = raw.split("\n");
     const filtered = lines.filter(line => {
       if (!line.startsWith("|")) return true;
       const cols = line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
-      const idNum = parseInt(cols[0], 10);
-      return isNaN(idNum) || idNum !== targetId;
+      if (!cols[0] || cols[0] === "ID") return true;
+      // Match by string ID (e.g. "C1") or numeric ID
+      return cols[0] !== targetId && (isNaN(targetIdNum) || parseInt(cols[0], 10) !== targetIdNum);
     });
     if (filtered.length === lines.length) return notFound(res, "entry not found");
     try {
       fs.writeFileSync(CONSENSUS_FILE, filtered.join("\n"));
-      return json(res, { ok: true, deleted: targetId });
+      // Return as number if purely numeric, otherwise string
+      const deletedVal = /^\d+$/.test(targetId) ? parseInt(targetId, 10) : targetId;
+      return json(res, { ok: true, deleted: deletedVal });
     } catch (e) {
       return json(res, { error: "Internal server error" }, 500);
     }

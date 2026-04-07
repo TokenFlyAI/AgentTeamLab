@@ -2530,7 +2530,8 @@ test.describe("GET /api/consensus (GAP-008)", () => {
     const { status, body } = await apiGet("/api/consensus");
     expect(status).toBe(200);
     for (const entry of body.entries) {
-      expect(typeof entry.id).toBe("number");
+      // id can be number (legacy 5-col format) or string (4-col format like "C1", "D1")
+      expect(typeof entry.id === "number" || typeof entry.id === "string").toBe(true);
       expect(typeof entry.type).toBe("string");
       expect(typeof entry.content).toBe("string");
       expect(typeof entry.author).toBe("string");
