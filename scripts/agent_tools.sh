@@ -17,6 +17,7 @@
 #   post "message"               — Post milestone to team_channel
 #   announce "message"           — Post civilization-wide announcement
 #   read_inbox                   — Show unread messages from chat_inbox
+#   inbox_done <filename>        — Mark an inbox message processed (move to processed/)
 #   read_peer <agent>            — Read another agent's status.md
 #   read_knowledge               — Read shared knowledge base
 #   read_culture                 — Read consensus norms and decisions
