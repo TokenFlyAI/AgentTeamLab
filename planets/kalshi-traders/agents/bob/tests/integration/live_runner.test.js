@@ -228,6 +228,55 @@ await runTest("Capital floor breach halts trading", () => {
   }
 });
 
+// T714: Per-trade stop-loss blocks oversized trades
+runTest("T714: per-trade stop-loss rejects trades exceeding max capital %", async () => {
+  const dbBackup = backupFile(PAPER_TRADES_DB);
+  const signalsBackup = backupFile(TRADE_SIGNALS);
+  const logBackup = backupFile(PAPER_TRADE_LOG);
+  try {
+    // Run with 0.001% cap (so tiny that any real trade is rejected)
+    const out = execSync(
+      `node ${LIVE_RUNNER} --execute`,
+      {
+        cwd: path.join(__dirname, "../../"),
+        timeout: 30000,
+        env: { ...process.env, PAPER_TRADING: "true", PAPER_TRADING_MAX_TRADE_PCT: "0.00001" },
+      }
+    ).toString();
+    // Should see T714 stop-loss message
+    assert(out.includes("T714 stop-loss") || out.includes("Persisted 0 trades"),
+      `Expected T714 stop-loss rejection, got: ${out.slice(-200)}`);
+  } finally {
+    restoreFile(PAPER_TRADES_DB, dbBackup);
+    restoreFile(TRADE_SIGNALS, signalsBackup);
+    restoreFile(PAPER_TRADE_LOG, logBackup);
+  }
+});
+
+runTest("T714: per-trade stop-loss allows normal trades within cap", async () => {
+  const dbBackup = backupFile(PAPER_TRADES_DB);
+  const signalsBackup = backupFile(TRADE_SIGNALS);
+  const logBackup = backupFile(PAPER_TRADE_LOG);
+  try {
+    // Run with default 20% cap — trades should go through
+    const out = execSync(
+      `node ${LIVE_RUNNER} --execute`,
+      {
+        cwd: path.join(__dirname, "../../"),
+        timeout: 30000,
+        env: { ...process.env, PAPER_TRADING: "true", PAPER_TRADING_MAX_TRADE_PCT: "0.20" },
+      }
+    ).toString();
+    // Should NOT see T714 stop-loss rejection for normal sized trades
+    assert(!out.includes("T714 stop-loss"),
+      `Expected no T714 rejection with 20% cap, but got rejection: ${out.slice(-200)}`);
+  } finally {
+    restoreFile(PAPER_TRADES_DB, dbBackup);
+    restoreFile(TRADE_SIGNALS, signalsBackup);
+    restoreFile(PAPER_TRADE_LOG, logBackup);
+  }
+});
+
 // Summary
 console.log("\n" + "=".repeat(60));
 console.log("INTEGRATION TEST SUMMARY");

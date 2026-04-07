@@ -36,6 +36,8 @@ const EXECUTE_TRADES = process.argv.includes("--execute");
 const PAPER_TRADING = process.env.PAPER_TRADING !== 'false';
 const PAPER_TRADING_INITIAL_CAPITAL_CENTS = parseInt(process.env.PAPER_TRADING_INITIAL_CAPITAL_CENTS || "500000", 10);
 const PAPER_TRADING_CAPITAL_FLOOR_CENTS = parseInt(process.env.PAPER_TRADING_CAPITAL_FLOOR_CENTS || "5000", 10);
+// T714: Per-trade stop-loss — no single trade should exceed this % of initial capital
+const PAPER_TRADING_MAX_TRADE_PCT = parseFloat(process.env.PAPER_TRADING_MAX_TRADE_PCT || "0.20"); // 20%
 
 // Realistic fallback markets when API key is unavailable
 const FALLBACK_MARKETS = [
@@ -465,6 +467,16 @@ async function main() {
           console.warn(`  ⚠️  Skipping trade for ${s.ticker || s.marketId}: NULL or invalid confidence`);
           skippedNullConfidence++;
           continue;
+        }
+
+        // T714: Per-trade stop-loss — reject trades that risk more than MAX_TRADE_PCT of capital
+        if (PAPER_TRADING && s.currentPrice != null) {
+          const tradeCostCents = Math.round((s.currentPrice / 100) * (s.sizing?.contracts || 1) * 100);
+          const maxAllowedCents = Math.round(PAPER_TRADING_INITIAL_CAPITAL_CENTS * PAPER_TRADING_MAX_TRADE_PCT);
+          if (tradeCostCents > maxAllowedCents) {
+            console.warn(`  🛑 T714 stop-loss: rejecting ${s.ticker || s.marketId} — trade cost $${(tradeCostCents/100).toFixed(2)} exceeds ${(PAPER_TRADING_MAX_TRADE_PCT*100).toFixed(0)}% cap ($${(maxAllowedCents/100).toFixed(2)})`);
+            continue;
+          }
         }
         
         const tradeRecord = paperTradesDB.recordTrade({
