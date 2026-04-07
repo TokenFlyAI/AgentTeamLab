@@ -821,13 +821,13 @@ function archiveDoneTasks() {
   if (!doneTasks.length) return 0;
   
   // Append done rows to archive
-  const header = "| ID | Title | Description | Priority | Assignee | Status | Created | Updated | Notes |";
-  const sep = "|----|-------|-------------|----------|----------|--------|---------|---------|-------|";
+  const header = "| ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |";
+  const sep = "|----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|";
   if (!fs.existsSync(archivePath)) {
     fs.writeFileSync(archivePath, `# Task Board Archive\n\n## Archived Tasks\n${header}\n${sep}\n`);
   }
   const doneRows = doneTasks.map((t) =>
-    `| ${t.id} | ${t.title} | ${t.description} | ${t.priority} | ${t.assignee} | ${t.status} | ${t.created} | ${t.updated} | ${t.notes || ""} |`
+    `| ${t.id} | ${t.title} | ${t.description} | ${t.priority} | ${t.group || ""} | ${t.assignee} | ${t.status} | ${t.created} | ${t.updated} | ${t.notes || ""} |`
   ).join("\n");
   fs.appendFileSync(archivePath, doneRows + "\n");
   
@@ -2191,8 +2191,8 @@ async function handleRequest(req, res) {
         total_unread: inboxFiles.length,
         urgent: urgentMessages,
         messages: inboxPreviews,
-        // more = total shown is urgent(2) + regular(15); anything beyond that is hidden
-        more: Math.max(0, (urgentFiles.length - 2) + (regularFiles.length - 15)),
+        // more = count of messages beyond what's shown (2 urgent + 15 regular)
+        more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),
       },
       tasks,
       team_channel: teamChannel,
@@ -2322,15 +2322,20 @@ async function handleRequest(req, res) {
         if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
         const cols = line.split("|").slice(1, -1).map((c) => c.trim());
         if (cols.length >= 6) {
+          // Detect if Group column is present (newer format has 10 cols, older had 9)
+          const hasGroup = cols.length >= 9;
+          const g = hasGroup ? cols[4] : "";
+          const off = hasGroup ? 1 : 0;
           taskList.push({
             id: parseInt(cols[0], 10) || cols[0],
             title: cols[1] || "",
             description: cols[2] || "",
             priority: cols[3] || "",
-            assignee: cols[4] || "",
-            status: cols[5] || "done",
-            created: cols[6] || "",
-            updated: cols[7] || "",
+            group: g,
+            assignee: cols[4 + off] || "",
+            status: cols[5 + off] || "done",
+            created: cols[6 + off] || "",
+            updated: cols[7 + off] || "",
             archived: true,
             notesList: [],
           });
@@ -2654,12 +2659,12 @@ async function handleRequest(req, res) {
   // GET /api/tasks/export.csv — download task board as CSV
   if (method === "GET" && pathname === "/api/tasks/export.csv") {
     const tasks = parseTaskBoard();
-    const header = ["ID", "Title", "Description", "Priority", "Assignee", "Status", "Created", "Updated", "Notes"];
+    const header = ["ID", "Title", "Description", "Priority", "Group", "Assignee", "Status", "Created", "Updated", "Notes"];
     const escape = (v) => `"${String(v || "").replace(/"/g, '""')}"`;
     const rows = [
       header.map(escape).join(","),
       ...tasks.map((t) =>
-        [t.id, t.title, t.description, t.priority, t.assignee, t.status, t.created, t.updated, t.notes || ""]
+        [t.id, t.title, t.description, t.priority, t.group || "", t.assignee, t.status, t.created, t.updated, t.notes || ""]
           .map(escape).join(",")
       ),
     ].join("\r\n");
