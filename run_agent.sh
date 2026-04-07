@@ -422,7 +422,7 @@ else
         # Render JSON context into human-readable markdown for the prompt
         _CTX_TMP=$(mktemp /tmp/agent_ctx_XXXXXX)
         echo "$_CTX_JSON" > "$_CTX_TMP"
-        LIVE_SNAPSHOT=$(python3 - "$_CTX_TMP" << 'PYEOF'
+        LIVE_SNAPSHOT=$(python3 - "$_CTX_TMP" 2>/dev/null << 'PYEOF'
 import sys, json, re
 
 with open(sys.argv[1]) as f:
@@ -532,7 +532,13 @@ if culture:
 
 print("\n".join(out))
 PYEOF
-)
+) || {
+            echo "[warn:${AGENT_NAME}] Live snapshot render failed — using minimal fallback" >&2
+            LIVE_SNAPSHOT="## Live State Snapshot
+- Snapshot render failed — read files directly this cycle
+- Inbox: check chat_inbox/ for unread messages
+- Tasks: grep your name from public/task_board.md"
+        }
         rm -f "$_CTX_TMP"
         # Save snapshot for delta diffing on subsequent resume cycles
         echo "$_CTX_JSON" > "$SNAPSHOT_FILE"
@@ -613,6 +619,8 @@ mkdir -p "$_CYCLE_LOG_DIR"
 # Run asynchronously so it doesn't block the cycle start.
 find "$_CYCLE_LOG_DIR" -maxdepth 1 -name "*_prompt.txt" -mtime +7 -delete 2>/dev/null &
 find "$_CYCLE_LOG_DIR" -maxdepth 1 -name "*_snapshot.json" -mtime +7 -delete 2>/dev/null &
+# Clean up stale /tmp/agent_ctx_* and /tmp/agent_snap_* left by crashed cycles (> 1 hour old)
+find /tmp -maxdepth 1 \( -name "agent_ctx_*" -o -name "agent_snap_*" \) -mmin +60 -delete 2>/dev/null &
 _ABS_CYCLE=$([ -f "$SESSION_CYCLE_FILE" ] && cat "$SESSION_CYCLE_FILE" || echo 0)
 _ABS_CYCLE=$(( _ABS_CYCLE + 1 ))
 _CYCLE_TYPE=$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")
