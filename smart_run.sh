@@ -27,7 +27,20 @@ source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
 CONFIG_FILE="${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json"
 PID_FILE="${COMPANY_DIR}/.smart_run_daemon.pid"
 TASK_BOARD="${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md"
-ALL_AGENTS="alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina"
+# Discover agents dynamically from the agents directory so this works on any planet.
+# An agent is any directory that has a persona.md or prompt.md file.
+_AGENTS_BASE="${AGENTS_DIR:-${COMPANY_DIR}/agents}"
+ALL_AGENTS=""
+for _ag_dir in "${_AGENTS_BASE}"/*/; do
+    _ag=$(basename "$_ag_dir")
+    [ -f "${_ag_dir}persona.md" ] || [ -f "${_ag_dir}prompt.md" ] || continue
+    ALL_AGENTS="$ALL_AGENTS $_ag"
+done
+ALL_AGENTS=$(echo "$ALL_AGENTS" | tr ' ' '\n' | sort | tr '\n' ' ' | xargs)
+# Fallback: hardcoded kalshi-traders roster if directory is empty or missing
+if [ -z "$ALL_AGENTS" ]; then
+    ALL_AGENTS="alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina"
+fi
 
 # ── Config Defaults ───────────────────────────────────────────────────────────
 MAX_AGENTS=3
