@@ -137,7 +137,7 @@ task_list() {
 import sys,json
 tasks=json.load(sys.stdin)
 assignee='${assignee}'.lower() if '${assignee}' else None
-active=[t for t in tasks if t.get('status') in ('open','in_progress')]
+active=[t for t in tasks if t.get('status') in ('open','in_progress','in_review')]
 if assignee: active=[t for t in active if (t.get('assignee','') or '').lower()==assignee]
 if not active: print('No active tasks' + (f' for {assignee}' if assignee else '')); sys.exit()
 for t in active:
