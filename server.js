@@ -3693,11 +3693,17 @@ server.on("upgrade", (req, socket, head) => {
     .createHash("sha1")
     .update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
     .digest("base64");
+  // RFC 6455: if client sent Sec-WebSocket-Protocol, server must echo the accepted subprotocol
+  const wsProtoHeader = req.headers["sec-websocket-protocol"] || "";
+  const firstProto = wsProtoHeader.split(",")[0].trim();
+  const protoLine = firstProto ? `Sec-WebSocket-Protocol: ${firstProto}\r\n` : "";
   socket.write(
     "HTTP/1.1 101 Switching Protocols\r\n" +
     "Upgrade: websocket\r\n" +
     "Connection: Upgrade\r\n" +
-    `Sec-WebSocket-Accept: ${accept}\r\n\r\n`
+    `Sec-WebSocket-Accept: ${accept}\r\n` +
+    protoLine +
+    "\r\n"
   );
   wsClients.add(socket);
   // Send hello
