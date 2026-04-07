@@ -478,8 +478,11 @@ pending = d.get("pending_review", [])
 if pending:
     out.append("**Tasks awaiting your review** (in_review, assigned to others):")
     for t in pending:
-        out.append("  T{} [in_review] {}: {} (assignee: {})".format(
-            t.get("id",""), t.get("priority","medium"), t.get("title",""), t.get("assignee","")))
+        notes = (t.get("notes") or "").strip()
+        last_note = notes.split(";;")[-1].strip()[:120] if notes else ""
+        note_str = " — note: {}".format(last_note) if last_note else ""
+        out.append("  T{} [in_review] {}: {} (assignee: {}){}".format(
+            t.get("id",""), t.get("priority","medium"), t.get("title",""), t.get("assignee",""), note_str))
     out.append("")
 
 # Team channel (last 5)

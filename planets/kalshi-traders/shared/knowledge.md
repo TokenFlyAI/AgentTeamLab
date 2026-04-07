@@ -48,7 +48,7 @@
 
 ## Paper Trading Validation (T353)
 
-**⚠️ CORRECTED (2026-04-03):** Prior metrics were **artifacts of broken mock data** per Consensus Decision #2. They are INVALIDATED.
+**⚠️ CORRECTED (2026-04-03):** Prior metrics were **artifacts of broken mock data** (see T326 fix). They are INVALIDATED.
 
 **Old (invalidated) metrics:**
 - Win Rate: 84.0% | Sharpe: 17.18 | P&L: $21.39
@@ -94,7 +94,7 @@ Disabled strategies:
 
 - **Dashboard:** agents/bob/backend/dashboard_api.js running on port 3200
 - **APIs operational:** /api/signals, /api/health, /api/pnl/live, /api/win-rate-trend, all returning real data
-- **Test coverage:** 96 unit + 30 integration + 572 E2E tests (49 API + 44 dashboard + 59 metrics + 360 coverage + 12 smart_run + 47 message_bus)
+- **Test coverage:** 96 unit + 30 integration + 624 E2E tests (57 API + 44 dashboard + 60 metrics + 383 coverage + 12 smart_run + 47 message_bus + 1 planet_create + 20 ui_verify)
 - **Pipeline runner:** `node output/bob/run_pipeline.js` — runs full Phase 1→3 pipeline
 - **Production gates:** Security audit PASS, Risk audit PASS, Ops readiness PASS (T354)
 - **Blocker:** T236 (Kalshi API credentials from Founder) — only remaining dependency for live trading
@@ -152,7 +152,7 @@ Disabled strategies:
 - C9: DM teammates when your work affects theirs
 - C10: Post milestones to team_channel
 - C11: Mark tasks in_review, not done — reviewers approve/reject
-- D6: Sprint 3 is about collaboration quality, not just task completion
+- Collaboration norms C9/C10/C11: DM on completion, post milestones to team_channel, mark in_review not done
 
 ## Sprint 4: Synthetic Validation Paths
 
