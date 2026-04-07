@@ -593,6 +593,10 @@ TODAY=$(date +%Y_%m_%d)
 DAILY_LOG="${AGENT_DIR}/logs/${TODAY}.log"
 RAW_LOG="${AGENT_DIR}/logs/${TODAY}_raw.log"
 TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
+# Record the raw log byte offset BEFORE this cycle so last_context.md only processes
+# the current cycle's output, not the entire growing daily log (charlie: 33MB → 2-3s jq)
+_RAW_LOG_OFFSET=$(wc -c < "$RAW_LOG" 2>/dev/null | tr -d ' ')
+_RAW_LOG_OFFSET="${_RAW_LOG_OFFSET:-0}"
 
 echo "" >> "$DAILY_LOG"
 echo "========== CYCLE START — ${TIMESTAMP} [session:$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")] [executor:${EXECUTOR}] ==========" >> "$DAILY_LOG"
@@ -943,8 +947,11 @@ fi
 
 # ── Cycle success check ───────────────────────────────────────────────────────
 # Detect failed cycles (no output, errors) and log for monitoring
+# Measure only this cycle's bytes (total_size - offset_before_run) to avoid false-positives
+# where prior cycles in the daily log make the size check pass even on empty cycles.
 _CYCLE_SUCCESS=1
-_RAW_SIZE=$(wc -c < "$RAW_LOG" 2>/dev/null | tr -d ' ')
+_RAW_TOTAL=$(wc -c < "$RAW_LOG" 2>/dev/null | tr -d ' ')
+_RAW_SIZE=$(( ${_RAW_TOTAL:-0} - ${_RAW_LOG_OFFSET:-0} ))
 if [ -z "$NEW_SESSION_ID" ] && [ "$_DRY_RUN" != "1" ]; then
     _CYCLE_SUCCESS=0
     echo "[WARN] ${AGENT_NAME}: cycle produced no session ID — LLM call may have failed" | tee -a "$DAILY_LOG"
@@ -966,7 +973,9 @@ fi
     echo "# Executor: ${EXECUTOR}"
     echo "# Session: $(cat "$SESSION_ID_FILE" 2>/dev/null | head -c 12)… cycle $((SAVED_CYCLE+1))/${SESSION_MAX_CYCLES}"
     echo ""
-    cat "$RAW_LOG" 2>/dev/null | jq -r --arg start_time "$(date +%Y-%m-%dT%H:%M:%S)" '
+    # Only process the current cycle's output (tail from _RAW_LOG_OFFSET bytes).
+    # Processing the full daily raw log (charlie: 33MB) through jq cost 2-3s per cycle.
+    tail -c +"$((_RAW_LOG_OFFSET + 1))" "$RAW_LOG" 2>/dev/null | jq -r --arg start_time "$(date +%Y-%m-%dT%H:%M:%S)" '
         # Handle Claude/Kimi JSON plus broader structured executor output
         # Add timestamps using input_line_number as a proxy for sequence
         ((if .type == "assistant" then .message.content
