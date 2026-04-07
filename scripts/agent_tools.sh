@@ -150,6 +150,26 @@ my_tasks() {
   task_list "$_SELF"
 }
 
+read_task() {
+  local id="$1"
+  [ -z "$id" ] && echo "Usage: read_task <task-id>" && return 1
+  curl -s "${_API}/api/tasks/${id}" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  t=json.load(sys.stdin)
+  if 'error' in t: print(f'Error: {t[\"error\"]}'); sys.exit(1)
+  print(f'T{t[\"id\"]}: {t[\"title\"]}')
+  print(f'  Status:   {t.get(\"status\",\"?\")}')
+  print(f'  Assignee: {t.get(\"assignee\",\"unassigned\")}')
+  print(f'  Priority: {t.get(\"priority\",\"?\")}')
+  desc=(t.get('description') or '').strip()
+  if desc: print(f'  Desc:     {desc[:200]}')
+  notes=(t.get('notes') or '').strip()
+  if notes: print(f'  Notes:    {notes[-300:]}')
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
 # ── Communication ────────────────────────────────────────────────────────────
 
 dm() {
@@ -306,4 +326,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, read_peer, read_knowledge, read_culture, pipeline_status, log_progress"

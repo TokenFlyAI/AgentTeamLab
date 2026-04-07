@@ -227,6 +227,7 @@ source ../../scripts/agent_tools.sh
 | Command | What it does |
 |---------|-------------|
 | `my_tasks` | Show your assigned open/in-progress/in-review tasks |
+| `read_task 542` | Read full details of a specific task (title, status, description, notes) |
 | `task_claim 542` | Atomically claim a task |
 | `task_done 542 "Delivered pipeline.js"` | Mark task done with result note |
 | `task_inreview 542 "Ready for review"` | Mark task in_review (request approval) |
