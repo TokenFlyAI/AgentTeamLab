@@ -58,6 +58,12 @@ agent_has_work() {
 }
 
 for AGENT in "${AGENTS[@]}"; do
+    # Rotate runtime log before launch if it exceeds 5MB (keep last 1MB)
+    _log="${LOGDIR}/${AGENT}.log"
+    if [ -f "$_log" ] && [ "$(wc -c < "$_log" 2>/dev/null | tr -d ' ')" -gt 5242880 ]; then
+        tail -c 1048576 "$_log" > "${_log}.tmp" 2>/dev/null && mv "${_log}.tmp" "$_log" 2>/dev/null || true
+    fi
+    unset _log
     (
         # BUG-018 fix: skip if agent already managed by another run_subset.sh
         # Use a lock file per agent to prevent duplicates across separate invocations.

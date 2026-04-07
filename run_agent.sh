@@ -212,7 +212,7 @@ if [ $USE_RESUME -eq 1 ]; then
         _SNAP_TMP=$(mktemp /tmp/agent_snap_XXXXXX)
         echo "$_NEW_CTX" > "$_DELTA_TMP"
         cp "$SNAPSHOT_FILE" "$_SNAP_TMP"
-        DELTA_TEXT=$(python3 - "$_SNAP_TMP" "$_DELTA_TMP" << 'PYEOF'
+        DELTA_TEXT=$(python3 - "$_SNAP_TMP" "$_DELTA_TMP" 2>/dev/null << 'PYEOF'
 import sys, json, re
 
 with open(sys.argv[1]) as f:
@@ -354,7 +354,12 @@ if lines:
 else:
     print("")
 PYEOF
-)
+) || {
+            # Delta computation failed (e.g., corrupted snapshot JSON) — reset snapshot
+            echo "[warn:${AGENT_NAME}] Context delta failed — resetting snapshot" >&2
+            rm -f "$SNAPSHOT_FILE"
+            DELTA_TEXT=""
+        }
         rm -f "$_DELTA_TMP" "$_SNAP_TMP"
         # Update snapshot for next cycle's diff
         echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
