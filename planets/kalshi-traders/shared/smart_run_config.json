@@ -4,10 +4,10 @@
   "interval_seconds": 30,
   "mode": "smart",
   "enabled_executors": [
-    "claude",
+    "codex",
     "kimi"
   ],
-  "last_updated": "2026-04-07T00:46:52Z",
+  "last_updated": "2026-04-07T01:55:10Z",
   "force_alice": 1,
   "dry_run": true,
   "dry_run_sleep": 120,
