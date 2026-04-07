@@ -578,12 +578,51 @@ function getAgentStatus(name) {
   return { status, heartbeat, heartbeat_age_ms };
 }
 
+const ACTIVE_AGENTS_CACHE_TTL_MS = 45_000;
+const activeAgentsSnapshot = {
+  value: 0,
+  expiresAt: 0,
+  refreshedAt: 0,
+  refreshing: false,
+};
+
+function computeActiveAgentsCount() {
+  return listAgentNames().filter((name) => getAgentStatus(name).status === "running").length;
+}
+
+function refreshActiveAgentsCountSync() {
+  const value = computeActiveAgentsCount();
+  const now = Date.now();
+  activeAgentsSnapshot.value = value;
+  activeAgentsSnapshot.refreshedAt = now;
+  activeAgentsSnapshot.expiresAt = now + ACTIVE_AGENTS_CACHE_TTL_MS;
+  return value;
+}
+
+function scheduleActiveAgentsCountRefresh() {
+  if (activeAgentsSnapshot.refreshing) return;
+  activeAgentsSnapshot.refreshing = true;
+  setImmediate(() => {
+    try {
+      refreshActiveAgentsCountSync();
+    } catch (_) {
+      // Keep serving the previous snapshot if a refresh fails.
+    } finally {
+      activeAgentsSnapshot.refreshing = false;
+    }
+  });
+}
+
 function getActiveAgentsCount() {
-  // /api/health is polled frequently. Cache the filesystem scan briefly so
-  // health probes do not fan out into dozens of sync reads on the hot path.
-  return cached("health:active-agents", 30_000, () =>
-    listAgentNames().filter((name) => getAgentStatus(name).status === "running").length
-  );
+  // /api/health is polled frequently. Serve a warmed snapshot and refresh it
+  // off the request path so probes do not trigger synchronous filesystem scans.
+  if (!activeAgentsSnapshot.refreshedAt) {
+    return refreshActiveAgentsCountSync();
+  }
+  if (Date.now() >= activeAgentsSnapshot.expiresAt) {
+    scheduleActiveAgentsCountRefresh();
+  }
+  return activeAgentsSnapshot.value;
 }
 
 // Build a name→role map from team_directory.md table rows (cached by file mtime)
@@ -2442,7 +2481,8 @@ async function handleRequest(req, res) {
   // ---- Tasks ----
   if (method === "GET" && pathname === "/api/tasks") {
     const includeArchive = query.include_archive === "true" || query.include_archive === "1";
-    let taskList = parseTaskBoard().map((t) => ({ ...t, id: parseInt(t.id, 10) || t.id, notesList: (t.notes || "").split(" ;; ").filter(Boolean) }));
+    let taskList = cached("task_board", 10_000, () => parseTaskBoard())
+      .map((t) => ({ ...t, id: parseInt(t.id, 10) || t.id, notesList: (t.notes || "").split(" ;; ").filter(Boolean) }));
 
     // Include archived done tasks if requested
     if (includeArchive) {
