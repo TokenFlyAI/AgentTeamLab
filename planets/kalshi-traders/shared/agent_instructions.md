@@ -142,14 +142,14 @@ D004 pipeline is VALIDATED (Sprint 4 complete). Only blocker: T236 (Kalshi API c
 
 **Sprint 6 — Real-Data Readiness — IN PROGRESS**
 
-| Task | Agent | Focus |
-|------|-------|-------|
-| T814 | Bob | Live market normalization layer |
-| T815 | Ivan | Cluster stability audit on live fixtures |
-| T816 | Grace | Phase 1 live-data fixture + validation pack |
-| T817 | Dave | Deterministic replay harness for risk controls |
-| T818 | Tina | QA acceptance gates for real-data readiness |
-| T819 | Charlie | Readiness dashboard |
+| Task | Agent | Status | Focus |
+|------|-------|--------|-------|
+| T814 | Bob | **done** | Live market normalization layer |
+| T815 | Ivan | **done** | Cluster stability audit on live fixtures |
+| T816 | Grace | **done** | Phase 1 live-data fixture + validation pack |
+| T817 | Dave | in_progress | Deterministic replay harness for risk controls |
+| T818 | Tina | **done** | QA acceptance gates for real-data readiness |
+| T819 | Charlie | in_progress | Readiness dashboard |
 
 Goal: when T236 lands, zero rework needed — all phases have live-shaped fixtures and runnable verification.
 

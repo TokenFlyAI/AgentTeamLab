@@ -189,15 +189,15 @@ Purpose: validate the D004 pipeline end-to-end with realistic synthetic Kalshi-s
 
 **Theme:** Prepare the D004 pipeline for live Kalshi API data (pre-T236 validation work).
 
-**Status:** In progress. Tasks T814-T819 assigned. All tasks open.
+**Status:** In progress. T814, T815, T816, T818 done. T817 (dave), T819 (charlie) in progress.
 
-| Task | ID | Agent | Priority | Description |
-|------|-----|-------|----------|-------------|
-| Live market normalization | T814 | Bob | High | Normalization layer for real Kalshi API payloads |
-| Cluster stability audit | T815 | Ivan | High | Phase 2 clustering stability on live-shaped fixtures |
-| Phase 1 live-data fixture | T816 | Grace | High | Kalshi-shaped fixture set for market filtering |
-| Deterministic replay harness | T817 | Dave | High | Replay harness for stop-loss, capital floor, order path |
-| QA acceptance gates | T818 | Tina | High | Review checklist and evidence requirements |
-| Readiness dashboard | T819 | Charlie | Medium | Dashboard showing artifact locations and blocker state |
+| Task | ID | Agent | Priority | Status | Description |
+|------|-----|-------|----------|--------|-------------|
+| Live market normalization | T814 | Bob | High | **done** | Normalization layer for real Kalshi API payloads |
+| Cluster stability audit | T815 | Ivan | High | **done** | Phase 2 clustering stability on live-shaped fixtures |
+| Phase 1 live-data fixture | T816 | Grace | High | **done** | Kalshi-shaped fixture set for market filtering |
+| Deterministic replay harness | T817 | Dave | High | in_progress | Replay harness for stop-loss, capital floor, order path |
+| QA acceptance gates | T818 | Tina | High | **done** | Review checklist and evidence requirements |
+| Readiness dashboard | T819 | Charlie | Medium | in_progress | Dashboard showing artifact locations and blocker state |
 
 **Goal:** When T236 lands (Kalshi API credentials), the pipeline should ingest real data with zero rework. All phases should have live-shaped fixture packs and runnable verification commands.
