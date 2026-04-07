@@ -1008,7 +1008,12 @@ if [ "${_RAW_SIZE:-0}" -lt 50 ] && [ "$_DRY_RUN" != "1" ]; then
 fi
 if [ "$_CYCLE_SUCCESS" -eq 0 ]; then
     # Write failure marker for watchdog/monitoring
-    echo "$(date +%Y-%m-%dT%H:%M:%S) FAIL executor=${EXECUTOR} raw_bytes=${_RAW_SIZE:-0}" >> "${AGENT_DIR}/logs/cycle_failures.log"
+    _FAIL_LOG="${AGENT_DIR}/logs/cycle_failures.log"
+    echo "$(date +%Y-%m-%dT%H:%M:%S) FAIL executor=${EXECUTOR} raw_bytes=${_RAW_SIZE:-0}" >> "$_FAIL_LOG"
+    # Prune to last 200 entries — prevent unbounded growth over months
+    if [ "$(wc -l < "$_FAIL_LOG" 2>/dev/null | tr -d ' ')" -gt 250 ]; then
+        tail -200 "$_FAIL_LOG" > "${_FAIL_LOG}.tmp" && mv "${_FAIL_LOG}.tmp" "$_FAIL_LOG" 2>/dev/null || true
+    fi
     echo "[WARN] Failure logged to logs/cycle_failures.log. Watchdog or next smart_run will retry."
 fi
 
