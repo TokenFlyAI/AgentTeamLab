@@ -31,7 +31,7 @@
 
 **Rule: If the Live State Snapshot (injected below) already has the data — do NOT re-read with a tool call.**
 
-## 1. THREE SHARED RESOURCES
+## 2. THREE SHARED RESOURCES
 
 ### A. public/knowledge.md (Technical Facts)
 - Contains technical algorithms, deliverables, status of each D004 phase
@@ -59,7 +59,7 @@
   - Delta says "**Teammates**: grace:working→idle" → now read grace's status.md to see what she delivered
   - Delta is empty → no peer reads needed this cycle, go straight to your work
 
-## 2. TASK WORKFLOW (Must Show In-Progress)
+## 3. TASK WORKFLOW (Must Show In-Progress)
 
 ### Proper Progression
 ```
@@ -84,7 +84,7 @@
   - [DONE] Delivered markets_filtered.json
   ```
 
-## 3. STATUS.MD TEMPLATE
+## 4. STATUS.MD TEMPLATE
 
 **REPLACE (overwrite) status.md each cycle — do NOT append.** The prior session's content is already in your context via KV cache. Appending to status.md makes it grow unboundedly, wasting tokens every fresh start (dave's status.md ballooned to 200+ lines of stale history). Keep it to the current task only.
 
@@ -115,7 +115,7 @@ Write to agents/{your_name}/status.md each cycle. Include:
 - {Task or action for next cycle}
 ```
 
-## 4. CITING CULTURE IN DECISIONS
+## 5. CITING CULTURE IN DECISIONS
 
 When you make a decision, explicitly state which culture norm or strategy decision you're following:
 
@@ -126,21 +126,21 @@ When you make a decision, explicitly state which culture norm or strategy decisi
 - "Following C5: claiming T344 and immediately moving to in_progress to show my work"
 - "Following C6: read knowledge.md Phase 2 clustering spec before implementing"
 
-## 5. SPRINT FOCUS (Current)
+## 6. SPRINT FOCUS (Current)
 
-**Sprint 5 — Risk Management & System Hardening**
+**Sprint 5 — Risk Management & System Hardening — COMPLETE**
 
 | Task | Agent | Status | Focus |
 |------|-------|--------|-------|
-| T714 | Dave | in_progress | Per-trade stop-loss |
+| T714 | Dave | **done** | Per-trade stop-loss (PAPER_TRADING_MAX_TRADE_PCT, 11/11 tests pass) |
 | T715 | Bob | **done** | Capital floor |
-| T716 | Bob | in_review | Rate limit testing |
+| T716 | Bob | **done** | Rate limit testing (55-request burst, /v1 path fix) |
 | T717 | Sam | **done** | Velocity tracking |
 
-Handoff chain: Dave (stop-loss) → Tina (QA). T715 and T717 complete.
-D004 pipeline is VALIDATED (Sprint 4 complete). Focus is now operational safety.
+Sprint 5 complete. All risk controls shipped and tested.
+D004 pipeline is VALIDATED (Sprint 4 complete). Only blocker: T236 (Kalshi API credentials from Founder).
 
-## 6. OUTPUT — WHERE TO WRITE DELIVERABLES
+## 7. OUTPUT — WHERE TO WRITE DELIVERABLES
 
 ### Personal Output (your work)
 Write deliverables to your `output/` folder (symlinked from your agent dir):
@@ -163,7 +163,7 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 
 ---
 
-## 7. WORK PRIORITY ORDER
+## 8. WORK PRIORITY ORDER
 
 1. Founder commands (from_ceo messages) — always highest priority
 2. Unread inbox messages (already shown in delta) — handle before starting new work
@@ -172,7 +172,7 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 
 ---
 
-## 8. CRITICAL: CLOSE TASKS WHEN DONE (C7)
+## 9. CRITICAL: CLOSE TASKS WHEN DONE (C7)
 
 **This is mandatory.** When you finish a task, you MUST close it immediately:
 
@@ -220,7 +220,7 @@ cp -r output/backend/* ../../output/shared/codebase/backend/ 2>/dev/null
 
 ---
 
-## 9. AGENT TOOLS (Use These!)
+## 10. AGENT TOOLS (Use These!)
 
 Load the agent toolkit at the start of each cycle for easier operations:
 
@@ -258,7 +258,7 @@ source ../../scripts/agent_tools.sh
 
 ---
 
-## 10. COLLABORATION PLAYBOOK (Sprint 3+)
+## 11. COLLABORATION PLAYBOOK (Sprint 3+)
 
 ### When to DM (C9)
 DM a teammate when:

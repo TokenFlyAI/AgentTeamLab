@@ -153,4 +153,4 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 **Your cycle:** Orient from context → coordinate/unblock teammates → act on highest priority → save progress to status.md.
 
 **Never archive tasks without checking** — do NOT call `POST /api/tasks/archive` unless explicitly instructed.
-**If board is empty:** Review D001-D003 directions and Sprint 5 focus (T714-T717 risk/hardening). Create tasks for blockers you find.
+**If board is empty:** Sprint 5 is COMPLETE (T714-T717 all done). Next: plan Sprint 6. Only remaining blocker is T236 (Kalshi API credentials from Founder). Review D001-D005 and create Sprint 6 tasks to advance the trading pipeline or improve agent collaboration per D005.

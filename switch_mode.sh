@@ -20,6 +20,12 @@ esac
 CURRENT_MODE=$(grep '^\*\*' "$MODE_FILE" | head -1 | tr -d '*')
 TODAY=$(date +%Y-%m-%d)
 
+# Skip if already in the requested mode (prevents announcement spam)
+if [ "$CURRENT_MODE" = "$MODE" ]; then
+    echo "Already in ${MODE} mode — no change."
+    exit 0
+fi
+
 echo "Switching from ${CURRENT_MODE} to ${MODE}..."
 
 # Update the mode file

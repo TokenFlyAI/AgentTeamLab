@@ -207,10 +207,15 @@ create_task() {
   # create_task "Task title" assignee priority "description"
   local title="$1" assignee="${2:-}" priority="${3:-medium}" desc="${4:-}"
   [ -z "$title" ] && echo "Usage: create_task \"title\" [assignee] [priority] [\"description\"]" && return 1
-  local body="{\"title\":\"${title}\",\"priority\":\"${priority}\""
-  [ -n "$assignee" ] && body="${body},\"assignee\":\"${assignee}\""
-  [ -n "$desc" ] && body="${body},\"description\":\"${desc}\""
-  body="${body}}"
+  # Use Python to safely build JSON (avoids injection from special chars in title/desc)
+  local body
+  body=$(python3 -c "
+import json, sys
+d = {'title': sys.argv[1], 'priority': sys.argv[2]}
+if sys.argv[3]: d['assignee'] = sys.argv[3]
+if sys.argv[4]: d['description'] = sys.argv[4]
+print(json.dumps(d))
+" "$title" "$priority" "$assignee" "$desc")
   curl -s -X POST "${_API}/api/tasks" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
@@ -237,7 +242,7 @@ read_inbox() {
     echo ""
     (( count++ ))
     [ $count -ge 20 ] && break
-  done < <(find "$inbox" -maxdepth 1 -name "*.md" ! -name "read_*" 2>/dev/null | sort)
+  done < <(find "$inbox" -maxdepth 1 -name "*.md" ! -name "read_*" ! -name "processed_*" ! -name "*.processed.md" 2>/dev/null | sort)
   [ $found -eq 0 ] && echo "No unread messages"
 }
 
