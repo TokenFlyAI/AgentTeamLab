@@ -2,7 +2,22 @@
 
 **This file and `consensus.md` are pre-loaded into your context (static prefix + live snapshot). Do NOT re-read them with tool calls — it wastes tokens. Reference them from memory.**
 
-## 0. RESUME vs FRESH START — What to Skip
+## 0. TRUST THE DELTA — Don't Scan What the System Already Delivers
+
+**The system guarantees you'll be told about any changes.** Every resume cycle injects a `Context Delta` block listing exactly what changed: new inbox messages, task status changes, culture updates, teammate status changes.
+
+**Rules:**
+- Do **NOT** proactively read your inbox directory, task board, heartbeats, or teammates' status.md on every cycle
+- Only read files explicitly listed in the delta ("New message from X", "Task T5xx changed status")
+- Only read a teammate's status.md when the delta reports they changed, or when you need to coordinate a handoff
+- If the delta is empty → nothing changed → go straight to your current work
+- This is how the KV cache works: your full prior context is cached; only the tiny delta is new tokens
+
+**Consequence:** Proactive scans (reading inbox dir, grepping task board, scanning heartbeats) waste ~2,000 tokens per cycle with no benefit. The delta already has everything.
+
+---
+
+## 1. RESUME vs FRESH START — What to Skip
 
 | What | Fresh Start | Resume Cycle |
 |------|-------------|--------------|
@@ -38,11 +53,11 @@
   - D3: D004 is production ready, only awaiting Founder approval
 
 ### C. agents/{other_agents}/status.md (Peer Coordination)
-- Read other agents' current status each cycle
-- **Why:** Understand who is doing what, unblock yourself, hand off work cleanly
+- Read a teammate's status.md **only when** the delta reports they changed, or when actively handing off work
+- **Do NOT scan all heartbeats or peer status.md on every cycle** — the delta already reports any teammate status changes
 - **Example:** 
-  - "Alice's status.md shows she finished integration testing (T352), ready for paper trades"
-  - "Bob's status.md shows correlation_pairs.json is ready, Phase 4 C++ can begin"
+  - Delta says "**Teammates**: grace:working→idle" → now read grace's status.md to see what she delivered
+  - Delta is empty → no peer reads needed this cycle, go straight to your work
 
 ## 2. TASK WORKFLOW (Must Show In-Progress)
 
@@ -259,12 +274,12 @@ Post to `../../public/team_channel/` when:
 - Sprint update: "Sprint 3 day 1: 4/10 tasks in progress, handoff chain 50% complete"
 
 ### How to Read Peers (C4)
-Every cycle, read at least 2 teammates' status:
+Read a teammate's status only when the delta reports a change or when you need to coordinate a handoff:
 ```bash
 source ../../scripts/agent_tools.sh
-read_peer bob    # Check what bob is working on
-read_peer dave   # Check if dave is ready for handoff
+read_peer bob    # Only if delta reported bob changed, or you're handing off to him
 ```
+Don't read peers speculatively — if nothing changed in the delta, nothing changed.
 
 ### Task Review Flow (C11)
 ```

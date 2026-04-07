@@ -185,8 +185,10 @@ else:
 fi
 
 # ── Build prompt ──────────────────────────────────────────────────────────────
-PROMPT_FILE="${AGENT_DIR}/prompt.md"
+# persona.md is the single agent identity file (merged identity + role context)
+# prompt.md is kept as a legacy fallback but persona.md takes precedence
 PERSONA_FILE="${AGENT_DIR}/persona.md"
+PROMPT_FILE="${AGENT_DIR}/prompt.md"
 MEMORY_FILE="${AGENT_DIR}/memory.md"
 
 # Count urgent (CEO/lord) messages in inbox — always surfaced in resume prompt
@@ -211,7 +213,7 @@ if [ $USE_RESUME -eq 1 ]; then
         echo "$_NEW_CTX" > "$_DELTA_TMP"
         cp "$SNAPSHOT_FILE" "$_SNAP_TMP"
         DELTA_TEXT=$(python3 - "$_SNAP_TMP" "$_DELTA_TMP" << 'PYEOF'
-import sys, json
+import sys, json, re
 
 with open(sys.argv[1]) as f:
     prev = json.load(f)
@@ -220,25 +222,31 @@ with open(sys.argv[2]) as f:
 
 MAX_CEO_CHARS = 2000  # cap urgent message content to prevent token blowup
 
-changes = []
+def sender_from_filename(fn):
+    """Extract readable sender name from inbox filename like 2026_04_07_12_30_from_alice.md"""
+    m = re.search(r'from_(\w+)', fn)
+    return m.group(1).capitalize() if m else fn
+
+lines = []
 
 # Mode change
 if curr.get("mode") != prev.get("mode"):
-    changes.append("**Mode**: {}→{}".format(prev.get("mode"), curr.get("mode")))
+    lines.append("The company switched to **{}** mode (was: {}).".format(
+        curr.get("mode"), prev.get("mode")))
     sop = curr.get("sop")
     if sop:
-        changes.append("**SOP**:\n" + sop)
+        lines.append("New SOP:\n" + sop)
 
 # New urgent (CEO/lord) messages — full content, capped
 prev_urgent = {m["filename"] for m in prev.get("inbox", {}).get("urgent", [])}
 new_urgent = [m for m in curr.get("inbox", {}).get("urgent", []) if m["filename"] not in prev_urgent]
 if new_urgent:
-    changes.append("**URGENT ({})**:".format(len(new_urgent)))
+    lines.append("⚠️ **URGENT — Founder/Lord message{}**:".format("s" if len(new_urgent) > 1 else ""))
     for m in new_urgent:
         body = m["content"].strip()
         if len(body) > MAX_CEO_CHARS:
             body = body[:MAX_CEO_CHARS] + "\n...[truncated]"
-        changes.append("[{}]\n{}".format(m["filename"], body))
+        lines.append(body)
 
 # New regular inbox messages — preview only
 prev_msgs = {m["filename"] for m in prev.get("inbox", {}).get("messages", [])}
@@ -246,25 +254,37 @@ prev_urgent_f = {m["filename"] for m in prev.get("inbox", {}).get("urgent", [])}
 prev_all = prev_msgs | prev_urgent_f
 new_msgs = [m for m in curr.get("inbox", {}).get("messages", []) if m["filename"] not in prev_all]
 if new_msgs:
-    changes.append("**Inbox ({} new)**:".format(len(new_msgs)))
-    for m in new_msgs:
-        changes.append("  [{}] {}".format(m["filename"], m["preview"]))
+    if len(new_msgs) == 1:
+        m = new_msgs[0]
+        lines.append("{} sent you a message: \"{}\"".format(
+            sender_from_filename(m["filename"]), m["preview"]))
+    else:
+        lines.append("You have {} new messages:".format(len(new_msgs)))
+        for m in new_msgs:
+            lines.append("  - {}: \"{}\"".format(
+                sender_from_filename(m["filename"]), m["preview"]))
 
 # New team channel — preview only
 prev_tc = {m["filename"] for m in prev.get("team_channel", [])}
 new_tc = [m for m in curr.get("team_channel", []) if m["filename"] not in prev_tc]
 if new_tc:
-    changes.append("**Team channel ({} new)**:".format(len(new_tc)))
-    for m in new_tc:
-        changes.append("  [{}] {}".format(m["filename"], m["preview"]))
+    if len(new_tc) == 1:
+        m = new_tc[0]
+        lines.append("{} posted to team channel: \"{}\"".format(
+            sender_from_filename(m["filename"]), m["preview"]))
+    else:
+        lines.append("Team channel ({} new posts):".format(len(new_tc)))
+        for m in new_tc:
+            lines.append("  - {}: \"{}\"".format(
+                sender_from_filename(m["filename"]), m["preview"]))
 
 # New announcements — preview only
 prev_ann = {m["filename"] for m in prev.get("announcements", [])}
 new_ann = [m for m in curr.get("announcements", []) if m["filename"] not in prev_ann]
 if new_ann:
-    changes.append("**Announcements ({} new)**:".format(len(new_ann)))
     for m in new_ann:
-        changes.append("  [{}] {}".format(m["filename"], m["preview"]))
+        lines.append("New announcement from {}: \"{}\"".format(
+            sender_from_filename(m["filename"]), m["preview"]))
 
 # Task changes (new or status changed)
 prev_tasks = {t["id"]: t for t in prev.get("tasks", [])}
@@ -272,26 +292,33 @@ curr_tasks = {t["id"]: t for t in curr.get("tasks", [])}
 new_task_ids = set(curr_tasks) - set(prev_tasks)
 changed_tasks = [t for tid, t in curr_tasks.items()
                  if tid in prev_tasks and t.get("status") != prev_tasks[tid].get("status")]
-if new_task_ids or changed_tasks:
-    changes.append("**Tasks**:")
-    for tid in new_task_ids:
-        t = curr_tasks[tid]
-        changes.append("  +{}|{}|{}".format(t.get("id",""), t.get("title",""), t.get("status","")))
-        desc = (t.get("description") or "").strip()
-        if desc:
-            changes.append("    Description: {}".format(desc))
-    for t in changed_tasks:
-        changes.append("  #{}:{}→{}".format(t.get("id",""), prev_tasks[t["id"]].get("status",""), t.get("status","")))
+for tid in new_task_ids:
+    t = curr_tasks[tid]
+    desc = (t.get("description") or "").strip()
+    if desc:
+        lines.append("New task assigned to you — T{}: \"{}\" ({})\n  {}".format(
+            t.get("id",""), t.get("title",""), t.get("status",""), desc))
+    else:
+        lines.append("New task assigned to you — T{}: \"{}\" ({})".format(
+            t.get("id",""), t.get("title",""), t.get("status","")))
+for t in changed_tasks:
+    old_s = prev_tasks[t["id"]].get("status","")
+    new_s = t.get("status","")
+    lines.append("T{} ({}) moved: {} → {}".format(t.get("id",""), t.get("title",""), old_s, new_s))
 
 # Teammate status changes
 prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
 curr_tm = {t["name"]: t["status"] for t in curr.get("teammates", [])}
 tm_changes = [(n, prev_tm[n], curr_tm[n]) for n in curr_tm
               if n in prev_tm and curr_tm[n] != prev_tm[n]]
-if tm_changes:
-    changes.append("**Teammates**:")
-    for name, old, new in tm_changes:
-        changes.append("  {}:{}→{}".format(name, old, new))
+for name, old, new_s in tm_changes:
+    if new_s == "idle":
+        lines.append("{} is now idle (was: {}) — available for new work.".format(
+            name.capitalize(), old))
+    elif new_s in ("working", "running"):
+        lines.append("{} started working (was: {}).".format(name.capitalize(), old))
+    else:
+        lines.append("{}: {} → {}.".format(name.capitalize(), old, new_s))
 
 # Culture / consensus changes — only new lines (not the full board)
 prev_culture = (prev.get("culture") or "").strip()
@@ -300,11 +327,11 @@ if curr_culture != prev_culture and curr_culture:
     prev_lines = set(prev_culture.splitlines())
     new_lines = [l for l in curr_culture.splitlines() if l.strip() and l not in prev_lines]
     if new_lines:
-        changes.append("**Culture (new)**:\n" + "\n".join(new_lines))
+        lines.append("Culture updated:\n" + "\n".join(new_lines))
 
-if changes:
-    print("## Context Delta (changes since last cycle)")
-    print("\n".join(changes))
+if lines:
+    print("---")
+    print("\n".join(lines))
 else:
     print("")
 PYEOF
@@ -322,39 +349,41 @@ PYEOF
     # Build resume prompt: cycle nudge + delta (empty string if nothing changed)
     CURRENT_CYCLE=$((SAVED_CYCLE + 1))
     _URGENT_NOTE=""
-    [ "${CEO_COUNT}" -gt 0 ] && _URGENT_NOTE=" URGENT: ${CEO_COUNT} Founder/Lord message(s) — handle FIRST."
-    _CYCLE_NOTE="Next cycle (${CURRENT_CYCLE}). Prior context is cached — trust it.${_URGENT_NOTE}"
+    [ "${CEO_COUNT}" -gt 0 ] && _URGENT_NOTE=" ⚠️ URGENT: ${CEO_COUNT} Founder/Lord message(s) — handle FIRST."
     if [ -n "$DELTA_TEXT" ] && [ "$(echo "$DELTA_TEXT" | tr -d '[:space:]')" != "" ]; then
-        PROMPT_TEXT="$(printf '%s\n\n%s' "$_CYCLE_NOTE" "$DELTA_TEXT")"
+        PROMPT_TEXT="$(printf 'Cycle %s.%s Here is what happened while you were away:\n\n%s' "$CURRENT_CYCLE" "$_URGENT_NOTE" "$DELTA_TEXT")"
         echo "[session:${AGENT_NAME}] Resume: injecting context delta"
         echo "$DELTA_TEXT" | sed 's/^/  [delta] /'
     else
-        PROMPT_TEXT="${_CYCLE_NOTE} Nothing changed — continue your current work."
+        PROMPT_TEXT="Cycle ${CURRENT_CYCLE}.${_URGENT_NOTE} Nothing new — keep going."
         echo "[session:${AGENT_NAME}] Resume: no changes detected"
     fi
 else
     # Fresh start — static prefix first (KV-cached), then dynamic context last.
     # Static prefix = persona.md + prompt.md (never changes → always hits KV cache)
     # Dynamic suffix = memory + live snapshot (changes per session → not cached, but small)
-    [ -f "$PROMPT_FILE" ] || { echo "Error: prompt.md not found: $PROMPT_FILE" >&2; exit 1; }
+    # persona.md is the primary agent identity file (merged identity + role context).
+    # prompt.md is accepted as a legacy fallback when persona.md is absent.
+    _PRIMARY_FILE=""
+    if [ -f "$PERSONA_FILE" ] && [ -s "$PERSONA_FILE" ]; then
+        _PRIMARY_FILE="$PERSONA_FILE"
+    elif [ -f "$PROMPT_FILE" ] && [ -s "$PROMPT_FILE" ]; then
+        _PRIMARY_FILE="$PROMPT_FILE"
+    fi
+    [ -z "$_PRIMARY_FILE" ] && { echo "Error: persona.md not found: $PERSONA_FILE" >&2; exit 1; }
 
-    # Build static prefix: persona.md (identity) + prompt.md (work rules) + agent_instructions.md (shared SOPs)
+    # Build static prefix: persona.md (identity + role) + agent_instructions.md (shared SOPs)
     INSTRUCTIONS_FILE="${SHARED_DIR:-${COMPANY_DIR}/public}/agent_instructions.md"
     _INSTRUCTIONS=""
     if [ -f "$INSTRUCTIONS_FILE" ] && [ -s "$INSTRUCTIONS_FILE" ]; then
         _INSTRUCTIONS="$(cat "$INSTRUCTIONS_FILE")"
     fi
-    if [ -f "$PERSONA_FILE" ] && [ -s "$PERSONA_FILE" ]; then
-        if [ -n "$_INSTRUCTIONS" ]; then
-            STATIC_PREFIX="$(printf '%s\n\n---\n\n%s\n\n---\n\n%s' "$(cat "$PERSONA_FILE")" "$(cat "$PROMPT_FILE")" "$_INSTRUCTIONS")"
-            echo "[session:${AGENT_NAME}] Static prefix: persona.md + prompt.md + agent_instructions.md"
-        else
-            STATIC_PREFIX="$(printf '%s\n\n---\n\n%s' "$(cat "$PERSONA_FILE")" "$(cat "$PROMPT_FILE")")"
-            echo "[session:${AGENT_NAME}] Static prefix: persona.md + prompt.md"
-        fi
+    if [ -n "$_INSTRUCTIONS" ]; then
+        STATIC_PREFIX="$(printf '%s\n\n---\n\n%s' "$(cat "$_PRIMARY_FILE")" "$_INSTRUCTIONS")"
+        echo "[session:${AGENT_NAME}] Static prefix: $(basename "$_PRIMARY_FILE") + agent_instructions.md"
     else
-        STATIC_PREFIX="$(cat "$PROMPT_FILE")"
-        echo "[session:${AGENT_NAME}] Static prefix: prompt.md only (no persona.md)"
+        STATIC_PREFIX="$(cat "$_PRIMARY_FILE")"
+        echo "[session:${AGENT_NAME}] Static prefix: $(basename "$_PRIMARY_FILE") only"
     fi
 
     # -- Live state snapshot via /api/agents/:name/context endpoint ---------------

@@ -155,19 +155,30 @@ curl -X POST http://localhost:3199/api/smart-run/config \
 **Lifecycle:**
 - Cycles 1..`SESSION_MAX_CYCLES` (default: **20**): each cycle uses `--resume` — the entire conversation is KV-cached, only new tokens cost money
 - At cycle `SESSION_MAX_CYCLES`: `status.md` snapshotted into `memory.md`, session cleared
-- Fresh start: static `prompt.md` loaded first (KV-cached after first use), `memory.md` **appended last** so static prefix is always identical
+- Fresh start: static `persona.md` loaded first (KV-cached after first use), `memory.md` **appended last** so static prefix is always identical
 
-**Resume prompt (ultra-short — ~15 tokens):**
-- No inbox: `"Next cycle. Check tasks, observe teammates, keep working. Stay active."`
-- With inbox: `"Next cycle. You have N unread message(s) — handle inbox first, then continue work."`
+**Resume prompt (human-friendly, ~15 tokens):**
+- No changes: `"Cycle 5. Nothing new — keep going."`
+- With changes: `"Cycle 5. Here is what happened while you were away: [human-readable delta]"`
+- Urgent: `"Cycle 5. ⚠️ URGENT: 1 Founder message(s) — handle FIRST. Here is what happened..."`
+
+**Delta injection (human-readable, not JSON):**
+- Messages: `"Alice sent you a message: 'phase 3 data is ready'"` (not filenames)
+- Tasks: `"Task T582 (pipeline report) moved: in_progress → done"`
+- Teammates: `"Grace is now idle (was: working) — available for new work."`
+- Culture: `"Culture updated: [new lines only]"`
 
 **Fresh prompt structure (KV cache order):**
 ```
-[prompt.md — static, identical every time → cached]
+[persona.md — static, identical every time → cached]
+---
+[agent_instructions.md — static shared SOPs → cached]
 ---
 ## Memory Snapshot (from last session)
 [memory.md — dynamic, appended last → not cached, but prefix above is]
 ```
+
+**persona.md is the single agent file** (merged identity + role context). `prompt.md` is accepted as legacy fallback when `persona.md` is absent.
 
 **Env vars:**
 - `SESSION_MAX_CYCLES=20` — cycles per session before reset (also in `smart_run_config.json`)

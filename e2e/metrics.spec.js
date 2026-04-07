@@ -534,7 +534,8 @@ test.describe("Social Consensus Board", () => {
   test("GET /api/consensus entries have required fields", async () => {
     const { body } = await apiGet("/api/consensus");
     for (const e of body.entries) {
-      expect(typeof e.id).toBe("number");
+      // id can be numeric (5-col format) or string like "C1" (4-col format)
+      expect(typeof e.id === "number" || typeof e.id === "string").toBe(true);
       expect(typeof e.type).toBe("string");
       expect(typeof e.content).toBe("string");
       expect(typeof e.author).toBe("string");

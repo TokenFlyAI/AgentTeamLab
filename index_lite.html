@@ -2416,10 +2416,6 @@ async function refreshExecutorCatalog() {
   } catch (_) {}
 }
 
-function getEnabledExecutorSelection() {
-  return Array.from(document.querySelectorAll('#fleet-enabled-executors input[type="checkbox"]:checked'))
-    .map((el) => el.value);
-}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
