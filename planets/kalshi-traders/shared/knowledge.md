@@ -128,7 +128,7 @@ Disabled strategies:
 | T560 | Frank | QA pipeline tests + new test cases |
 | T539 | Tina | QA pipeline data chain validation |
 
-## Sprint 3 (Current) — Production Quality via Collaboration
+## Sprint 3 (Completed) — Production Quality via Collaboration
 
 **Theme:** Every task has explicit handoffs. Agents must DM each other, post to team_channel, and review each other's work.
 
