@@ -1,6 +1,8 @@
 # Agent logs (can be large)
 agents/*/logs/*.log
 agents/*/logs/*_raw.log
+planets/*/agents/*/logs/*.log
+planets/*/agents/*/logs/*_raw.log
 
 # Agent runtime state (changes every cycle — not useful to track)
 agents/*/heartbeat.md
@@ -9,17 +11,29 @@ agents/*/status.md
 agents/*/memory.md
 agents/*/session_id.txt
 agents/*/session_cycle.txt
+agents/*/context_snapshot.json
+planets/*/agents/*/heartbeat.md
+planets/*/agents/*/last_context.md
+planets/*/agents/*/status.md
+planets/*/agents/*/memory.md
+planets/*/agents/*/session_id.txt
+planets/*/agents/*/session_cycle.txt
+planets/*/agents/*/context_snapshot.json
 
 # Agent inboxes & processed (ephemeral messages)
 agents/*/chat_inbox/
 agents/*/processed_inbox/
+planets/*/agents/*/chat_inbox/
 
 # Announcements & team channel (high-volume noise)
 public/announcements/
 public/team_channel/
+planets/*/shared/announcements/
+planets/*/shared/team_channel/
 
 # CEO inbox runtime messages
 ceo_inbox/
+planets/*/data/ceo_inbox/
 
 # Playwright test artifacts
 test-results/
@@ -32,6 +46,9 @@ public/task_outputs/
 backend/messages.db-shm
 backend/messages.db-wal
 backend/metrics_queue.jsonl
+planets/*/data/messages.db-shm
+planets/*/data/messages.db-wal
+planets/*/data/metrics_queue.jsonl
 
 # Temp config dirs
 /tmp/aicompany_config/
