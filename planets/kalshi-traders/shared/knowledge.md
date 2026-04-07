@@ -174,13 +174,13 @@ Purpose: validate the D004 pipeline end-to-end with realistic synthetic Kalshi-s
 
 **Theme:** Harden the trading engine with risk controls and validate system behavior under load.
 
-**Status:** P1 tasks in progress. P0 (T236 Kalshi API credentials) still blocked on external dependency.
+**Status:** T715 done, T717 done. T714 and T716 open. P0 (T236 Kalshi API credentials) still blocked on external dependency.
 
-| Task | ID | Agent | Priority | Description |
-|------|----|-------|----------|-------------|
-| Per-trade stop-loss | T714 | Dave | High | Prevent single trade exceeding max loss threshold |
-| Post-trade capital floor | T715 | Bob | High | Halt trading if capital drops below floor |
-| Rate limit integration test | T716 | Bob | Medium | Realistic API load testing |
-| Velocity tracking | T717 | Sam | Medium | Sprint 5 metrics dashboard |
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Per-trade stop-loss | T714 | Dave | High | open | Prevent single trade exceeding max loss threshold |
+| Post-trade capital floor | T715 | Bob | High | **done** | Halt trading if capital drops below floor |
+| Rate limit integration test | T716 | Bob | Medium | open | Realistic API load testing |
+| Velocity tracking | T717 | Sam | Medium | **done** | Sprint 5 metrics dashboard |
 
 **Handoff chain (Sprint 5):** Bob (capital floor logic) → Dave (integrate with stop-loss) → Tina (QA risk controls) → Alice (sprint 5 retro)
