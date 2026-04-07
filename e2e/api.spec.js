@@ -669,7 +669,7 @@ test.describe("Task review endpoint", () => {
   });
 
   test("POST /api/tasks/:id/review approve marks task done", async () => {
-    const { body: created } = await apiPost("/api/tasks", { title: "review-approve-test", assignee: "alice" });
+    const { body: created } = await apiPost("/api/tasks", { title: "review-approve-test", assignee: "frank" });
     const taskId = created.id;
     try {
       const { status, body } = await apiPost(`/api/tasks/${taskId}/review`, {
