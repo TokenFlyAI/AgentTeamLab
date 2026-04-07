@@ -154,27 +154,19 @@ if [ "${_EARLY_DRY_RUN:-0}" != "1" ] && [ -f "$_CONFIG_FILE" ]; then
         _COST_JSON=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/cost" \
             -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
         if [ -n "$_COST_JSON" ]; then
-            _AGENT_COST=$(echo "$_COST_JSON" | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-for a in d.get('per_agent', []):
-    if a['name'] == '${AGENT_NAME}':
-        print(f\"{a.get('today_usd', 0):.2f}\")
-        break
-else:
-    print('0.00')
-" 2>/dev/null)
+            # Use jq for JSON parsing (faster than spawning Python)
+            _AGENT_COST=$(echo "$_COST_JSON" | jq -r --arg n "${AGENT_NAME}" '.per_agent[]? | select(.name == $n) | .today_usd // 0' 2>/dev/null | head -1)
             _TOTAL_COST=$(echo "$_COST_JSON" | jq -r '.today_usd // 0' 2>/dev/null)
-            _AGENT_COST="${_AGENT_COST:-0.00}"
+            _AGENT_COST="${_AGENT_COST:-0}"
             _TOTAL_COST="${_TOTAL_COST:-0}"
-            # Check per-agent cap
-            if [ "$_AGENT_CAP" != "0" ] && python3 -c "exit(0 if float('${_AGENT_COST}') >= float('${_AGENT_CAP}') else 1)" 2>/dev/null; then
+            # Use awk for float comparison (no Python subprocess needed)
+            if [ "$_AGENT_CAP" != "0" ] && awk "BEGIN{exit (!(${_AGENT_COST} >= ${_AGENT_CAP}))}" 2>/dev/null; then
                 echo "[cost-cap:${AGENT_NAME}] Agent daily spend \$${_AGENT_COST} >= cap \$${_AGENT_CAP} — STOPPING"
                 _write_idle_heartbeat 2>/dev/null || true
                 exit 0
             fi
             # Check total daily cap
-            if [ "$_DAILY_CAP" != "0" ] && python3 -c "exit(0 if float('${_TOTAL_COST}') >= float('${_DAILY_CAP}') else 1)" 2>/dev/null; then
+            if [ "$_DAILY_CAP" != "0" ] && awk "BEGIN{exit (!(${_TOTAL_COST} >= ${_DAILY_CAP}))}" 2>/dev/null; then
                 echo "[cost-cap:${AGENT_NAME}] Total daily spend \$${_TOTAL_COST} >= cap \$${_DAILY_CAP} — STOPPING"
                 _write_idle_heartbeat 2>/dev/null || true
                 exit 0
