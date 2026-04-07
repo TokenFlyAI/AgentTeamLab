@@ -1356,7 +1356,7 @@ async function handleRequest(req, res) {
 
   if (method === "GET" && pathname === "/api/dashboard") {
     const agents = listAgentNames().map(getAgentSummary);
-    const tasks = parseTaskBoard();
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard());
     const modeMd = safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "";
     const modeMatch = modeMd.match(/##\s*Current Mode\s*\n\*\*(\w+)\*\*/i);
     const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
@@ -1454,8 +1454,8 @@ async function handleRequest(req, res) {
       filename: f,
       read: f.startsWith("read_") || f.startsWith("processed_") || f.endsWith(".processed.md"),
     }));
-    // Assigned tasks from task board
-    const tasks = parseTaskBoard().filter(
+    // Assigned tasks from task board (use cache to avoid extra file reads)
+    const tasks = cached("task_board", 10_000, () => parseTaskBoard()).filter(
       (t) => (t.assignee || "").toLowerCase() === name.toLowerCase()
     );
     const executor = getExecutorForAgent(name);
