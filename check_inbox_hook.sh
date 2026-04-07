@@ -20,11 +20,12 @@ shopt -u nullglob
 
 [ ${#UNREAD_FILES[@]} -eq 0 ] && exit 0
 
-# Sort: CEO messages first (highest priority), then newest-first by filename
+# Sort: CEO/Lord messages first (highest priority), then newest-first by filename
 CEO_FILES=()
 OTHER_FILES=()
 for msg in "${UNREAD_FILES[@]}"; do
-    if [[ "$(basename "$msg")" == *_from_ceo.md ]]; then
+    basename_msg="$(basename "$msg")"
+    if [[ "$basename_msg" == *_from_ceo.md || "$basename_msg" == *_from_lord.md ]]; then
         CEO_FILES+=("$msg")
     else
         OTHER_FILES+=("$msg")
@@ -41,7 +42,7 @@ SORTED_FILES=("${SORTED_CEO[@]}" "${SORTED_OTHER[@]}")
 MAX_MSGS=5
 TOTAL=${#UNREAD_FILES[@]}
 OUTPUT="=== URGENT: UNREAD MESSAGES IN YOUR INBOX (${TOTAL} total) ===\n"
-[ ${#CEO_FILES[@]} -gt 0 ] && OUTPUT="${OUTPUT}⚡ ${#CEO_FILES[@]} FOUNDER message(s) — handle FIRST\n"
+[ ${#CEO_FILES[@]} -gt 0 ] && OUTPUT="${OUTPUT}⚡ ${#CEO_FILES[@]} FOUNDER/LORD message(s) — handle FIRST\n"
 SHOWN=0
 for msg in "${SORTED_FILES[@]}"; do
     [ $SHOWN -ge $MAX_MSGS ] && break
