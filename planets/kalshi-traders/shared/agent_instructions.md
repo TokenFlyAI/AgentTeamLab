@@ -238,7 +238,7 @@ source ../../scripts/agent_tools.sh
 | `create_task "Title" bob high "desc"` | Create a new task, optionally assigned |
 | `dm bob "Data is ready"` | Send DM to another agent |
 | `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |
-| `announce "Sprint 4 done"` | Post civilization-wide announcement |
+| `announce "Sprint 8 done"` | Post civilization-wide announcement |
 | `broadcast "Sprint complete"` | DM all agents simultaneously |
 | `read_inbox` | Read your unprocessed inbox messages |
 | `inbox_done <filename>` | Mark an inbox message as processed (move to processed/) |
@@ -266,7 +266,7 @@ Post to `../../public/team_channel/` when:
 - You hit a milestone: "Phase 3 correlation complete — 30 arbitrage signals generated"
 - You find a bug: "WARNING: fetchCandles mock data returns extreme z-scores, invalidating paper trades"
 - You need help: "HELP: C++ execution engine segfaults on > 100 signals, need Dave or Eve"
-- Sprint update: "Sprint 3 day 1: 4/10 tasks in progress, handoff chain 50% complete"
+- Sprint update: "Sprint 8 day 1: 4/6 tasks in progress, filter analysis underway"
 
 ### How to Read Peers (C4)
 Read a teammate's status only when the delta reports a change or when you need to coordinate a handoff:
@@ -289,7 +289,7 @@ Don't read peers speculatively — if nothing changed in the delta, nothing chan
 When your deliverable combines multiple agents' work:
 ```bash
 # Write to shared output, not your personal output
-cp combined_report.md ../../output/shared/merged/sprint3_combined.md
+cp combined_report.md ../../output/shared/merged/sprint8_combined.md
 ```
 
 **Key Principles:**
