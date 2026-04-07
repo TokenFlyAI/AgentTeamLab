@@ -676,6 +676,7 @@ test.describe("Task review endpoint", () => {
   test("POST /api/tasks/:id/review reject sets back to in_progress", async () => {
     const { body: created } = await apiPost("/api/tasks", { title: "review-reject-test", assignee: "bob", status: "in_review" });
     const taskId = created.id;
+    const beforeMs = Date.now();
     try {
       const { status, body } = await apiPost(`/api/tasks/${taskId}/review`, {
         verdict: "reject", reviewer: "tina", comment: "Missing tests"
@@ -689,6 +690,20 @@ test.describe("Task review endpoint", () => {
       expect(task.status).toBe("in_progress");
     } finally {
       await apiDelete(`/api/tasks/${taskId}`);
+      // Cleanup: remove the rejection DM written to bob's inbox by the reject endpoint
+      const bobInbox = path.join(AGENTS_DIR, "bob", "chat_inbox");
+      try {
+        if (fs.existsSync(bobInbox)) {
+          for (const f of fs.readdirSync(bobInbox)) {
+            if (!f.endsWith(".md")) continue;
+            const fp = path.join(bobInbox, f);
+            const stat = fs.statSync(fp);
+            if (stat.mtimeMs >= beforeMs && f.includes("_from_tina")) {
+              try { fs.unlinkSync(fp); } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
     }
   });
 
