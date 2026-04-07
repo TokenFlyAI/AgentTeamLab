@@ -891,7 +891,7 @@ function getAgentCostFromLogs(name, days = 7) {
     data.totalCost = Math.round(data.totalCost * 100) / 100;
   } catch (_) { /* no log */ }
 
-  _statsCache.set(cacheKey, { mtime: currentMtime, data });
+  _statsCache.set(cacheKey, { mtime: currentMtime, data, ts: Date.now() });
   return data;
 }
 

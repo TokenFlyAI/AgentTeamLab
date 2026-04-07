@@ -697,25 +697,33 @@ for raw in sys.stdin:
 extract_session_id() {
     local raw_log="$1"
     local executor="$2"
+    # Only process bytes written during this cycle (avoids scanning the full 33MB daily log)
+    local _log_offset="${_RAW_LOG_OFFSET:-0}"
+    local _log_cmd
+    if [ "$_log_offset" -gt 0 ] 2>/dev/null; then
+        _log_cmd="tail -c +$((_log_offset + 1)) \"$raw_log\""
+    else
+        _log_cmd="cat \"$raw_log\""
+    fi
     case "$executor" in
         kimi)
-            if grep -q 'TurnEnd\|StatusUpdate' "$raw_log" 2>/dev/null; then
+            if eval "$_log_cmd" 2>/dev/null | grep -q 'TurnEnd\|StatusUpdate'; then
                 echo "kimi"
             fi
             ;;
         claude)
-            jq -r 'select(.type == "result") | .session_id // ""' "$raw_log" 2>/dev/null \
+            eval "$_log_cmd" 2>/dev/null | jq -r 'select(.type == "result") | .session_id // ""' 2>/dev/null \
                 | grep -v '^$' | grep -v '^null$' | grep -v '^dryrun' | tail -1 || true
             ;;
         codex)
             # Handle both JSONL and JSON array output from codex
-            jq -r 'if type == "array" then .[] else . end | (.session_id // .conversation_id // .thread_id // .session.id // "")' "$raw_log" 2>/dev/null \
+            eval "$_log_cmd" 2>/dev/null | jq -r 'if type == "array" then .[] else . end | (.session_id // .conversation_id // .thread_id // .session.id // "")' 2>/dev/null \
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
             # Primary: parse sessionId directly from this agent's raw output stream.
             # This is agent-specific and has no race conditions with concurrent agents.
-            _GEMINI_SID=$(jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' "$raw_log" 2>/dev/null \
+            _GEMINI_SID=$(eval "$_log_cmd" 2>/dev/null | jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' 2>/dev/null \
                 | grep -v '^null$' | grep -v '^$' | tail -1 || true)
             if [ -n "$_GEMINI_SID" ]; then echo "$_GEMINI_SID"; return; fi
             # Fallback: scan ~/.gemini/tmp/ for the newest session file.
