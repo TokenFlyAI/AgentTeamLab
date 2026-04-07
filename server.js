@@ -7,6 +7,7 @@
 
 const http = require("http");
 const fs = require("fs");
+const fsp = fs.promises;
 const path = require("path");
 const url = require("url");
 const { execFile, spawn, spawnSync } = require("child_process");
@@ -66,7 +67,7 @@ function recordProductionMetric(endpoint, method, statusCode, durationMs) {
     duration_ms: Math.round(durationMs),
     recorded_at: new Date().toISOString(),
   });
-  try { fs.appendFileSync(METRICS_QUEUE_PATH, row + "\n"); } catch (_) { /* non-fatal */ }
+  fs.appendFile(METRICS_QUEUE_PATH, row + "\n", () => {});
 }
 // Bob's backend API module — rate limiting, validation, metrics (Task #4)
 // Planet-resolved at startup; gracefully absent on planets without bob's code
@@ -434,10 +435,27 @@ function fileMtime(p) {
   try { return fs.statSync(p).mtimeMs; } catch (_) { return null; }
 }
 
+async function fileMtimeAsync(p) {
+  try {
+    const stat = await fsp.stat(p);
+    return stat.mtimeMs;
+  } catch (_) {
+    return null;
+  }
+}
+
 function safeJson(p) {
   const raw = safeRead(p);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch (_) { return null; }
+}
+
+async function safeReadAsync(p) {
+  try {
+    return await fsp.readFile(p, "utf8");
+  } catch (_) {
+    return null;
+  }
 }
 
 function listDir(p) {
@@ -578,52 +596,86 @@ function getAgentStatus(name) {
   return { status, heartbeat, heartbeat_age_ms };
 }
 
-const ACTIVE_AGENTS_CACHE_TTL_MS = 45_000;
 const activeAgentsSnapshot = {
   value: 0,
-  expiresAt: 0,
   refreshedAt: 0,
   refreshing: false,
+  refreshPromise: null,
 };
+const activeAgentStates = new Map();
+const activeAgentRefreshes = new Map();
 
-function computeActiveAgentsCount() {
-  return listAgentNames().filter((name) => getAgentStatus(name).status === "running").length;
+function parseHeartbeatStatus(raw) {
+  if (!raw) return "unknown";
+  for (const line of raw.split("\n")) {
+    const match = line.match(/^status:\s*(.+)$/i)
+      || line.match(/^[-*]\s*\*\*status\*\*:\s*(.+)$/i);
+    if (match) return match[1].trim().toLowerCase();
+  }
+  return "unknown";
 }
 
-function refreshActiveAgentsCountSync() {
-  const value = computeActiveAgentsCount();
+async function isAgentRunningForHealth(name) {
+  const agentDir = path.join(EMPLOYEES_DIR, name);
+  const heartbeatStatus = parseHeartbeatStatus(await safeReadAsync(path.join(agentDir, "heartbeat.md")));
+  if (heartbeatStatus === "running") return true;
+  if (heartbeatStatus !== "unknown") return false;
+  const rawLogMtime = await fileMtimeAsync(path.join(agentDir, "logs", `${todayStr()}_raw.log`));
+  return rawLogMtime !== null && Date.now() - rawLogMtime < 120000;
+}
+
+function updateActiveAgentsSnapshotFromStates() {
+  const value = Array.from(activeAgentStates.values()).filter(Boolean).length;
   const now = Date.now();
   activeAgentsSnapshot.value = value;
   activeAgentsSnapshot.refreshedAt = now;
-  activeAgentsSnapshot.expiresAt = now + ACTIVE_AGENTS_CACHE_TTL_MS;
   return value;
 }
 
-function scheduleActiveAgentsCountRefresh() {
-  if (activeAgentsSnapshot.refreshing) return;
-  activeAgentsSnapshot.refreshing = true;
-  setImmediate(() => {
+function refreshAgentRunningState(name) {
+  if (activeAgentRefreshes.has(name)) return activeAgentRefreshes.get(name);
+  const refresh = (async () => {
     try {
-      refreshActiveAgentsCountSync();
+      activeAgentStates.set(name, await isAgentRunningForHealth(name));
+      return updateActiveAgentsSnapshotFromStates();
     } catch (_) {
-      // Keep serving the previous snapshot if a refresh fails.
+      return activeAgentsSnapshot.value;
+    } finally {
+      activeAgentRefreshes.delete(name);
+    }
+  })();
+  activeAgentRefreshes.set(name, refresh);
+  return refresh;
+}
+
+function refreshAllActiveAgentStatesInBackground() {
+  if (activeAgentsSnapshot.refreshing) return activeAgentsSnapshot.refreshPromise;
+  activeAgentsSnapshot.refreshing = true;
+  activeAgentsSnapshot.refreshPromise = (async () => {
+    try {
+      await Promise.all(listAgentNames().map((name) => refreshAgentRunningState(name)));
+      return updateActiveAgentsSnapshotFromStates();
+    } catch (_) {
+      return activeAgentsSnapshot.value;
     } finally {
       activeAgentsSnapshot.refreshing = false;
+      activeAgentsSnapshot.refreshPromise = null;
     }
-  });
+  })();
+  return activeAgentsSnapshot.refreshPromise;
 }
 
 function getActiveAgentsCount() {
-  // /api/health is polled frequently. Serve a warmed snapshot and refresh it
-  // off the request path so probes do not trigger synchronous filesystem scans.
+  // /api/health is polled frequently. Serve only the latest warmed snapshot.
+  // Snapshot hydration happens once at startup, then per-agent heartbeat
+  // changes refresh the in-memory count without any periodic full scan.
   if (!activeAgentsSnapshot.refreshedAt) {
-    return refreshActiveAgentsCountSync();
-  }
-  if (Date.now() >= activeAgentsSnapshot.expiresAt) {
-    scheduleActiveAgentsCountRefresh();
+    refreshAllActiveAgentStatesInBackground();
   }
   return activeAgentsSnapshot.value;
 }
+
+refreshAllActiveAgentStatesInBackground();
 
 // Build a name→role map from team_directory.md table rows (cached by file mtime)
 let _roleMapCache = null;
@@ -1184,7 +1236,7 @@ function getDigest() {
       } else if (/CYCLE\s*END/i.test(line)) {
         if (currentCycle) { currentCycle.end = line.trim(); cycles.push(currentCycle); }
         currentCycle = null;
-      } else if (/DONE/i.test(line) && currentCycle) {
+      } else if (/^\[DONE\]/i.test(line.trim()) && currentCycle) {
         currentCycle.tasks.push(line.trim());
       }
     }
@@ -3454,7 +3506,7 @@ async function handleRequest(req, res) {
   }
 
   if (method === "GET" && pathname === "/api/digest") {
-    return json(res, getDigest());
+    return json(res, cached("digest", 30_000, () => getDigest()));
   }
 
   // ---- Metrics (Bob — Beta task) ----
@@ -3785,12 +3837,14 @@ const server = http.createServer((req, res) => {
   const _start = Date.now();
   const _endpoint = normalizeEndpoint(req.method, url.parse(req.url).pathname);
   const _method = req.method.toUpperCase();
-  res.on("finish", () => {
-    const _duration = Date.now() - _start;
-    apiMetrics.recordRequest(_endpoint, _duration, res.statusCode);
-    // Also record to metrics_queue.jsonl for Ivan's api_error_monitor.js
-    recordProductionMetric(_endpoint, _method, res.statusCode, _duration);
-  });
+  if (_endpoint !== "GET /api/health") {
+    res.on("finish", () => {
+      const _duration = Date.now() - _start;
+      apiMetrics.recordRequest(_endpoint, _duration, res.statusCode);
+      // Also record to metrics_queue.jsonl for Ivan's api_error_monitor.js
+      recordProductionMetric(_endpoint, _method, res.statusCode, _duration);
+    });
+  }
   handleRequest(req, res).catch((err) => {
     if (err.code !== "BODY_TOO_LARGE") console.error("Unhandled error:", err);
     try {
@@ -3922,6 +3976,7 @@ fs.watch(path.join(DIR, "agents"), { recursive: true }, (event, filename) => {
   if (filename && filename.endsWith("heartbeat.md")) {
     const agentName = filename.split(path.sep)[0];
     if (/^[a-zA-Z0-9_-]+$/.test(agentName)) {
+      refreshAgentRunningState(agentName);
       broadcastWS("heartbeat_update", { agent: agentName, ts: Date.now() });
     }
   }
