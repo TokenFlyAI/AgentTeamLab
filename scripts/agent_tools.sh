@@ -24,6 +24,9 @@
 #   add_culture norm|decision "text" — Append new entry to consensus.md
 #   pipeline_status              — Show D004 pipeline phase status
 #   log_progress "message"       — Append timestamped note to logs/progress.log
+#   artifact_validate <path> ... — Validate artifact (C15/C16/C20)
+#   artifact_metadata <path> <id> — Inject C20 metadata into JSON
+#   handoff <agent> <id> <p> <c> — C16-compliant handoff (DM + Post)
 
 # Handle both bash and zsh
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
@@ -288,6 +291,70 @@ inbox_done() {
   mv "$src" "$dest" && echo "Moved to processed: $fname" || echo "Failed to move: $fname"
 }
 
+# ── Handoff & Artifacts (C15, C16, C20) ──────────────────────────────────────
+
+artifact_validate() {
+  # Usage: artifact_validate <file_path> [options]
+  # Wraps scripts/artifact_check.js
+  local path="$1"; shift
+  if [ -z "$path" ]; then
+    echo "Usage: artifact_validate <file_path> [--max-age hours] [--required-fields f1,f2] [--run-command cmd] [--check-metadata]"
+    return 1
+  fi
+  node "${SCRIPTS_DIR}/artifact_check.js" "$path" "$@"
+}
+
+artifact_metadata() {
+  # Usage: artifact_metadata <file_path> <task_id>
+  # Injects C20 metadata into a JSON file
+  local path="$1" task_id="$2"
+  if [ -z "$path" ] || [ -z "$task_id" ]; then
+    echo "Usage: artifact_metadata <file_path> <task_id>"
+    return 1
+  fi
+  if [ ! -f "$path" ]; then echo "File not found: $path" && return 1; fi
+  
+  local agent="${_SELF:-unknown}"
+  local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  
+  python3 -c "
+import sys, json
+path, task_id, agent, ts = sys.argv[1:5]
+try:
+    with open(path, 'r') as f: data = json.load(f)
+    if isinstance(data, dict):
+        data['metadata'] = {'task_id': int(task_id), 'agent': agent, 'timestamp': ts}
+        with open(path, 'w') as f: json.dump(data, f, indent=2)
+        print(f'Metadata injected into {path}')
+    else: print('JSON root is not a dictionary, skipping injection')
+except Exception as e: print(f'Error injecting metadata: {e}')
+" "$path" "$task_id" "$agent" "$ts"
+}
+
+handoff() {
+  # Usage: handoff <target_agent> <task_id> <artifact_path> <run_command> ["notes"]
+  # C16-compliant handoff message (DM + Post)
+  local to="$1" task_id="$2" path="$3" cmd="$4" notes="${5:-}"
+  if [ -z "$to" ] || [ -z "$task_id" ] || [ -z "$path" ] || [ -z "$cmd" ]; then
+    echo "Usage: handoff <target_agent> <task_id> <artifact_path> <run_command> [\"notes\"]"
+    return 1
+  fi
+  
+  [ ! -f "$path" ] && echo "Error: Artifact not found at $path" && return 1
+
+  local from="${_SELF:-unknown}"
+  local ts=$(date +%Y-%m-%d\ %H:%M:%S)
+  local msg="### Handoff: T${task_id} from ${from}
+- **Artifact**: ${path}
+- **Run Command**: \`${cmd}\`
+- **Freshness**: ${ts}
+- **Notes**: ${notes}"
+
+  dm "$to" "$msg"
+  post "HANDOFF: T${task_id} to ${to} — Artifact: ${path}"
+  echo "Handoff complete. Remember to mark T${task_id} as in_review or done."
+}
+
 # ── Information ──────────────────────────────────────────────────────────────
 
 read_peer() {
@@ -332,7 +399,7 @@ add_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 6 COMPLETE — Sprint 7: Live pipeline run + verification) ==="
+  echo "=== D004 Pipeline Status (Sprint 8: Pipeline quality + platform evolution) ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
@@ -344,33 +411,27 @@ pipeline_status() {
       echo "  ✗ $label MISSING: $path"
     fi
   }
-  echo "Phase 1 (Market Filter — bob → mock data):"
-  _check_file "mock_kalshi_markets.json" "${_AGENTS}/bob/output/mock_kalshi_markets.json"
-  echo ""
-  echo "Phase 1 Live Fixture (grace — T816 Sprint 6):"
+  echo "Phase 1 (Market Filter — grace/bob):"
   _check_file "filtered_markets_live_fixture.json" "${PLANET_DIR:-${_AGENTS}/..}/output/grace/filtered_markets_live_fixture.json"
+  _check_file "mock_kalshi_markets.json" "${_AGENTS}/bob/output/mock_kalshi_markets.json"
   echo ""
   echo "Phase 2 (Clustering — ivan):"
   _check_file "market_clusters.json" "${_AGENTS}/ivan/output/market_clusters.json"
   echo ""
   echo "Phase 3 (Correlation — bob):"
   _check_file "correlation_pairs.json" "${_AGENTS}/bob/output/correlation_pairs.json"
+  _check_file "trade_signals.json" "${_AGENTS}/bob/output/trade_signals.json"
   echo ""
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
-  echo "Sprint 6 Infrastructure (all complete):"
-  _check_file "T814 normalization report (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/live_market_normalization_report.md"
-  _check_file "T815 cluster stability audit (ivan)" "${PLANET_DIR:-${_AGENTS}/..}/output/ivan/cluster_stability_audit.md"
-  _check_file "T817 replay harness (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/t817/replay_report.json"
-  _check_file "T818 QA acceptance gates (tina)" "${PLANET_DIR:-${_AGENTS}/..}/output/tina/sprint6_qa_acceptance_gates.md"
-  _check_file "T819 readiness dashboard (charlie)" "${PLANET_DIR:-${_AGENTS}/..}/output/charlie/sprint6_readiness_dashboard.html"
-  echo ""
-  echo "Sprint 7 Live Pipeline Run (T851-T854):"
+  echo "Sprint 7 Live Pipeline Run (COMPLETE):"
   _check_file "T851 retro report (alice)" "${PLANET_DIR:-${_AGENTS}/..}/output/alice/sprint7_retro.md"
   _check_file "T852 E2E run with live fixtures (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/sprint7_e2e_run.md"
   _check_file "T853 replay harness live signals (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/sprint7_replay_live.md"
-  _check_file "T854 velocity metrics (sam)" "${PLANET_DIR:-${_AGENTS}/..}/output/sam/sprint7_metrics.md"
+  echo ""
+  echo "Sprint 8 Quality Tasks:"
+  _check_file "T963 Phase 3 remediation (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/phase3_remediation.md"
   echo ""
   echo "Blocker: T236 (Kalshi API credentials) — live trading pending"
 }
@@ -390,4 +451,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"

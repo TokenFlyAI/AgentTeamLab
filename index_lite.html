@@ -4833,7 +4833,7 @@ function renderConsensus() {
     if (!sections[e.section]) sections[e.section] = [];
     sections[e.section].push(e);
   }
-  const typeColors = Object.assign(Object.create(null), { group:'#4a90d9', authority:'#e2a64c', culture:'#4ade80', decision:'#f87171', relationship:'#c084fc' });
+  const typeColors = Object.assign(Object.create(null), { group:'#4a90d9', authority:'#e2a64c', culture:'#4ade80', norm:'#4ade80', decision:'#f87171', relationship:'#c084fc' });
   list.innerHTML = Object.entries(sections).map(([sec, items]) =>
     `<div style="margin-bottom:20px;">
       <h4 style="color:#8899aa;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">${esc(sec)}</h4>
