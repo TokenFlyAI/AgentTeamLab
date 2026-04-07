@@ -398,6 +398,8 @@ curl -X POST http://localhost:3199/api/tasks/555/review \
 
 Task flow: `open` → `in_progress` → `in_review` → `done` (approved) or back to `in_progress` (rejected)
 
+Both approve and reject send a DM to the assignee's inbox so they learn the outcome on their next resume cycle.
+
 ## Visual Validation (IMPORTANT)
 
 **Always verify changes by taking screenshots and clicking through the UI** — not just running unit tests. Unit tests only check what you expect; screenshots reveal what's actually broken.

@@ -285,12 +285,12 @@ read_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 4 VALIDATED — Sprint 6 real-data readiness in progress) ==="
+  echo "=== D004 Pipeline Status (Sprint 6 COMPLETE — Sprint 7: E2E live-fixture run) ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
     if [ -f "$path" ]; then
-      echo "  ✓ $label ($(wc -c < "$path" | tr -d ' ') bytes): $path"
+      echo "  ✓ $label ($(wc -c < "$path" | tr -d ' ') bytes)"
     else
       echo "  ✗ $label MISSING: $path"
     fi
@@ -298,8 +298,8 @@ pipeline_status() {
   echo "Phase 1 (Market Filter — bob → mock data):"
   _check_file "mock_kalshi_markets.json" "${_AGENTS}/bob/output/mock_kalshi_markets.json"
   echo ""
-  echo "Phase 1b (Market Filter — grace filters):"
-  _check_file "filtered_markets.json" "${_AGENTS}/grace/output/filtered_markets.json"
+  echo "Phase 1 Live Fixture (grace — T816 Sprint 6):"
+  _check_file "filtered_markets_live_fixture.json" "${PLANET_DIR:-${_AGENTS}/..}/output/grace/filtered_markets_live_fixture.json"
   echo ""
   echo "Phase 2 (Clustering — ivan):"
   _check_file "market_clusters.json" "${_AGENTS}/ivan/output/market_clusters.json"
@@ -309,6 +309,13 @@ pipeline_status() {
   echo ""
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
+  echo ""
+  echo "Sprint 6 Readiness:"
+  _check_file "T814 normalization report (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/live_market_normalization_report.md"
+  _check_file "T815 cluster stability audit (ivan)" "${PLANET_DIR:-${_AGENTS}/..}/output/ivan/cluster_stability_audit.md"
+  _check_file "T817 replay harness (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/t817/replay_report.json"
+  _check_file "T818 QA acceptance gates (tina)" "${PLANET_DIR:-${_AGENTS}/..}/output/tina/sprint6_qa_acceptance_gates.md"
+  _check_file "T819 readiness dashboard (charlie)" "${PLANET_DIR:-${_AGENTS}/..}/output/charlie/sprint6_readiness_dashboard.html"
 }
 
 # ── Logging ──────────────────────────────────────────────────────────────────
