@@ -604,6 +604,10 @@ echo "========== CYCLE START — ${TIMESTAMP} [session:$([ $USE_RESUME -eq 1 ] &
 # ── Log what gets sent to the LLM this cycle ─────────────────────────────────
 _CYCLE_LOG_DIR="${AGENT_DIR}/logs/cycles"
 mkdir -p "$_CYCLE_LOG_DIR"
+# Prune cycle files older than 7 days — they accumulate to 190MB+ across all agents.
+# Run asynchronously so it doesn't block the cycle start.
+find "$_CYCLE_LOG_DIR" -maxdepth 1 -name "*_prompt.txt" -mtime +7 -delete 2>/dev/null &
+find "$_CYCLE_LOG_DIR" -maxdepth 1 -name "*_snapshot.json" -mtime +7 -delete 2>/dev/null &
 _ABS_CYCLE=$([ -f "$SESSION_CYCLE_FILE" ] && cat "$SESSION_CYCLE_FILE" || echo 0)
 _ABS_CYCLE=$(( _ABS_CYCLE + 1 ))
 _CYCLE_TYPE=$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")
