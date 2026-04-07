@@ -399,12 +399,17 @@ else
         _CTX_TMP=$(mktemp /tmp/agent_ctx_XXXXXX)
         echo "$_CTX_JSON" > "$_CTX_TMP"
         LIVE_SNAPSHOT=$(python3 - "$_CTX_TMP" << 'PYEOF'
-import sys, json
+import sys, json, re
 
 with open(sys.argv[1]) as f:
     d = json.load(f)
+
+def sender_from_filename(fn):
+    m = re.search(r'from_(\w+)', fn)
+    return m.group(1).capitalize() if m else fn
+
 out = []
-out.append("## Live State Snapshot (pre-aggregated via /api/agents/{}/context — do not re-read these files this cycle)".format(d.get("agent","")))
+out.append("## Your Starting Context")
 out.append("")
 
 # Mode
@@ -414,9 +419,8 @@ out.append("")
 # Urgent messages (full content)
 urgent = d.get("inbox", {}).get("urgent", [])
 if urgent:
-    out.append("### URGENT — Founder/Lord Messages (handle FIRST)")
+    out.append("### ⚠️ URGENT — Founder/Lord Messages (handle FIRST)")
     for m in urgent:
-        out.append("[{}]".format(m["filename"]))
         out.append(m["content"].strip())
         out.append("")
 
@@ -425,14 +429,14 @@ inbox = d.get("inbox", {})
 total = inbox.get("total_unread", 0)
 msgs = inbox.get("messages", [])
 more = inbox.get("more", 0)
-shown = len(urgent) + len(msgs)
 if total > 0:
-    suffix = " (showing {}, {} more unread)".format(shown, more) if more > 0 else ""
-    out.append("**Unread inbox**: {}{}".format(total, suffix))
+    shown = len(urgent) + len(msgs)
+    suffix = " ({} more not shown)".format(more) if more > 0 else ""
+    out.append("**Unread inbox** ({} messages{}):".format(total, suffix))
     for m in msgs:
-        out.append("  [{}] {}".format(m["filename"], m["preview"]))
+        out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
 else:
-    out.append("**Unread inbox**: 0 messages")
+    out.append("**Unread inbox**: none")
 out.append("")
 
 # Tasks
@@ -440,54 +444,55 @@ tasks = d.get("tasks", [])
 if tasks:
     out.append("**Your open tasks**:")
     for t in tasks:
-        out.append("  | {} | {} | {} | {} |".format(t.get("id",""), t.get("title",""), t.get("priority",""), t.get("status","")))
+        out.append("  T{} [{}] {}: {}".format(t.get("id",""), t.get("status",""), t.get("priority","medium"), t.get("title","")))
         desc = (t.get("description") or "").strip()
         if desc:
-            # Show full description for tasks with instructions (sprint pipeline tasks have detailed steps)
-            out.append("    Description: {}".format(desc))
+            out.append("    {}".format(desc))
 else:
-    out.append("**Your open tasks**: (none assigned)")
+    out.append("**Your open tasks**: none assigned")
 out.append("")
 
-# Team channel
+# Team channel (last 5)
 tc = d.get("team_channel", [])
 if tc:
-    out.append("**Recent team channel** (last {}):".format(len(tc)))
-    for m in tc:
-        out.append("  [{}] {}".format(m["filename"], m["preview"]))
-else:
-    out.append("**Recent team channel**: (none)")
-out.append("")
+    out.append("**Recent team channel**:")
+    for m in tc[-5:]:
+        out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
+    out.append("")
 
-# Announcements
+# Announcements (last 3)
 anns = d.get("announcements", [])
 if anns:
-    out.append("**Recent announcements** (last {}):".format(len(anns)))
-    for a in anns:
-        out.append("  [{}] {}".format(a["filename"], a["preview"]))
-else:
-    out.append("**Recent announcements**: (none)")
-out.append("")
+    out.append("**Recent announcements**:")
+    for a in anns[-3:]:
+        out.append("  - {}: \"{}\"".format(sender_from_filename(a["filename"]), a["preview"]))
+    out.append("")
 
 # Teammates
 teammates = d.get("teammates", [])
 if teammates:
-    out.append("**Teammate statuses**:")
-    for t in teammates:
-        out.append("  - {}: {}".format(t["name"], t["status"]))
-out.append("")
+    working = [t for t in teammates if t["status"] not in ("idle", "unknown")]
+    idle = [t for t in teammates if t["status"] == "idle"]
+    if working:
+        out.append("**Active teammates**: {}".format(", ".join(
+            "{} ({})".format(t["name"], t["status"]) for t in working)))
+    if idle:
+        out.append("**Idle teammates**: {}".format(", ".join(t["name"] for t in idle)))
+    out.append("")
 
 # Active SOP
 sop = d.get("sop")
 if sop:
-    out.append("### Active SOP ({}_mode.md — follow this):".format(d.get("mode","normal")))
+    out.append("### Active SOP ({} mode):".format(d.get("mode","normal")))
     out.append(sop)
     out.append("")
 
-# Culture / consensus
+# Culture / consensus (cap to 3000 chars to save tokens — full consensus is in static prefix)
 culture = d.get("culture")
 if culture:
-    out.append("### Team Culture & Consensus (public/consensus.md):")
+    if len(culture) > 3000:
+        culture = culture[:3000] + "\n...[truncated — read public/consensus.md for full norms]"
+    out.append("### Culture & Decisions (consensus.md):")
     out.append(culture)
 
 print("\n".join(out))

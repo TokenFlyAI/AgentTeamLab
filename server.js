@@ -2161,10 +2161,12 @@ async function handleRequest(req, res) {
       filename: f,
       content: safeRead(path.join(inboxDir, f)) || "",
     }));
-    // First-line preview of up to 15 regular DMs
+    // First non-empty, non-heading line preview of up to 15 regular DMs
     const inboxPreviews = regularFiles.slice(0, 15).map(f => {
-      const firstLine = (safeRead(path.join(inboxDir, f)) || "").split("\n")[0].slice(0, 100);
-      return { filename: f, preview: firstLine };
+      const lines = (safeRead(path.join(inboxDir, f)) || "").split("\n");
+      // Skip blank lines and markdown headings (# ...) to get actual message content
+      const contentLine = lines.find(l => l.trim() && !l.trim().startsWith("#")) || lines[0] || "";
+      return { filename: f, preview: contentLine.trim().slice(0, 150) };
     });
 
     // Open tasks for this agent
@@ -2172,25 +2174,31 @@ async function handleRequest(req, res) {
       .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
                && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()));
 
-    // Recent team channel (last 3 messages)
+    // Recent team channel (last 5 messages, skip heading lines in preview)
     const tcDir = path.join(PUBLIC_DIR, "team_channel");
     const teamChannel = listDir(tcDir)
       .filter(f => f.endsWith(".md"))
-      .sort().reverse().slice(0, 3)
+      .sort().reverse().slice(0, 5)
       .map(f => {
         const raw = safeRead(path.join(tcDir, f)) || "";
-        const preview = raw.split("\n").filter(l => l.trim()).slice(0, 5).join(" ").slice(0, 200);
+        const lines = raw.split("\n");
+        const preview = lines
+          .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
+          .slice(0, 3).join(" ").slice(0, 200);
         return { filename: f, preview };
       });
 
-    // Recent announcements (last 2, skip mode-switch files)
+    // Recent announcements (last 3, skip mode-switch files, skip heading lines)
     const annDir = path.join(PUBLIC_DIR, "announcements");
     const announcements = listDir(annDir)
       .filter(f => f.endsWith(".md") && !f.includes("mode_switch"))
-      .sort().reverse().slice(0, 2)
+      .sort().reverse().slice(0, 3)
       .map(f => {
         const raw = safeRead(path.join(annDir, f)) || "";
-        const preview = raw.split("\n").filter(l => l.trim()).slice(0, 3).join(" ").slice(0, 200);
+        const lines = raw.split("\n");
+        const preview = lines
+          .filter(l => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("Date:"))
+          .slice(0, 2).join(" ").slice(0, 200);
         return { filename: f, preview };
       });
 
