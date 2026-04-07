@@ -44,10 +44,11 @@ agent_has_work() {
         return 0
     fi
     # Check task board for assigned open/in_progress tasks
+    # in_review tasks do NOT count: assignee is waiting for reviewer DM (handled by inbox check above)
     local tb="${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md"
     if [ -f "$tb" ] && grep -q "| ${ag} |" "$tb" 2>/dev/null; then
-        # Check if any of those rows are not done
-        if grep "| ${ag} |" "$tb" | grep -qvE '\|\s*(done|cancelled)\s*\|'; then
+        # Check if any rows have actionable status (not done, cancelled, or in_review)
+        if grep "| ${ag} |" "$tb" | grep -qvE '\|\s*(done|cancelled|in_review)\s*\|'; then
             return 0
         fi
     fi
