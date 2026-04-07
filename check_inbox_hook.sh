@@ -47,7 +47,8 @@ SHOWN=0
 for msg in "${SORTED_FILES[@]}"; do
     [ $SHOWN -ge $MAX_MSGS ] && break
     [ -z "$msg" ] || [ ! -f "$msg" ] && continue
-    OUTPUT="${OUTPUT}--- Message: $(basename "$msg") ---\n$(cat "$msg")\n"
+    MSG_CONTENT=$(head -25 "$msg")
+    OUTPUT="${OUTPUT}--- Message: $(basename "$msg") ---\n${MSG_CONTENT}\n"
     SHOWN=$((SHOWN+1))
 done
 [ $TOTAL -gt $MAX_MSGS ] && OUTPUT="${OUTPUT}... and $((TOTAL - MAX_MSGS)) more — process these first, then re-check.\n"
