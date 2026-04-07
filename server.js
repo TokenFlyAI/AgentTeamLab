@@ -3594,6 +3594,9 @@ async function handleRequest(req, res) {
 
   // ---- Metrics (Bob — Beta task) ----
   if (method === "GET" && pathname === "/api/metrics") {
+    // Cache for 60s — metrics are for monitoring/dashboards, not real-time control.
+    // Without cache: 12s on first call (grep across 20 agents × 7 days = 140 spawnSync calls).
+    const metricsData = cached("metrics_full", 60_000, () => {
     const agentNames = listAgentNames();
     const tasks = cached("task_board", 10_000, () => parseTaskBoard());
 
@@ -3631,7 +3634,7 @@ async function handleRequest(req, res) {
     const totalCycles7d = costStats.reduce((s, a) => s + a.cycles, 0);
     const avgCostPerCycle = totalCycles7d > 0 ? Math.round((totalCost7d / totalCycles7d) * 10000) / 10000 : 0;
 
-    return json(res, {
+    return {
       timestamp: new Date().toISOString(),
       tasks: {
         total: totalTasks,
@@ -3654,7 +3657,9 @@ async function handleRequest(req, res) {
         per_agent: costStats.map((a) => ({ name: a.name, cost_usd: a.totalCost, cycles: a.cycles })),
       },
       http: apiMetrics.snapshot(),
-    });
+    };
+    }); // end cached()
+    return json(res, metricsData);
   }
 
   // Bob's agent metrics sub-routes: /api/metrics/agents, /api/metrics/tasks, /api/metrics/health
