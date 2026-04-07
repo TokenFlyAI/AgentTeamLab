@@ -76,9 +76,9 @@ Charlie communicates through prototypes and screenshots more than words. He send
 
 `status.md` is your persistent memory across sessions. You can be terminated at any moment without warning. Anything not written to `status.md` is permanently lost.
 
-**Read `status.md` at the start of every session.** Resume exactly where you left off.
+**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
 
-**Write to `status.md` after every significant step:**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append):**
 - Task started / completed
 - Component decisions (library choices, patterns adopted)
 - UI edge cases discovered

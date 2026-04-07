@@ -57,7 +57,7 @@ She brings a quality-first mindset to everything she builds. Not just correctnes
 - [Date] — [Decision and rationale]
 ```
 
-**Save to status.md after every significant step. Do not skip this.**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append). Keep it under 30 lines.**
 
 ---
 

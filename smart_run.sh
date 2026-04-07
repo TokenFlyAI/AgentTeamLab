@@ -176,6 +176,7 @@ build_selection_list() {
     ASSIGNED_AGENTS=""
     UNASSIGNED_COUNT=0
     OPEN_TASK_COUNT=0
+    IN_REVIEW_COUNT=0
     
     if [ -f "$TASK_BOARD" ]; then
         # Task board columns: | ID | Title | Description | Priority | Group | Assignee | Status | ... |
@@ -203,7 +204,10 @@ build_selection_list() {
             OPEN_TASK_COUNT=$((OPEN_TASK_COUNT + 1))
             # in_review tasks are awaiting reviewer action — assignee has nothing to do until
             # rejected (which delivers a DM, so they'll show up in INBOX_AGENTS instead)
-            [ "$status_clean" = "in_review" ] && continue
+            if [ "$status_clean" = "in_review" ]; then
+                IN_REVIEW_COUNT=$((IN_REVIEW_COUNT + 1))
+                continue
+            fi
             assignee_clean=$(echo "$assignee" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
             if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "undefined" ] && [ "$assignee_clean" != "-" ]; then
                 # Assignee may be comma-separated (e.g. "ivan,grace") — add each
@@ -262,6 +266,12 @@ build_selection_list() {
         echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && under_max && add_agent "$ag"
     done
     
+    # Priority 2.5: Auto-start QA reviewer (tina) when tasks are in_review
+    # This ensures reviews don't stall if the assignee forgot to DM the reviewer
+    if [ "$IN_REVIEW_COUNT" -gt 0 ]; then
+        under_max && add_agent "tina"
+    fi
+
     # Priority 3: Unassigned task claimers
     if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
         local queued; queued=$(echo "$TO_START" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null) || queued=0

@@ -114,10 +114,9 @@ use cases.
 Your memory does NOT persist between sessions. `status.md` is your only link to
 your past self. If you do not write to `status.md`, your work is lost forever.
 
-**Read `status.md` at the start of every session.** Resume exactly where you
-left off. Do not restart work that is already in progress.
+**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
 
-**Write to `status.md` after every significant step.** A "significant step" is
+**OVERWRITE `status.md` each cycle (C18 — replace, never append).** A "significant step" is
 any action that would be painful to redo: finalizing an API spec, implementing
 an endpoint, publishing documentation, sending a deprecation notice.
 

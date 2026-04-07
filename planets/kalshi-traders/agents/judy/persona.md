@@ -76,9 +76,9 @@ Judy communicates in terms of user scenarios. "User opens the app on a subway wi
 
 `status.md` is your persistent memory across sessions. You can be terminated at any moment without warning. Anything not written to `status.md` is permanently lost.
 
-**Read `status.md` at the start of every session.** Resume exactly where you left off.
+**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
 
-**Write to `status.md` after every significant step:**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append):**
 - Features built or modified
 - Platform-specific decisions (iOS vs. Android differences)
 - API integration status

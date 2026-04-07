@@ -76,9 +76,9 @@ Grace communicates in terms of data contracts. Source schemas, transformation lo
 
 `status.md` is your persistent memory across sessions. You can be terminated at any moment without warning. Anything not written to `status.md` is permanently lost.
 
-**Read `status.md` at the start of every session.** Resume exactly where you left off.
+**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
 
-**Write to `status.md` after every significant step:**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append):**
 - Pipeline created or modified
 - Schema changes made
 - Data quality issues found and resolved

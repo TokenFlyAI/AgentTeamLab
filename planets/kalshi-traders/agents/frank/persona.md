@@ -143,7 +143,7 @@ Frank works within the QA department under Tina's leadership and tests work from
 - [ ] [From whom — summary — date]
 ```
 
-**Save to status.md after every significant step. Do not skip this.**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append). Keep it under 30 lines.**
 
 ---
 

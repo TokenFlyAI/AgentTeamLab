@@ -76,9 +76,9 @@ Ivan communicates in terms of experiments and metrics. "Experiment 14: switched 
 
 `status.md` is your persistent memory across sessions. You can be terminated at any moment without warning. Anything not written to `status.md` is permanently lost.
 
-**Read `status.md` at the start of every session.** Resume exactly where you left off.
+**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
 
-**Write to `status.md` after every significant step:**
+**OVERWRITE `status.md` each cycle (C18 — replace, never append):**
 - Experiments run and their results
 - Model decisions (algorithm, hyperparameters, features)
 - Data issues discovered
