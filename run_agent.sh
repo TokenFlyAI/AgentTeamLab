@@ -487,11 +487,11 @@ if sop:
     out.append(sop)
     out.append("")
 
-# Culture / consensus (cap to 3000 chars to save tokens — full consensus is in static prefix)
+# Culture / consensus — agents need the full file to see all norms and sprint decisions
 culture = d.get("culture")
 if culture:
-    if len(culture) > 3000:
-        culture = culture[:3000] + "\n...[truncated — read public/consensus.md for full norms]"
+    if len(culture) > 12000:
+        culture = culture[:12000] + "\n...[truncated — call read_culture for the rest]"
     out.append("### Culture & Decisions (consensus.md):")
     out.append(culture)
 

@@ -1,6 +1,6 @@
 # Shared Agent Instructions — All Agents Must Follow
 
-**This file and `consensus.md` are pre-loaded into your context (static prefix + live snapshot). Do NOT re-read them with tool calls — it wastes tokens. Reference them from memory.**
+**This file is part of your static prefix (KV cached). `consensus.md` is injected in your live snapshot. Do NOT re-read either with tool calls — they're already in your context. Reference them from memory.**
 
 ## 0. TRUST THE DELTA — Don't Scan What the System Already Delivers
 
@@ -40,7 +40,7 @@
 - **Reference in status.md:** "Reading knowledge.md Phase 2 — LLM clustering algorithm, semantic relationships important"
 
 ### B. public/consensus.md (Culture & Decisions)
-- **Already injected into your context via live snapshot. Do NOT re-read.**
+- **Already injected into your context via live snapshot (full file). Do NOT re-read.**
 - Contains behavioral norms (C1-C6) and strategic decisions (D1-D4)
 - **When to reference:** Before each decision point — use what's already in context
 - **Example behaviors to cite:**
@@ -124,23 +124,19 @@ When you make a decision, explicitly state which culture norm or strategy decisi
 - "Following C5: claiming T344 and immediately moving to in_progress to show my work"
 - "Following C6: read knowledge.md Phase 2 clustering spec before implementing"
 
-## 5. D004 PHASE OWNERSHIP
+## 5. SPRINT FOCUS (Current)
 
-| Phase | Agent | Task | Knowledge Ref |
-|-------|-------|------|---------------|
-| 1 | Grace | T343 | knowledge.md Phase 1 |
-| 2 | Ivan | T344 | knowledge.md Phase 2 |
-| 3 | Bob | T345/T348 | knowledge.md Phase 3 |
-| 4 | Dave | T346/T350/T351 | knowledge.md Phase 4 |
-| E2E | Alice | T352/T356 | knowledge.md Integration |
+**Sprint 5 — Risk Management & System Hardening**
 
-**Each phase agent:**
-- Reads the Knowledge spec for their phase
-- Reads consensus.md D2-D4 (D004 is north star, complete, production ready)
-- Reads prior phase agent's status.md (see what they delivered)
-- Claims their task and shows in_progress state
-- Delivers output to their `output/` folder (or `../../output/shared/merged/` for cross-agent results)
-- Hands off to next phase
+| Task | Agent | Focus |
+|------|-------|-------|
+| T714 | Dave | Per-trade stop-loss |
+| T715 | Bob | Capital floor |
+| T716 | Bob | Rate limit testing |
+| T717 | Sam | Velocity tracking |
+
+Handoff chain: Bob (floor logic) → Dave (integrate stop-loss) → Tina (QA risk controls).
+D004 pipeline is VALIDATED (Sprint 4 complete). Focus is now operational safety.
 
 ## 6. OUTPUT — WHERE TO WRITE DELIVERABLES
 
@@ -165,13 +161,12 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 
 ---
 
-## 7. UNRELATED WORK DEPRIORITIZED
+## 7. WORK PRIORITY ORDER
 
-Per D2 decision: "ALL unrelated work is deprioritized until D004 Phase 4 is live and validated."
-
-- If you have a D004 task assigned: do that first
-- If you have unrelated tasks: they're second priority
-- Exception: Founder commands (from_ceo messages) are always highest priority
+1. Founder commands (from_ceo messages) — always highest priority
+2. Unread inbox messages (already shown in delta) — handle before starting new work
+3. Your assigned open/in_progress tasks (from task board)
+4. Unassigned tasks you can claim (if no assigned work)
 
 ---
 
@@ -237,14 +232,14 @@ source ../../scripts/agent_tools.sh
 
 | Command | What it does |
 |---------|-------------|
-| `my_tasks` | Show your assigned open/in-progress tasks |
+| `my_tasks` | Show your assigned open/in-progress/in-review tasks |
 | `task_claim 542` | Atomically claim a task |
 | `task_done 542 "Delivered pipeline.js"` | Mark task done with result note |
 | `task_inreview 542 "Ready for review"` | Mark task in_review (request approval) |
 | `task_review 542 approve "Verified"` | Approve a task (reviewers: olivia, tina, alice) |
 | `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
-| `task_list` | List all open/in-progress tasks |
+| `task_list` | List all open/in-progress/in-review tasks |
 | `create_task "Title" bob high "desc"` | Create a new task, optionally assigned |
 | `dm bob "Data is ready"` | Send DM to another agent |
 | `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |

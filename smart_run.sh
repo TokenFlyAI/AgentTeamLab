@@ -200,6 +200,9 @@ build_selection_list() {
             [ "$status_clean" = "closed" ] && continue
 
             OPEN_TASK_COUNT=$((OPEN_TASK_COUNT + 1))
+            # in_review tasks are awaiting reviewer action — assignee has nothing to do until
+            # rejected (which delivers a DM, so they'll show up in INBOX_AGENTS instead)
+            [ "$status_clean" = "in_review" ] && continue
             assignee_clean=$(echo "$assignee" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
             if [ -n "$assignee_clean" ] && [ "$assignee_clean" != "unassigned" ] && [ "$assignee_clean" != "undefined" ] && [ "$assignee_clean" != "-" ]; then
                 # Assignee may be comma-separated (e.g. "ivan,grace") — add each
