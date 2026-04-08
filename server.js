@@ -822,29 +822,33 @@ function buildVelocityData() {
   const cutoff = new Date(Date.now() - 3 * 24 * 3600000).toISOString().slice(0, 10);
   const tasks = cached("task_board", 10_000, () => parseTaskBoard());
   for (const t of tasks) {
-    const ag = (t.assignee || "").toLowerCase();
-    if (!ag) continue;
-    if (!velocity[ag]) velocity[ag] = { done: 0, inProgress: 0, total: 0, recentDone: 0 };
-    velocity[ag].total++;
-    const st = (t.status || "").toLowerCase();
-    if (["done", "in_review", "in_progress"].includes(st)) velocity[ag].inProgress++;
-    if (st === "done" || st === "in_review") {
-      velocity[ag].done++;
-      if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
+    // Support comma-separated assignees (e.g. "ivan,grace") — count for each agent
+    const assignees = (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).filter(Boolean);
+    for (const ag of assignees) {
+      if (!velocity[ag]) velocity[ag] = { done: 0, inProgress: 0, total: 0, recentDone: 0 };
+      velocity[ag].total++;
+      const st = (t.status || "").toLowerCase();
+      if (["done", "in_review", "in_progress"].includes(st)) velocity[ag].inProgress++;
+      if (st === "done" || st === "in_review") {
+        velocity[ag].done++;
+        if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
+      }
     }
   }
   // Also count recently archived done tasks — agents who completed sprint work
   // shouldn't show zero velocity just because their tasks were archived
   const archiveCutoff = new Date(Date.now() - 7 * 24 * 3600000).toISOString().slice(0, 10);
   for (const t of cached("task_archive", 30_000, () => parseTaskArchive())) {
-    const ag = (t.assignee || "").toLowerCase();
-    if (!ag) continue;
+    const assignees = (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).filter(Boolean);
+    if (!assignees.length) continue;
     if ((t.updated || "").trim() < archiveCutoff) continue;
-    if (!velocity[ag]) velocity[ag] = { done: 0, inProgress: 0, total: 0, recentDone: 0 };
     const st = (t.status || "").toLowerCase();
-    if (st === "done" || st === "in_review") {
-      velocity[ag].done++;
-      if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
+    for (const ag of assignees) {
+      if (!velocity[ag]) velocity[ag] = { done: 0, inProgress: 0, total: 0, recentDone: 0 };
+      if (st === "done" || st === "in_review") {
+        velocity[ag].done++;
+        if ((t.updated || "").trim() >= cutoff) velocity[ag].recentDone++;
+      }
     }
   }
   return velocity;
@@ -1569,8 +1573,9 @@ async function handleRequest(req, res) {
       read: f.startsWith("read_") || f.startsWith("processed_") || f.endsWith(".processed.md"),
     }));
     // Assigned tasks from task board (use cache to avoid extra file reads)
+    // Support comma-separated assignees (e.g. "ivan,grace")
     const tasks = cached("task_board", 10_000, () => parseTaskBoard()).filter(
-      (t) => (t.assignee || "").toLowerCase() === name.toLowerCase()
+      (t) => (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).includes(name.toLowerCase())
     );
     const executor = getExecutorForAgent(name);
     return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor, executorHealth: getExecutorHealth(executor) });
@@ -2420,8 +2425,12 @@ async function handleRequest(req, res) {
         : t.description,
     });
     const tasks = allTasks
-      .filter(t => (t.assignee || "").toLowerCase() === name.toLowerCase()
-               && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase()))
+      .filter(t => {
+        // Support comma-separated assignees (e.g. "ivan,grace") — check if agent is in the list
+        const assignees = (t.assignee || "").toLowerCase().split(",").map(a => a.trim());
+        return assignees.includes(name.toLowerCase())
+          && !["done","cancelled","canceled"].includes((t.status || "").toLowerCase());
+      })
       .map(truncateDesc);
 
     // For reviewer agents (tina, olivia, alice): also include in_review tasks from all agents
@@ -2430,7 +2439,7 @@ async function handleRequest(req, res) {
     const pending_review = REVIEWER_AGENTS.has(name.toLowerCase())
       ? allTasks
           .filter(t => (t.status || "").toLowerCase() === "in_review"
-                    && (t.assignee || "").toLowerCase() !== name.toLowerCase())
+                    && !(t.assignee || "").toLowerCase().split(",").map(a => a.trim()).includes(name.toLowerCase()))
           .map(truncateDesc)
       : [];
 
@@ -2641,7 +2650,8 @@ async function handleRequest(req, res) {
     const statusFilter = query.status;
     const priorityFilter = query.priority;
     const qFilter = query.q ? query.q.toLowerCase() : null;
-    if (assigneeFilter) taskList = taskList.filter((t) => (t.assignee || "").toLowerCase() === assigneeFilter.toLowerCase());
+    if (assigneeFilter) taskList = taskList.filter((t) =>
+      (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).includes(assigneeFilter.toLowerCase()));
     if (statusFilter) taskList = taskList.filter((t) => (t.status || "").toLowerCase() === statusFilter.toLowerCase());
     if (priorityFilter) taskList = taskList.filter((t) => (t.priority || "").toLowerCase() === priorityFilter.toLowerCase());
     if (qFilter) taskList = taskList.filter((t) =>
@@ -2705,8 +2715,9 @@ async function handleRequest(req, res) {
     if (body.priority !== undefined && !VALID_PRIORITIES_PATCH.has(String(body.priority).toLowerCase())) {
       return badRequest(res, "invalid priority: must be low, medium, high, or critical");
     }
-    if (body.assignee !== undefined && String(body.assignee).trim() !== "" && !/^[a-zA-Z0-9_-]+$/.test(String(body.assignee).trim())) {
-      return badRequest(res, "invalid assignee: must be alphanumeric agent name");
+    if (body.assignee !== undefined && String(body.assignee).trim() !== "" &&
+        !String(body.assignee).trim().split(",").every(a => /^[a-zA-Z0-9_-]+$/.test(a.trim()))) {
+      return badRequest(res, "invalid assignee: must be alphanumeric agent name(s), comma-separated for multiple");
     }
     const ok = await updateTaskRow(id, body);
     if (!ok) return notFound(res, "task not found");

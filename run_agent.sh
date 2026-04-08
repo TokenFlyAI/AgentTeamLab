@@ -854,8 +854,10 @@ extract_session_id() {
                     if [ -n "$_GEMINI_UUID" ]; then echo "$_GEMINI_UUID"; return; fi
                 fi
             fi
-            # Final fallback: if output exists but no session ID, save generic marker
-            if grep -q '"type":"message"' "$raw_log" 2>/dev/null || grep -q '"role":"assistant"' "$raw_log" 2>/dev/null; then
+            # Final fallback: if output exists but no session ID, save generic marker.
+            # IMPORTANT: use _read_log_from_offset (current cycle only) — not $raw_log (full file).
+            # Searching the full log would match output from prior cycles, masking empty cycles as successes.
+            if _read_log_from_offset | grep -qE '"type":"message"|"role":"assistant"' 2>/dev/null; then
                 echo "gemini"
             fi
             ;;
