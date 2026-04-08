@@ -152,9 +152,10 @@ task_inreview() {
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
     -d "$body" 2>/dev/null)
-  local tid title
+  local tid title assignee
   tid=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); s=str(d.get('id','?')); print('T'+s if s.isdigit() else s)" 2>/dev/null)
   title=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('title','?'))" 2>/dev/null)
+  assignee=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('assignee','?'))" 2>/dev/null)
   echo "$result" | python3 -c "
 import sys,json
 try:
@@ -165,7 +166,7 @@ except: print('Error parsing response')
 " 2>/dev/null
   # DM reviewers so they're notified immediately (C11: don't leave reviewers waiting)
   local reviewer_msg
-  reviewer_msg="Review request: ${tid} (\"${title}\") is ready. Use task_review ${id} approve/reject."
+  reviewer_msg="Review request: ${tid} (\"${title}\") from ${assignee}. Check \`list_outputs ${assignee}\` for artifact. Use \`task_review ${id} approve/reject\`."
   [ -n "$note" ] && reviewer_msg="${reviewer_msg} Note: ${note}"
   dm tina "$reviewer_msg" 2>/dev/null
   dm olivia "$reviewer_msg" 2>/dev/null
