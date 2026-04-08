@@ -163,6 +163,27 @@ test('08 — Stats tab: shows cost/metrics', async ({ page }) => {
   expect(body).toMatch(/cost|cycle|agent|\$/i);
 });
 
+test('08b — Stats tab: collaboration health panel renders', async ({ page }) => {
+  await page.goto(BASE);
+  await page.waitForLoadState('load');
+  await page.locator('button.tab-btn[data-tab="stats"]').click();
+  await page.waitForTimeout(1000);
+
+  const panel = await page.locator('#collab-panel');
+  await expect(panel).toBeVisible();
+  const heading = await panel.textContent();
+  expect(heading).toMatch(/Collaboration Health/i);
+
+  // Verify collab-status API returns expected shape
+  const res = await page.evaluate(async () => {
+    const r = await fetch('/api/collab-status', { headers: { 'Authorization': 'Bearer test' } });
+    return r.json();
+  });
+  expect(res).toHaveProperty('team_channel');
+  expect(res).toHaveProperty('dm_backlog');
+  expect(res).toHaveProperty('silent_agents');
+});
+
 // ─── Fleet Tab ────────────────────────────────────────────────────────────────
 
 test('09 — Fleet tab: shows daemon status + controls', async ({ page }) => {
