@@ -360,8 +360,10 @@ curr_tm = {t["name"]: t["status"] for t in curr.get("teammates", [])}
 tm_changes = [(n, prev_tm[n], curr_tm[n]) for n in curr_tm
               if n in prev_tm and curr_tm[n] != prev_tm[n]]
 curr_tm_full = {t["name"]: t for t in curr.get("teammates", [])}
+prev_tm_full = {t["name"]: t for t in prev.get("teammates", [])}
 for name, old, new_s in tm_changes:
     tm_data = curr_tm_full.get(name, {})
+    prev_tm_data = prev_tm_full.get(name, {})
     current_task = tm_data.get("current_task", "")
     task_info = tm_data.get("task", "")
     # Prefer current_task (from task board) over heartbeat task field
@@ -371,8 +373,16 @@ for name, old, new_s in tm_changes:
     elif task_info and task_info not in ("Processing work cycle", "Available for assignment"):
         task_suffix = " — working on: {}".format(task_info[:60])
     if new_s == "idle":
-        lines.append("{} is now idle (was: {}) — available for new work.".format(
-            name.capitalize(), old))
+        # Show what they were working on before going idle (check output/ if they had a task)
+        prev_task = prev_tm_data.get("current_task", "")
+        prev_task_info = prev_tm_data.get("task", "")
+        finished_suffix = ""
+        if prev_task:
+            finished_suffix = " — just finished: {}".format(prev_task[:60])
+        elif prev_task_info and prev_task_info not in ("Processing work cycle", "Available for assignment"):
+            finished_suffix = " — just finished: {}".format(prev_task_info[:60])
+        lines.append("{} is now idle (was: {}).{} Check their output/ if you depend on their work.".format(
+            name.capitalize(), old, finished_suffix))
     elif new_s in ("working", "running"):
         lines.append("{} started working (was: {}).{}".format(name.capitalize(), old, task_suffix))
     else:
