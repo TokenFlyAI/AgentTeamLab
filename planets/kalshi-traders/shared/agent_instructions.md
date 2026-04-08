@@ -228,6 +228,7 @@ source ../../scripts/agent_tools.sh
 | `read_culture` | Read consensus norms and decisions |
 | `add_culture norm "What you learned"` | Add norm to consensus.md (use `decision` for decisions) |
 | `pipeline_status` | Check D004 phase file status (per-agent output paths) |
+| `sprint_status` | Show Sprint 11 task states + pipeline chain (○ open ⟳ in_progress ◎ in_review ✓ done) |
 | `log_progress "Fixed bug X"` | Write timestamped note to logs/progress.log (NOT status.md — C18) |
 
 **Use these instead of raw curl commands.** They handle formatting, error checking, and agent detection automatically.

@@ -562,4 +562,32 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"
+sprint_status() {
+  # sprint_status — Show Sprint 11 task states and pipeline dependency chain
+  # Useful for Sam (velocity), Alice (coordination), Tina (QA gate)
+  echo "=== Sprint 11 Status (T1200-T1207) ==="
+  echo "Pipeline: grace(T1203) → bob(T1201) → ivan(T1204) → dave(T1207)"
+  echo ""
+  curl -s "${_API}/api/tasks" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
+import sys, json
+tasks = json.load(sys.stdin)
+sprint = {str(t['id']): t for t in tasks if str(t.get('id','')).isdigit() and 1200 <= int(t['id']) <= 1207}
+order = ['1200','1201','1202','1203','1204','1205','1206','1207']
+for tid in order:
+    t = sprint.get(tid)
+    if not t: print(f'  T{tid}: not found'); continue
+    status = t.get('status','?')
+    assignee = t.get('assignee','?')
+    title = t.get('title','')[:50]
+    notes = (t.get('notes') or '').strip()
+    last_note = notes.split(';;')[-1].strip()[:80] if notes else ''
+    status_icon = {'open': '○', 'in_progress': '⟳', 'in_review': '◎', 'done': '✓'}.get(status, '?')
+    print(f'  {status_icon} T{tid} [{status:11s}] {assignee:8s}  {title}')
+    if last_note: print(f'       Note: {last_note}')
+" 2>/dev/null || echo "  (failed to fetch tasks — is server running?)"
+  echo ""
+  echo "Output files:"
+  pipeline_status 2>/dev/null | grep -E "✓|✗" | head -8
+}
+
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, sprint_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"

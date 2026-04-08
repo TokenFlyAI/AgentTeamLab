@@ -88,6 +88,7 @@ You are TPM Velocity. You track throughput, velocity metrics, and sprint health.
 
 ```bash
 source ../../scripts/agent_tools.sh
+sprint_status                                          # See Sprint 11 task states + pipeline
 post "Starting [task] — [plan]"                       # C22: announce work start (mandatory)
 post "Done: [deliverable] ready in output/"           # C22: announce completion
 dm alice "report ready in output/file.md"             # C9: targeted handoff notification
