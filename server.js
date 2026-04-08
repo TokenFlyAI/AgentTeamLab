@@ -2756,42 +2756,44 @@ async function handleRequest(req, res) {
       if (files.length > 0) { deliverableFound = true; deliverableLocation = `task_outputs/${files[0]}`; }
     }
 
-    // Check assignee's output/
+    // Check assignee's output/ (support comma-separated multi-assignees)
     if (!deliverableFound && assignee && EMPLOYEES_DIR) {
-      const agentOutDir = path.join(EMPLOYEES_DIR, assignee, "output");
-      if (fs.existsSync(agentOutDir) && listDir(agentOutDir).length > 0) {
-        deliverableFound = true;
-        deliverableLocation = `agents/${assignee}/output/`;
+      for (const ag of assignee.split(",").map(a => a.trim()).filter(Boolean)) {
+        const agentOutDir = path.join(EMPLOYEES_DIR, ag, "output");
+        if (fs.existsSync(agentOutDir) && listDir(agentOutDir).length > 0) {
+          deliverableFound = true;
+          deliverableLocation = `agents/${ag}/output/`;
+          break;
+        }
       }
     }
+
+    // Helper: notify all assignees (supports comma-separated multi-assignees)
+    const notifyAssignees = (content) => {
+      if (!assignee) return;
+      const ts = new Date().toISOString().replace(/[-:T]/g, "_").slice(0, 19);
+      for (const ag of assignee.split(",").map(a => a.trim()).filter(Boolean)) {
+        const inboxDir = path.join(EMPLOYEES_DIR, ag, "chat_inbox");
+        if (fs.existsSync(inboxDir)) {
+          const msgFile = path.join(inboxDir, `${ts}_from_${reviewer || "reviewer"}.md`);
+          try { fs.writeFileSync(msgFile, content); } catch (_) {}
+        }
+      }
+    };
 
     if (verdict === "approve") {
       const noteText = `[REVIEWED by ${reviewer || "unknown"}] ${comment || "Approved"}${deliverableFound ? " — deliverable: " + deliverableLocation : " — no deliverable file found (manual verify)"}`;
       await updateTaskRow(id, { status: "done", notes: noteText });
       const updated = parseTaskBoard().find((t) => String(t.id) === String(id));
-      // Notify assignee via inbox so they see the approval in their delta
-      if (assignee) {
-        const inboxDir = path.join(EMPLOYEES_DIR, assignee, "chat_inbox");
-        if (fs.existsSync(inboxDir)) {
-          const ts = new Date().toISOString().replace(/[-:T]/g, "_").slice(0, 19);
-          const msgFile = path.join(inboxDir, `${ts}_from_${reviewer || "reviewer"}.md`);
-          fs.writeFileSync(msgFile, `# Task T${id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
-        }
-      }
+      // Notify all assignees via inbox so they see the approval in their delta
+      notifyAssignees(`# Task T${id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
       broadcastWS("task_updated", { id: parseTaskId(id), status: "done", reviewer });
       return json(res, { ok: true, verdict: "approved", deliverable_found: deliverableFound, deliverable_location: deliverableLocation, task: updated });
     } else {
       const noteText = `[REJECTED by ${reviewer || "unknown"}] ${comment || "Needs revision"}`;
       await updateTaskRow(id, { status: "in_progress", notes: noteText });
-      // Notify assignee via inbox
-      if (assignee) {
-        const inboxDir = path.join(EMPLOYEES_DIR, assignee, "chat_inbox");
-        if (fs.existsSync(inboxDir)) {
-          const ts = new Date().toISOString().replace(/[-:T]/g, "_").slice(0, 19);
-          const msgFile = path.join(inboxDir, `${ts}_from_${reviewer || "reviewer"}.md`);
-          fs.writeFileSync(msgFile, `# Task T${id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
-        }
-      }
+      // Notify all assignees via inbox
+      notifyAssignees(`# Task T${id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
       broadcastWS("task_updated", { id: parseTaskId(id), status: "in_progress", reviewer });
       return json(res, { ok: true, verdict: "rejected", comment, task_id: id });
     }
