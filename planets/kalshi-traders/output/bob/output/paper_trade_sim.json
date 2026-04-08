@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-04-08T17:05:05.621Z",
+  "task": 250,
+  "description": "Paper trading simulation - 3 runs with simulated P&L",
+  "totalRuns": 3,
+  "runs": [
+    {
+      "runNumber": 1,
+      "timestamp": "2026-04-08T17:05:01.534Z",
+      "signals": [],
+      "signalCount": 0
+    },
+    {
+      "runNumber": 2,
+      "timestamp": "2026-04-08T17:05:03.580Z",
+      "signals": [],
+      "signalCount": 0
+    },
+    {
+      "runNumber": 3,
+      "timestamp": "2026-04-08T17:05:05.621Z",
+      "signals": [],
+      "signalCount": 0
+    }
+  ],
+  "summary": {
+    "totalSignals": 0,
+    "totalPnL": 0,
+    "strategyCount": 0
+  },
+  "strategyPnL": []
+}

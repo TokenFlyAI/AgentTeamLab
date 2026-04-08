@@ -1819,14 +1819,14 @@ body {
         <h3>Selection Mode</h3>
         <div class="fleet-radio-group">
           <label class="fleet-radio-label">
-            <input type="radio" name="fleet-selection-mode" value="deterministic" checked onclick="_selectionModeUserEdited=true">
-            <span>Deterministic</span>
-            <small>Fixed priority order (alice → task-assigned → unassigned → inbox)</small>
+            <input type="radio" name="fleet-selection-mode" value="smart" checked onclick="_selectionModeUserEdited=true">
+            <span>Smart</span>
+            <small>Activity-first: agents with inbox/tasks run first, remaining slots filled randomly</small>
           </label>
           <label class="fleet-radio-label">
             <input type="radio" name="fleet-selection-mode" value="random" onclick="_selectionModeUserEdited=true">
             <span>Random</span>
-            <small>Shuffle eligible agents for fair distribution</small>
+            <small>Shuffle all eligible agents for fair distribution</small>
           </label>
         </div>
 
@@ -2895,7 +2895,7 @@ function updateFleetUI(configData, statusData, agentList) {
 
   // Sync selection mode radio — skip if user has made a pending change
   if (!_selectionModeUserEdited) {
-    const selMode = configData.config?.selection_mode || 'deterministic';
+    const selMode = configData.config?.selection_mode || 'smart';
     document.querySelectorAll('input[name="fleet-selection-mode"]')
       .forEach(r => { r.checked = r.value === selMode; });
   }

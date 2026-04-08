@@ -9,13 +9,13 @@
     "kimi",
     "claude"
   ],
-  "last_updated": "2026-04-08T16:21:33Z",
+  "last_updated": "2026-04-08T22:55:45Z",
   "force_alice": 1,
   "dry_run": true,
   "dry_run_sleep": 120,
   "description": "Smart Run configuration - Controls how many agents run and selection strategy",
   "cycle_sleep_seconds": 100,
-  "selection_mode": "deterministic",
+  "selection_mode": "smart",
   "daily_cost_cap_usd": 0,
   "per_agent_cost_cap_usd": 0,
   "max_total_cycles": 0

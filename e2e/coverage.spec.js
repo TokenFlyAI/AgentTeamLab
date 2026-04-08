@@ -3121,7 +3121,7 @@ test.describe("GET & POST /api/smart-run/config", () => {
   test("GET config includes selection_mode field", async () => {
     const { body } = await apiGet("/api/smart-run/config");
     expect(typeof body.config.selection_mode).toBe("string");
-    expect(["deterministic", "random"]).toContain(body.config.selection_mode);
+    expect(["deterministic", "random", "smart"]).toContain(body.config.selection_mode);
   });
 
   test("POST updates selection_mode to random", async () => {

@@ -2093,10 +2093,10 @@ async function handleRequest(req, res) {
     }
 
     if (body.selection_mode !== undefined) {
-      if (["deterministic", "random"].includes(body.selection_mode)) {
+      if (["deterministic", "random", "smart"].includes(body.selection_mode)) {
         config.selection_mode = body.selection_mode;
       } else {
-        return badRequest(res, "selection_mode must be deterministic or random");
+        return badRequest(res, "selection_mode must be deterministic, random, or smart");
       }
     }
 

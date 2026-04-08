@@ -84,7 +84,7 @@ done
 PREV_ARG=""
 for i in "$@"; do
     if [ "$PREV_ARG" = "--selection-mode" ]; then
-        if [ "$i" = "random" ] || [ "$i" = "deterministic" ]; then
+        if [ "$i" = "random" ] || [ "$i" = "deterministic" ] || [ "$i" = "smart" ]; then
             CLI_SELECTION_MODE="$i"
             SELECTION_MODE="$i"
         fi
@@ -282,20 +282,21 @@ build_selection_list() {
     done
     
     # Priority 2.5: Auto-start reviewers (tina, olivia) when tasks are in_review
-    # This ensures reviews don't stall if the assignee forgot to DM the reviewer
-    if [ "$IN_REVIEW_COUNT" -gt 0 ]; then
+    # Skipped in smart mode — reviewer slots go to random fill instead
+    if [ "$SELECTION_MODE" != "smart" ] && [ "$IN_REVIEW_COUNT" -gt 0 ]; then
         under_max && add_agent "tina"
         under_max && add_agent "olivia"
     fi
 
     # Priority 3: Unassigned task claimers
-    if [ "$UNASSIGNED_COUNT" -gt 0 ]; then
+    # Skipped in smart mode — unassigned slots go to random fill instead
+    if [ "$SELECTION_MODE" != "smart" ] && [ "$UNASSIGNED_COUNT" -gt 0 ]; then
         local queued; queued=$(echo "$TO_START" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null) || queued=0
         local running_c; running_c=$(echo "$RUNNING_AGENTS" | tr ' ' '\n' | grep -c '[a-z]' 2>/dev/null) || running_c=0
         local total=$((queued + running_c))
         local need=$((UNASSIGNED_COUNT < 3 ? UNASSIGNED_COUNT : 3))
         local add_more=$((need - total))
-        
+
         if [ "$add_more" -gt 0 ]; then
             for ag in $ALL_AGENTS; do
                 [ "$add_more" -le 0 ] && break
@@ -308,15 +309,36 @@ build_selection_list() {
             done
         fi
     fi
-    
-    # Priority 4: Inbox-only agents
+
+    # Priority 4: Inbox-only agents (all modes)
     for ag in $ALL_AGENTS; do
         [ "$ag" = "alice" ] && continue
         echo "$INBOX_AGENTS" | grep -qw "$ag" || continue
         echo "$ASSIGNED_AGENTS" | grep -qw "$ag" && continue
         under_max && add_agent "$ag"
     done
-    
+
+    # Smart mode: after activity-based selection, fill remaining slots with random idle agents
+    if [ "$SELECTION_MODE" = "smart" ]; then
+        _IDLE_POOL=""
+        for ag in $ALL_AGENTS; do
+            echo "$TO_START" | grep -qw "$ag" && continue
+            echo "$RUNNING_AGENTS" | grep -qw "$ag" && continue
+            _IDLE_POOL="$_IDLE_POOL $ag"
+        done
+        if [ -n "$(echo "$_IDLE_POOL" | tr -d ' ')" ]; then
+            if command -v shuf >/dev/null 2>&1; then
+                _SHUFFLED_IDLE=$(printf '%s\n' $_IDLE_POOL | shuf | tr '\n' ' ')
+            else
+                _SHUFFLED_IDLE=$(printf '%s\n' $_IDLE_POOL | awk 'BEGIN{srand()} {lines[NR]=$0} END{for(i=NR;i>1;i--){j=int(rand()*i)+1; t=lines[i]; lines[i]=lines[j]; lines[j]=t} for(i=1;i<=NR;i++) print lines[i]}' | tr '\n' ' ')
+            fi
+            for ag in $_SHUFFLED_IDLE; do
+                under_max || break
+                add_agent "$ag"
+            done
+        fi
+    fi
+
     # Apply selection mode shuffle if random.
     # FORCE_ALICE: preserve alice at position 1 so she always starts even if max_agents < total candidates.
     if [ "$SELECTION_MODE" = "random" ]; then
