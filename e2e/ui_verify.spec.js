@@ -387,7 +387,7 @@ test('19 — BUG CHECK: GET /api/tasks/:id returns 404 (missing route)', async (
   // Create a task
   const create = await page.request.post(`${BASE}/api/tasks`, {
     headers: { 'Content-Type': 'application/json' },
-    data: { title: 'Bug check task - delete me', priority: 'low', assignee: 'alice' }
+    data: { title: 'e2e-route-check-task', priority: 'low', assignee: 'alice' }
   });
   const created = await create.json();
   const id = created.id || created.task?.id;
