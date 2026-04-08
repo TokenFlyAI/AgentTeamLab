@@ -571,7 +571,7 @@ if tasks:
         desc = (t.get("description") or "").strip()
         if desc:
             # Truncate long descriptions (D004 is 2000+ chars) — agents read full spec from knowledge.md
-            desc_preview = desc[:200] + "…" if len(desc) > 200 else desc
+            desc_preview = desc[:400] + "…" if len(desc) > 400 else desc
             out.append("    {}".format(desc_preview))
         # Show most recent note (progress update) so agents resume in-context after session reset
         notes = (t.get("notes") or "").strip()
@@ -666,7 +666,7 @@ if culture:
         # Compact: strip bold markers from content to save tokens
         content = _re.sub(r'\*\*(.*?)\*\*', r'\1', content)
         if _re.match(r'^C\d+$', id_col, _re.I):
-            norms.append('{}: {}'.format(id_col, content[:160]))
+            norms.append('{}: {}'.format(id_col, content[:350]))
         elif _re.match(r'^D\d+$', id_col, _re.I):
             dnum = int(_re.match(r'^D(\d+)$', id_col, _re.I).group(1))
             all_d_entries.append((dnum, content))
@@ -685,7 +685,7 @@ if culture:
             if sprint not in completed_sprints:
                 completed_sprints.append(sprint)
         else:
-            decisions.append('D{}: {}'.format(dnum, content[:300]))
+            decisions.append('D{}: {}'.format(dnum, content[:400]))
     if norms:
         out.append('Norms (C1-C{}):'.format(len(norms)))
         out.extend('  ' + n for n in norms)

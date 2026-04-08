@@ -2532,8 +2532,8 @@ async function handleRequest(req, res) {
       return {
         ...t,
         // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
-        description: t.description && t.description.length > 300
-          ? t.description.slice(0, 300) + "…"
+        description: t.description && t.description.length > 500
+          ? t.description.slice(0, 500) + "…"
           : t.description,
         // Truncate long notes (accumulated progress updates) to last 300 chars
         notes: truncNotes,
