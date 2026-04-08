@@ -2824,29 +2824,34 @@ async function handleRequest(req, res) {
       return json(res, { task_id: id, source: "task_outputs", file, content: content || "" });
     }
 
-    // 2. Fall back to assignee's output folder
-    const assignee = (task.assignee || "").toLowerCase().trim();
-    if (!assignee) return notFound(res, "task has no assignee and no shared result file");
-    const agentOutDir = path.resolve(path.join(EMPLOYEES_DIR, assignee, "output"));
-    // Guard against path traversal via a task's assignee field
-    if (!agentOutDir.startsWith(path.resolve(EMPLOYEES_DIR) + path.sep)) return badRequest(res, "invalid assignee path");
-    if (!fs.existsSync(agentOutDir)) return notFound(res, `no output found for task ${id}`);
+    // 2. Fall back to assignee's output folder (support comma-separated multi-assignees)
+    const assigneeRaw = (task.assignee || "").toLowerCase().trim();
+    if (!assigneeRaw) return notFound(res, "task has no assignee and no shared result file");
+    const agentNames = assigneeRaw.split(",").map(a => a.trim()).filter(Boolean);
+    const empBase = path.resolve(EMPLOYEES_DIR);
 
-    const agentFiles = listDir(agentOutDir).filter(f => {
-      try { return fs.statSync(path.join(agentOutDir, f)).isFile(); } catch (_) { return false; }
-    });
-    const exact = agentFiles.find(f => f.toLowerCase().match(new RegExp(`task[_-]?0*${id}[_-]`, 'i')));
-    if (exact) {
-      const content = safeRead(path.join(agentOutDir, exact));
-      return json(res, { task_id: id, source: "agent_output", assignee, file: exact, content: content || "" });
-    }
+    for (const assignee of agentNames) {
+      const agentOutDir = path.resolve(path.join(EMPLOYEES_DIR, assignee, "output"));
+      // Guard against path traversal via a task's assignee field
+      if (!agentOutDir.startsWith(empBase + path.sep)) continue;
+      if (!fs.existsSync(agentOutDir)) continue;
 
-    // 3. Return latest file from agent output as best effort
-    if (agentFiles.length > 0) {
-      const sorted = agentFiles.map(f => ({ f, mtime: fileMtime(path.join(agentOutDir, f)) || 0 })).sort((a, b) => b.mtime - a.mtime);
-      const file = sorted[0].f;
-      const content = safeRead(path.join(agentOutDir, file));
-      return json(res, { task_id: id, source: "agent_output_latest", assignee, file, content: content || "" });
+      const agentFiles = listDir(agentOutDir).filter(f => {
+        try { return fs.statSync(path.join(agentOutDir, f)).isFile(); } catch (_) { return false; }
+      });
+      const exact = agentFiles.find(f => f.toLowerCase().match(new RegExp(`task[_-]?0*${id}[_-]`, 'i')));
+      if (exact) {
+        const content = safeRead(path.join(agentOutDir, exact));
+        return json(res, { task_id: id, source: "agent_output", assignee, file: exact, content: content || "" });
+      }
+
+      // Best-effort: latest file from this agent's output
+      if (agentFiles.length > 0) {
+        const sorted = agentFiles.map(f => ({ f, mtime: fileMtime(path.join(agentOutDir, f)) || 0 })).sort((a, b) => b.mtime - a.mtime);
+        const file = sorted[0].f;
+        const content = safeRead(path.join(agentOutDir, file));
+        return json(res, { task_id: id, source: "agent_output_latest", assignee, file, content: content || "" });
+      }
     }
 
     return notFound(res, `no output found for task ${id}`);
@@ -2885,8 +2890,13 @@ async function handleRequest(req, res) {
       const task = tasks.find((t) => String(t.id) === String(id));
       if (!task) { result = { ok: false, error: "task not found", status: 404 }; return; }
       if (task.status === "done") { result = { ok: false, error: "task already done", status: 409 }; return; }
-      if (task.status === "in_progress" && task.assignee && task.assignee !== claimant) {
+      const existingAssignees = (task.assignee || "").toLowerCase().split(",").map(a => a.trim()).filter(a => a && a !== "unassigned" && a !== "undefined" && a !== "-");
+      if (task.status === "in_progress" && existingAssignees.length > 0 && !existingAssignees.includes(claimant.toLowerCase())) {
         result = { ok: false, error: "task already claimed by " + task.assignee, status: 409, claimed_by: task.assignee }; return;
+      }
+      // If task already has an assignee (even open), only the assigned agent(s) can claim it
+      if (existingAssignees.length > 0 && !existingAssignees.includes(claimant.toLowerCase())) {
+        result = { ok: false, error: "task is assigned to " + task.assignee + " — only that agent can claim it", status: 409, claimed_by: task.assignee }; return;
       }
       // Directly update in-place (no nested lock)
       const lines = raw.split("\n");
@@ -2897,18 +2907,20 @@ async function handleRequest(req, res) {
         if (cols.length < 2 || String(cols[0]) !== String(id)) continue;
         // Pad to full 10-column schema: ID|Title|Desc|Priority|Group|Assignee|Status|Created|Updated|Notes
         while (cols.length < 10) cols.push("");
-        cols[5] = claimant;  // assignee
+        // If task already has assigned agent(s), preserve them — only update status
+        if (existingAssignees.length === 0) cols[5] = claimant;  // assignee (only set if unassigned)
         cols[6] = "in_progress";  // status
         cols[8] = new Date().toISOString().slice(0, 10);  // updated
         lines[i] = "| " + cols.join(" | ") + " |";
         found = true;
         break;
       }
+      const finalAssignee = existingAssignees.length > 0 ? task.assignee : claimant;
       if (found) {
         fs.writeFileSync(tbPath, lines.join("\n"));
         cacheInvalidate("task_board");
-        result = { ok: true, id: parseTaskId(id), status: "in_progress", assignee: claimant };
-        broadcastWS("task_claimed", { id: parseTaskId(id), assignee: claimant });
+        result = { ok: true, id: parseTaskId(id), status: "in_progress", assignee: finalAssignee };
+        broadcastWS("task_claimed", { id: parseTaskId(id), assignee: finalAssignee });
       } else {
         result = { ok: false, error: "task row not found", status: 500 };
       }
@@ -3652,8 +3664,9 @@ async function handleRequest(req, res) {
       return acc;
     }, {});
     const tasksByAssignee = tasks.reduce((acc, t) => {
-      const a = (t.assignee || "unassigned").toLowerCase();
-      acc[a] = (acc[a] || 0) + 1;
+      const raw = (t.assignee || "").toLowerCase().trim();
+      const agents = raw ? raw.split(",").map(a => a.trim()).filter(Boolean) : ["unassigned"];
+      for (const a of agents) acc[a] = (acc[a] || 0) + 1;
       return acc;
     }, {});
     const totalTasks = tasks.length;

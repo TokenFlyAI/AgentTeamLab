@@ -13,8 +13,8 @@ find /tmp -maxdepth 1 -name ".taskboard_hook_${AGENT_NAME}_*[0-9]" -delete 2>/de
 
 [ ! -f "$TASKBOARD" ] && exit 0
 
-# Extract only open/in_progress rows (skip done/blocked/header/separator)
-ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *done *|\|| *cancelled *|")
+# Extract only open/in_progress rows (skip done/blocked/in_review/header/separator)
+ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *done *|\|| *cancelled *|\|| *in_review *|")
 
 [ -z "$ACTIVE" ] && exit 0
 
@@ -22,7 +22,7 @@ ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *
 # Match both sole "| name |" and comma-separated "| name,other |" / "| other,name |"
 MY_P0=$(echo "$ACTIVE" | grep -iE "critical|p0" | grep -iE "\| *${AGENT_NAME}[ ,|]|\|[^|]*,${AGENT_NAME}[ ,|]" | tail -10)
 
-# My latest assigned tasks (newest = highest row number = bottom of table), max 3
+# My latest assigned tasks (newest = highest row number = bottom of table), max 10
 MY_TASKS=$(echo "$ACTIVE" | grep -iE "\| *${AGENT_NAME}[ ,|]|\|[^|]*,${AGENT_NAME}[ ,|]" | tail -10)
 
 # Latest unassigned tasks (for self-assignment), max 3
