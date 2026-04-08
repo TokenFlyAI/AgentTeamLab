@@ -1110,7 +1110,9 @@ async function appendTaskRow(task) {
       newId = maxId + 1;
     }
     const now = new Date().toISOString().slice(0, 10);
-    const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.group || "all")} | ${sanitizeCell(task.assignee)} | ${sanitizeCell(task.status || "open")} | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
+    // Normalize multi-assignee: strip spaces around commas so "ivan, grace" → "ivan,grace"
+    const normalizedAssignee = (task.assignee || "").toLowerCase().split(",").map(a => a.trim()).filter(Boolean).join(",");
+    const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.group || "all")} | ${sanitizeCell(normalizedAssignee)} | ${sanitizeCell(task.status || "open")} | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
     
     // Determine which section to append to based on task_type
     const taskType = (task.task_type || "task").toLowerCase();
@@ -1172,7 +1174,7 @@ async function updateTaskRow(id, updates) {
         // Columns: ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes
         while (cols.length < 10) cols.push("");
         if (updates.status !== undefined) cols[6] = String(updates.status).toLowerCase();
-        if (updates.assignee !== undefined) cols[5] = sanitizeCell(String(updates.assignee).toLowerCase());
+        if (updates.assignee !== undefined) cols[5] = sanitizeCell(String(updates.assignee).toLowerCase().split(",").map(a => a.trim()).filter(Boolean).join(","));
         if (updates.group !== undefined) cols[4] = sanitizeCell(String(updates.group).toLowerCase());
         if (updates.priority !== undefined) cols[3] = String(updates.priority).toLowerCase();
         if (updates.title !== undefined) cols[1] = sanitizeCell(updates.title);
