@@ -1083,16 +1083,32 @@ async function appendTaskRow(task) {
     // Auto-archive done tasks when board exceeds 50 rows
     if (existing.length >= 50) archiveDoneTasks();
     const all = parseTaskBoard(); // re-read after potential archive
-    let maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id || t["#"] || "0", 10) || 0), 0);
-    // Also check task_outputs/ so deleted tasks don't get ID-reused (orphaned result files cause test failures)
-    const taskOutDir = path.join(PUBLIC_DIR, "task_outputs");
-    if (fs.existsSync(taskOutDir)) {
-      for (const f of listDir(taskOutDir)) {
-        const m = f.match(/^task[_-]?0*(\d+)[_-]/i);
-        if (m) maxId = Math.max(maxId, parseInt(m[1], 10) || 0);
+    // Determine ID type based on task_type — Directions get D-prefix, Instructions get I-prefix
+    const taskTypeForId = (task.task_type || "task").toLowerCase();
+    if (taskTypeForId === "direction") {
+      const maxDNum = all.reduce((m, t) => {
+        const dm = String(t.id || "").match(/^[Dd](\d+)$/);
+        return dm ? Math.max(m, parseInt(dm[1], 10) || 0) : m;
+      }, 0);
+      newId = "D" + String(maxDNum + 1).padStart(3, "0");
+    } else if (taskTypeForId === "instruction") {
+      const maxINum = all.reduce((m, t) => {
+        const im = String(t.id || "").match(/^[Ii](\d+)$/);
+        return im ? Math.max(m, parseInt(im[1], 10) || 0) : m;
+      }, 0);
+      newId = "I" + String(maxINum + 1).padStart(3, "0");
+    } else {
+      let maxId = all.reduce((m, t) => Math.max(m, parseInt(t.id || t["#"] || "0", 10) || 0), 0);
+      // Also check task_outputs/ so deleted tasks don't get ID-reused
+      const taskOutDir = path.join(PUBLIC_DIR, "task_outputs");
+      if (fs.existsSync(taskOutDir)) {
+        for (const f of listDir(taskOutDir)) {
+          const m = f.match(/^task[_-]?0*(\d+)[_-]/i);
+          if (m) maxId = Math.max(maxId, parseInt(m[1], 10) || 0);
+        }
       }
+      newId = maxId + 1;
     }
-    newId = maxId + 1;
     const now = new Date().toISOString().slice(0, 10);
     const row = `| ${newId} | ${sanitizeCell(task.title)} | ${sanitizeCell(task.description)} | ${sanitizeCell(task.priority || "medium")} | ${sanitizeCell(task.group || "all")} | ${sanitizeCell(task.assignee)} | ${sanitizeCell(task.status || "open")} | ${now} | ${now} | ${sanitizeCell(task.notes)} |`;
     
