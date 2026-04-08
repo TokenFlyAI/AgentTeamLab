@@ -542,13 +542,54 @@ if teammates:
         out.append("**Idle teammates**: {}".format(idle_str))
     out.append("")
 
-# Culture / consensus — agents need the full file to see all norms and sprint decisions
+# Culture / consensus — render as compact list to save ~800-1000 tokens vs full markdown table
+# Parses norms (C-prefix) and decisions (D-prefix) from the consensus.md table format.
+# Completed sprint decisions (D6 onward, marked with "COMPLETE" in content) are summarized.
 culture = d.get("culture")
 if culture:
-    if len(culture) > 12000:
-        culture = culture[:12000] + "\n...[truncated — call read_culture for the rest]"
-    out.append("### Culture & Decisions (consensus.md):")
-    out.append(culture)
+    import re as _re
+    out.append("### Culture & Decisions:")
+    norms = []
+    decisions = []
+    completed_sprints = []
+    # Parse markdown table rows: | ID | TYPE | Content | Date |
+    for row in culture.splitlines():
+        row = row.strip()
+        if not row.startswith('|') or '---' in row: continue
+        cells = [c.strip() for c in row.split('|')[1:-1]]
+        if len(cells) < 3: continue
+        id_col = cells[0]
+        content = cells[2] if len(cells) > 2 else ''
+        if not id_col or id_col.upper() in ('ID', 'TYPE') or not content: continue
+        # Compact: strip bold markers from content to save tokens
+        content = _re.sub(r'\*\*(.*?)\*\*', r'\1', content)
+        if _re.match(r'^C\d+$', id_col, _re.I):
+            norms.append('{}: {}'.format(id_col, content[:200]))
+        elif _re.match(r'^D\d+$', id_col, _re.I):
+            dnum = int(_re.match(r'^D(\d+)$', id_col, _re.I).group(1))
+            # D6-D12 are historical sprint records — summarize to save tokens
+            # D1-D5 are core strategy + D13+ are current/future — show in full
+            if 6 <= dnum <= 12:
+                sprint_match = _re.search(r'Sprint (\d+)', content)
+                sprint = 'Sprint {}'.format(sprint_match.group(1)) if sprint_match else 'D{}'.format(dnum)
+                if sprint not in completed_sprints:
+                    completed_sprints.append(sprint)
+            else:
+                decisions.append('D{}: {}'.format(dnum, content[:300]))
+    if norms:
+        out.append('Norms (C1-C{}):'.format(len(norms)))
+        out.extend('  ' + n for n in norms)
+    if completed_sprints:
+        def _sprint_key(s):
+            m = _re.search(r'\d+', s)
+            return int(m.group()) if m else 0
+        decisions.insert(0, 'Completed: {} (see read_culture for full history)'.format(', '.join(sorted(set(completed_sprints), key=_sprint_key))))
+    if decisions:
+        out.append('Decisions:')
+        out.extend('  ' + dec for dec in decisions)
+    if not norms and not decisions:
+        # Fallback: show raw culture if parsing fails (shouldn't happen)
+        out.append(culture[:8000] + ('\n...[truncated]' if len(culture) > 8000 else ''))
 
 print("\n".join(out))
 PYEOF

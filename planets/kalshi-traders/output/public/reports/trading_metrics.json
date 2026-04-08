@@ -1,9 +1,9 @@
 {
   "healthCheck": {
     "lastSuccess": null,
-    "consecutiveFailures": 1395,
-    "totalChecks": 1395,
-    "failedChecks": 1395
+    "consecutiveFailures": 1405,
+    "totalChecks": 1405,
+    "failedChecks": 1405
   },
   "trades": {
     "totalExecuted": 0,
