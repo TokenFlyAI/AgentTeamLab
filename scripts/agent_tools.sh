@@ -530,7 +530,7 @@ pipeline_status() {
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
-  echo "Blocker: T236 (Kalshi API credentials) — live trading pending"
+  echo "Blocker: Kalshi API credentials needed from Founder — register at kalshi.com/signup, export KALSHI_API_KEY. See dave/output/kalshi_credentials.md"
 }
 
 # ── Logging ──────────────────────────────────────────────────────────────────

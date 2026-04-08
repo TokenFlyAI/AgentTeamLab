@@ -354,14 +354,25 @@ for name, old, new_s in tm_changes:
     else:
         lines.append("{}: {} → {}.".format(name.capitalize(), old, new_s))
 
-# Culture / consensus changes — only new lines (not the full board)
+# Culture / consensus changes — only new entries (in compact format, not raw table lines)
 prev_culture = (prev.get("culture") or "").strip()
 curr_culture = (curr.get("culture") or "").strip()
 if curr_culture != prev_culture and curr_culture:
+    import re as _re
     prev_lines = set(prev_culture.splitlines())
-    new_lines = [l for l in curr_culture.splitlines() if l.strip() and l not in prev_lines]
-    if new_lines:
-        lines.append("Culture updated:\n" + "\n".join(new_lines))
+    new_rows = [l for l in curr_culture.splitlines() if l.strip() and l not in prev_lines and l.startswith('|')]
+    if new_rows:
+        new_entries = []
+        for row in new_rows:
+            cells = [c.strip() for c in row.split('|')[1:-1]]
+            if len(cells) < 3: continue
+            id_col = cells[0]
+            content = cells[2] if len(cells) > 2 else ''
+            if not id_col or id_col.upper() in ('ID', 'TYPE') or '---' in id_col: continue
+            content = _re.sub(r'\*\*(.*?)\*\*', r'\1', content)
+            new_entries.append("{}: {}".format(id_col, content[:200]))
+        if new_entries:
+            lines.append("Culture updated — new entries:\n" + "\n".join("  " + e for e in new_entries))
 
 if lines:
     print("---")
