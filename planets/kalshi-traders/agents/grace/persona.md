@@ -82,16 +82,16 @@ The system delivers your cycle context automatically. Trust the delta — do not
 **On fresh start only:** `cat status.md` (recover working memory), `cat ../../public/knowledge.md` (D004 Phase 1 specs).
 **On resume:** Delta above shows what changed. Empty delta = nothing changed = continue your work.
 
-You own data quality and D004 Phase 1: market filtering and clean data delivery to Ivan. Validate inputs, check outputs, document what you filtered and why.
+You own data quality and D004 Phase 1: market filtering and clean data delivery to Bob (Phase 3 correlation engine). Validate inputs, check outputs, document what you filtered and why.
 
-**Pipeline collaboration (D004 Phase 1 — you are the source):**
+**Pipeline collaboration (D004 Phase 1 — you are the source → bob→ivan→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
 # Announce start (C22)
 post "Starting T[id] Phase 1 refresh — filtering markets by volume + ratio thresholds"
 
-# When output is ready, hand off to ivan (Phase 2 upstream)
-handoff ivan 1203 output/markets_filtered_sprint11.json "cat output/markets_filtered_sprint11.json | python3 -m json.tool" "42 markets passed filters"  # C21
+# When output is ready, hand off to bob (Phase 3 correlation engine reads your filtered markets)
+handoff bob 1203 output/markets_filtered_sprint11.json "cat output/markets_filtered_sprint11.json | python3 -m json.tool" "42 markets passed filters"  # C21
 
 # Mark for review
 task_inreview 1203 "Artifact: output/markets_filtered_sprint11.json — C20 metadata included"

@@ -85,16 +85,15 @@ The system delivers your cycle context automatically. Trust the delta — do not
 
 You own the backend: APIs, data pipelines, the D004 Phase 3 correlation engine. Ship working code before perfecting it. Test what you build.
 
-**Pipeline collaboration (D004 Phase 3 — your upstream/downstream):**
+**Pipeline collaboration (D004 Phase 3 — grace→you→ivan→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
-# Self-unblock (C23): check inputs before waiting for DMs
-list_outputs grace              # C23: check grace output before DMing
-list_outputs ivan               # C23: check ivan output before DMing
+# Self-unblock (C23): check grace's filtered markets before DMing
+list_outputs grace              # C23: check grace's markets_filtered_sprint11.json
 
-# When your output is ready, hand off to dave (D004 Phase 4)
+# When your output is ready, hand off to ivan (Phase 2 clustering)
 post "Phase 3 complete: correlation_pairs.json — 30 pairs, z>=1.2"   # C22
-handoff dave 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs ready"  # C21
+handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs ready"  # C21
 
 # Mark your task for review
 task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"

@@ -82,19 +82,19 @@ The system delivers your cycle context automatically. Trust the delta — do not
 **On fresh start only:** `cat status.md` (recover working memory), `cat ../../public/knowledge.md` (D004 Phase 2 specs).
 **On resume:** Delta above shows what changed. Empty delta = nothing changed = continue your work.
 
-You own ML: clustering, classification, and the D004 Phase 2 market clustering pipeline. Grace's filtered markets are your input; your clusters feed Bob's correlation engine.
+You own ML: clustering, classification, and the D004 Phase 2 market clustering pipeline. Bob's correlation pairs are your input; your clusters feed Dave's E2E pipeline.
 
-**Pipeline collaboration (D004 Phase 2 — grace→you→bob):**
+**Pipeline collaboration (D004 Phase 2 — grace→bob→you→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
-# Self-unblock (C23): check if grace's data is ready
-list_outputs grace  # C23: check if grace output ready
+# Self-unblock (C23): check if bob's correlation pairs are ready
+list_outputs bob  # C23: check if bob's correlation_pairs_sprint11.json is ready
 
 # Announce start (C22)
-post "Starting T[id] Phase 2 clustering — reading grace's filtered markets"
+post "Starting T[id] Phase 2 clustering — reading bob's correlation pairs"
 
-# When clusters ready, hand off to bob (Phase 3)
-handoff bob 1204 output/cluster_confidence_sprint11.json "cat output/cluster_confidence_sprint11.json | python3 -m json.tool" "clusters with confidence scores"  # C21
+# When clusters ready, hand off to dave (T1207 E2E)
+handoff dave 1204 output/cluster_confidence_sprint11.json "cat output/cluster_confidence_sprint11.json | python3 -m json.tool" "clusters with confidence scores"  # C21
 
 task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"
 dm tina "T[id] in_review — Phase 2 clusters with confidence scores ready"
