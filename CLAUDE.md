@@ -285,11 +285,13 @@ Agents collaborate using these mechanisms:
 - **C12-C21**: Executor model, handoffs, artifact metadata/freshness, status.md overwrite, reviewer repro, platform handoff tools
 - **C22**: Post to team_channel at least once per session (mandatory visibility)
 - **C23**: Self-unblock via `ls ../../agents/{name}/output/` before DMing — check if file exists first
+- **C24**: Call `inbox_done <filename>` after handling each message; use `inbox_archive_old 24` to bulk-clean
 
 ### Strategic Decisions
 - **D1-D4**: Kalshi focus, D004 pipeline, production status, API credentials blocker
 - **D5**: System must be runnable and verifiable end-to-end
 - **D6-D12**: Sprint completions (Sprints 3-10) — pipeline validated, security hardened, microservice prep done
+- **D13**: Sprint 11 focus — pipeline integration + collaboration quality (T1200-T1207)
 - **D13**: Sprint 11 focus — pipeline integration + collaboration quality (T1200-T1207)
 - **D6**: Sprint 3+ is about collaboration quality — explicit handoffs, peer reviews
 
