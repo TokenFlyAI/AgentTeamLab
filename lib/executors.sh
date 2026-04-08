@@ -2,8 +2,8 @@
 # executors.sh — shared executor metadata and health helpers for shell scripts
 
 _AICOMPANY_SUPPORTED_EXECUTORS=(claude kimi codex gemini)
-_AICOMPANY_DEFAULT_EXECUTOR="codex"
-_AICOMPANY_DEFAULT_ENABLED_EXECUTORS="codex,gemini"
+_AICOMPANY_DEFAULT_EXECUTOR="gemini"
+_AICOMPANY_DEFAULT_ENABLED_EXECUTORS="gemini"
 
 _executor_config_path() {
     local base="${1:-}"

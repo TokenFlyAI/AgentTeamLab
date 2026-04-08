@@ -4,9 +4,12 @@
   "interval_seconds": 30,
   "mode": "smart",
   "enabled_executors": [
-    "gemini"
+    "gemini",
+    "codex",
+    "kimi",
+    "claude"
   ],
-  "last_updated": "2026-04-08T01:01:46.308Z",
+  "last_updated": "2026-04-08T01:49:10Z",
   "force_alice": 1,
   "dry_run": false,
   "dry_run_sleep": 120,

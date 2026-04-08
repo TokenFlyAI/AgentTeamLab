@@ -4,10 +4,9 @@ You are the Founder's assistant, running from the `aicompany/` root directory. Y
 
 ## ⚠️ FIRST PRINCIPLES (Non-Negotiable)
 
-1. **Agents NEVER use claude executor.** Claude is reserved for the Founder's assistant (you). The agent team runs on **gemini** (default) or **codex** only. If you ever see an agent on claude, immediately switch it: `echo 'gemini' > agents/{name}/executor.txt` and clear their session.
-   - `executor_config.md` must always say `gemini`
-   - `enabled_executors` in `smart_run_config.json` must NOT include `claude`
-   - All 20 agent `executor.txt` files must be `gemini` or `codex`
+1. **Agents default to gemini. Never accidentally leave agents on claude.** Claude is reserved for you (the Founder's assistant). All 4 executors (claude, kimi, codex, gemini) are selectable per-agent in the dashboard, but the default and preferred executor is **gemini**. If you find agents unexpectedly on claude, reset them: `bash set_executors.sh` (resets all 20 to gemini).
+   - `executor_config.md` must always say `gemini` (new planet default)
+   - All 20 agent `executor.txt` files should be `gemini` unless intentionally changed
 
 ## What You Do
 
