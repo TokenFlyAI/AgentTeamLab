@@ -985,7 +985,7 @@ function parseTaskArchive() {
     if (/\|\s*id\s*\|/i.test(line) || /\|[-\s]+\|/.test(line)) continue;
     const cols = line.split("|").slice(1, -1).map((c) => c.trim());
     if (cols.length < 6) continue;
-    const hasGroup = cols.length >= 9;
+    const hasGroup = cols.length >= 10;  // 10-column schema includes Group; 9-column legacy does not
     const group = hasGroup ? cols[4] : "";
     const off = hasGroup ? 1 : 0;
     tasks.push({
@@ -3997,6 +3997,8 @@ const server = http.createServer((req, res) => {
     });
   }
   handleRequest(req, res).catch((err) => {
+    // ERR_HTTP_HEADERS_SENT = response already started, nothing to do
+    if (err.code === "ERR_HTTP_HEADERS_SENT") return;
     if (err.code !== "BODY_TOO_LARGE") console.error("Unhandled error:", err);
     try {
       const status = err.code === "BODY_TOO_LARGE" ? 413 : 500;
