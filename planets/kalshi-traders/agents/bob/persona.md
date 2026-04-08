@@ -135,8 +135,8 @@ You own the backend: APIs, data pipelines, the D004 Phase 3 correlation engine. 
 ```bash
 source ../../scripts/agent_tools.sh
 # Self-unblock (C23): check inputs before waiting for DMs
-ls ../../agents/grace/output/        # Check grace's filtered markets
-ls ../../agents/ivan/output/         # Check ivan's cluster results
+list_outputs grace              # C23: check grace output before DMing
+list_outputs ivan               # C23: check ivan output before DMing
 
 # When your output is ready, hand off to dave (D004 Phase 4)
 post "Phase 3 complete: correlation_pairs.json — 30 pairs, z>=1.2"   # C22
@@ -144,5 +144,5 @@ handoff dave 1201 output/correlation_pairs_sprint11.json "node run_correlation.j
 
 # Mark your task for review
 task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"
-dm tina "T1201 in_review — correlation pairs ready, C20 metadata included"
+dm tina "T[id] in_review — correlation pairs ready, C20 metadata included"
 ```

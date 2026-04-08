@@ -21,6 +21,8 @@
 #   read_inbox                   — Show unread messages from chat_inbox
 #   inbox_done <filename>        — Mark an inbox message processed (move to processed/)
 #   read_peer <agent>            — Read another agent's status.md
+#   list_outputs [agent]         — List output files for an agent (C23: self-unblock)
+#   read_channel [n]             — Read last N team_channel posts (default 10)
 #   read_knowledge               — Read shared knowledge base
 #   read_culture                 — Read consensus norms and decisions
 #   add_culture norm|decision "text" — Append new entry to consensus.md
@@ -290,7 +292,7 @@ read_inbox() {
     [ -f "$f" ] || continue
     found=1
     echo "--- $(basename "$f") ---"
-    head -5 "$f"
+    head -30 "$f"
     echo ""
     (( count++ ))
     [ $count -ge 20 ] && break
@@ -391,6 +393,36 @@ read_peer() {
   tail -30 "$status_file"
 }
 
+list_outputs() {
+  # list_outputs [agent] — list deliverable files in an agent's output/ dir (default: self)
+  # C23: use this to self-unblock before DMing a teammate asking for a file
+  local agent="${1:-${_SELF:-}}"
+  [ -z "$agent" ] && echo "Usage: list_outputs <agent-name>" && return 1
+  local out_dir="${_AGENTS}/${agent}/output"
+  [ ! -d "$out_dir" ] && echo "No output dir for agent: ${agent}" && return 1
+  echo "=== ${agent} output/ ==="
+  ls -lh "${out_dir}/" 2>/dev/null | tail -n +2
+}
+
+read_channel() {
+  # read_channel [n] — read last N team_channel posts (default 10, max 50)
+  # Use this to stay informed about what teammates have posted
+  local n="${1:-10}"
+  [ "$n" -gt 50 ] 2>/dev/null && n=50
+  local channel="${_SHARED}/team_channel"
+  [ ! -d "$channel" ] && echo "team_channel directory not found" && return 1
+  local count=0
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    echo "--- $(basename "$f") ---"
+    head -10 "$f"
+    echo ""
+    count=$((count+1))
+    [ $count -ge "$n" ] && break
+  done < <(ls -t "$channel"/*.md 2>/dev/null | head -"$n")
+  [ $count -eq 0 ] && echo "No team_channel posts found"
+}
+
 read_knowledge() {
   cat "${_SHARED}/knowledge.md" 2>/dev/null || echo "knowledge.md not found"
 }
@@ -475,4 +507,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"

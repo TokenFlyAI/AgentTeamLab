@@ -41,18 +41,18 @@
 
 ### B. public/consensus.md (Culture & Decisions)
 - **Already injected into your context via live snapshot (full file). Do NOT re-read.**
-- Contains behavioral norms (C1-C23) and strategic decisions (D1-D13)
+- Contains behavioral norms (C1+) and strategic decisions (D1+). Check your live context for the latest sprint decisions.
 - **When to reference:** Before each decision point — use what's already in context
 - **Example behaviors to cite:**
   - C3: "Following C3: citing culture in decision — prioritizing D004 over other work"
   - C4: "Following C4: read Grace's status.md — she completed T343 markets_filtered.json, ready for Ivan"
   - C5: "Following C5: claiming T343 and moving to in_progress (don't skip to done)"
   - C6: "Following C6: referenced knowledge.md Phase 1 filtering algorithm"
-  - C22: "Following C22: posting to team_channel — starting T1203 Phase 1 data refresh"
+  - C22: "Following C22: posting to team_channel — starting my task"
   - C23: "Following C23: checking grace's output/ directly — no need to wait for DM"
 - **Decisions to align with:**
   - D2: D004 is north star — all decisions orient toward 4-phase pipeline
-  - D13: Sprint 11 — T1200-T1207 active, collaboration quality focus (see consensus.md)
+  - **Current sprint**: Check the `### Culture & Decisions` section in your live context snapshot
 
 ### C. agents/{other_agents}/status.md (Peer Coordination)
 - Read a teammate's status.md **only when** the delta reports they changed, or when actively handing off work
@@ -168,49 +168,18 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 
 ## 9. CRITICAL: CLOSE TASKS WHEN DONE (C7)
 
-**This is mandatory.** When you finish a task, you MUST close it immediately:
+**Mandatory.** Never leave finished work in open/in_progress. Use agent_tools.sh (faster than raw curl):
 
 ```bash
-# Mark task done with a result note
-curl -X PATCH http://localhost:3199/api/tasks/{TASK_ID} \
-  -H "Content-Type: application/json" \
-  -d '{"status":"done","notes":"Brief result: what you delivered"}'
+source ../../scripts/agent_tools.sh
+task_inreview 542 "Ready for review: output/report.md"   # Write deliverable → mark in_review → DM reviewer
+task_review 542 approve "Independently reproduced"        # Reviewers: approve (→ done)
+task_review 542 reject "Missing test coverage"            # Reviewers: reject (→ in_progress with feedback)
 ```
 
-**Why this matters:** If you don't close tasks, the task board shows stale work. Other agents can't see what's available. The Founder can't track progress. The whole civilization slows down.
-
-**Task completion flow:**
-1. Finish your work and write deliverable to `output/`
-2. Mark task as `in_review` (NOT `done`):
-   ```bash
-   curl -X PATCH http://localhost:3199/api/tasks/{TASK_ID} \
-     -H "Content-Type: application/json" \
-     -d '{"status":"in_review","notes":"Ready for review: [what you delivered]"}'
-   ```
-3. DM olivia or tina to review your deliverable
-4. They will approve (→ done) or reject (→ back to in_progress with feedback)
-
-**Reviewers (olivia, tina, alice):** To approve or reject a task:
-```bash
-# Approve — marks task done
-curl -X POST http://localhost:3199/api/tasks/{TASK_ID}/review \
-  -H "Content-Type: application/json" \
-  -d '{"verdict":"approve","reviewer":"olivia","comment":"Deliverable verified"}'
-
-# Reject — sends feedback to assignee, sets back to in_progress
-curl -X POST http://localhost:3199/api/tasks/{TASK_ID}/review \
-  -H "Content-Type: application/json" \
-  -d '{"verdict":"reject","reviewer":"olivia","comment":"Missing test coverage"}'
-```
-
-**Self-close exception:** If you are alice (lead coordinator), you may mark your own tasks done directly for coordination/report tasks.
-
-**Code integration:** After completing code tasks, also copy/merge your code into the shared codebase:
-```bash
-cp -r output/backend/* ../../output/shared/codebase/backend/ 2>/dev/null
-```
-
-**Never leave a task in open or in_progress when you've completed the work.**
+**Flow:** write deliverable → `task_inreview` → DM tina/olivia → they approve/reject → done.
+**Self-close exception:** alice may mark own coordination/report tasks done directly.
+**Code tasks:** also run `cp -r output/backend/* ../../output/shared/codebase/backend/ 2>/dev/null`
 
 ---
 
@@ -242,11 +211,13 @@ source ../../scripts/agent_tools.sh
 | `create_instruction "Title" "desc"` | Create a persistent Instruction (I-prefix, always-on context) |
 | `dm bob "Data is ready"` | Send DM to another agent |
 | `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |
-| `announce "Sprint 8 done"` | Post civilization-wide announcement |
+| `announce "Sprint complete"` | Post civilization-wide announcement |
 | `broadcast "Sprint complete"` | DM all agents simultaneously |
 | `read_inbox` | Read your unprocessed inbox messages |
 | `inbox_done <filename>` | Mark an inbox message as processed (move to processed/) |
 | `read_peer ivan` | Read another agent's status.md |
+| `list_outputs grace` | List grace's output files (C23: self-unblock before DMing) |
+| `read_channel 10` | Read last 10 team_channel posts |
 | `read_knowledge` | Read shared knowledge base |
 | `read_culture` | Read consensus norms and decisions |
 | `add_culture norm "What you learned"` | Add norm to consensus.md (use `decision` for decisions) |
@@ -257,70 +228,23 @@ source ../../scripts/agent_tools.sh
 
 ---
 
-## 11. COLLABORATION PLAYBOOK
-
-### When to DM (C9)
-DM a teammate when:
-- You finish work they depend on: `dm dave "signals.json ready — 15 signals, z=1.2 threshold"`
-- You're blocked waiting for their output: `dm bob "Need updated correlation_pairs.json to proceed"`
-- You found something wrong in their deliverable: `dm grace "data_chain_audit found 3 signals with missing Phase 1 trace"`
-
-### When to Post to Team Channel (C10, C22)
-Post to team_channel **at least twice per session** (C22 — mandatory visibility):
-- When you START a task: `post "Starting T1203 Phase 1 data refresh — filtering markets"`
-- When you FINISH: `post "T1203 done — markets_filtered_sprint11.json, 42 markets passed. DM'd bob."`
-- Bugs, blockers, or help: `post "WARNING: Phase 2 cluster output has NaN confidence scores — investigating"`
+## 11. COLLABORATION QUICK REFERENCE
 
 ```bash
 source ../../scripts/agent_tools.sh
-post "Sprint 11: starting T1201 Phase 3 correlation — pulling grace's filtered markets"
+post "Starting T[id] [task] — [plan]"              # C22: start announcement (MANDATORY)
+post "T[id] done — [deliverable]. DM'd [teammate]" # C22: completion announcement (MANDATORY)
+list_outputs grace                                  # C23: self-unblock before DMing
+dm dave "signals.json ready in output/"             # C9: handoff notification
+handoff ivan 542 output/pairs.json "node run.js"    # C21: formal handoff (DM+Post)
+read_peer bob                                       # C4: only when delta reports change
+cp combined.md ../../output/shared/merged/          # shared cross-agent deliverables
 ```
 
-### Self-Unblock Before DMing (C23)
-Before sending a DM asking for a file, check if it already exists:
-```bash
-ls ../../agents/grace/output/          # Check grace's deliverables
-ls ../../agents/bob/output/            # Check bob's deliverables
-```
-If the file is there → start work immediately. Only DM if missing.
-
-### How to Use the Handoff Tool (C21)
-When your work unblocks a teammate, use the `handoff` command:
-```bash
-source ../../scripts/agent_tools.sh
-handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs, z>=1.2"
-# This: (1) DMs ivan with artifact path + run command, (2) Posts to team_channel, (3) Reminds you to mark in_review
-```
-
-### How to Read Peers (C4)
-Read a teammate's status only when the delta reports a change or when you need to coordinate a handoff:
-```bash
-source ../../scripts/agent_tools.sh
-read_peer bob    # Only if delta reported bob changed, or you're handing off to him
-```
-Don't read peers speculatively — if nothing changed in the delta, nothing changed.
-
-### Task Review Flow (C11)
-```
-1. Finish work → write deliverable to output/
-2. Mark task in_review: curl -X PATCH .../api/tasks/{id} -d '{"status":"in_review"}'
-3. DM reviewer: dm olivia "T567 ready for review — signals.json in output/"
-4. Reviewer approves: POST /api/tasks/{id}/review {"verdict":"approve"}
-5. Or rejects with feedback: POST /api/tasks/{id}/review {"verdict":"reject","comment":"..."}
-```
-
-### Shared Output (cross-agent work)
-When your deliverable combines multiple agents' work:
-```bash
-# Write to shared output, not your personal output
-cp combined_report.md ../../output/shared/merged/sprint8_combined.md
-```
-
-**Key Principles:**
-1. **Transparency:** Show all your work in-progress (not just final done)
-2. **Coordination:** Read peers' status.md, hand off cleanly, DM on completion (C9)
-3. **Communication:** Post milestones to team_channel (C10), DM for handoffs
-4. **Reference:** Cite culture and knowledge when deciding
-5. **Review:** Mark in_review not done, get reviewer approval (C11)
-6. **Alignment:** Every decision threads back to strategic directions (D1-D13 + current sprint) or Founder priority
-7. **Completion:** Always close tasks via API when done (C7) — never leave orphaned work
+**Key rules:**
+1. **Post twice per task** (start + done) — silent agents are invisible (C22)
+2. **Check output/ before DMing** — self-unblock first (C23)
+3. **DM on completion** — don't leave teammates waiting (C9)
+4. **Mark in_review, not done** — get reviewer approval (C11)
+5. **Every decision cites culture** — D1+ north star, C3 always (C3)
+6. **Never leave tasks open** when work is done (C7)

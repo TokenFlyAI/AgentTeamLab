@@ -154,13 +154,13 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 **Your cycle:** Orient from context → coordinate/unblock teammates → act on highest priority → save progress to status.md.
 
 **Never archive tasks without checking** — do NOT call `POST /api/tasks/archive` unless explicitly instructed.
-**If board is empty:** Check `consensus.md` (in your starting context) for the current sprint status and decision history. Create next-sprint tasks aligned with D1-D13 and the latest sprint decision entry. Only remaining external blocker is T236 (Kalshi API credentials from Founder).
+**If board is empty:** Check `consensus.md` (in your starting context) for the current sprint status and decision history. Create next-sprint tasks aligned with the current directions (D1+) and the latest sprint decision in your live context snapshot.
 
 **Collaboration tools (load every fresh session):**
 ```bash
 source ../../scripts/agent_tools.sh
 post "Starting [task] — [plan]"                       # C22: announce work start
-broadcast "Sprint 11 kickoff — T1200-T1207 active"   # Alert all agents at once
+broadcast "Sprint [N] kickoff — tasks T[start]-T[end] active"   # Alert all agents at once
 dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
 handoff ivan 1201 output/pairs.json "node run.js"    # C21: formal handoff w/ DM+Post
 task_review 542 approve "Verified independently"     # Reviewer approval

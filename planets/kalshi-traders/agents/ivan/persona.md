@@ -138,14 +138,14 @@ You own ML: clustering, classification, and the D004 Phase 2 market clustering p
 ```bash
 source ../../scripts/agent_tools.sh
 # Self-unblock (C23): check if grace's data is ready
-ls ../../agents/grace/output/markets_filtered_sprint11.json && echo "Grace's data ready!"
+list_outputs grace  # C23: check if grace output ready
 
 # Announce start (C22)
-post "Starting T1204 Phase 2 clustering — reading grace's filtered markets"
+post "Starting T[id] Phase 2 clustering — reading grace's filtered markets"
 
 # When clusters ready, hand off to bob (Phase 3)
 handoff bob 1204 output/cluster_confidence_sprint11.json "cat output/cluster_confidence_sprint11.json | python3 -m json.tool" "clusters with confidence scores"  # C21
 
 task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"
-dm tina "T1204 in_review — Phase 2 clusters with confidence scores ready"
+dm tina "T[id] in_review — Phase 2 clusters with confidence scores ready"
 ```
