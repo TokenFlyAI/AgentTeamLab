@@ -451,6 +451,22 @@ def sender_from_filename(fn):
     m = re.search(r'from_(\w+)', fn)
     return m.group(1).capitalize() if m else fn
 
+def time_ago_from_filename(fn):
+    """Extract relative time (e.g. '2h ago') from filename like 2026_04_07_15_19_53_from_bob.md"""
+    import datetime
+    m = re.match(r'(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})', fn)
+    if not m: return ""
+    try:
+        ts = datetime.datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                               int(m.group(4)), int(m.group(5)), int(m.group(6)))
+        delta = datetime.datetime.now() - ts
+        secs = int(delta.total_seconds())
+        if secs < 0: return ""
+        if secs < 3600: return "{}m ago".format(secs // 60)
+        if secs < 86400: return "{}h ago".format(secs // 3600)
+        return "{}d ago".format(secs // 86400)
+    except: return ""
+
 out = []
 out.append("## Your Starting Context")
 out.append("")
@@ -534,7 +550,9 @@ tc = d.get("team_channel", [])
 if tc:
     out.append("**Recent team channel**:")
     for m in tc[-10:]:
-        out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
+        ago = time_ago_from_filename(m["filename"])
+        ts_str = " [{}]".format(ago) if ago else ""
+        out.append("  - {}{}: \"{}\"".format(sender_from_filename(m["filename"]), ts_str, m["preview"]))
     out.append("")
 
 # Announcements (last 3)
@@ -542,7 +560,9 @@ anns = d.get("announcements", [])
 if anns:
     out.append("**Recent announcements**:")
     for a in anns[-3:]:
-        out.append("  - {}: \"{}\"".format(sender_from_filename(a["filename"]), a["preview"]))
+        ago = time_ago_from_filename(a["filename"])
+        ts_str = " [{}]".format(ago) if ago else ""
+        out.append("  - {}{}: \"{}\"".format(sender_from_filename(a["filename"]), ts_str, a["preview"]))
     out.append("")
 
 # Teammates — show active/running ones in full; compress idle list to save tokens
