@@ -26,4 +26,4 @@
 | 1206 | QA gate: validate all Sprint 11 deliverables (T1200-T1205) | When any Sprint 11 task reaches in_review, validate each artifact: run artifact_validate on each file, verify C20 metadata, independently reproduce outputs. Approve or reject with specific evidence. Track all review results in output/sprint11_qa_log.md. | high | all | tina | open | 2026-04-08 | 2026-04-08 |  |
 | 1207 | E2E pipeline integration: run full D004 pipeline with Sprint 11 outputs | When T1203 (grace), T1201 (bob), T1204 (ivan) are done: chain the full 4-phase pipeline. Input: grace's filtered markets → bob's correlations → ivan's clusters → generate trade signals. Run replay harness. Write output/sprint11_e2e_results.md with P&L summary. DM alice and post to team_channel. | high | all | dave | open | 2026-04-08 | 2026-04-08 |  |
 
-| 1344 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1351 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |

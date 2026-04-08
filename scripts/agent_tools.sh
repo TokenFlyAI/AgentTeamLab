@@ -407,10 +407,11 @@ handoff() {
 
   [ ! -f "$path" ] && echo "Error: Artifact not found at $path" && return 1
 
-  # C20: warn if JSON artifact is missing metadata
+  # C20: auto-inject metadata if JSON artifact is missing it (prevents handoff rejection by QA)
   if [[ "$path" == *.json ]]; then
     if ! grep -q '"metadata"' "$path" 2>/dev/null || ! grep -q '"task_id"' "$path" 2>/dev/null; then
-      echo "Warning: $path is missing C20 metadata. Run: artifact_metadata $path $task_id"
+      echo "C20: Auto-injecting metadata into $path..."
+      artifact_metadata "$path" "$task_id" && echo "C20: Metadata injected." || echo "Warning: C20 metadata injection failed — verify manually."
     fi
   fi
 
