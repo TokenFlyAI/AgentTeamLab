@@ -322,6 +322,16 @@ for tid in removed_pr_ids:
     lines.append("{} ({}) is no longer in_review — resolved or reassigned.".format(
         fmt_task_id(t.get("id","")), t.get("title","")))
 
+# Unassigned task count change — tell agents when new claimable work arrives
+prev_ua = prev.get("unassigned_count", 0)
+curr_ua = curr.get("unassigned_count", 0)
+prev_my_tasks = len(prev.get("tasks", []))
+curr_my_tasks = len(curr.get("tasks", []))
+# Only surface if agent has no assigned tasks AND unassigned count grew
+if curr_my_tasks == 0 and curr_ua > prev_ua:
+    lines.append("{} unassigned task{} now available to claim — run `task_list` to see them.".format(
+        curr_ua, "s" if curr_ua != 1 else ""))
+
 # Teammate status changes
 prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
 curr_tm = {t["name"]: t["status"] for t in curr.get("teammates", [])}
@@ -459,15 +469,19 @@ if urgent:
         out.append("⚠️ {} MORE Founder/Lord messages not shown — process these first, then run `read_inbox` to see all.".format(urgent_more))
         out.append("")
 
-# Inbox previews
-total = inbox_obj.get("total_unread", 0)
+# Inbox previews (regular DMs only — urgent/founder messages shown separately above)
 msgs = inbox_obj.get("messages", [])
-more = inbox_obj.get("more", 0)
-if total > 0:
-    suffix = " ({} more not shown)".format(more) if more > 0 else ""
-    out.append("**Unread inbox** ({} messages{}):".format(total, suffix))
+regular_total = inbox_obj.get("regular_total", len(msgs))
+regular_more = inbox_obj.get("regular_more", 0)
+total_unread = inbox_obj.get("total_unread", 0)
+if regular_total > 0:
+    suffix = " ({} more not shown — run `read_inbox`)".format(regular_more) if regular_more > 0 else ""
+    out.append("**Unread inbox** ({} messages{}):".format(regular_total, suffix))
     for m in msgs:
         out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
+elif total_unread > 0:
+    # Only urgent messages, no regular DMs
+    out.append("**Unread inbox**: none (founder/urgent messages shown above)")
 else:
     out.append("**Unread inbox**: none")
 out.append("")

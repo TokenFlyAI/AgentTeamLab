@@ -2445,13 +2445,20 @@ async function handleRequest(req, res) {
 
     // Open tasks for this agent (task board cached 10s — task updates are critical, keep TTL short)
     const allTasks = cached("task_board", 10_000, () => parseTaskBoard());
-    const truncateDesc = t => ({
-      ...t,
-      // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
-      description: t.description && t.description.length > 300
-        ? t.description.slice(0, 300) + "…"
-        : t.description,
-    });
+    const truncateDesc = t => {
+      // Truncate long notes: show only last 300 chars (most recent progress update)
+      const notes = t.notes || "";
+      const truncNotes = notes.length > 300 ? "…" + notes.slice(-300) : notes;
+      return {
+        ...t,
+        // Truncate long descriptions (D004 is 2000+ chars) to save snapshot/delta tokens
+        description: t.description && t.description.length > 300
+          ? t.description.slice(0, 300) + "…"
+          : t.description,
+        // Truncate long notes (accumulated progress updates) to last 300 chars
+        notes: truncNotes,
+      };
+    };
     const tasks = allTasks
       .filter(t => {
         // Support comma-separated assignees (e.g. "ivan,grace") — check if agent is in the list
@@ -2537,7 +2544,9 @@ async function handleRequest(req, res) {
         urgent: urgentMessages,
         urgent_more: Math.max(0, urgentFiles.length - 2),  // extra urgent msgs beyond 2 shown
         messages: inboxPreviews,
-        // more = count of messages beyond what's shown (2 urgent + 15 regular)
+        regular_total: regularFiles.length,               // regular (non-urgent) message count
+        regular_more: Math.max(0, regularFiles.length - 15), // hidden regular messages
+        // Legacy: more = total hidden (urgent overflow + regular overflow)
         more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),
       },
       tasks,

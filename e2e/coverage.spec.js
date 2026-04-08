@@ -3869,3 +3869,83 @@ test.describe("GET /api/agents/:name/context — unassigned_count field", () => 
     expect(after.unassigned_count).toBe(baseline + 1);
   });
 });
+
+// ── Context endpoint: task notes truncation ──────────────────────────────────
+// Regression: task notes accumulate with " ;; " separators and could grow
+// unboundedly in the context snapshot. Now truncated to last 300 chars.
+test.describe("GET /api/agents/:name/context — task notes truncation", () => {
+  let _tempTaskId = null;
+
+  test.afterAll(async () => {
+    if (_tempTaskId) {
+      try { await apiDelete(`/api/tasks/${_tempTaskId}`); } catch (_) {}
+    }
+  });
+
+  test("context truncates long task notes to last 300 chars", async () => {
+    const longNotes = "note;; ".repeat(60); // ~420 chars
+    const { status: cs, body: created } = await apiPost("/api/tasks", {
+      title: "E2E test: notes truncation regression",
+      priority: "low",
+      assignee: "alice",
+      notes: longNotes,
+    });
+    expect(cs).toBe(201);
+    _tempTaskId = created.id;
+
+    const { body } = await apiGet("/api/agents/alice/context");
+    const task = (body.tasks || []).find(t => String(t.id) === String(_tempTaskId));
+    expect(task).toBeTruthy();
+    // Notes should be at most 301 chars (300 + leading ellipsis)
+    expect(task.notes.length).toBeLessThanOrEqual(301);
+    expect(task.notes.startsWith("…")).toBe(true);
+  });
+
+  test("context does not truncate short task notes", async () => {
+    const shortNotes = "short note";
+    const { status: cs, body: created } = await apiPost("/api/tasks", {
+      title: "E2E test: notes no-truncation",
+      priority: "low",
+      assignee: "alice",
+      notes: shortNotes,
+    });
+    expect(cs).toBe(201);
+    const tid = created.id;
+
+    try {
+      const { body } = await apiGet("/api/agents/alice/context");
+      const task = (body.tasks || []).find(t => String(t.id) === String(tid));
+      expect(task).toBeTruthy();
+      expect(task.notes).toBe(shortNotes);
+    } finally {
+      try { await apiDelete(`/api/tasks/${tid}`); } catch (_) {}
+    }
+  });
+});
+
+// ── Context endpoint: inbox regular_total / regular_more fields ──────────────
+// Bug fix: old `more` field combined urgent overflow + regular overflow, causing
+// agents to see "38 messages (33 more not shown)" with only 3 messages listed.
+// New fields: regular_total = only regular DM count; regular_more = hidden regular.
+test.describe("GET /api/agents/:name/context — inbox regular_total field", () => {
+  test("context inbox includes regular_total and regular_more fields", async () => {
+    const { status, body } = await apiGet("/api/agents/bob/context");
+    expect(status).toBe(200);
+    const inbox = body.inbox || {};
+    expect(typeof inbox.regular_total).toBe("number");
+    expect(typeof inbox.regular_more).toBe("number");
+    expect(inbox.regular_total).toBeGreaterThanOrEqual(0);
+    expect(inbox.regular_more).toBeGreaterThanOrEqual(0);
+    // regular_more must be <= regular_total (can't have more hidden than total)
+    expect(inbox.regular_more).toBeLessThanOrEqual(inbox.regular_total);
+  });
+
+  test("regular_total equals number of non-urgent messages in inbox", async () => {
+    const { body } = await apiGet("/api/agents/bob/context");
+    const inbox = body.inbox || {};
+    // regular_total + urgent count should equal total_unread
+    const urgentShown = (inbox.urgent || []).length;
+    const urgentTotal = urgentShown + (inbox.urgent_more || 0);
+    expect(inbox.total_unread).toBe(urgentTotal + inbox.regular_total);
+  });
+});
