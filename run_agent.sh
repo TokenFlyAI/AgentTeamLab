@@ -74,7 +74,7 @@ if [ -z "$SESSION_MAX_CYCLES" ] && [ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/sm
     _cfg_cycles=$(jq -r '.session_max_cycles // 20' "${SHARED_DIR:-${COMPANY_DIR}/public}/smart_run_config.json" 2>/dev/null)
     echo "$_cfg_cycles" | grep -qE '^[0-9]+$' && SESSION_MAX_CYCLES="$_cfg_cycles"
 fi
-SESSION_MAX_CYCLES="${SESSION_MAX_CYCLES:-20}"
+SESSION_MAX_CYCLES="${SESSION_MAX_CYCLES:-100}"
 
 # Read saved state (best-effort, never abort on failure)
 SAVED_SESSION_ID=""
