@@ -164,6 +164,8 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 3. Your assigned open/in_progress tasks (from task board)
 4. Unassigned tasks you can claim (if no assigned work)
 
+**After handling any message**: call `inbox_done <filename>` to move it to processed/. This keeps your inbox clean and prevents the backlog from growing unboundedly. CEO/Lord messages are never auto-archived — you must `inbox_done` them manually after acting on them.
+
 ---
 
 ## 9. CRITICAL: CLOSE TASKS WHEN DONE (C7)
