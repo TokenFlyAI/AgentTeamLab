@@ -79,7 +79,12 @@ done
 echo ""
 [ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/company_mode.md" ] && echo -e "Mode: ${CYAN}$(grep '^\*\*' "${SHARED_DIR:-${COMPANY_DIR}/public}/company_mode.md" | head -1 | tr -d '*')${NC}"
 
-[ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" ] && echo "Tasks: $(grep "^|" "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" | grep -v "^| ID\|^|--" | wc -l | tr -d ' ') total"
+if [ -f "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" ]; then
+    _BOARD="${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md"
+    _ACTIVE=$(grep "^|" "$_BOARD" | grep -v "^| ID\|^|--" | grep -iv "| *done *|\|| *cancelled *|" | wc -l | tr -d ' ')
+    _INPROG=$(grep "^|" "$_BOARD" | grep -v "^| ID\|^|--" | grep -i "| *in_progress *|" | wc -l | tr -d ' ')
+    echo "Tasks: ${_ACTIVE} active (${_INPROG} in progress)"
+fi
 
 echo ""
 echo -e "Legend: ${GREEN}RUNNING${NC}=working  ${YELLOW}IDLE${NC}=waiting  ${BLUE}DREAMING${NC}=system task"

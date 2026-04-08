@@ -404,7 +404,7 @@ add_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 10: Phase B deploy + security hardening) ==="
+  echo "=== D004 Pipeline Status ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
@@ -430,7 +430,7 @@ pipeline_status() {
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
-  echo "Sprint 10 (Phase B deploy + security hardening):"
+  echo "Phase B (deploy + security hardening):"
   _check_file "T1038 correlation_engine security fixes (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/t1038_security_fixes.md"
   _check_file "T1041 microservice deploy (eve)" "${PLANET_DIR:-${_AGENTS}/..}/output/eve/t1041_deploy_report.md"
   _check_file "T1045 HMAC inter-service auth (heidi)" "${PLANET_DIR:-${_AGENTS}/..}/output/heidi/t1045_hmac_auth.md"

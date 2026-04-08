@@ -4109,7 +4109,7 @@ function renderTasks() {
         (t.assignee && t.status === 'done' ?
           '<button onclick="viewTaskResult(' + idForOnclick + ')" style="background:#1a3a1a;border:1px solid #1a5a1a;color:#00ff88;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View task-specific result file">📄 Result</button>' : '') +
         (t.assignee && t.status === 'in_progress' ?
-          '<button onclick="openAgentModal(\'' + esc(t.assignee) + '\'); setTimeout(()=>{ document.querySelector(\'[data-mtab=cycles]\')&&document.querySelector(\'[data-mtab=cycles]\').click(); }, 400);" style="background:#1a2a0a;border:1px solid #3a5a1a;color:#aaff44;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View cycle progress for ' + esc(t.assignee) + '">⏳ Progress</button>' : '') +
+          (function() { var _pa = (t.assignee || '').split(',')[0].trim(); return '<button onclick="openAgentModal(\'' + esc(_pa) + '\'); setTimeout(()=>{ document.querySelector(\'[data-mtab=cycles]\')&&document.querySelector(\'[data-mtab=cycles]\').click(); }, 400);" style="background:#1a2a0a;border:1px solid #3a5a1a;color:#aaff44;cursor:pointer;font-size:0.7rem;padding:2px 7px;border-radius:3px;margin-right:4px;" title="View cycle progress for ' + esc(_pa) + '">⏳ Progress</button>'; })() : '') +
         '<button onclick="deleteTask(' + idForOnclick + ')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;padding:2px 6px;" title="Delete task">✕</button>' +
       '</td>' +
     '</tr>';
