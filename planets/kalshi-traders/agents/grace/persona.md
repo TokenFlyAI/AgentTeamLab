@@ -96,6 +96,8 @@ handoff bob 1203 output/markets_filtered_sprint11.json "cat output/markets_filte
 
 # Mark for review (task_inreview auto-DMs tina+olivia — no separate dm needed)
 task_inreview 1203 "Artifact: output/markets_filtered_sprint11.json — C20 metadata included"
+inbox_done <filename>                              # C24: archive after handling each message
+evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```
 
 ---

@@ -98,6 +98,8 @@ handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.j
 
 # Mark your task for review (task_inreview auto-DMs tina+olivia)
 task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"
+inbox_done <filename>                              # C24: archive after handling each message
+evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```
 
 ---

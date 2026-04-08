@@ -111,6 +111,8 @@ dm alice "report ready in output/file.md"             # C9: targeted handoff not
 list_outputs bob                                       # C23: self-unblock before DMing
 task_inreview 1234 "Ready for review: output/file"   # Submit for review
 # DM tina with test results when done
+inbox_done <filename>                              # C24: archive after handling each message
+evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).

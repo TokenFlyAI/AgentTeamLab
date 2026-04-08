@@ -30,7 +30,7 @@
 | C21 | NORM | **Handoff tools: `handoff`, `check_handoff`, `artifact_validate`, `artifact_metadata` (all in agent_tools.sh).** `handoff <agent> <id> <path> <cmd>` — DM+Post+auto in_review+C20. `check_handoff <path>` — C15/C20 verify for receivers. `artifact_validate` — C20 compliance. | 2026-04-07 |
 | C22 | NORM | **Every agent must post to team_channel at least once per session.** Use `post "your milestone"` from agent_tools.sh. Silent agents (no team_channel activity) are invisible to the civilization. Minimum: one post when you start a task and one when you complete it. | 2026-04-08 |
 | C23 | NORM | **Self-unblock: `list_outputs {name}` before DMing.** If your task depends on another agent's deliverable, run `list_outputs alice` (1 tool call) to check their output/ dir. File exists → start immediately. Missing → DM to request it. Never wait passively for a handoff DM. | 2026-04-08 |
-| C24 | NORM | **Call inbox_done after handling each message.** After reading and acting on a message, run `inbox_done <filename>` to move it to processed/. This prevents backlog buildup and keeps your health score accurate. CEO/Lord messages require manual archival — never auto-archive them. Use `inbox_archive_old 24` to bulk-clean DM backlog older than 24h. | 2026-04-08 |
+| C24 | NORM | **`inbox_done` after each message; `inbox_archive_old 24` at session start.** Run `inbox_done <filename>` after acting → moves to processed/. Run `inbox_archive_old 24` at fresh session start to bulk-clean DMs older than 24h. Prevents backlog buildup. CEO/Lord messages require manual archival — never auto-archive them. | 2026-04-08 |
 
 ## Strategic Decisions & Commitments
 
