@@ -458,7 +458,8 @@ test.describe("POST /api/ceo/command", () => {
   });
 
   test("routes @mention to agent inbox", async () => {
-    const { status, body } = await apiPost("/api/ceo/command", { command: "@alice E2E test ping" });
+    // Use unique message to avoid dedup (dedup blocks identical messages within 30 min)
+    const { status, body } = await apiPost("/api/ceo/command", { command: `@alice E2E test ping ${Date.now()}` });
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.action).toBe("dm");
@@ -484,7 +485,9 @@ test.describe("POST /api/ceo/command", () => {
   });
 
   test("routes plain text to alice inbox", async () => {
-    const { status, body } = await apiPost("/api/ceo/command", { command: "Please review the task board" });
+    // Use a unique message to avoid dedup (dedup blocks identical messages within 30 min)
+    const uniqueCmd = `test command ${Date.now()}`;
+    const { status, body } = await apiPost("/api/ceo/command", { command: uniqueCmd });
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.action).toBe("routed_to_alice");
