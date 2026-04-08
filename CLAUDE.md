@@ -457,7 +457,7 @@ npx playwright test e2e/message_bus.spec.js
 
 Test files: `e2e/api.spec.js` (57 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (64 tests), `e2e/coverage.spec.js` (406 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests), `e2e/planet_create.spec.js` (1 test), `e2e/ui_verify.spec.js` (20 tests)
 
-**Total: 651 tests** — typical run: ~628 passed / ~20 skipped / ~3 expected failures from `smart_run.spec.js` (button-state + fleet-panel tests require live running agents)
+**Total: 651 tests** — typical run: ~631 passed / ~20 skipped / 0 failures
 
 **Known flaky:**
 - `smart_run.spec.js` — button state tests require real running agents (excluded from count above)
