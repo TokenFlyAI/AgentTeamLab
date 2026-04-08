@@ -782,8 +782,8 @@ function computeAgentHealth(agent, velocityData) {
                                    dimensions.heartbeat = { score: 15, detail: `status=${agent.status}, no heartbeat` };
   else                             dimensions.heartbeat = { score: 5,  detail: "offline/unknown" };
 
-  // Activity (25 pts) — inbox backlog
-  const inbox = agent.unread_messages || 0;
+  // Activity (25 pts) — inbox backlog (regular DMs only; CEO/lord msgs can't be auto-archived)
+  const inbox = agent.regular_unread_messages ?? (agent.unread_messages || 0);
   if (inbox === 0)       dimensions.activity = { score: 25, detail: "inbox clear" };
   else if (inbox <= 2)   dimensions.activity = { score: 20, detail: `${inbox} unread (light backlog)` };
   else if (inbox <= 5)   dimensions.activity = { score: 15, detail: `${inbox} unread (moderate backlog)` };
@@ -1498,7 +1498,8 @@ async function handleRequest(req, res) {
         const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
         const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
         const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
-        const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+        const regularInboxFiles = inboxFiles.filter(f => !f.includes("from_ceo") && !f.includes("from_lord"));
+        const agentData = { ...summary, alive, unread_messages: inboxFiles.length, regular_unread_messages: regularInboxFiles.length };
         const health = computeAgentHealth(agentData, velocityData);
         const executor = getExecutorForAgent(name);
         return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
@@ -1576,7 +1577,8 @@ async function handleRequest(req, res) {
         const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
         const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
         const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
-        const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+        const regularInboxFiles = inboxFiles.filter(f => !f.includes("from_ceo") && !f.includes("from_lord"));
+        const agentData = { ...summary, alive, unread_messages: inboxFiles.length, regular_unread_messages: regularInboxFiles.length };
         const health = computeAgentHealth(agentData, velocityData);
         const executor = getExecutorForAgent(name);
         return { ...agentData, health: { score: health.score, grade: health.grade, dimensions: health.dimensions }, executor };
@@ -2677,7 +2679,8 @@ async function handleRequest(req, res) {
     const hbMtime = fileMtime(path.join(d, "heartbeat.md"));
     const alive = Boolean(hbMtime && Date.now() - hbMtime < 5 * 60 * 1000) || summary.status === "running";
     const inboxFiles = listDir(path.join(d, "chat_inbox")).filter((f) => !f.startsWith("read_") && !f.startsWith("processed_") && f.endsWith(".md") && !f.endsWith(".processed.md"));
-    const agentData = { ...summary, alive, unread_messages: inboxFiles.length };
+    const regularInboxFiles = inboxFiles.filter(f => !f.includes("from_ceo") && !f.includes("from_lord"));
+    const agentData = { ...summary, alive, unread_messages: inboxFiles.length, regular_unread_messages: regularInboxFiles.length };
     const velocityData = buildVelocityData();
     const health = computeAgentHealth(agentData, velocityData);
     return json(res, health);
