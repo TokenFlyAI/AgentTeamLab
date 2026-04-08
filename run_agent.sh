@@ -620,13 +620,13 @@ if teammates:
 
 # Culture / consensus — render as compact list to save ~800-1000 tokens vs full markdown table
 # Parses norms (C-prefix) and decisions (D-prefix) from the consensus.md table format.
-# Completed sprint decisions (D6 onward, marked with "COMPLETE" in content) are summarized.
+# Strategy: D1-D5 = core (always shown), D6+ sprint records = compress all but 2 most recent.
 culture = d.get("culture")
 if culture:
     import re as _re
     out.append("### Culture & Decisions:")
     norms = []
-    decisions = []
+    all_d_entries = []  # [(dnum, content)] in order
     completed_sprints = []
     # Parse markdown table rows: | ID | TYPE | Content | Date |
     for row in culture.splitlines():
@@ -643,15 +643,23 @@ if culture:
             norms.append('{}: {}'.format(id_col, content[:200]))
         elif _re.match(r'^D\d+$', id_col, _re.I):
             dnum = int(_re.match(r'^D(\d+)$', id_col, _re.I).group(1))
-            # D6-D12 are historical sprint records — summarize to save tokens
-            # D1-D5 are core strategy + D13+ are current/future — show in full
-            if 6 <= dnum <= 12:
-                sprint_match = _re.search(r'Sprint (\d+)', content)
-                sprint = 'Sprint {}'.format(sprint_match.group(1)) if sprint_match else 'D{}'.format(dnum)
-                if sprint not in completed_sprints:
-                    completed_sprints.append(sprint)
-            else:
-                decisions.append('D{}: {}'.format(dnum, content[:300]))
+            all_d_entries.append((dnum, content))
+    # Determine which sprint decisions to compress:
+    # D1-D5 = core strategy (always shown in full)
+    # D6+ = sprint records — compress all but 2 most recent to save tokens
+    sprint_dnums = sorted([d for d, _ in all_d_entries if d >= 6])
+    # Keep 2 most recent sprint decisions in full; compress the rest
+    compress_cutoff = sprint_dnums[-2] if len(sprint_dnums) >= 2 else (sprint_dnums[0] if sprint_dnums else 999)
+    decisions = []
+    for dnum, content in all_d_entries:
+        if dnum >= 6 and dnum < compress_cutoff:
+            # Compress: extract sprint number for summary line
+            sprint_match = _re.search(r'Sprint (\d+)', content)
+            sprint = 'Sprint {}'.format(sprint_match.group(1)) if sprint_match else 'D{}'.format(dnum)
+            if sprint not in completed_sprints:
+                completed_sprints.append(sprint)
+        else:
+            decisions.append('D{}: {}'.format(dnum, content[:300]))
     if norms:
         out.append('Norms (C1-C{}):'.format(len(norms)))
         out.extend('  ' + n for n in norms)
