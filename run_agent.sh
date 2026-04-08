@@ -599,6 +599,9 @@ if tc:
         ts_str = " [{}]".format(ago) if ago else ""
         out.append("  - {}{}: \"{}\"".format(sender_from_filename(m["filename"]), ts_str, m["preview"]))
     out.append("")
+else:
+    out.append("**Team channel**: no posts yet this sprint — post your start message (C22: `post \"Starting T[id]...\"`)!")
+    out.append("")
 
 # Announcements (last 3)
 anns = d.get("announcements", [])

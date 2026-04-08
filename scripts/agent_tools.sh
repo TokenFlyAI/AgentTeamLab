@@ -31,6 +31,7 @@
 #   artifact_validate <path> ... — Validate artifact (C15/C16/C20)
 #   artifact_metadata <path> <id> — Inject C20 metadata into JSON
 #   handoff <agent> <id> <p> <c> — C16-compliant handoff (DM + Post)
+#   collab_status                — Show per-agent team_channel post counts + inbox DM backlog
 
 # Handle both bash and zsh
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
@@ -567,7 +568,8 @@ sprint_status() {
   # sprint_status — Show current active task states + pipeline output file status
   # Useful for Sam (velocity), Alice (coordination), Tina (QA gate)
   echo "=== Current Sprint Tasks ==="
-  echo "Pipeline: grace(T1203) → bob(T1201) → ivan(T1204) → dave(T1207)"
+  # Dynamic pipeline: show D004 agents' current open tasks (not hardcoded IDs)
+  echo "Pipeline order: grace → bob → ivan → dave (D004 phases 1→3→2→4)"
   echo ""
   curl -s "${_API}/api/tasks" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
 import sys, json, re
@@ -594,6 +596,48 @@ for t in active:
   pipeline_status 2>/dev/null | grep -E "✓|✗" | head -8
 }
 
+collab_status() {
+  # collab_status — Show per-agent collaboration activity (C22: team_channel posts, inbox DMs)
+  # Useful for Alice (T1200 audit), Sam (T1205 velocity), and any agent checking civilization health
+  local channel="${_SHARED}/team_channel"
+  echo "=== Collaboration Status ==="
+  echo ""
+  echo "Team channel posts (current sprint — not archived):"
+  # Count posts per agent from current team_channel dir
+  python3 -c "
+import os, re, sys
+channel = sys.argv[1]
+counts = {}
+if os.path.isdir(channel):
+    for f in os.listdir(channel):
+        if not f.endswith('.md'): continue
+        m = re.search(r'_from_(\w+)\.md$', f)
+        if m:
+            agent = m.group(1).lower()
+            counts[agent] = counts.get(agent, 0) + 1
+if counts:
+    for ag, cnt in sorted(counts.items(), key=lambda x: -x[1]):
+        bar = '█' * min(cnt, 20)
+        print(f'  {ag:12s} {cnt:3d} {bar}')
+else:
+    print('  (none — sprint just started or all archived)')
+" "$channel" 2>/dev/null
+  echo ""
+  echo "Agent inbox DM backlog (unprocessed messages):"
+  for agent_dir in "${_AGENTS}"/*/; do
+    ag=$(basename "$agent_dir")
+    inbox="${agent_dir}chat_inbox"
+    if [ -d "$inbox" ]; then
+      # Count unread non-CEO messages
+      cnt=$(find "$inbox" -maxdepth 1 -name "*.md" ! -name "*from_ceo*" ! -name "*from_lord*" 2>/dev/null | wc -l | tr -d ' ')
+      if [ "${cnt:-0}" -gt 0 ]; then
+        echo "  ${ag}: ${cnt} unread DMs"
+      fi
+    fi
+  done
+  echo ""
+}
+
 evolve_persona() {
   # evolve_persona "What I learned or how I've grown" — document persona evolution
   # Appends a timestamped evolution entry to your own persona.md via the API.
@@ -616,4 +660,4 @@ except: print('Error parsing response')
 " 2>/dev/null
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, sprint_status, evolve_persona, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, sprint_status, collab_status, evolve_persona, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"

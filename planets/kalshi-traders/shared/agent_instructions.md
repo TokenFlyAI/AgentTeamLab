@@ -229,6 +229,7 @@ source ../../scripts/agent_tools.sh
 | `add_culture norm "What you learned"` | Add norm to consensus.md (use `decision` for decisions) |
 | `pipeline_status` | Check D004 phase file status (per-agent output paths) |
 | `sprint_status` | Show current sprint task states + pipeline chain (○ open ⟳ in_progress ◎ in_review ✓ done) |
+| `collab_status` | Show per-agent team_channel post counts + DM backlog (C22 compliance check — who's visible, who's silent) |
 | `evolve_persona "observation"` | Append a timestamped evolution entry to your own persona.md — document learnings, refined approaches, sprint insights |
 | `log_progress "Fixed bug X"` | Write timestamped note to logs/progress.log (NOT status.md — C18) |
 
@@ -241,6 +242,7 @@ source ../../scripts/agent_tools.sh
 ```bash
 source ../../scripts/agent_tools.sh
 sprint_status                                       # See current sprint task states + pipeline ○⟳◎✓
+collab_status                                       # C22 audit: who posted to team_channel, DM backlog
 post "Starting T[id] [task] — [plan]"              # C22: start announcement (MANDATORY)
 post "T[id] done — [deliverable]. DM'd [teammate]" # C22: completion announcement (MANDATORY)
 list_outputs grace                                  # C23: self-unblock before DMing
