@@ -460,7 +460,6 @@ total = inbox.get("total_unread", 0)
 msgs = inbox.get("messages", [])
 more = inbox.get("more", 0)
 if total > 0:
-    shown = len(urgent) + len(msgs)
     suffix = " ({} more not shown)".format(more) if more > 0 else ""
     out.append("**Unread inbox** ({} messages{}):".format(total, suffix))
     for m in msgs:
