@@ -590,4 +590,26 @@ for tid in order:
   pipeline_status 2>/dev/null | grep -E "✓|✗" | head -8
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, sprint_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"
+evolve_persona() {
+  # evolve_persona "What I learned or how I've grown" — document persona evolution
+  # Appends a timestamped evolution entry to your own persona.md via the API.
+  # Use this when you've developed new insights, refined your approach, or learned from a sprint.
+  local observation="$1"
+  [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
+  [ -z "$observation" ] && echo "Usage: evolve_persona \"What I learned or how I've grown this sprint\"" && return 1
+  local body
+  body=$(python3 -c "import json,sys; print(json.dumps({'observation':sys.argv[1]}))" "$observation")
+  curl -s -X PATCH "${_API}/api/agents/${_SELF}/persona" \
+    -H "Content-Type: application/json" \
+    -H "${_AUTH_HEADER}" \
+    -d "$body" 2>/dev/null | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  if d.get('ok'): print('Persona evolution logged at ' + d.get('timestamp','?'))
+  else: print('Failed: ' + d.get('error','unknown'))
+except: print('Error parsing response')
+" 2>/dev/null
+}
+
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, sprint_status, evolve_persona, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"

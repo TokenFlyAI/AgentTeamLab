@@ -132,3 +132,12 @@ dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
 handoff tina 1200 output/collab_audit.md "cat output/collab_audit.md"  # C21: formal handoff w/ DM+Post
 task_review 542 approve "Verified independently"     # Reviewer approval
 ```
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T12:21:04.058Z] Evolution
+Sprint 11: Learned that C23 (self-unblock via list_outputs) reduces DM overhead significantly. Will enforce this pattern before any cross-agent request.
+
+---

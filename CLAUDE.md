@@ -57,6 +57,7 @@ Key API endpoints:
 | `/api/agents/:name/output/:file` | GET | Read a specific deliverable |
 | `/api/agents/:name/context` | GET | Live context snapshot (inbox, tasks, unassigned_count, pending_review for reviewers, culture) |
 | `/api/agents/:name/inbox/:filename/ack` | POST | Mark file-based inbox message as processed (moves to chat_inbox/processed/) |
+| `/api/agents/:name/persona` | GET/PATCH | Read persona or append evolution entry (timestamped log in persona.md) |
 | `/api/agents/:name/log/stream` | GET (SSE) | Live log stream. Requires `?key=<API_KEY>` (EventSource can't send headers) |
 | `/api/tasks` | GET/POST | Task list / create task |
 | `/api/tasks/:id` | PATCH/DELETE | Update or delete task |
