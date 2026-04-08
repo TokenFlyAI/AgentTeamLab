@@ -19,10 +19,11 @@ ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *
 [ -z "$ACTIVE" ] && exit 0
 
 # P0/critical assigned to me — always show, urgent
-MY_P0=$(echo "$ACTIVE" | grep -iE "critical|p0" | grep -i "| *${AGENT_NAME} *|" | tail -10)
+# Match both sole "| name |" and comma-separated "| name,other |" / "| other,name |"
+MY_P0=$(echo "$ACTIVE" | grep -iE "critical|p0" | grep -iE "\| *${AGENT_NAME}[ ,|]|\|[^|]*,${AGENT_NAME}[ ,|]" | tail -10)
 
 # My latest assigned tasks (newest = highest row number = bottom of table), max 3
-MY_TASKS=$(echo "$ACTIVE" | grep -i "| *${AGENT_NAME} *|" | tail -10)
+MY_TASKS=$(echo "$ACTIVE" | grep -iE "\| *${AGENT_NAME}[ ,|]|\|[^|]*,${AGENT_NAME}[ ,|]" | tail -10)
 
 # Latest unassigned tasks (for self-assignment), max 3
 # Use awk to check the Assignee column (field 7 when split by |) precisely.
