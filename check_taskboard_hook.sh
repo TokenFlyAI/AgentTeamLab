@@ -16,7 +16,17 @@ find /tmp -maxdepth 1 -name ".taskboard_hook_${AGENT_NAME}_*[0-9]" -delete 2>/de
 # Extract only open/in_progress rows (skip done/blocked/in_review/header/separator)
 ACTIVE=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -iv "| *done *|\|| *cancelled *|\|| *in_review *|")
 
-[ -z "$ACTIVE" ] && exit 0
+# For reviewer agents: also collect in_review rows to show pending reviews
+REVIEWER_NAMES="tina olivia alice"
+IN_REVIEW_TASKS=""
+for _rname in $REVIEWER_NAMES; do
+    if [ "$AGENT_NAME" = "$_rname" ]; then
+        IN_REVIEW_TASKS=$(grep "^|" "$TASKBOARD" | grep -iv "^| id\|^|--\|^| ---" | grep -i "| *in_review *|" || true)
+        break
+    fi
+done
+
+[ -z "$ACTIVE" ] && [ -z "$IN_REVIEW_TASKS" ] && exit 0
 
 # P0/critical assigned to me — always show, urgent
 # Match both sole "| name |" and comma-separated "| name,other |" / "| other,name |"
@@ -57,6 +67,9 @@ if [ -n "$MY_TASKS" ]; then
 fi
 if [ -z "$MY_TASKS" ] && [ -n "$UNASSIGNED" ]; then
     OUTPUT="${OUTPUT}=== LATEST UNASSIGNED TASKS (claim one) ===\n$(echo "$UNASSIGNED" | truncate_rows)\n\n"
+fi
+if [ -n "$IN_REVIEW_TASKS" ]; then
+    OUTPUT="${OUTPUT}=== TASKS AWAITING YOUR REVIEW (in_review) ===\n$(echo "$IN_REVIEW_TASKS" | truncate_rows)\n\n"
 fi
 
 [ -z "$OUTPUT" ] && exit 0

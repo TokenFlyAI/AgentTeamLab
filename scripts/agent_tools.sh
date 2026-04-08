@@ -469,7 +469,7 @@ pipeline_status() {
     fi
   }
   echo "Phase 1 (Market Filter — grace/bob):"
-  _check_file "filtered_markets_live_fixture.json" "${PLANET_DIR:-${_AGENTS}/..}/output/grace/filtered_markets_live_fixture.json"
+  _check_file "filtered_markets_live_fixture.json" "${_AGENTS}/grace/output/filtered_markets_live_fixture.json"
   _check_file "mock_kalshi_markets.json" "${_AGENTS}/bob/output/mock_kalshi_markets.json"
   echo ""
   echo "Phase 2 (Clustering — ivan):"
@@ -481,13 +481,6 @@ pipeline_status() {
   echo ""
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
-  echo ""
-  echo "Sprint 11 (T1200-T1207 — collaboration + pipeline refresh):"
-  _check_file "T1203 markets_filtered_sprint11.json (grace)" "${PLANET_DIR:-${_AGENTS}/..}/output/grace/markets_filtered_sprint11.json"
-  _check_file "T1204 cluster_confidence_sprint11.json (ivan)" "${PLANET_DIR:-${_AGENTS}/..}/output/ivan/cluster_confidence_sprint11.json"
-  _check_file "T1201 correlation_pairs_sprint11.json (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/correlation_pairs_sprint11.json"
-  _check_file "T1207 sprint11_e2e_results.md (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/sprint11_e2e_results.md"
-  _check_file "T1200 sprint11_collab_audit.md (alice)" "${PLANET_DIR:-${_AGENTS}/..}/output/alice/sprint11_collab_audit.md"
   echo ""
   echo "Blocker: T236 (Kalshi API credentials) — live trading pending"
 }
