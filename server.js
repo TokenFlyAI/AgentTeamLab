@@ -1607,8 +1607,15 @@ async function handleRequest(req, res) {
     const tasks = cached("task_board", 10_000, () => parseTaskBoard()).filter(
       (t) => (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).includes(name.toLowerCase())
     );
+    // Compute current_task for modal display: prefer in_progress, fall back to open
+    const inProgressTask = tasks.find(t => (t.status || "").toLowerCase() === "in_progress");
+    const openTask = tasks.find(t => (t.status || "").toLowerCase() === "open");
+    const currentTaskObj = inProgressTask || openTask || null;
+    const current_task = currentTaskObj
+      ? ((/^\d+$/.test(String(currentTaskObj.id)) ? "T" : "") + currentTaskObj.id + ": " + (currentTaskObj.title || "")).slice(0, 80)
+      : null;
     const executor = getExecutorForAgent(name);
-    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor, executorHealth: getExecutorHealth(executor) });
+    return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, current_task, executor, executorHealth: getExecutorHealth(executor) });
   }
 
   // GET /api/executors — list supported executors (all 4, regardless of fleet enabled_executors)
