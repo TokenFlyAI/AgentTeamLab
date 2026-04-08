@@ -142,13 +142,20 @@ except: print('Error parsing response')
 }
 
 task_inreview() {
+  # Usage: task_inreview <task-id> ["note"]
+  # Marks task in_review AND DMs reviewers (tina + olivia) so they're notified immediately.
   local id; id=$(_norm_task_id "$1"); local note="$2"
   [ -z "$id" ] && echo "Usage: task_inreview <task-id> [\"note\"]" && return 1
   local body; body=$(python3 -c "import json,sys; d={'status':'in_review'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
-  curl -s -X PATCH "${_API}/api/tasks/${id}" \
+  local result
+  result=$(curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
-    -d "$body" 2>/dev/null | python3 -c "
+    -d "$body" 2>/dev/null)
+  local tid title
+  tid=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); s=str(d.get('id','?')); print('T'+s if s.isdigit() else s)" 2>/dev/null)
+  title=$(echo "$result" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('title','?'))" 2>/dev/null)
+  echo "$result" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
@@ -156,6 +163,13 @@ try:
   else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
+  # DM reviewers so they're notified immediately (C11: don't leave reviewers waiting)
+  local reviewer_msg
+  reviewer_msg="Review request: ${tid} (\"${title}\") is ready. Use task_review ${id} approve/reject."
+  [ -n "$note" ] && reviewer_msg="${reviewer_msg} Note: ${note}"
+  dm tina "$reviewer_msg" 2>/dev/null
+  dm olivia "$reviewer_msg" 2>/dev/null
+  echo "Reviewers notified (tina, olivia)"
 }
 
 task_list() {

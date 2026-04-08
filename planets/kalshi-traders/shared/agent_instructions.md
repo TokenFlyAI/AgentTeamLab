@@ -182,7 +182,7 @@ task_review 542 approve "Independently reproduced"        # Reviewers: approve (
 task_review 542 reject "Missing test coverage"            # Reviewers: reject (→ in_progress with feedback)
 ```
 
-**Flow:** write deliverable → `task_inreview` → DM tina/olivia → they approve/reject → done.
+**Flow:** write deliverable → `task_inreview "note"` (auto-DMs tina+olivia) → they approve/reject → done.
 **Self-close exception:** alice may mark own coordination/report tasks done directly.
 **Code tasks:** also run `cp -r output/backend/* ../../output/shared/codebase/backend/ 2>/dev/null`
 
@@ -206,7 +206,7 @@ source ../../scripts/agent_tools.sh
 | `read_task 542` | Read full details of a specific task (title, status, description, notes) |
 | `task_claim 542` | Atomically claim a task |
 | `task_done 542 "Delivered pipeline.js"` | **Reviewers/alice only** — mark task done directly. Regular agents: use `task_inreview` instead (C11) |
-| `task_inreview 542 "Ready for review"` | **Most agents** — submit for review (triggers DM to reviewer) |
+| `task_inreview 542 "Ready for review"` | **Most agents** — mark in_review AND auto-DM tina+olivia |
 | `task_review 542 approve "Verified"` | Approve a task (reviewers: olivia, tina, alice) |
 | `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
