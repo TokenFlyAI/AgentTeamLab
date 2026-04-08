@@ -323,7 +323,9 @@ path, task_id, agent, ts = sys.argv[1:5]
 try:
     with open(path, 'r') as f: data = json.load(f)
     if isinstance(data, dict):
-        data['metadata'] = {'task_id': int(task_id), 'agent': agent, 'timestamp': ts}
+        # task_id may be numeric (1040) or alphanumeric (D001) — keep as-is
+        tid = int(task_id) if task_id.isdigit() else task_id
+        data['metadata'] = {'task_id': tid, 'agent': agent, 'timestamp': ts}
         with open(path, 'w') as f: json.dump(data, f, indent=2)
         print(f'Metadata injected into {path}')
     else: print('JSON root is not a dictionary, skipping injection')
@@ -399,7 +401,7 @@ add_culture() {
 }
 
 pipeline_status() {
-  echo "=== D004 Pipeline Status (Sprint 8: Pipeline quality + platform evolution) ==="
+  echo "=== D004 Pipeline Status (Sprint 10: Phase B deploy + security hardening) ==="
   echo ""
   _check_file() {
     local label="$1" path="$2"
