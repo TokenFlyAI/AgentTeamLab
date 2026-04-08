@@ -5237,7 +5237,7 @@ async function refreshAgentModal() {
     overview.innerHTML =
       '<div class="mb-16"><strong>Status:</strong> <span class="status-dot dot-' + safeStatus + '" style="display:inline-block;vertical-align:middle;"></span> ' + esc(status) + '</div>' +
       '<div class="mb-16"><strong>Executor:</strong> ' + executorBadge + '</div>' +
-      (executorHealth.message ? '<div class="mb-16"><strong>Executor Health:</strong> ' + esc(executorHealth.message) + '</div>' : '') +
+      (executorHealth.message && !executorHealth.runnable ? '<div class="mb-16"><strong>Executor Health:</strong> <span style="color:#ff4444;">' + esc(executorHealth.message) + '</span></div>' : '') +
       '<div class="mb-16"><strong>Current Task:</strong> ' + esc(task) + '</div>' +
       (progress.length ? '<div class="mb-16"><strong>Progress:</strong><ul style="margin-left:20px;margin-top:4px;">' + progress.map(p => '<li style="font-size:0.85rem;">' + esc(typeof p === 'string' ? p : p.text || JSON.stringify(p)) + '</li>').join('') + '</ul></div>' : '') +
       (blockers.length ? '<div class="mb-16"><strong>Blockers:</strong><ul style="margin-left:20px;margin-top:4px;color:#ff4444;">' + blockers.map(b => '<li style="font-size:0.85rem;">' + esc(typeof b === 'string' ? b : b.text || JSON.stringify(b)) + '</li>').join('') + '</ul></div>' : '') +
@@ -5393,8 +5393,11 @@ async function refreshAgentModal() {
       if (cycles.length === 0) {
         cyclesEl.innerHTML = '<div class="text-muted" style="padding:16px;">No cycles today yet.</div>';
       } else {
-        cyclesEl.innerHTML = '<div style="font-size:0.8rem;color:#888;padding-bottom:8px;">' + cycles.length + ' cycles today — click to see LLM output</div>' +
-          cycles.map(c => {
+        const productive = cycles.filter(c => c.turns > 0 || c.preview);
+        const empty = cycles.length - productive.length;
+        const emptyNote = empty > 0 ? ' <span style="color:#444;">(' + empty + ' empty hidden)</span>' : '';
+        cyclesEl.innerHTML = '<div style="font-size:0.8rem;color:#888;padding-bottom:8px;">' + productive.length + ' productive cycles today — click to see LLM output' + emptyNote + '</div>' +
+          productive.map(c => {
             const cost = c.cost_usd != null ? ' · $' + c.cost_usd.toFixed(4) : '';
             const dur = c.duration_s != null ? ' · ' + c.duration_s + 's' : '';
             const turns = c.turns != null ? ' · ' + c.turns + ' turns' : '';
@@ -5404,6 +5407,7 @@ async function refreshAgentModal() {
               '<strong style="color:' + (isRecent?'#00ff88':'#ccc') + ';">Cycle #' + c.n + '</strong>' +
               '<span style="color:#555;font-size:0.75rem;">' + esc(c.started || '') + cost + dur + turns + '</span>' +
               '</div>' +
+              (c.preview ? '<div style="font-size:0.75rem;color:#666;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(c.preview.slice(0,120)) + '</div>' : '') +
               '<div id="cycle-detail-' + c.n + '" style="display:none;"></div>' +
               '</div>';
           }).join('');
