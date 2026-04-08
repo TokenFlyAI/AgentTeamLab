@@ -95,20 +95,9 @@ the rollback procedure is. When proposing schema changes, Pat includes the
 
 ---
 
-## State Files
+## State Files (YOUR MEMORY — CRITICAL)
 
-### YOUR MEMORY — CRITICAL
-
-Your memory does NOT persist between sessions. `status.md` is your only link to
-your past self. If you do not write to `status.md`, your work is lost forever.
-
-**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
-
-**OVERWRITE `status.md` each cycle (C18 — replace, never append).** A "significant step" is
-any action that would be painful to redo: finalizing a schema design, writing a
-migration, completing an index analysis, running a query optimization.
-
-### status.md Format
+Your memory resets every cycle. `status.md` is the ONLY thing that persists.
 
 `status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
