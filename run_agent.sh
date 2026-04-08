@@ -556,16 +556,17 @@ PYEOF
 fi
 
 # ── Executor failure warning ──────────────────────────────────────────────────
-# If the last 3+ cycles all failed with the current executor (raw_bytes=0),
-# warn the agent so they can decide to switch executors.
+# If the last 3+ cycles all failed with the current executor, warn the agent so
+# they can decide to switch executors. Matches both raw_bytes=0 (no output) and
+# API error failures (quota exhausted, auth failure).
 _FAILURE_LOG="${AGENT_DIR}/logs/cycle_failures.log"
 if [ -f "$_FAILURE_LOG" ] && [ "$_EARLY_DRY_RUN" != "1" ]; then
-    _CONSEC_FAIL=$(tail -5 "$_FAILURE_LOG" 2>/dev/null | grep -c "FAIL executor=${EXECUTOR} raw_bytes=0" || true)
+    _CONSEC_FAIL=$(tail -5 "$_FAILURE_LOG" 2>/dev/null | grep -c "FAIL executor=${EXECUTOR}" || true)
     if [ "${_CONSEC_FAIL:-0}" -ge 3 ]; then
         _FAIL_WARN="
 
-⚠️ EXECUTOR WARNING: Your last ${_CONSEC_FAIL} cycles failed with executor '${EXECUTOR}' (no output produced).
-The executor may be unauthenticated, rate-limited, or unavailable.
+⚠️ EXECUTOR WARNING: Your last ${_CONSEC_FAIL} cycles failed with executor '${EXECUTOR}'.
+The executor may be quota-exhausted, unauthenticated, or unavailable.
 To switch executor: Write 'codex' to your executor.txt if on gemini (or 'gemini' if on codex). NEVER use 'claude'.
 Example: Use the Write tool to write 'codex' to executor.txt. Your next session will use the new executor."
         PROMPT_TEXT="${PROMPT_TEXT}${_FAIL_WARN}"
@@ -689,6 +690,14 @@ for raw in sys.stdin:
             cost = event.get("total_cost_usd") or 0
             duration_ms = event.get("duration_ms") or 0
             duration_s = round(duration_ms / 1000, 3)
+            # Detect API errors (quota, auth, rate limiting)
+            if event.get("status") == "error" or event.get("type") == "error":
+                err_msg = (event.get("error") or event.get("message") or "API error")
+                if isinstance(err_msg, dict):
+                    err_msg = err_msg.get("message") or str(err_msg)
+                print("[API_ERROR] {}".format(str(err_msg)[:300]))
+                print("[DONE] turns=0 cost=$0 duration={}s session=ERROR".format(duration_s))
+                continue
             print("[DONE] turns={} cost=${} duration={}s session={}".format(turns, cost, duration_s, sid))
             continue
         text = event.get("text") or event.get("message") or event.get("content")
@@ -758,6 +767,14 @@ for raw in sys.stdin:
             turns = stats.get("tool_calls") or 0
             duration_ms = stats.get("duration_ms") or 0
             duration_s = round(duration_ms / 1000, 3)
+            # Detect API errors (quota exhausted, auth failed, rate limited)
+            if event.get("status") == "error":
+                err_obj = event.get("error") or {}
+                err_msg = err_obj.get("message") or str(err_obj)[:200] or "API error"
+                print("[API_ERROR] {}".format(err_msg[:300]))
+                # Emit DONE with session=ERROR so failure detection can catch it
+                print("[DONE] turns=0 cost=$0 duration={}s session=ERROR".format(duration_s))
+                continue
             # Gemini does not report USD cost directly — use 0 (tracked via token counts)
             print("[DONE] turns={} cost=$0 duration={}s session={}".format(turns, duration_s, sid))
             continue
@@ -1069,6 +1086,13 @@ fi
 if [ "${_RAW_SIZE:-0}" -lt 50 ] && [ "$_DRY_RUN" != "1" ]; then
     _CYCLE_SUCCESS=0
     echo "[WARN] ${AGENT_NAME}: raw output too small (${_RAW_SIZE} bytes) — likely failed" | tee -a "$DAILY_LOG"
+fi
+# Check for API-level errors (quota exhausted, auth failures) — these produce non-zero raw bytes
+# but include status:"error" in the result event. gemini_stream_log emits [DONE]...session=ERROR.
+# Check only the last 20 lines (current cycle is always at the end of the log).
+if [ "$_DRY_RUN" != "1" ] && tail -20 "$DAILY_LOG" 2>/dev/null | grep -q '^\[DONE\].*session=ERROR'; then
+    _CYCLE_SUCCESS=0
+    echo "[WARN] ${AGENT_NAME}: API error detected (quota exhausted / auth failure) — marking cycle failed" | tee -a "$DAILY_LOG"
 fi
 if [ "$_CYCLE_SUCCESS" -eq 0 ]; then
     # Write failure marker for watchdog/monitoring

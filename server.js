@@ -2520,7 +2520,7 @@ async function handleRequest(req, res) {
     let lines = [];
     if (logPath && fs.existsSync(logPath)) {
       try {
-        const r = spawnSync("grep", ["-E", "^={5,}.*CYCLE (START|END)|^\\[DONE\\] turns=|^\\[TOOL\\] |^\\[ASSISTANT\\] ", logPath], {
+        const r = spawnSync("grep", ["-E", "^={5,}.*CYCLE (START|END)|^\\[DONE\\] turns=|^\\[TOOL\\] |^\\[ASSISTANT\\] |^\\[API_ERROR\\] ", logPath], {
           encoding: "utf8", maxBuffer: 10 * 1024 * 1024,
         });
         if (r.stdout) lines = r.stdout.split("\n");
@@ -2546,6 +2546,9 @@ async function handleRequest(req, res) {
       } else if (current && line.startsWith("[ASSISTANT] ")) {
         const text = line.slice(12, 100);
         if (text.trim()) current.actions.push(">> " + text);
+      } else if (current && line.startsWith("[API_ERROR] ")) {
+        current.actions.push("⚠ " + line.slice(12, 120));
+        current.error = line.slice(12, 300);
       }
     }
     // Return summary (no full content for list endpoint)
@@ -2554,6 +2557,7 @@ async function handleRequest(req, res) {
       turns: c.turns, cost_usd: c.cost_usd, duration_s: c.duration_s,
       action_count: c.actions.length,
       preview: c.actions.slice(0, 3).join(" | "),
+      error: c.error || null,
     }));
     return json(res, { name, date: today, cycles: summary.reverse() }); // newest first
   }
