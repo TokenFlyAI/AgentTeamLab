@@ -3108,7 +3108,7 @@ function renderAgents() {
       : computeHealthScore(agent);
     const healthColor = health.score > 80 ? 'green' : health.score >= 50 ? 'yellow' : 'red';
     const unreadCount = agent.unread_messages || 0;
-    const agentTaskCount = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase() === name && (t.status !== 'done' && t.status !== 'cancelled')).length : 0;
+    const agentTaskCount = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase().split(',').map(a => a.trim()).includes(name) && (t.status !== 'done' && t.status !== 'cancelled')).length : 0;
     const executor = agent.executor || 'claude';
     return '<div class="card agent-card' + (isStaleHb ? ' stale-heartbeat' : '') + (authErr ? ' auth-error-card' : '') + '" data-agent="' + esc(name) + '" onclick="openAgentModal(\'' + esc(name) + '\')">' +
       (authErr ? '<div style="position:absolute;top:0;left:0;right:0;background:linear-gradient(90deg,#ff4444,#ff6b35);color:#fff;font-size:0.65rem;padding:2px 8px;text-align:center;font-weight:600;letter-spacing:0.5px;">🔐 AUTH REQUIRED</div>' : '') +
@@ -3220,7 +3220,7 @@ function computeHealthScore(agent) {
   // Velocity (20 pts) — tasks done in last 3 days
   const cutoffMs = now - 3 * 24 * 3600000;
   const cutoffDate = new Date(cutoffMs).toISOString().slice(0, 10);
-  const agentTasks = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase() === (agent.name || '').toLowerCase()) : [];
+  const agentTasks = Array.isArray(tasks) ? tasks.filter(t => (t.assignee || '').toLowerCase().split(',').map(a => a.trim()).includes((agent.name || '').toLowerCase())) : [];
   const doneTasks = agentTasks.filter(t => (t.status || '') === 'done');
   const recentDone = doneTasks.filter(t => (t.updated || t.created || '') >= cutoffDate).length;
   let velPts;
@@ -5336,7 +5336,7 @@ async function refreshAgentModal() {
   // Tasks tab — assigned tasks for this agent
   const tasksEl = document.getElementById('mtab-tasks');
   const agentTasks = (Array.isArray(tasks) ? tasks : []).filter(t =>
-    (t.assignee || '').toLowerCase() === name.toLowerCase()
+    (t.assignee || '').toLowerCase().split(',').map(a => a.trim()).includes(name.toLowerCase())
   );
   const prioColor = { critical: '#ff4444', high: '#ffaa00', medium: '#00aaff', low: '#888' };
   tasksEl.innerHTML = agentTasks.length ?
