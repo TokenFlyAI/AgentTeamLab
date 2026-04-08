@@ -196,7 +196,10 @@ dm() {
   local ts=$(date +%Y_%m_%d_%H_%M_%S)
   local inbox="${_AGENTS}/${to}/chat_inbox"
   [ ! -d "$inbox" ] && echo "Agent '${to}' not found" && return 1
-  printf "# Message from %s\n\n%s\n" "$from" "$msg" > "${inbox}/${ts}_from_${from}.md"
+  # Append PID suffix to prevent filename collision when multiple DMs sent in same second
+  local outfile="${inbox}/${ts}_from_${from}.md"
+  [ -f "$outfile" ] && outfile="${inbox}/${ts}_from_${from}_$$.md"
+  printf "# Message from %s\n\n%s\n" "$from" "$msg" > "$outfile"
   echo "DM sent to ${to}"
 }
 
@@ -223,7 +226,9 @@ post() {
   local ts=$(date +%Y_%m_%d_%H_%M_%S)
   local channel="${_SHARED}/team_channel"
   mkdir -p "$channel"
-  printf "# Update from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "${channel}/${ts}_from_${from}.md"
+  local outfile="${channel}/${ts}_from_${from}.md"
+  [ -f "$outfile" ] && outfile="${channel}/${ts}_from_${from}_$$.md"
+  printf "# Update from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "$outfile"
   echo "Posted to team channel"
 }
 
