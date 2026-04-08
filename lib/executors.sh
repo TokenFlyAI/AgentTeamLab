@@ -67,7 +67,8 @@ executor_enabled_csv() {
         fi
     done
     if [ -z "$normalized" ]; then
-        normalized="claude"
+        # Fallback: use gemini (never claude — agents must not run on claude by default)
+        normalized="gemini"
     fi
     echo "$normalized"
 }
