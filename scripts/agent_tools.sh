@@ -60,8 +60,15 @@ _AUTH_HEADER="Authorization: Bearer ${API_KEY:-test}"
 
 # ── Task Operations ──────────────────────────────────────────────────────────
 
-task_claim() {
+# Normalize task ID: strip T prefix for numeric tasks (T1234 → 1234, D001 stays D001)
+_norm_task_id() {
   local id="$1"
+  # Strip leading T if followed only by digits (display prefix, not a real prefix)
+  echo "$id" | sed -E 's/^T([0-9]+)$/\1/'
+}
+
+task_claim() {
+  local id; id=$(_norm_task_id "$1")
   [ -z "$id" ] && echo "Usage: task_claim <task-id>" && return 1
   local agent="${_SELF:-unknown}"
   curl -s -X POST "${_API}/api/tasks/${id}/claim" \
@@ -78,7 +85,7 @@ except: print('Error parsing response')
 }
 
 task_done() {
-  local id="$1" note="$2"
+  local id; id=$(_norm_task_id "$1"); local note="$2"
   [ -z "$id" ] && echo "Usage: task_done <task-id> [\"result note\"]" && return 1
   local body; body=$(python3 -c "import json,sys; d={'status':'done'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
@@ -95,7 +102,7 @@ except: print('Error parsing response')
 }
 
 task_progress() {
-  local id="$1" note="$2"
+  local id; id=$(_norm_task_id "$1"); local note="$2"
   [ -z "$id" ] || [ -z "$note" ] && echo "Usage: task_progress <task-id> \"progress note\"" && return 1
   local body; body=$(python3 -c "import json,sys; print(json.dumps({'status':'in_progress','notes':sys.argv[1]}))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
@@ -112,7 +119,7 @@ except: print('Error parsing response')
 }
 
 task_review() {
-  local id="$1" verdict="$2" comment="${3:-Reviewed}"
+  local id; id=$(_norm_task_id "$1"); local verdict="$2" comment="${3:-Reviewed}"
   [ -z "$id" ] || [ -z "$verdict" ] && echo "Usage: task_review <task-id> <approve|reject> [\"comment\"]" && return 1
   local reviewer="${_SELF:-unknown}"
   local body; body=$(python3 -c "import json,sys; print(json.dumps({'verdict':sys.argv[1],'reviewer':sys.argv[2],'comment':sys.argv[3]}))" "$verdict" "$reviewer" "$comment")
@@ -130,7 +137,7 @@ except: print('Error parsing response')
 }
 
 task_inreview() {
-  local id="$1" note="$2"
+  local id; id=$(_norm_task_id "$1"); local note="$2"
   [ -z "$id" ] && echo "Usage: task_inreview <task-id> [\"note\"]" && return 1
   local body; body=$(python3 -c "import json,sys; d={'status':'in_review'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
@@ -168,7 +175,7 @@ my_tasks() {
 }
 
 read_task() {
-  local id="$1"
+  local id; id=$(_norm_task_id "$1")
   [ -z "$id" ] && echo "Usage: read_task <task-id>" && return 1
   curl -s "${_API}/api/tasks/${id}" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
 import sys,json

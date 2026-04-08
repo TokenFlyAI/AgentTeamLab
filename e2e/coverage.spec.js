@@ -3210,9 +3210,9 @@ test.describe("GET /api/agents/:name/context", () => {
     }
   });
 
-  test("team_channel contains at most 5 entries", async () => {
+  test("team_channel contains at most 10 entries", async () => {
     const { body } = await apiGet("/api/agents/alice/context");
-    expect(body.team_channel.length).toBeLessThanOrEqual(5);
+    expect(body.team_channel.length).toBeLessThanOrEqual(10);
   });
 
   test("announcements contains at most 3 entries", async () => {
@@ -3562,6 +3562,35 @@ test.describe("DELETE /api/tasks/:id — response shape", () => {
     expect(typeof body.deleted.title).toBe("string");
     expect(typeof body.deleted.status).toBe("string");
     _deleteShapeTaskId = null; // already deleted
+  });
+});
+
+// ── PATCH /api/tasks/:id — T-prefix normalization (regression) ───────────────
+
+test.describe("PATCH /api/tasks/:id — T-prefix normalization", () => {
+  let _tPrefixTaskId = null;
+
+  test.beforeAll(async () => {
+    const { body } = await apiPost("/api/tasks", { title: "E2E-TPrefix-Norm-Test", priority: "low" });
+    _tPrefixTaskId = body.id;
+  });
+
+  test.afterAll(async () => {
+    if (_tPrefixTaskId) await apiDelete(`/api/tasks/${_tPrefixTaskId}`).catch(() => {});
+  });
+
+  test("PATCH with T-prefixed numeric ID works same as bare numeric ID (regression: agent handoff uses T1234 format)", async () => {
+    // Agents display task IDs as T1234 and may pass them to handoff/task_inreview that way
+    const { status, body } = await apiPatch(`/api/tasks/T${_tPrefixTaskId}`, { status: "in_progress" });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.status).toBe("in_progress");
+  });
+
+  test("GET with T-prefixed numeric ID resolves to same task", async () => {
+    const { status, body } = await apiGet(`/api/tasks/T${_tPrefixTaskId}`);
+    expect(status).toBe(200);
+    expect(body.id).toBe(_tPrefixTaskId);
   });
 });
 

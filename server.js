@@ -1013,10 +1013,13 @@ function parseTaskArchive() {
 
 function findTaskById(id, options) {
   const includeArchive = !options || options.includeArchive !== false;
-  const activeTask = cached("task_board", 10_000, () => parseTaskBoard()).find((t) => String(t.id) === String(id));
+  // Normalize T-prefixed numeric IDs (display convention): T1234 → 1234
+  const normId = /^T(\d+)$/.test(String(id)) ? String(id).slice(1) : String(id);
+  const match = (t) => String(t.id) === normId || String(t.id) === String(id);
+  const activeTask = cached("task_board", 10_000, () => parseTaskBoard()).find(match);
   if (activeTask) return activeTask;
   if (!includeArchive) return null;
-  return cached("task_archive", 30_000, () => parseTaskArchive()).find((t) => String(t.id) === String(id)) || null;
+  return cached("task_archive", 30_000, () => parseTaskArchive()).find(match) || null;
 }
 
 function archiveDoneTasks() {
@@ -1174,7 +1177,8 @@ async function updateTaskRow(id, updates) {
       if (!lines[i].trim().startsWith("|")) continue;
       const cols = lines[i].split("|").slice(1, -1).map((c) => c.trim());
       if (cols.length < 2) continue;
-      if (String(cols[0]).trim() === String(id)) {
+      const normId = /^T(\d+)$/.test(String(id)) ? String(id).slice(1) : String(id);
+      if (String(cols[0]).trim() === normId || String(cols[0]).trim() === String(id)) {
         // Pad to full 10-column schema so sparse writes don't produce undefined in joined output
         // Columns: ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes
         while (cols.length < 10) cols.push("");
@@ -2731,6 +2735,8 @@ async function handleRequest(req, res) {
   const taskPatchMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)$/);
   if (method === "PATCH" && taskPatchMatch) {
     const id = taskPatchMatch[1];
+    // Normalize T-prefixed numeric IDs (T1234 → 1234) — agents use T as display prefix
+    const normId = /^T(\d+)$/.test(id) ? id.slice(1) : id;
     const body = await parseBody(req);
     const VALID_STATUSES = new Set(["open", "in_progress", "done", "blocked", "in_review", "cancelled"]);
     const VALID_PRIORITIES_PATCH = new Set(["low", "medium", "high", "critical"]);
@@ -2744,9 +2750,9 @@ async function handleRequest(req, res) {
         !String(body.assignee).trim().split(",").every(a => /^[a-zA-Z0-9_-]+$/.test(a.trim()))) {
       return badRequest(res, "invalid assignee: must be alphanumeric agent name(s), comma-separated for multiple");
     }
-    const ok = await updateTaskRow(id, body);
+    const ok = await updateTaskRow(normId, body);
     if (!ok) return notFound(res, "task not found");
-    const updatedTask = parseTaskBoard().find((t) => String(t.id) === String(id));
+    const updatedTask = parseTaskBoard().find((t) => String(t.id) === normId);
     if (!updatedTask) return notFound(res, "task not found");
     broadcastWS("task_updated", { id: parseTaskId(updatedTask.id), status: updatedTask.status, assignee: updatedTask.assignee, title: updatedTask.title });
     return json(res, { ok: true, ...updatedTask, id: parseTaskId(updatedTask.id), notesList: (updatedTask.notes || "").split(" ;; ").filter(Boolean) });
