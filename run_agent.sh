@@ -303,6 +303,14 @@ for t in changed_tasks:
     new_s = t.get("status","")
     lines.append("{} ({}) moved: {} → {}".format(fmt_task_id(t.get("id","")), t.get("title",""), old_s, new_s))
 
+# Tasks that disappeared (deleted or cancelled — no longer in context)
+# Note: tasks that moved to done/cancelled also disappear from context (filtered server-side)
+removed_task_ids = set(prev_tasks) - set(curr_tasks)
+for tid in removed_task_ids:
+    t = prev_tasks[tid]
+    lines.append("{} (\"{}\") was removed from your queue — it may have been cancelled or deleted.".format(
+        fmt_task_id(t.get("id","")), t.get("title","")))
+
 # New tasks pending review (for reviewer agents — tina/olivia/alice)
 prev_pr = {t["id"]: t for t in prev.get("pending_review", [])}
 curr_pr = {t["id"]: t for t in curr.get("pending_review", [])}
@@ -373,8 +381,7 @@ PYEOF
         # Update snapshot for next cycle's diff
         echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
     else
-        # No snapshot to diff against — just report counts
-        _DELTA_TEXT=""
+        # No snapshot to diff against — save new snapshot and report nothing changed
         if [ -n "$_NEW_CTX" ]; then
             cp "$SNAPSHOT_FILE" "${SNAPSHOT_FILE}.prev" 2>/dev/null || true
             echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
