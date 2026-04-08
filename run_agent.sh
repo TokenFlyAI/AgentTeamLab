@@ -498,6 +498,7 @@ if urgent:
     out.append("### ⚠️ URGENT — Founder/Lord Messages (handle FIRST)")
     for m in urgent:
         out.append(m["content"].strip())
+        out.append("_After handling: `inbox_done {}`_".format(m["filename"]))
         out.append("")
     if urgent_more > 0:
         out.append("⚠️ {} MORE Founder/Lord messages not shown — process these first, then run `read_inbox` to see all.".format(urgent_more))
@@ -514,7 +515,9 @@ if regular_total > 0:
     for m in msgs:
         ago = time_ago_from_filename(m["filename"])
         ts_str = " [{}]".format(ago) if ago else ""
-        out.append("  - {}{}: \"{}\"".format(sender_from_filename(m["filename"]), ts_str, m["preview"]))
+        # Show filename so agents can call inbox_done <filename> after handling
+        out.append("  - {}{}: \"{}\" — `inbox_done {}`".format(
+            sender_from_filename(m["filename"]), ts_str, m["preview"], m["filename"]))
 elif total_unread > 0:
     # Only urgent messages, no regular DMs
     out.append("**Unread inbox**: none (founder/urgent messages shown above)")
