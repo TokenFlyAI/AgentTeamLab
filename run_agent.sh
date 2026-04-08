@@ -632,6 +632,10 @@ TIMESTAMP=$(date +%Y_%m_%d_%H_%M_%S)
 # the current cycle's output, not the entire growing daily log (charlie: 33MB → 2-3s jq)
 _RAW_LOG_OFFSET=$(wc -c < "$RAW_LOG" 2>/dev/null | tr -d ' ')
 _RAW_LOG_OFFSET="${_RAW_LOG_OFFSET:-0}"
+# Also record daily log offset so API error detection only scans the CURRENT cycle
+# (avoids false positives from a session=ERROR in a prior cycle's [DONE] line)
+_DAILY_LOG_OFFSET=$(wc -c < "$DAILY_LOG" 2>/dev/null | tr -d ' ')
+_DAILY_LOG_OFFSET="${_DAILY_LOG_OFFSET:-0}"
 
 echo "" >> "$DAILY_LOG"
 echo "========== CYCLE START — ${TIMESTAMP} [session:$([ $USE_RESUME -eq 1 ] && echo "RESUME" || echo "FRESH")] [executor:${EXECUTOR}] ==========" >> "$DAILY_LOG"
@@ -1070,10 +1074,11 @@ else
     NEW_SESSION_ID="$(extract_session_id "$RAW_LOG" "$EXECUTOR")"
 fi
 
-# Detect API errors early (before session save) — check tail of daily log for session=ERROR.
+# Detect API errors early (before session save) — scan ONLY the current cycle's output
+# in the daily log (using pre-cycle byte offset to avoid false positives from prior cycles).
 # Must be done here because _CYCLE_SUCCESS is computed after this block.
 _API_ERROR_CYCLE=0
-if [ "$_DRY_RUN" != "1" ] && tail -20 "$DAILY_LOG" 2>/dev/null | grep -q '^\[DONE\].*session=ERROR'; then
+if [ "$_DRY_RUN" != "1" ] && tail -c +"$((_DAILY_LOG_OFFSET + 1))" "$DAILY_LOG" 2>/dev/null | grep -q '^\[DONE\].*session=ERROR'; then
     _API_ERROR_CYCLE=1
 fi
 
