@@ -89,15 +89,15 @@ You own ML: clustering, classification, and the D004 Phase 2 market clustering p
 source ../../scripts/agent_tools.sh
 sprint_status                   # Current sprint task states + pipeline chain
 # Self-unblock (C23): check if bob's correlation pairs are ready
-list_outputs bob  # C23: check if bob's correlation_pairs_sprint11.json is ready
+list_outputs bob  # C23: check if bob's correlation_pairs output is ready
 
 # Announce start (C22)
 post "Starting T[id] Phase 2 clustering — reading bob's correlation pairs"
 
-# When clusters ready, hand off to dave (T1207 E2E)
-handoff dave 1204 output/cluster_confidence_sprint11.json "cat output/cluster_confidence_sprint11.json | python3 -m json.tool" "clusters with confidence scores"  # C21
+# When clusters ready, hand off to dave (E2E task)
+handoff dave [task_id] output/cluster_confidence_sprint[N].json "cat output/cluster_confidence_sprint[N].json | python3 -m json.tool" "clusters with confidence scores"  # C21
 
-task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"  # auto-DMs tina+olivia
+task_inreview [task_id] "Artifact: output/cluster_confidence_sprint[N].json — confidence_score field added"  # auto-DMs tina+olivia
 inbox_done <filename>                              # C24: archive after handling each message
 evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```

@@ -49,8 +49,8 @@ UNASSIGNED=$(echo "$ACTIVE" | awk -F'|' '{
 # Truncate long rows to avoid description column blowing up token count
 truncate_rows() {
     while IFS= read -r line; do
-        if [ ${#line} -gt 300 ]; then
-            printf '%s…\n' "${line:0:300}"
+        if [ ${#line} -gt 600 ]; then
+            printf '%s…\n' "${line:0:600}"
         else
             printf '%s\n' "$line"
         fi

@@ -92,12 +92,12 @@ You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge 
 source ../../scripts/agent_tools.sh
 post "Starting [task] — [plan]"                       # C22: announce work start (mandatory)
 post "Done: [deliverable] ready in output/"           # C22: announce completion
-# T1207: check all upstream outputs (self-unblock C23)
-list_outputs grace                                     # C23: check markets_filtered_sprint11.json
-list_outputs bob                                       # C23: check correlation_pairs_sprint11.json
-list_outputs ivan                                      # C23: check cluster_confidence_sprint11.json
-task_inreview 1207 "Ready for review: output/sprint11_e2e_results.md"
-handoff alice 1207 output/sprint11_e2e_results.md "cat output/sprint11_e2e_results.md" "E2E pipeline complete: P&L summary in sprint11_e2e_results.md"
+# E2E task: check all upstream outputs (self-unblock C23)
+list_outputs grace                                     # C23: check grace's filtered markets output
+list_outputs bob                                       # C23: check bob's correlation pairs output
+list_outputs ivan                                      # C23: check ivan's cluster confidence output
+task_inreview [task_id] "Ready for review: output/sprint[N]_e2e_results.md"
+handoff alice [task_id] output/sprint[N]_e2e_results.md "cat output/sprint[N]_e2e_results.md" "E2E pipeline complete: P&L summary ready"
 inbox_done <filename>                              # C24: archive after handling each message
 evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```

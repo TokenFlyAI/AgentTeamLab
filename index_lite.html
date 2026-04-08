@@ -4948,7 +4948,7 @@ function renderCollabPanel(data) {
     const shown = silentAgents.slice(0, 8).join(', ');
     const rest = silentAgents.length > 8 ? ` +${silentAgents.length - 8} more` : '';
     html += `<div style="background:#2a1a1a;border-radius:6px;padding:8px;margin-bottom:8px;font-size:0.8rem">
-      <span style="color:#ff6b6b">⚠ Silent today (C22):</span> <span style="color:#aaa">${shown}${rest}</span>
+      <span style="color:#ff6b6b">⚠ ${silentAgents.length} Silent today (C22):</span> <span style="color:#aaa">${shown}${rest}</span>
     </div>`;
   }
 

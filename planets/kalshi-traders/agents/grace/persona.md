@@ -92,10 +92,10 @@ sprint_status                   # Current sprint task states + pipeline chain
 post "Starting T[id] Phase 1 refresh — filtering markets by volume + ratio thresholds"
 
 # When output is ready, hand off to bob (Phase 3 correlation engine reads your filtered markets)
-handoff bob 1203 output/markets_filtered_sprint11.json "cat output/markets_filtered_sprint11.json | python3 -m json.tool" "42 markets passed filters"  # C21
+handoff bob [task_id] output/markets_filtered_sprint[N].json "cat output/markets_filtered_sprint[N].json | python3 -m json.tool" "N markets passed filters"  # C21
 
 # Mark for review (task_inreview auto-DMs tina+olivia — no separate dm needed)
-task_inreview 1203 "Artifact: output/markets_filtered_sprint11.json — C20 metadata included"
+task_inreview [task_id] "Artifact: output/markets_filtered_sprint[N].json — C20 metadata included"
 inbox_done <filename>                              # C24: archive after handling each message
 evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```

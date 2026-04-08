@@ -67,10 +67,11 @@
 ### Proper Progression
 ```
 1. [PENDING] Task exists unassigned
-2. [You claim it] → POST /api/tasks/:id/claim (atomic, prevents race conditions)
-3. [IN_PROGRESS] PATCH /api/tasks/:id { status: "in_progress" }
+2. [You claim it] → task_claim <id>  ← atomically claims AND sets in_progress (one step!)
+3. [IN_PROGRESS] Already set by task_claim — start working immediately
 4. [You work] Multiple cycles of actual work visible in your status.md
-5. [DONE] PATCH /api/tasks/:id { status: "done" }
+5. [IN_REVIEW] task_inreview <id> "note"  ← auto-DMs tina+olivia for review
+6. [DONE] After reviewer approves → done (reviewer calls task_review <id> approve)
 ```
 
 ### Critical: Show "In-Progress" State

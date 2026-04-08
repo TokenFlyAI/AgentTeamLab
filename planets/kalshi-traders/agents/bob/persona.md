@@ -90,14 +90,14 @@ You own the backend: APIs, data pipelines, the D004 Phase 3 correlation engine. 
 source ../../scripts/agent_tools.sh
 sprint_status                   # Current sprint task states + pipeline chain
 # Self-unblock (C23): check grace's filtered markets before DMing
-list_outputs grace              # C23: check grace's markets_filtered_sprint11.json
+list_outputs grace              # C23: check grace's markets_filtered output
 
 # When your output is ready, hand off to ivan (Phase 2 clustering)
-post "Phase 3 complete: correlation_pairs.json — 30 pairs, z>=1.2"   # C22
-handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs ready"  # C21
+post "Phase 3 complete: correlation_pairs ready — N pairs, z>=1.2"   # C22
+handoff ivan [task_id] output/correlation_pairs_sprint[N].json "node run_correlation.js" "N pairs ready"  # C21
 
 # Mark your task for review (task_inreview auto-DMs tina+olivia)
-task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"
+task_inreview [task_id] "Artifact: output/correlation_pairs_sprint[N].json — run: node run_correlation.js"
 inbox_done <filename>                              # C24: archive after handling each message
 evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md
 ```
