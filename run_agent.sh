@@ -694,14 +694,46 @@ for raw in sys.stdin:
         print(raw[:MAX_RAW])
         continue
     if isinstance(event, dict):
+        etype = str(event.get("type") or "").lower()
+        if etype == "init":
+            # {"type":"init","session_id":"UUID","model":"..."} — skip, session parsed separately
+            continue
+        # Extract assistant text from gemini message format
+        # Gemini messages: {"type":"message","role":"assistant","parts":[{"text":"..."}]}
+        # or nested content: {"type":"content","delta":{"text":"..."}}
+        if etype == "message":
+            role = str(event.get("role") or "").lower()
+            if role == "assistant":
+                parts = event.get("parts") or []
+                for p in parts:
+                    if isinstance(p, dict):
+                        t = p.get("text") or p.get("content") or ""
+                    else:
+                        t = str(p)
+                    if t.strip():
+                        print("[ASSISTANT] " + t.strip()[:500])
+            continue
+        if etype == "content":
+            delta = event.get("delta") or {}
+            t = delta.get("text") or delta.get("content") or event.get("text") or ""
+            if t.strip():
+                print("[TOOL] " + t.strip()[:200])
+            continue
+        if etype in ("result", "final", "completed"):
+            # Extract stats for [DONE] line matching cycles parser format:
+            # [DONE] turns=N cost=$X.XXXX duration=X.Xs session=UUID
+            stats = event.get("stats") or {}
+            sid = event.get("session_id") or event.get("sessionId") or "?"
+            turns = stats.get("tool_calls") or 0
+            duration_ms = stats.get("duration_ms") or 0
+            duration_s = round(duration_ms / 1000, 3)
+            # Gemini does not report USD cost directly — use 0 (tracked via token counts)
+            print("[DONE] turns={} cost=$0 duration={}s session={}".format(turns, duration_s, sid))
+            continue
+        # Fallback: print other event types (tool calls, etc.)
         msg = event.get("message") or event.get("text") or event.get("content")
         if isinstance(msg, str) and msg.strip():
             print("[ASSISTANT] " + msg.strip())
-            continue
-        etype = str(event.get("type") or "").lower()
-        if etype in ("result", "final", "completed"):
-            sid = event.get("sessionId") or event.get("session_id") or event.get("session") or "?"
-            print("[DONE] session=" + str(sid))
             continue
     dumped = json.dumps(event, ensure_ascii=True)
     print(dumped[:MAX_RAW] + ("…" if len(dumped) > MAX_RAW else ""))
@@ -737,9 +769,13 @@ extract_session_id() {
                 | grep -v '^$' | grep -v '^null$' | tail -1 || true
             ;;
         gemini)
-            # Primary: parse sessionId directly from this agent's raw output stream.
-            # This is agent-specific and has no race conditions with concurrent agents.
-            _GEMINI_SID=$(_read_log_from_offset | jq -r 'select(.sessionId != null and .sessionId != "") | .sessionId' 2>/dev/null \
+            # Gemini stream-json emits {"type":"init","session_id":"UUID"} as first line.
+            # Parse session_id (underscore) from the init message in this agent's raw log.
+            _GEMINI_SID=$(_read_log_from_offset | jq -r 'select(.type == "init" and .session_id != null and .session_id != "") | .session_id' 2>/dev/null \
+                | grep -v '^null$' | grep -v '^$' | tail -1 || true)
+            if [ -n "$_GEMINI_SID" ]; then echo "$_GEMINI_SID"; return; fi
+            # Also try legacy field name (sessionId without underscore) for compatibility
+            _GEMINI_SID=$(_read_log_from_offset | jq -r 'select((.sessionId // .session_id) != null) | (.sessionId // .session_id)' 2>/dev/null \
                 | grep -v '^null$' | grep -v '^$' | tail -1 || true)
             if [ -n "$_GEMINI_SID" ]; then echo "$_GEMINI_SID"; return; fi
             # Fallback: scan ~/.gemini/tmp/ for the newest session file.
@@ -749,7 +785,7 @@ extract_session_id() {
             if [ -n "$_GEMINI_PROJ" ]; then
                 _NEWEST=$(ls -t ~/.gemini/tmp/"$_GEMINI_PROJ"/chats/session-*.json 2>/dev/null | head -1)
                 if [ -n "$_NEWEST" ]; then
-                    _GEMINI_UUID=$(python3 -c "import json; d=json.load(open('$_NEWEST')); print(d.get('sessionId',''))" 2>/dev/null)
+                    _GEMINI_UUID=$(python3 -c "import json; d=json.load(open('$_NEWEST')); print(d.get('session_id', d.get('sessionId','')))" 2>/dev/null)
                     if [ -n "$_GEMINI_UUID" ]; then echo "$_GEMINI_UUID"; return; fi
                 fi
             fi
