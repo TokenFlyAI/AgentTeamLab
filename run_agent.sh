@@ -877,7 +877,7 @@ for line in sys.stdin:
         print(line[:500] + ('…' if len(line) > 500 else ''))
 sys.stdout.flush()
 " >> "$DAILY_LOG" 2>/dev/null || true
-            echo "[DONE] kimi cycle complete" >> "$DAILY_LOG"
+            echo "[DONE] turns=0 cost=$0 duration=0s session=kimi" >> "$DAILY_LOG"
             ;;
         claude)
             # shellcheck disable=SC2086
