@@ -64,28 +64,21 @@ echo ""
 # Reset public state files (keep structure, reset content)
 echo "🧹 Resetting public state files..."
 
-# Reset task board (keep header, remove tasks)
+# Reset task board (keep header, remove tasks — use current 3-section format)
 cat > "${SHARED_DIR:-${COMPANY_DIR}/public}/task_board.md" << 'EOF'
 # Task Board
 
-Global task tracking for Agent Planet.
+## Directions (Long-term Goals - Set by Lord Only)
+| ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |
+|----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|
 
-## Legend
-- **OPEN**: Waiting for pickup
-- **IN_PROGRESS**: Assigned and being worked on
-- **REVIEW**: Pending review/merge
-- **DONE**: Completed
+## Instructions (Persistent Context - Always Consider)
+| ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |
+|----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|
 
-## Active Tasks
-
-| ID | Title | Assignee | Status | Priority | Created |
-|----|-------|----------|--------|----------|---------|
-
-## Completed Tasks
-
-| ID | Title | Assignee | Status | Completed |
-|----|-------|----------|--------|-----------|
-
+## Tasks (Regular Work - Assignable & Completable)
+| ID | Title | Description | Priority | Group | Assignee | Status | Created | Updated | Notes |
+|----|-------|-------------|----------|-------|----------|--------|---------|---------|-------|
 EOF
 
 # Reset inbox (keep structure)
