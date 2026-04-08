@@ -3400,8 +3400,8 @@ async function handleRequest(req, res) {
     const body = await parseBody(req);
     const { type, content, author, section } = body;
     if (!type || !content) return badRequest(res, "type and content are required");
-    const VALID_TYPES = new Set(["group", "authority", "culture", "decision", "relationship"]);
-    if (!VALID_TYPES.has(String(type).toLowerCase())) return badRequest(res, "invalid type: must be group, authority, culture, decision, or relationship");
+    const VALID_TYPES = new Set(["group", "authority", "culture", "norm", "decision", "relationship"]);
+    if (!VALID_TYPES.has(String(type).toLowerCase())) return badRequest(res, "invalid type: must be group, authority, culture, norm, decision, or relationship");
     const raw = safeRead(CONSENSUS_FILE) || "";
     // Determine ID prefix based on type: culture/norm → "C", decision → "D", else numeric
     const typeNorm = String(type).toLowerCase();

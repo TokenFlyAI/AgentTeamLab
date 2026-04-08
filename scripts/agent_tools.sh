@@ -441,7 +441,7 @@ add_culture() {
   fi
   local api_type section
   case "$kind" in
-    norm|culture) api_type="culture"; section="Core Behavioral Norms (Must Follow)" ;;
+    norm|culture) api_type="norm"; section="Core Behavioral Norms (Must Follow)" ;;
     decision) api_type="decision"; section="Strategic Decisions & Commitments" ;;
     *) api_type="culture"; section="Core Behavioral Norms (Must Follow)" ;;
   esac

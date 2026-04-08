@@ -45,8 +45,15 @@ planets/*/data/ceo_inbox/
 test-results/
 playwright-report/
 
-# Task outputs from e2e test runs
+# Task outputs from e2e test runs and agent runtime
 public/task_outputs/
+planets/*/output/shared/task_outputs/
+
+# Agent cycle failure logs (ephemeral)
+planets/*/agents/*/logs/cycle_failures.log
+
+# Runtime context snapshots in agent dirs (prev files)
+planets/*/agents/*/*.prev
 
 # SQLite WAL journal files (ephemeral)
 backend/messages.db-shm
@@ -65,6 +72,10 @@ planets/*/output/shared/reports/heartbeat_status.json
 planets/*/output/shared/reports/health_check_log.jsonl
 planets/*/agents/*/tests/integration/*_results.json
 planets/*/agents/public/
+
+# Runtime daemon PID files
+*.pid
+.smart_run_daemon.pid
 
 # Temp config dirs
 /tmp/aicompany_config/
