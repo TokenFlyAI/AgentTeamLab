@@ -515,7 +515,7 @@ add_culture() {
 
 pipeline_status() {
   echo "=== D004 Pipeline Status ==="
-  echo "Sprint 11 execution order: grace → bob → ivan → dave"
+  echo "Execution order: grace(Phase1) → bob(Phase3) → ivan(Phase2) → dave(Phase4)"
   echo "(D004 phase labels: Phase1=grace, Phase3=bob, Phase2=ivan, Phase4=dave)"
   echo ""
   _check_file() {
@@ -564,26 +564,29 @@ log_progress() {
 }
 
 sprint_status() {
-  # sprint_status — Show Sprint 11 task states and pipeline dependency chain
+  # sprint_status — Show current active task states + pipeline output file status
   # Useful for Sam (velocity), Alice (coordination), Tina (QA gate)
-  echo "=== Sprint 11 Status (T1200-T1207) ==="
+  echo "=== Current Sprint Tasks ==="
   echo "Pipeline: grace(T1203) → bob(T1201) → ivan(T1204) → dave(T1207)"
   echo ""
   curl -s "${_API}/api/tasks" -H "${_AUTH_HEADER}" 2>/dev/null | python3 -c "
-import sys, json
+import sys, json, re
 tasks = json.load(sys.stdin)
-sprint = {str(t['id']): t for t in tasks if str(t.get('id','')).isdigit() and 1200 <= int(t['id']) <= 1207}
-order = ['1200','1201','1202','1203','1204','1205','1206','1207']
-for tid in order:
-    t = sprint.get(tid)
-    if not t: print(f'  T{tid}: not found'); continue
+# Show all active regular tasks (numeric IDs, non-done/cancelled)
+active = [t for t in tasks if
+    re.match(r'^\d+$', str(t.get('id','')))
+    and (t.get('status','') or '').lower() not in ('done','cancelled','canceled')]
+active.sort(key=lambda t: int(t.get('id',0)))
+if not active:
+    print('  (no active tasks)')
+for t in active:
     status = t.get('status','?')
     assignee = t.get('assignee','?')
     title = t.get('title','')[:50]
     notes = (t.get('notes') or '').strip()
     last_note = notes.split(';;')[-1].strip()[:80] if notes else ''
     status_icon = {'open': '○', 'in_progress': '⟳', 'in_review': '◎', 'done': '✓'}.get(status, '?')
-    print(f'  {status_icon} T{tid} [{status:11s}] {assignee:8s}  {title}')
+    print(f'  {status_icon} T{t[\"id\"]} [{status:11s}] {assignee:8s}  {title}')
     if last_note: print(f'       Note: {last_note}')
 " 2>/dev/null || echo "  (failed to fetch tasks — is server running?)"
   echo ""
