@@ -358,28 +358,45 @@ except Exception as e: print(f'Error injecting metadata: {e}')
 
 handoff() {
   # Usage: handoff <target_agent> <task_id> <artifact_path> <run_command> ["notes"]
-  # C16-compliant handoff message (DM + Post)
+  # C13/C16-compliant handoff: DM + Post + auto in_review + C20 metadata check
   local to="$1" task_id="$2" path="$3" cmd="$4" notes="${5:-}"
   if [ -z "$to" ] || [ -z "$task_id" ] || [ -z "$path" ] || [ -z "$cmd" ]; then
     echo "Usage: handoff <target_agent> <task_id> <artifact_path> <run_command> [\"notes\"]"
     return 1
   fi
-  
+
   [ ! -f "$path" ] && echo "Error: Artifact not found at $path" && return 1
 
+  # C20: warn if JSON artifact is missing metadata
+  if [[ "$path" == *.json ]]; then
+    if ! grep -q '"metadata"' "$path" 2>/dev/null || ! grep -q '"task_id"' "$path" 2>/dev/null; then
+      echo "Warning: $path is missing C20 metadata. Run: artifact_metadata $path $task_id"
+    fi
+  fi
+
   local from="${_SELF:-unknown}"
-  local ts=$(date +%Y-%m-%d\ %H:%M:%S)
+  # Use file modification time as freshness marker (more accurate than call time)
+  local freshness; freshness=$(date -r "$path" +%Y-%m-%dT%H:%M:%S 2>/dev/null || date +%Y-%m-%dT%H:%M:%S)
   # Prefix numeric IDs with T; leave D/I prefix IDs as-is
   local task_display; task_display=$(echo "$task_id" | python3 -c "import sys; s=sys.stdin.read().strip(); print('T'+s if s.isdigit() else s)")
   local msg="### Handoff: ${task_display} from ${from}
 - **Artifact**: ${path}
 - **Run Command**: \`${cmd}\`
-- **Freshness**: ${ts}
+- **Freshness**: ${freshness}
 - **Notes**: ${notes}"
 
   dm "$to" "$msg"
   post "HANDOFF: ${task_display} to ${to} — Artifact: ${path}"
-  echo "Handoff complete. Remember to mark ${task_display} as in_review or done."
+  task_inreview "$task_id" "Handoff to ${to}: ${path} (C16)"
+  echo "Handoff complete: ${task_display} → in_review, DM sent to ${to}."
+}
+
+check_handoff() {
+  # Usage: check_handoff <artifact_path>
+  # Convenience for receiving agents to verify an incoming handoff artifact (C15/C16/C20)
+  local path="$1"
+  [ -z "$path" ] && echo "Usage: check_handoff <artifact_path>" && return 1
+  artifact_validate "$path" --check-metadata
 }
 
 # ── Information ──────────────────────────────────────────────────────────────
@@ -500,4 +517,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"
