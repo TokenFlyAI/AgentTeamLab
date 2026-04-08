@@ -483,7 +483,11 @@ if tasks:
             desc_preview = desc[:200] + "…" if len(desc) > 200 else desc
             out.append("    {}".format(desc_preview))
 else:
-    out.append("**Your open tasks**: none assigned")
+    unassigned = d.get("unassigned_count", 0)
+    if unassigned > 0:
+        out.append("**Your open tasks**: none assigned ({} unassigned available — run `task_list` to see and claim them)".format(unassigned))
+    else:
+        out.append("**Your open tasks**: none assigned")
 out.append("")
 
 # Pending review (for tina/olivia/alice — tasks waiting for their review)

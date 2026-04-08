@@ -2461,6 +2461,18 @@ async function handleRequest(req, res) {
       })
       .map(truncateDesc);
 
+    // Count unassigned open tasks (excluding Directions/Instructions) so agents know
+    // whether to call task_list when they have no assigned tasks
+    const unassigned_count = allTasks.filter(t => {
+      const assignee = (t.assignee || "").trim().toLowerCase();
+      const isUnassigned = !assignee || assignee === "unassigned" || assignee === "undefined" || assignee === "-";
+      const status = (t.status || "").toLowerCase();
+      const isActive = !["done", "cancelled", "canceled", "in_review"].includes(status);
+      const id = String(t.id || "");
+      const isRegular = !/^[DI]/i.test(id);  // Skip Directions/Instructions — intentionally unassigned
+      return isUnassigned && isActive && isRegular;
+    }).length;
+
     // For reviewer agents (tina, olivia, alice): also include in_review tasks from all agents
     // so they can proactively pick them up without running task_list each cycle
     const REVIEWER_AGENTS = new Set(["tina", "olivia", "alice"]);
@@ -2528,6 +2540,7 @@ async function handleRequest(req, res) {
         more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),
       },
       tasks,
+      unassigned_count,
       pending_review,
       team_channel: teamChannel,
       announcements,

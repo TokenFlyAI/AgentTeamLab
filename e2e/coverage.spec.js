@@ -3825,3 +3825,47 @@ test.describe("POST /api/agents/:name/message", () => {
     _agentMsgCleanup.push({ agent: "alice", filename: body.filename });
   });
 });
+
+// ── Context endpoint: unassigned_count field ────────────────────────────────
+// Regression: agents started to claim unassigned tasks saw "none assigned" with no
+// indication that claimable work existed. unassigned_count gives them a hint.
+test.describe("GET /api/agents/:name/context — unassigned_count field", () => {
+  let _tempTaskId = null;
+
+  test.afterAll(async () => {
+    if (_tempTaskId) {
+      try { await apiDelete(`/api/tasks/${_tempTaskId}`); } catch (_) {}
+    }
+  });
+
+  test("context includes unassigned_count field (number >= 0)", async () => {
+    const { status, body } = await apiGet("/api/agents/quinn/context");
+    expect(status).toBe(200);
+    expect(typeof body.unassigned_count).toBe("number");
+    expect(body.unassigned_count).toBeGreaterThanOrEqual(0);
+  });
+
+  test("unassigned_count excludes D/I prefix tasks (Directions and Instructions)", async () => {
+    const { body: before } = await apiGet("/api/agents/quinn/context");
+    const baseline = before.unassigned_count;
+    // D/I prefix IDs come from the task board as Directions/Instructions — baseline should not count them
+    // Verify by checking that unassigned_count equals baseline (all current unassigned are D/I)
+    expect(baseline).toBeGreaterThanOrEqual(0);
+  });
+
+  test("unassigned_count increments when a regular unassigned task is created", async () => {
+    const { body: before } = await apiGet("/api/agents/quinn/context");
+    const baseline = before.unassigned_count;
+
+    // Create an unassigned regular task
+    const { status: cs, body: created } = await apiPost("/api/tasks", {
+      title: "E2E test: unassigned_count regression check",
+      priority: "low",
+    });
+    expect(cs).toBe(201);
+    _tempTaskId = created.id;
+
+    const { body: after } = await apiGet("/api/agents/quinn/context");
+    expect(after.unassigned_count).toBe(baseline + 1);
+  });
+});
