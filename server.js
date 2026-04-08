@@ -3552,8 +3552,14 @@ async function handleRequest(req, res) {
     const raw = cached("company_mode", 30_000, () => safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "");
     let mode = "normal";
     if (raw) {
-      const m = raw.match(/##\s*Current Mode\s*\n\*\*(\w+)\*\*/i);
-      if (m) mode = m[1].toLowerCase();
+      // Match **mode** anywhere after "## Current Mode" section header (tolerates blank lines)
+      const sectionMatch = raw.match(/##\s*Current Mode[\s\S]*?\*\*(\w+)\*\*/i);
+      if (sectionMatch) mode = sectionMatch[1].toLowerCase();
+      else {
+        // Fallback: first **word** in file (used by context endpoint too)
+        const m = raw.match(/\*\*(\w+)\*\*/);
+        if (m) mode = m[1].toLowerCase();
+      }
     }
     return json(res, { mode, raw });
   }
