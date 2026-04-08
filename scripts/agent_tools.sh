@@ -654,10 +654,11 @@ collab_status() {
   echo "=== Collaboration Status ==="
   echo ""
   echo "Team channel posts (current sprint — not archived):"
-  # Count posts per agent from current team_channel dir
+  # Count posts per agent from current team_channel dir; show silent agents (C22)
   python3 -c "
 import os, re, sys
 channel = sys.argv[1]
+agents_dir = sys.argv[2]
 counts = {}
 if os.path.isdir(channel):
     for f in os.listdir(channel):
@@ -666,13 +667,19 @@ if os.path.isdir(channel):
         if m:
             agent = m.group(1).lower()
             counts[agent] = counts.get(agent, 0) + 1
+# Get all known agents from agents/ dir
+all_agents = sorted(d for d in os.listdir(agents_dir) if os.path.isdir(os.path.join(agents_dir, d))) if os.path.isdir(agents_dir) else []
 if counts:
     for ag, cnt in sorted(counts.items(), key=lambda x: -x[1]):
         bar = '█' * min(cnt, 20)
         print(f'  {ag:12s} {cnt:3d} {bar}')
 else:
     print('  (none — sprint just started or all archived)')
-" "$channel" 2>/dev/null
+silent = [a for a in all_agents if a not in counts]
+if silent:
+    more_str = ' +more' if len(silent) > 8 else ''
+    print('  ⚠ {} silent (C22 — no posts): {}{}'.format(len(silent), ', '.join(silent[:8]), more_str))
+" "$channel" "${_AGENTS}" 2>/dev/null
   echo ""
   echo "Agent inbox DM backlog (unprocessed messages):"
   for agent_dir in "${_AGENTS}"/*/; do
