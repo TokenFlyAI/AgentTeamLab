@@ -2468,11 +2468,12 @@ async function handleRequest(req, res) {
       : [];
 
     // Recent team channel (cached 20s — new posts appear within one agent cycle anyway)
+    // Show last 10 posts: with 20 agents posting (C22), 5 was too few to catch up on resume
     const teamChannel = cached("team_channel", 20_000, () => {
       const tcDir = path.join(PUBLIC_DIR, "team_channel");
       return listDir(tcDir)
         .filter(f => f.endsWith(".md"))
-        .sort().reverse().slice(0, 5)
+        .sort().reverse().slice(0, 10)
         .map(f => {
           const raw = safeRead(path.join(tcDir, f)) || "";
           const lines = raw.split("\n");

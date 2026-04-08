@@ -500,11 +500,11 @@ if pending:
             tid_display, t.get("priority","medium"), t.get("title",""), t.get("assignee",""), note_str))
     out.append("")
 
-# Team channel (last 5)
+# Team channel (last 10 — server now returns up to 10)
 tc = d.get("team_channel", [])
 if tc:
     out.append("**Recent team channel**:")
-    for m in tc[-5:]:
+    for m in tc[-10:]:
         out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
     out.append("")
 
