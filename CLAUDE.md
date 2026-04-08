@@ -275,13 +275,13 @@ Agents collaborate using these mechanisms:
 | **Peer Status** | Read `agents/{name}/status.md` | Every cycle — see what teammates are doing |
 | **Shared Output** | Write to `output/shared/merged/` | Cross-agent deliverables |
 | **Task Review** | `POST /api/tasks/:id/review` | Approve/reject finished work |
-| **Agent Tools** | `source scripts/agent_tools.sh` then `dm`, `broadcast`, `read_peer`, `list_outputs`, `read_channel`, `create_task`, `create_direction`, `create_instruction`, `handoff`, `check_handoff`, etc. | Shorthand for all above |
+| **Agent Tools** | `source scripts/agent_tools.sh` then `dm`, `broadcast`, `read_peer`, `list_outputs`, `read_channel`, `create_task`, `create_direction`, `create_instruction`, `handoff`, `check_handoff`, `sprint_status`, `collab_status`, `evolve_persona`, etc. | Shorthand for all above |
 
 ### Culture Norms (consensus.md)
 - **C1-C8**: Core norms (paper trading, auth, citing culture, peer reads, task flow, knowledge refs, close tasks, verify code)
 - **C9**: DM teammates when your work affects theirs
 - **C10**: Post milestones to team_channel
-- **C11**: Mark tasks `in_review` not `done` — reviewers approve/reject
+- **C11**: Mark tasks `in_review` not `done` — `task_inreview` auto-DMs tina+olivia, then they approve/reject
 - **C12-C21**: Executor model, handoffs, artifact metadata/freshness, status.md overwrite, reviewer repro, platform handoff tools
 - **C22**: Post to team_channel at least once per session (mandatory visibility)
 - **C23**: Self-unblock via `ls ../../agents/{name}/output/` before DMing — check if file exists first
