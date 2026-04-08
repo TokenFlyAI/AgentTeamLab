@@ -653,7 +653,7 @@ if culture:
         # Compact: strip bold markers from content to save tokens
         content = _re.sub(r'\*\*(.*?)\*\*', r'\1', content)
         if _re.match(r'^C\d+$', id_col, _re.I):
-            norms.append('{}: {}'.format(id_col, content[:200]))
+            norms.append('{}: {}'.format(id_col, content[:100]))
         elif _re.match(r'^D\d+$', id_col, _re.I):
             dnum = int(_re.match(r'^D(\d+)$', id_col, _re.I).group(1))
             all_d_entries.append((dnum, content))

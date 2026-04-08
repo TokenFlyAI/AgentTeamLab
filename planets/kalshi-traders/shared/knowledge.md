@@ -230,13 +230,71 @@ Purpose: validate the D004 pipeline end-to-end with realistic synthetic Kalshi-s
 
 **Theme:** Improve pipeline accuracy, platform observability, and agent collaboration quality.
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE (D10). All tasks done (2026-04-07/08).
 
 | Task | ID | Agent | Priority | Status | Description |
 |------|----|-------|----------|--------|-------------|
-| Phase 1 filter analysis | T910 | Bob | High | **open** | Tune market filter thresholds against live fixture data |
-| Phase 2 cluster confidence | T911 | Ivan | High | **open** | Add confidence scores to cluster output |
-| Dashboard health monitoring | T912 | Charlie | Medium | **open** | Add health/latency trend section to Stats tab |
-| Persona audit | T913 | Alice | Medium | **open** | Improve low-health agent personas (frank, liam) |
-| Phase 3 data quality gate | T914 | Grace | Medium | **open** | Validate correlation_pairs.json freshness and quality |
-| Culture norms C17-C20 | T915 | Sam | Low | **open** | Add norms around output freshness and peer verification |
+| Phase 1 filter analysis | T938 | Bob | High | **done** | Tuned market filter thresholds; updated Phase 1 output |
+| Phase 2 cluster confidence | T939 | Ivan | High | **done** | Added confidence scores to cluster output |
+| Dashboard health monitoring | T940 | Charlie | Medium | **done** | Health/latency trend section added to Stats tab |
+| Security audits | T947/T989 | Heidi | High | **done** | Phase 1-4 security audit complete; no critical findings |
+| Mobile prototype | T948 | Judy | Medium | **done** | SwiftUI Opportunity Feed prototype delivered |
+| Persona audit | T913 | Alice | Medium | **done** | Low-health agent personas improved |
+| Phase 3 data quality gate | T914 | Grace | Medium | **done** | Validated correlation_pairs.json freshness and quality |
+
+## Sprint 9: Phase A Microservice Prep + Pipeline Validation
+
+**Theme:** Prepare Phase A microservice architecture and validate the full D004 pipeline with live signals.
+
+**Status:** COMPLETE (D11). All tasks done (2026-04-07/08).
+
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Topology view | T1006 | Charlie | Medium | **done** | Service topology diagram added to dashboard |
+| Phase A schema versioning | T1008 | Mia | High | **done** | Schema versioning for microservice readiness |
+| E2E pipeline validation | T1009 | Bob | High | **done** | Full D004 pipeline validated with live signals |
+| API client SDK | T1014 | Karl | High | **done** | lib/api_client.js — zero-dep Node.js SDK, 74 endpoints, 14 namespaces; shipped to output/shared/codebase/lib/api_client.js |
+| CI/CD pipeline | T1019 | Eve | High | **done** | CI/CD pipeline for Phase A schema-versioned API endpoints |
+| Sprint 9 retro + Sprint 10 plan | — | Alice | High | **done** | Sprint 9 closed; D004 microservice prep complete |
+
+## Sprint 10: Phase B Deploy + Security Hardening
+
+**Theme:** Deploy Phase B and harden security across the D004 pipeline.
+
+**Status:** COMPLETE (D12). All tasks done (2026-04-07/08).
+
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Security fixes in correlation_engine | T1038 | Bob | High | **done** | Auth + path traversal fixes in correlation_engine/server.js |
+| QA gate: security fixes | T1040 | Tina | High | **done** | QA validation of Bob's T1038 security fixes |
+| E2E smoke test | T1028 | Dave | High | **done** | Phase 1→4 smoke test PASS 4/4; 119 markets, 0.01s |
+| Phase B microservice deploy | T1043 | Sam | Medium | **done** | Sprint 10 metrics and T236 escalation brief |
+| Sprint 10 retro + Sprint 11 plan | — | Alice | High | **done** | Sprint 10 closed; D13 Sprint 11 focus set |
+
+**Key outputs (Sprints 8-10):**
+- `output/bob/phase3_correlation_detector.js` — runnable Phase 3 correlation engine
+- `output/shared/codebase/lib/api_client.js` — Karl's API client SDK (74 endpoints)
+- `output/dave/e2e_smoke.js` — E2E smoke test (T1028, Phase 1→4 PASS)
+
+## Sprint 11: Pipeline Integration + Collaboration Quality (ACTIVE)
+
+**Theme:** Run the full D004 pipeline with latest data, measure and improve agent collaboration quality.
+
+**Status:** IN PROGRESS (D13). Tasks assigned 2026-04-08.
+
+| Task | ID | Agent | Priority | Status | Description |
+|------|----|-------|----------|--------|-------------|
+| Collab health audit | T1200 | Alice | High | **open** | Audit agent collaboration; DM silent agents; collab health report |
+| Phase 3 E2E correlation run | T1201 | Bob | High | **open** | Run correlation engine on Grace's latest fixture; output/correlation_pairs_sprint11.json |
+| Collaboration indicators panel | T1202 | Charlie | Medium | **open** | Dashboard panel: team_channel count, DM activity, handoffs |
+| Phase 1 data refresh | T1203 | Grace | High | **open** | Refresh markets_filtered_sprint11.json with latest thresholds |
+| Phase 2 cluster confidence refresh | T1204 | Ivan | High | **open** | Updated cluster_confidence_sprint11.json with confidence scores |
+| Sprint 11 velocity report | T1205 | Sam | Medium | **open** | Token efficiency + collaboration tool usage metrics |
+| QA gate: Sprint 11 deliverables | T1206 | Tina | High | **open** | Validate all Sprint 11 artifacts (T1200-T1205) |
+| E2E pipeline integration | T1207 | Dave | High | **open** | Full D004 pipeline: grace→bob→ivan→trade signals; sprint11_e2e_results.md |
+
+**Pipeline execution order for Sprint 11:**
+1. Grace (T1203) → refreshed markets_filtered_sprint11.json
+2. Bob (T1201) → correlation_pairs_sprint11.json (reads Grace's output)
+3. Ivan (T1204) → cluster_confidence_sprint11.json (reads Bob's output)
+4. Dave (T1207) → sprint11_e2e_results.md (chains all 3 phases)

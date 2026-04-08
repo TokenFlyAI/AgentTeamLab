@@ -472,3 +472,12 @@
 | 1221 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
 | 1228 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
 | 1243 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1262 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1265 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1268 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1271 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1274 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1277 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1280 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1288 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1296 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |

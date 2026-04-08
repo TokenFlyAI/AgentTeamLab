@@ -9,9 +9,9 @@
     "kimi",
     "claude"
   ],
-  "last_updated": "2026-04-08T09:22:52Z",
+  "last_updated": "2026-04-08T10:58:27Z",
   "force_alice": 1,
-  "dry_run": false,
+  "dry_run": true,
   "dry_run_sleep": 120,
   "description": "Smart Run configuration - Controls how many agents run and selection strategy",
   "cycle_sleep_seconds": 100,

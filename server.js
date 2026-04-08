@@ -721,14 +721,44 @@ function getAgentSummary(name) {
   const roleMap = getRoleMap();
   const role = roleMap.get(name.toLowerCase()) || "";
 
-  // Extract current task from status.md
+  // Extract current task — priority: task board (canonical) > status.md > heartbeat
   let current_task = null;
-  if (statusMd) {
-    const m = statusMd.match(/##\s*Currently Working On\s*\n+([^\n#]+)/)
-           || statusMd.match(/current.*?(?:task|focus)[:\s]+([^\n]+)/i);
-    if (m) current_task = m[1].trim();
+  // 1. Task board: find in_progress or open task assigned to this agent
+  const taskBoardTasks = cached("task_board", 10_000, () => parseTaskBoard());
+  const myTasks = taskBoardTasks.filter(
+    t => (t.assignee || "").toLowerCase().split(",").map(a => a.trim()).includes(name.toLowerCase())
+      && !["done", "cancelled", "canceled", "in_review"].includes((t.status || "").toLowerCase())
+  );
+  const inProgress = myTasks.find(t => (t.status || "").toLowerCase() === "in_progress");
+  const firstTask = inProgress || myTasks[0];
+  if (firstTask) {
+    const tid = String(firstTask.id || "");
+    const tidDisplay = /^\d+$/.test(tid) ? "T" + tid : tid;
+    current_task = tidDisplay + ": " + (firstTask.title || "").slice(0, 60);
   }
-  if (!current_task && heartbeat && heartbeat.task) current_task = heartbeat.task;
+  // 2. Fall back to status.md — only if the extracted task doesn't look completed/idle
+  if (!current_task && statusMd) {
+    // First regex: captures line after "## Currently Working On" heading
+    // Second regex: inline "current task: <value>" on same line (^ anchored, no heading match)
+    const m = statusMd.match(/##\s*Currently Working On\s*\n+([^\n#\-|]+)/)
+           || statusMd.match(/^current\s*(?:task|focus)\s*:\s*(.+)$/im);
+    if (m) {
+      const candidate = m[1].trim().replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\|/g, "·");
+      // Skip if candidate looks done, idle, or empty
+      const nextLines = statusMd.slice(statusMd.indexOf(m[1].trim())).split("\n").slice(1, 3).join(" ");
+      const isDone = /\b(DONE|COMPLETE|APPROVED|done|complete)\b/.test(nextLines + " " + candidate);
+      const isIdle = /^(none|idle|stopped|waiting|available|unassigned)/i.test(candidate)
+                  || /\b(IDLE|idle|awaiting|no assigned|no task)\b/.test(candidate);
+      if (!isDone && !isIdle && candidate.length > 2) current_task = candidate;
+    }
+  }
+  // 3. Fall back to heartbeat.task — skip idle/stopped/done values
+  if (!current_task && heartbeat && heartbeat.task) {
+    const htask = heartbeat.task.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\|/g, "·").trim();
+    const isIdleHb = /^(stopped|none|idle|waiting|available|unassigned)/i.test(htask)
+                  || /\b(DONE|COMPLETE|APPROVED)\b/.test(htask);
+    if (!isIdleHb) current_task = htask;
+  }
 
   // Extract cycle count from status.md
   let cycles = null;
@@ -2439,8 +2469,8 @@ async function handleRequest(req, res) {
     // Split into urgent (from_ceo / from_lord) and regular
     const urgentFiles = inboxFiles.filter(f => f.includes("from_ceo") || f.includes("from_lord"));
     const regularFiles = inboxFiles.filter(f => !f.includes("from_ceo") && !f.includes("from_lord"));
-    // Read full content of last 2 urgent messages
-    const urgentMessages = urgentFiles.slice(0, 2).map(f => ({
+    // Read full content of last 4 urgent messages (show more per cycle to drain backlogs faster)
+    const urgentMessages = urgentFiles.slice(0, 4).map(f => ({
       filename: f,
       content: safeRead(path.join(inboxDir, f)) || "",
     }));
@@ -2577,7 +2607,7 @@ async function handleRequest(req, res) {
       inbox: {
         total_unread: inboxFiles.length,
         urgent: urgentMessages,
-        urgent_more: Math.max(0, urgentFiles.length - 2),  // extra urgent msgs beyond 2 shown
+        urgent_more: Math.max(0, urgentFiles.length - 4),  // extra urgent msgs beyond 4 shown
         messages: inboxPreviews,
         regular_total: regularFiles.length,               // regular (non-urgent) message count
         regular_more: Math.max(0, regularFiles.length - 15), // hidden regular messages
