@@ -152,7 +152,8 @@ active=[t for t in tasks if t.get('status') in ('open','in_progress','in_review'
 if assignee: active=[t for t in active if assignee in [a.strip() for a in (t.get('assignee','') or '').lower().split(',')]]
 if not active: print('No active tasks' + (f' for {assignee}' if assignee else '')); sys.exit()
 for t in active:
-  print(f'[{t[\"id\"]}] {t[\"status\"]:12s} P:{t.get(\"priority\",\"?\"):8s} {t.get(\"assignee\",\"unassigned\"):10s} {t[\"title\"][:60]}')
+  tid=str(t['id']); tid_display='T'+tid if tid.isdigit() else tid
+  print(f'[{tid_display}] {t[\"status\"]:12s} P:{t.get(\"priority\",\"?\"):8s} {t.get(\"assignee\",\"unassigned\"):10s} {t[\"title\"][:60]}')
 " 2>/dev/null
 }
 

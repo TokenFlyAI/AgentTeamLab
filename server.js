@@ -3844,8 +3844,8 @@ function normalizeEndpoint(method, pathname) {
   p = p.replace(/^(\/api\/agents\/:name\/cycles\/)(\d+)/, "$1:n");
   // /api/agents/:name/output/:file — any filename
   p = p.replace(/^(\/api\/agents\/:name\/output\/)(.+)/, "$1:file");
-  // /api/tasks/:id and /api/tasks/:id/...
-  p = p.replace(/^(\/api\/tasks\/)(\d+)/, "$1:id");
+  // /api/tasks/:id and /api/tasks/:id/... (numeric or D/I prefix like D001, I001)
+  p = p.replace(/^(\/api\/tasks\/)([A-Z]\d+|\d+)/, "$1:id");
   // /api/inbox/:agent and /api/inbox/:agent/:id/ack
   p = p.replace(/^(\/api\/inbox\/)([a-zA-Z0-9_-]+)/, "$1:agent");
   p = p.replace(/^(\/api\/inbox\/:agent\/)(\d+)/, "$1:id");
