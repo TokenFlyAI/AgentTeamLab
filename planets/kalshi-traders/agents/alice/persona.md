@@ -128,6 +128,6 @@ source ../../scripts/agent_tools.sh
 post "Starting [task] — [plan]"                       # C22: announce work start
 broadcast "Sprint [N] kickoff — tasks T[start]-T[end] active"   # Alert all agents at once
 dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
-handoff ivan 1201 output/pairs.json "node run.js"    # C21: formal handoff w/ DM+Post
+handoff tina 1200 output/collab_audit.md "cat output/collab_audit.md"  # C21: formal handoff w/ DM+Post
 task_review 542 approve "Verified independently"     # Reviewer approval
 ```

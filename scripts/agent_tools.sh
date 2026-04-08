@@ -514,6 +514,8 @@ add_culture() {
 
 pipeline_status() {
   echo "=== D004 Pipeline Status ==="
+  echo "Sprint 11 execution order: grace → bob → ivan → dave"
+  echo "(D004 phase labels: Phase1=grace, Phase3=bob, Phase2=ivan, Phase4=dave)"
   echo ""
   _check_file() {
     local label="$1" path="$2"
@@ -525,20 +527,20 @@ pipeline_status() {
       echo "  ✗ $label MISSING: $path"
     fi
   }
-  echo "Phase 1 (Market Filter — grace):"
+  echo "Step 1 — Phase 1 (Market Filter — grace):"
   _check_file "markets_filtered_sprint11.json [SPRINT 11]" "${_AGENTS}/grace/output/markets_filtered_sprint11.json"
   _check_file "filtered_markets_live_fixture.json [Sprint 7]" "${_AGENTS}/grace/output/filtered_markets_live_fixture.json"
   echo ""
-  echo "Phase 2 (Clustering — ivan):"
-  _check_file "cluster_confidence_sprint11.json [SPRINT 11]" "${_AGENTS}/ivan/output/cluster_confidence_sprint11.json"
-  _check_file "market_clusters.json [Sprint 7]" "${_AGENTS}/ivan/output/market_clusters.json"
-  echo ""
-  echo "Phase 3 (Correlation — bob):"
+  echo "Step 2 — Phase 3 (Correlation — bob):  ← reads grace's output"
   _check_file "correlation_pairs_sprint11.json [SPRINT 11]" "${_AGENTS}/bob/output/correlation_pairs_sprint11.json"
   _check_file "correlation_pairs.json [Sprint 7]" "${_AGENTS}/bob/output/correlation_pairs.json"
   _check_file "trade_signals.json" "${_AGENTS}/bob/output/trade_signals.json"
   echo ""
-  echo "Phase 4 (E2E — dave):"
+  echo "Step 3 — Phase 2 (Clustering — ivan):  ← reads bob's output"
+  _check_file "cluster_confidence_sprint11.json [SPRINT 11]" "${_AGENTS}/ivan/output/cluster_confidence_sprint11.json"
+  _check_file "market_clusters.json [Sprint 7]" "${_AGENTS}/ivan/output/market_clusters.json"
+  echo ""
+  echo "Step 4 — Phase 4 (E2E — dave):  ← reads grace+bob+ivan outputs"
   _check_file "sprint11_e2e_results.md [SPRINT 11]" "${_AGENTS}/dave/output/sprint11_e2e_results.md"
   _check_file "pipeline_report.md [Sprint 7]" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""

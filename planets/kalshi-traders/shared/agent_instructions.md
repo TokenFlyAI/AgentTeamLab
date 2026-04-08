@@ -50,6 +50,7 @@
   - C6: "Following C6: referenced knowledge.md Phase 1 filtering algorithm"
   - C22: "Following C22: posting to team_channel — starting my task"
   - C23: "Following C23: checking grace's output/ directly — no need to wait for DM"
+  - C24: "Following C24: calling inbox_done on message from bob — moving to processed/"
 - **Decisions to align with:**
   - D2: D004 is north star — all decisions orient toward 4-phase pipeline
   - **Current sprint**: Check the `### Culture & Decisions` section in your live context snapshot
@@ -164,9 +165,9 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 3. Your assigned open/in_progress tasks (from task board)
 4. Unassigned tasks you can claim (if no assigned work)
 
-**After handling any message**: call `inbox_done <filename>` to move it to processed/. This keeps your inbox clean and prevents the backlog from growing unboundedly. CEO/Lord messages are never auto-archived — you must `inbox_done` them manually after acting on them.
+**After handling any message (C24)**: call `inbox_done <filename>` to move it to processed/. This keeps your inbox clean and prevents the backlog from growing unboundedly. CEO/Lord messages are never auto-archived — you must `inbox_done` them manually after acting on them.
 
-**Keep inbox clean**: Run `inbox_archive_old 6` at the start of each fresh session to archive messages older than 6 hours. This prevents stale DMs from old sprints from cluttering your context.
+**Keep inbox clean**: Run `inbox_archive_old 24` at the start of each fresh session to archive messages older than 24 hours. This prevents stale DMs from old sprints from cluttering your context.
 
 ---
 

@@ -25,7 +25,7 @@
   - Calculate expected spread from historical correlation
   - Score arbitrage confidence (higher r = higher confidence)
 - **Reference:** https://hudson-and-thames-arbitragelab.readthedocs-hosted.com/en/latest/distance_approach/pearson_approach.html
-- **Input:** market_clusters.json from Phase 2
+- **Input:** market_clusters.json from Phase 2 (canonical) — in Sprint 11, Bob reads Grace's filtered markets directly (Phase1→Phase3→Phase2→Phase4 execution order)
 - **Deliverable:** correlation_pairs.json with {cluster, market_a, market_b, pearson_r, expected_spread, current_spread, arbitrage_confidence}
 - **Status:** COMPLETE (T348/T535, Bob) — 105 pairs detected, 73 significant, 30 arbitrage signals
   - All tickers trace back to Phase 1 markets_filtered.json (data chain verified)
@@ -94,7 +94,7 @@ Disabled strategies:
 
 - **Dashboard:** agents/bob/backend/dashboard_api.js running on port 3200
 - **APIs operational:** /api/signals, /api/health, /api/pnl/live, /api/win-rate-trend, all returning real data
-- **Test coverage:** 96 unit + 30 integration + 624 E2E tests (57 API + 44 dashboard + 60 metrics + 383 coverage + 12 smart_run + 47 message_bus + 1 planet_create + 20 ui_verify)
+- **Test coverage:** 96 unit + 30 integration + 651 E2E tests (57 API + 44 dashboard + 64 metrics + 406 coverage + 12 smart_run + 47 message_bus + 1 planet_create + 20 ui_verify)
 - **Pipeline runner:** `node output/bob/run_pipeline.js` — runs full Phase 1→3 pipeline
 - **Production gates:** Security audit PASS, Risk audit PASS, Ops readiness PASS (T354)
 - **Blocker:** T236 (Kalshi API credentials from Founder) — only remaining dependency for live trading
