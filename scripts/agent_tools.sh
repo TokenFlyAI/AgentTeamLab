@@ -555,21 +555,46 @@ pipeline_status() {
       echo "  ✗ $label MISSING: $path"
     fi
   }
+  # Find latest sprint file matching a glob pattern (sprint-agnostic)
+  _latest_sprint_file() {
+    local dir="$1" pattern="$2"
+    find "$dir" -maxdepth 1 -name "$pattern" 2>/dev/null | sort -V | tail -1
+  }
   echo "Step 1 — Phase 1 (Market Filter — grace):"
-  _check_file "markets_filtered_sprint11.json [SPRINT 11]" "${_AGENTS}/grace/output/markets_filtered_sprint11.json"
+  _grace_sprint=$(_latest_sprint_file "${_AGENTS}/grace/output" "markets_filtered_sprint*.json")
+  if [ -n "$_grace_sprint" ]; then
+    _check_file "$(basename "$_grace_sprint") [latest sprint]" "$_grace_sprint"
+  else
+    echo "  ✗ markets_filtered_sprint*.json MISSING (no sprint output yet)"
+  fi
   _check_file "filtered_markets_live_fixture.json [Sprint 7]" "${_AGENTS}/grace/output/filtered_markets_live_fixture.json"
   echo ""
   echo "Step 2 — Phase 3 (Correlation — bob):  ← reads grace's output"
-  _check_file "correlation_pairs_sprint11.json [SPRINT 11]" "${_AGENTS}/bob/output/correlation_pairs_sprint11.json"
+  _bob_sprint=$(_latest_sprint_file "${_AGENTS}/bob/output" "correlation_pairs_sprint*.json")
+  if [ -n "$_bob_sprint" ]; then
+    _check_file "$(basename "$_bob_sprint") [latest sprint]" "$_bob_sprint"
+  else
+    echo "  ✗ correlation_pairs_sprint*.json MISSING (no sprint output yet)"
+  fi
   _check_file "correlation_pairs.json [Sprint 7]" "${_AGENTS}/bob/output/correlation_pairs.json"
   _check_file "trade_signals.json" "${_AGENTS}/bob/output/trade_signals.json"
   echo ""
   echo "Step 3 — Phase 2 (Clustering — ivan):  ← reads bob's output"
-  _check_file "cluster_confidence_sprint11.json [SPRINT 11]" "${_AGENTS}/ivan/output/cluster_confidence_sprint11.json"
+  _ivan_sprint=$(_latest_sprint_file "${_AGENTS}/ivan/output" "cluster_confidence_sprint*.json")
+  if [ -n "$_ivan_sprint" ]; then
+    _check_file "$(basename "$_ivan_sprint") [latest sprint]" "$_ivan_sprint"
+  else
+    echo "  ✗ cluster_confidence_sprint*.json MISSING (no sprint output yet)"
+  fi
   _check_file "market_clusters.json [Sprint 7]" "${_AGENTS}/ivan/output/market_clusters.json"
   echo ""
   echo "Step 4 — Phase 4 (E2E — dave):  ← reads grace+bob+ivan outputs"
-  _check_file "sprint11_e2e_results.md [SPRINT 11]" "${_AGENTS}/dave/output/sprint11_e2e_results.md"
+  _dave_sprint=$(_latest_sprint_file "${_AGENTS}/dave/output" "sprint*_e2e_results.md")
+  if [ -n "$_dave_sprint" ]; then
+    _check_file "$(basename "$_dave_sprint") [latest sprint]" "$_dave_sprint"
+  else
+    echo "  ✗ sprint*_e2e_results.md MISSING (no sprint output yet)"
+  fi
   _check_file "pipeline_report.md [Sprint 7]" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
   echo "Blocker: Kalshi API credentials needed from Founder — register at kalshi.com/signup, export KALSHI_API_KEY. See dave/output/kalshi_credentials.md"

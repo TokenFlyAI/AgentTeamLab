@@ -685,7 +685,7 @@ if culture:
             if sprint not in completed_sprints:
                 completed_sprints.append(sprint)
         else:
-            decisions.append('D{}: {}'.format(dnum, content[:400]))
+            decisions.append('D{}: {}'.format(dnum, content[:700]))
     if norms:
         out.append('Norms (C1-C{}):'.format(len(norms)))
         out.extend('  ' + n for n in norms)
