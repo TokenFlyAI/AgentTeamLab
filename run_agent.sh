@@ -1049,7 +1049,14 @@ else
     NEW_SESSION_ID="$(extract_session_id "$RAW_LOG" "$EXECUTOR")"
 fi
 
-if [ -n "$NEW_SESSION_ID" ]; then
+# Detect API errors early (before session save) — check tail of daily log for session=ERROR.
+# Must be done here because _CYCLE_SUCCESS is computed after this block.
+_API_ERROR_CYCLE=0
+if [ "$_DRY_RUN" != "1" ] && tail -20 "$DAILY_LOG" 2>/dev/null | grep -q '^\[DONE\].*session=ERROR'; then
+    _API_ERROR_CYCLE=1
+fi
+
+if [ -n "$NEW_SESSION_ID" ] && [ "$_API_ERROR_CYCLE" -eq 0 ]; then
     echo "$NEW_SESSION_ID" > "$SESSION_ID_FILE"
     NEW_CYCLE=$((SAVED_CYCLE + 1))
     echo "$NEW_CYCLE" > "$SESSION_CYCLE_FILE"
@@ -1069,6 +1076,11 @@ if [ -n "$NEW_SESSION_ID" ]; then
             } > "$MEMORY_FILE"
         fi
     fi
+elif [ -n "$NEW_SESSION_ID" ] && [ "$_API_ERROR_CYCLE" -eq 1 ]; then
+    # API error cycle: do NOT advance session counter — keep the same session/cycle count.
+    # When quota resets, the agent will resume the same session without wasting context budget.
+    NEW_CYCLE="$SAVED_CYCLE"
+    echo "[session:${AGENT_NAME}] API error — session counter NOT advanced (cycle stays at ${SAVED_CYCLE}/${SESSION_MAX_CYCLES})"
 fi
 
 # ── Cycle success check ───────────────────────────────────────────────────────
@@ -1087,10 +1099,9 @@ if [ "${_RAW_SIZE:-0}" -lt 50 ] && [ "$_DRY_RUN" != "1" ]; then
     _CYCLE_SUCCESS=0
     echo "[WARN] ${AGENT_NAME}: raw output too small (${_RAW_SIZE} bytes) — likely failed" | tee -a "$DAILY_LOG"
 fi
-# Check for API-level errors (quota exhausted, auth failures) — these produce non-zero raw bytes
-# but include status:"error" in the result event. gemini_stream_log emits [DONE]...session=ERROR.
-# Check only the last 20 lines (current cycle is always at the end of the log).
-if [ "$_DRY_RUN" != "1" ] && tail -20 "$DAILY_LOG" 2>/dev/null | grep -q '^\[DONE\].*session=ERROR'; then
+# Check for API-level errors (quota exhausted, auth failures) — reuse _API_ERROR_CYCLE flag
+# set above which already checked for [DONE]...session=ERROR in last 20 lines of daily log.
+if [ "$_API_ERROR_CYCLE" -eq 1 ]; then
     _CYCLE_SUCCESS=0
     echo "[WARN] ${AGENT_NAME}: API error detected (quota exhausted / auth failure) — marking cycle failed" | tee -a "$DAILY_LOG"
 fi
