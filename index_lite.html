@@ -4528,11 +4528,13 @@ const _chatBodies = [];
 
 function renderChat() {
   const container = document.getElementById('chat-messages');
-  const msgs = Array.isArray(chatMessages) ? chatMessages : [];
+  const allMsgs = Array.isArray(chatMessages) ? chatMessages : [];
+  const CHAT_PAGE = 50;
+  const msgs = window._chatShowAll ? allMsgs : allMsgs.slice(0, CHAT_PAGE);
   const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
 
   _chatBodies.length = 0; // reset on each render
-  container.innerHTML = msgs.map((msg, i) => {
+  let html = msgs.map((msg, i) => {
     const from = msg.from || msg.sender || 'Unknown';
     const body = msg.message || msg.body || msg.content || '';
     const time = msg.timestamp || msg.time || msg.created_at || '';
@@ -4545,6 +4547,10 @@ function renderChat() {
       (isLong ? '<span class="msg-toggle" onclick="toggleChatMsg(' + i + ')">Show more</span>' : '') +
     '</div>';
   }).join('');
+  if (allMsgs.length > CHAT_PAGE && !window._chatShowAll) {
+    html = '<div style="text-align:center;padding:8px;"><button onclick="window._chatShowAll=true;renderChat();" style="background:#16213e;border:1px solid #0f3460;color:#aaa;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.8rem;">Show all ' + allMsgs.length + ' messages (' + (allMsgs.length - CHAT_PAGE) + ' older)</button></div>' + html;
+  }
+  container.innerHTML = html;
 
   if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
@@ -5117,7 +5123,8 @@ function startModalLiveLog() {
   const viewer = document.getElementById('modal-log-viewer');
   const statusEl = document.getElementById('modal-livelog-status');
   if (statusEl) { statusEl.textContent = 'Connecting...'; statusEl.style.color = '#888'; }
-  const url = '/api/agents/' + encodeURIComponent(currentModalAgent) + '/log/stream';
+  const _sseKey = window.__DASHBOARD_API_KEY;
+  const url = '/api/agents/' + encodeURIComponent(currentModalAgent) + '/log/stream' + (_sseKey ? '?key=' + encodeURIComponent(_sseKey) : '');
   modalLiveLogSSE = new EventSource(url);
   modalLiveLogSSE.addEventListener('connected', () => {
     if (statusEl) { statusEl.textContent = '● Live'; statusEl.style.color = '#00ff88'; }

@@ -41,16 +41,18 @@
 
 ### B. public/consensus.md (Culture & Decisions)
 - **Already injected into your context via live snapshot (full file). Do NOT re-read.**
-- Contains behavioral norms (C1-C21) and strategic decisions (D1-D8)
+- Contains behavioral norms (C1-C23) and strategic decisions (D1-D13)
 - **When to reference:** Before each decision point — use what's already in context
 - **Example behaviors to cite:**
   - C3: "Following C3: citing culture in decision — prioritizing D004 over other work"
   - C4: "Following C4: read Grace's status.md — she completed T343 markets_filtered.json, ready for Ivan"
   - C5: "Following C5: claiming T343 and moving to in_progress (don't skip to done)"
   - C6: "Following C6: referenced knowledge.md Phase 1 filtering algorithm"
+  - C22: "Following C22: posting to team_channel — starting T1203 Phase 1 data refresh"
+  - C23: "Following C23: checking grace's output/ directly — no need to wait for DM"
 - **Decisions to align with:**
   - D2: D004 is north star — all decisions orient toward 4-phase pipeline
-  - D3: D004 is production ready, only awaiting Founder approval
+  - D13: Sprint 11 — T1200-T1207 active, collaboration quality focus (see consensus.md)
 
 ### C. agents/{other_agents}/status.md (Peer Coordination)
 - Read a teammate's status.md **only when** the delta reports they changed, or when actively handing off work
@@ -235,7 +237,9 @@ source ../../scripts/agent_tools.sh
 | `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |
 | `task_list` | List all open/in-progress/in-review tasks |
-| `create_task "Title" bob high "desc"` | Create a new task, optionally assigned |
+| `create_task "Title" bob high "desc"` | Create a new regular task, optionally assigned |
+| `create_direction "Title" "desc"` | Create a long-term Direction (D-prefix, sets civilization goals) |
+| `create_instruction "Title" "desc"` | Create a persistent Instruction (I-prefix, always-on context) |
 | `dm bob "Data is ready"` | Send DM to another agent |
 | `post "Phase 1 complete — 47 markets filtered"` | Post milestone to team channel |
 | `announce "Sprint 8 done"` | Post civilization-wide announcement |
@@ -261,12 +265,32 @@ DM a teammate when:
 - You're blocked waiting for their output: `dm bob "Need updated correlation_pairs.json to proceed"`
 - You found something wrong in their deliverable: `dm grace "data_chain_audit found 3 signals with missing Phase 1 trace"`
 
-### When to Post to Team Channel (C10)
-Post to `../../public/team_channel/` when:
-- You hit a milestone: "Phase 3 correlation complete — 30 arbitrage signals generated"
-- You find a bug: "WARNING: fetchCandles mock data returns extreme z-scores, invalidating paper trades"
-- You need help: "HELP: C++ execution engine segfaults on > 100 signals, need Dave or Eve"
-- Sprint update: "Sprint 8 day 1: 4/6 tasks in progress, filter analysis underway"
+### When to Post to Team Channel (C10, C22)
+Post to team_channel **at least twice per session** (C22 — mandatory visibility):
+- When you START a task: `post "Starting T1203 Phase 1 data refresh — filtering markets"`
+- When you FINISH: `post "T1203 done — markets_filtered_sprint11.json, 42 markets passed. DM'd bob."`
+- Bugs, blockers, or help: `post "WARNING: Phase 2 cluster output has NaN confidence scores — investigating"`
+
+```bash
+source ../../scripts/agent_tools.sh
+post "Sprint 11: starting T1201 Phase 3 correlation — pulling grace's filtered markets"
+```
+
+### Self-Unblock Before DMing (C23)
+Before sending a DM asking for a file, check if it already exists:
+```bash
+ls ../../agents/grace/output/          # Check grace's deliverables
+ls ../../agents/bob/output/            # Check bob's deliverables
+```
+If the file is there → start work immediately. Only DM if missing.
+
+### How to Use the Handoff Tool (C21)
+When your work unblocks a teammate, use the `handoff` command:
+```bash
+source ../../scripts/agent_tools.sh
+handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs, z>=1.2"
+# This: (1) DMs ivan with artifact path + run command, (2) Posts to team_channel, (3) Reminds you to mark in_review
+```
 
 ### How to Read Peers (C4)
 Read a teammate's status only when the delta reports a change or when you need to coordinate a handoff:
@@ -298,5 +322,5 @@ cp combined_report.md ../../output/shared/merged/sprint8_combined.md
 3. **Communication:** Post milestones to team_channel (C10), DM for handoffs
 4. **Reference:** Cite culture and knowledge when deciding
 5. **Review:** Mark in_review not done, get reviewer approval (C11)
-6. **Alignment:** Every decision threads back to strategic directions (D1-D8 + current sprint) or Founder priority
+6. **Alignment:** Every decision threads back to strategic directions (D1-D13 + current sprint) or Founder priority
 7. **Completion:** Always close tasks via API when done (C7) — never leave orphaned work

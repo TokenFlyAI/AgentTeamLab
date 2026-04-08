@@ -115,6 +115,7 @@ function reloadPlanet() {
   DATA_DIR = resolved.DATA_DIR;
   PLANET_DIR = resolved.PLANET_DIR;
   PLANET_NAME = resolved.PLANET_NAME;
+  cacheFlush(); // Flush stale cache so new planet's data is served immediately
   console.log(`Planet reloaded: ${PLANET_NAME} (${PLANET_DIR})`);
 }
 const startTime = Date.now();
@@ -198,8 +199,10 @@ function isAuthorized(req) {
   if (!API_KEY) return true; // auth disabled — no API_KEY set
   const authHeader = req.headers["authorization"] || "";
   const xApiKey = req.headers["x-api-key"] || "";
+  // Also accept ?key= query param — EventSource (SSE) cannot send custom headers
+  const queryKey = url.parse(req.url, true).query.key || "";
   const provided =
-    authHeader.startsWith("Bearer ") ? authHeader.slice(7) : xApiKey;
+    authHeader.startsWith("Bearer ") ? authHeader.slice(7) : (xApiKey || queryKey);
   if (!provided) return false;
   // Constant-time comparison to prevent timing attacks.
   // Pad both to max length using null-filled Buffers (not space-padEnd which could
@@ -433,6 +436,8 @@ function cached(key, ttlMs, fn) {
 }
 // Invalidate a single cache key (call after writes that should be visible immediately)
 function cacheInvalidate(key) { _cache.delete(key); }
+// Flush entire cache (call on planet switch so new planet's data is loaded fresh)
+function cacheFlush() { _cache.clear(); }
 // Prune expired entries (called periodically to prevent unbounded growth)
 setInterval(() => {
   const now = Date.now();
@@ -1497,7 +1502,8 @@ async function handleRequest(req, res) {
     });
     const tasks = cached("task_board", 10_000, () => parseTaskBoard());
     const modeMd = cached("company_mode", 30_000, () => safeRead(path.join(PUBLIC_DIR, "company_mode.md")) || "");
-    const modeMatch = modeMd.match(/##\s*Current Mode\s*\n\*\*(\w+)\*\*/i);
+    const modeMatch = modeMd.match(/##\s*Current Mode[\s\S]*?\*\*(\w+)\*\*/i)
+                   || modeMd.match(/\*\*(\w+)\*\*/);
     const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
     const activeCount = agents.filter((a) => a.status === "running").length;
     // Archive count from cache
@@ -3077,10 +3083,13 @@ async function handleRequest(req, res) {
 
   // ---- Communication ----
   if (method === "GET" && pathname === "/api/team-channel") {
+    const limit = Math.min(parseInt(query.limit || "200", 10) || 200, 500);
     const files = cached("team_channel_full", 10_000, () => {
       const dir = path.join(PUBLIC_DIR, "team_channel");
       return listDir(dir)
         .filter((f) => f.endsWith(".md"))
+        .sort((a, b) => b.localeCompare(a)) // newest first by filename
+        .slice(0, 500) // server-side cap: never return more than 500 messages
         .map((f) => {
           const content = safeRead(path.join(dir, f));
           // Extract timestamp: YYYY_MM_DD_HH_MM_SS
@@ -3098,10 +3107,9 @@ async function handleRequest(req, res) {
             date: timestamp,
             timestamp,
           };
-        })
-        .sort((a, b) => (b.filename || "").localeCompare(a.filename || "")); // sort by full filename (includes HH_MM_SS)
+        });
     });
-    return json(res, files);
+    return json(res, files.slice(0, limit));
   }
 
   if (method === "POST" && pathname === "/api/team-channel") {

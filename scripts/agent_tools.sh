@@ -11,7 +11,9 @@
 #   task_list [assignee]         — List open/in-progress/in-review tasks
 #   my_tasks                     — Show tasks assigned to me
 #   read_task <id>               — Read full details of a specific task
-#   create_task "title" [assignee] [priority] ["desc"] — Create a new task
+#   create_task "title" [assignee] [priority] ["desc"] [type] — Create a new task (type: task|direction|instruction)
+#   create_direction "title" ["desc"]  — Create a Direction task (D-prefix, long-term goal)
+#   create_instruction "title" ["desc"] — Create an Instruction task (I-prefix, persistent context)
 #   dm <agent> "message"         — Send a DM to another agent
 #   broadcast "message"          — Send message to all agents
 #   post "message"               — Post milestone to team_channel
@@ -236,18 +238,19 @@ announce() {
 }
 
 create_task() {
-  # create_task "Task title" assignee priority "description"
-  local title="$1" assignee="${2:-}" priority="${3:-medium}" desc="${4:-}"
-  [ -z "$title" ] && echo "Usage: create_task \"title\" [assignee] [priority] [\"description\"]" && return 1
+  # create_task "Task title" [assignee] [priority] ["description"] [task_type]
+  # task_type: "task" (default), "direction" (D-prefix), "instruction" (I-prefix)
+  local title="$1" assignee="${2:-}" priority="${3:-medium}" desc="${4:-}" task_type="${5:-task}"
+  [ -z "$title" ] && echo "Usage: create_task \"title\" [assignee] [priority] [\"description\"] [task|direction|instruction]" && return 1
   # Use Python to safely build JSON (avoids injection from special chars in title/desc)
   local body
   body=$(python3 -c "
 import json, sys
-d = {'title': sys.argv[1], 'priority': sys.argv[2]}
+d = {'title': sys.argv[1], 'priority': sys.argv[2], 'task_type': sys.argv[5]}
 if sys.argv[3]: d['assignee'] = sys.argv[3]
 if sys.argv[4]: d['description'] = sys.argv[4]
 print(json.dumps(d))
-" "$title" "$priority" "$assignee" "$desc")
+" "$title" "$priority" "$assignee" "$desc" "$task_type")
   curl -s -X POST "${_API}/api/tasks" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
@@ -255,10 +258,27 @@ print(json.dumps(d))
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('id'): tid=str(d['id']); print(f'Task created: {"T"+tid if tid.isdigit() else tid} — {d.get("title","")}')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  if d.get('id'):
+    tid=str(d['id'])
+    tdisplay='T'+tid if tid.isdigit() else tid
+    print('Task created: '+tdisplay+' -- '+d.get('title',''))
+  else: print('Failed: '+d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
+}
+
+create_direction() {
+  # create_direction "title" ["description"] — Create a long-term Direction task (D-prefix)
+  local title="$1" desc="${2:-}"
+  [ -z "$title" ] && echo "Usage: create_direction \"title\" [\"description\"]" && return 1
+  create_task "$title" "" "high" "$desc" "direction"
+}
+
+create_instruction() {
+  # create_instruction "title" ["description"] — Create a persistent Instruction task (I-prefix)
+  local title="$1" desc="${2:-}"
+  [ -z "$title" ] && echo "Usage: create_instruction \"title\" [\"description\"]" && return 1
+  create_task "$title" "" "high" "$desc" "instruction"
 }
 
 read_inbox() {
@@ -430,10 +450,12 @@ pipeline_status() {
   echo "Phase 4 (Simulation — dave):"
   _check_file "pipeline_report.md" "${_AGENTS}/dave/output/pipeline_report.md"
   echo ""
-  echo "Phase B (deploy + security hardening):"
-  _check_file "T1038 correlation_engine security fixes (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/t1038_security_fixes.md"
-  _check_file "T1041 microservice deploy (eve)" "${PLANET_DIR:-${_AGENTS}/..}/output/eve/t1041_deploy_report.md"
-  _check_file "T1045 HMAC inter-service auth (heidi)" "${PLANET_DIR:-${_AGENTS}/..}/output/heidi/t1045_hmac_auth.md"
+  echo "Sprint 11 (T1200-T1207 — collaboration + pipeline refresh):"
+  _check_file "T1203 markets_filtered_sprint11.json (grace)" "${PLANET_DIR:-${_AGENTS}/..}/output/grace/markets_filtered_sprint11.json"
+  _check_file "T1204 cluster_confidence_sprint11.json (ivan)" "${PLANET_DIR:-${_AGENTS}/..}/output/ivan/cluster_confidence_sprint11.json"
+  _check_file "T1201 correlation_pairs_sprint11.json (bob)" "${PLANET_DIR:-${_AGENTS}/..}/output/bob/correlation_pairs_sprint11.json"
+  _check_file "T1207 sprint11_e2e_results.md (dave)" "${PLANET_DIR:-${_AGENTS}/..}/output/dave/sprint11_e2e_results.md"
+  _check_file "T1200 sprint11_collab_audit.md (alice)" "${PLANET_DIR:-${_AGENTS}/..}/output/alice/sprint11_collab_audit.md"
   echo ""
   echo "Blocker: T236 (Kalshi API credentials) — live trading pending"
 }
@@ -453,4 +475,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff"
