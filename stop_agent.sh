@@ -8,11 +8,14 @@ AGENT_NAME="$1"
 echo "Stopping ${AGENT_NAME}..."
 
 # 1. Kill run_subset.sh loop first (prevents loop from restarting the agent)
-pkill -TERM -f "run_subset.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
+# Note: \b not supported in macOS pkill (POSIX ERE) — use explicit end/space patterns
+pkill -TERM -f "run_subset.sh.*[ /]${AGENT_NAME}( |$)" 2>/dev/null || true
+pkill -TERM -f "run_subset.sh .*${AGENT_NAME}$" 2>/dev/null || true
 sleep 0.3
 
 # 2. Kill active run_agent.sh cycle
-pkill -TERM -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
+pkill -TERM -f "run_agent.sh ${AGENT_NAME}$" 2>/dev/null || true
+pkill -TERM -f "run_agent.sh ${AGENT_NAME} " 2>/dev/null || true
 sleep 0.3
 
 # 3. Force-kill executor subprocess for this agent (match both flat and planet paths)
@@ -20,7 +23,8 @@ for _exec in claude kimi codex gemini; do
     pkill -9 -f "${_exec}.*planets.*/${AGENT_NAME}" 2>/dev/null || true
     pkill -9 -f "${_exec}.*agents/${AGENT_NAME}"    2>/dev/null || true
 done
-pkill -9 -f "run_agent.sh.*\b${AGENT_NAME}\b" 2>/dev/null || true
+pkill -9 -f "run_agent.sh ${AGENT_NAME}$" 2>/dev/null || true
+pkill -9 -f "run_agent.sh ${AGENT_NAME} " 2>/dev/null || true
 
 # 4. Clean session locks
 rm -f /tmp/claude_launcher_*${AGENT_NAME}*.sessions 2>/dev/null || true
