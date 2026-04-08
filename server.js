@@ -931,14 +931,23 @@ function getAgentCostFromLogs(name, days = 7) {
         });
         if (result.stdout) lines = result.stdout.split("\n");
       } catch (_) {}
-      let dayCost = 0, dayCycles = 0;
+      let dayCost = 0, dayCycles = 0, dayCacheRead = 0, dayCacheWrite = 0, dayInput = 0;
       for (const line of lines) {
         const costMatch = line.match(/\[DONE\].*cost=\$?([\d.]+)/i);
         if (costMatch) dayCost += parseFloat(costMatch[1]) || 0;
         if (/CYCLE\s*START/i.test(line)) dayCycles++;
+        const crMatch = line.match(/cache_read=(\d+)/i);
+        if (crMatch) dayCacheRead += parseInt(crMatch[1]) || 0;
+        const cwMatch = line.match(/cache_write=(\d+)/i);
+        if (cwMatch) dayCacheWrite += parseInt(cwMatch[1]) || 0;
+        const inpMatch = line.match(/\binput=(\d+)/i);
+        if (inpMatch) dayInput += parseInt(inpMatch[1]) || 0;
       }
       data.totalCost += dayCost;
       data.cycles += dayCycles;
+      data.totalCacheRead = (data.totalCacheRead || 0) + dayCacheRead;
+      data.totalCacheWrite = (data.totalCacheWrite || 0) + dayCacheWrite;
+      data.totalInput = (data.totalInput || 0) + dayInput;
       if (dayCost > 0 || dayCycles > 0) {
         data.dailyCosts[dateStr] = Math.round(dayCost * 100) / 100;
         data.dailyCycles[dateStr] = dayCycles;
@@ -2700,9 +2709,9 @@ async function handleRequest(req, res) {
     for (const line of lines) {
       const startM = line.match(/^={5,} CYCLE START — (\S+)/);
       const endM = line.match(/^={5,} CYCLE END — (\S+)/);
-      const doneM = line.match(/^\[DONE\] turns=(\d+) cost=\$([0-9.]+) duration=([0-9.]+)s/);
+      const doneM = line.match(/^\[DONE\] turns=(\d+) cost=\$([0-9.]+) duration=([0-9.]+)s(?:.*cache_read=(\d+))?(?:.*cache_write=(\d+))?(?:.*\binput=(\d+))?/);
       if (startM) {
-        current = { n: cycles.length + 1, started: startM[1].replace(/_/g, " "), ended: null, turns: null, cost_usd: null, duration_s: null, actions: [] };
+        current = { n: cycles.length + 1, started: startM[1].replace(/_/g, " "), ended: null, turns: null, cost_usd: null, duration_s: null, cache_read: null, cache_write: null, input_tokens: null, actions: [] };
         cycles.push(current);
       } else if (endM && current) {
         current.ended = endM[1].replace(/_/g, " ");
@@ -2710,6 +2719,9 @@ async function handleRequest(req, res) {
         current.turns = parseInt(doneM[1], 10);
         current.cost_usd = parseFloat(doneM[2]);
         current.duration_s = parseFloat(doneM[3]);
+        if (doneM[4] !== undefined) current.cache_read = parseInt(doneM[4], 10);
+        if (doneM[5] !== undefined) current.cache_write = parseInt(doneM[5], 10);
+        if (doneM[6] !== undefined) current.input_tokens = parseInt(doneM[6], 10);
       } else if (current && line.startsWith("[TOOL] ")) {
         current.actions.push(line.slice(7, 120));
       } else if (current && line.startsWith("[ASSISTANT] ")) {
@@ -2724,6 +2736,7 @@ async function handleRequest(req, res) {
     const summary = cycles.map((c) => ({
       n: c.n, started: c.started, ended: c.ended,
       turns: c.turns, cost_usd: c.cost_usd, duration_s: c.duration_s,
+      cache_read: c.cache_read, cache_write: c.cache_write, input_tokens: c.input_tokens,
       action_count: c.actions.length,
       preview: c.actions.slice(0, 3).join(" | "),
       error: c.error || null,
@@ -3800,21 +3813,34 @@ async function handleRequest(req, res) {
     const result = cached("cost_summary", 60_000, () => {
       const names = listAgentNames();
       let todayCost = 0, todayCycles = 0, total7dCost = 0, total7dCycles = 0;
+      let todayCacheRead = 0, todayCacheWrite = 0, todayInput = 0;
       const perAgent = names.map((name) => {
-        // today = days=1; week = days=7. Both use mtime cache — only re-greps when log file changes.
         const today = getAgentCostFromLogs(name, 1);
         const week = getAgentCostFromLogs(name, 7);
         todayCost += today.totalCost;
         todayCycles += today.cycles;
         total7dCost += week.totalCost;
         total7dCycles += week.cycles;
-        return { name, today_usd: Math.round(today.totalCost * 100) / 100, today_cycles: today.cycles };
+        todayCacheRead += today.totalCacheRead || 0;
+        todayCacheWrite += today.totalCacheWrite || 0;
+        todayInput += today.totalInput || 0;
+        const totalTokens = (today.totalCacheRead || 0) + (today.totalInput || 0);
+        const cacheHitPct = totalTokens > 0 ? Math.round(((today.totalCacheRead || 0) / totalTokens) * 100) : null;
+        return { name, today_usd: Math.round(today.totalCost * 100) / 100, today_cycles: today.cycles,
+          cache_read: today.totalCacheRead || 0, cache_write: today.totalCacheWrite || 0,
+          input_tokens: today.totalInput || 0, cache_hit_pct: cacheHitPct };
       });
+      const totalTokens = todayCacheRead + todayInput;
+      const cacheHitPct = totalTokens > 0 ? Math.round((todayCacheRead / totalTokens) * 100) : null;
       return {
         today_usd: Math.round(todayCost * 100) / 100,
         today_cycles: todayCycles,
         total_7d_usd: Math.round(total7dCost * 100) / 100,
         total_7d_cycles: total7dCycles,
+        cache_read: todayCacheRead,
+        cache_write: todayCacheWrite,
+        input_tokens: todayInput,
+        cache_hit_pct: cacheHitPct,
         per_agent: perAgent.sort((a, b) => b.today_usd - a.today_usd),
       };
     });

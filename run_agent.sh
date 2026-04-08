@@ -887,9 +887,13 @@ for raw in sys.stdin:
                 if isinstance(err_msg, dict):
                     err_msg = err_msg.get("message") or str(err_msg)
                 print("[API_ERROR] {}".format(str(err_msg)[:300]))
-                print("[DONE] turns=0 cost=$0 duration={}s session=ERROR".format(duration_s))
+                print("[DONE] turns=0 cost=$0 duration={}s cache_read=0 cache_write=0 input=0 session=ERROR".format(duration_s))
                 continue
-            print("[DONE] turns={} cost=${} duration={}s session={}".format(turns, cost, duration_s, sid))
+            usage = event.get("usage") or {}
+            cache_read = usage.get("cache_read_input_tokens") or 0
+            cache_write = usage.get("cache_creation_input_tokens") or 0
+            inp = usage.get("input_tokens") or 0
+            print("[DONE] turns={} cost=${} duration={}s cache_read={} cache_write={} input={} session={}".format(turns, cost, duration_s, cache_read, cache_write, inp, sid))
             continue
         text = event.get("text") or event.get("message") or event.get("content")
         if isinstance(text, str) and text.strip():
@@ -963,11 +967,14 @@ for raw in sys.stdin:
                 err_obj = event.get("error") or {}
                 err_msg = err_obj.get("message") or str(err_obj)[:200] or "API error"
                 print("[API_ERROR] {}".format(err_msg[:300]))
-                # Emit DONE with session=ERROR so failure detection can catch it
-                print("[DONE] turns=0 cost=$0 duration={}s session=ERROR".format(duration_s))
+                print("[DONE] turns=0 cost=$0 duration={}s cache_read=0 cache_write=0 input=0 session=ERROR".format(duration_s))
                 continue
             # Gemini does not report USD cost directly — use 0 (tracked via token counts)
-            print("[DONE] turns={} cost=$0 duration={}s session={}".format(turns, duration_s, sid))
+            usage = event.get("stats") or event.get("usage") or {}
+            cache_read = usage.get("cache_read_input_tokens") or usage.get("cacheReadInputTokens") or 0
+            cache_write = usage.get("cache_creation_input_tokens") or usage.get("cacheCreationInputTokens") or 0
+            inp = usage.get("input_tokens") or usage.get("inputTokens") or 0
+            print("[DONE] turns={} cost=$0 duration={}s cache_read={} cache_write={} input={} session={}".format(turns, duration_s, cache_read, cache_write, inp, sid))
             continue
         # Fallback: print other unrecognized event types
         msg = event.get("message") or event.get("text") or event.get("content")
@@ -1090,10 +1097,10 @@ for line in sys.stdin:
         print(line[:500] + ('…' if len(line) > 500 else ''))
 duration_s = round(time.time() - start_s, 1)
 if saw_turn_end:
-    print('[DONE] turns=0 cost=$0 duration={}s session=kimi'.format(duration_s))
+    print('[DONE] turns=0 cost=$0 duration={}s cache_read=0 cache_write=0 input=0 session=kimi'.format(duration_s))
 else:
     print('[API_ERROR] kimi produced no TurnEnd — session may have failed or expired')
-    print('[DONE] turns=0 cost=$0 duration={}s session=ERROR'.format(duration_s))
+    print('[DONE] turns=0 cost=$0 duration={}s cache_read=0 cache_write=0 input=0 session=ERROR'.format(duration_s))
 sys.stdout.flush()
 " >> "$DAILY_LOG" 2>/dev/null || true
             ;;
@@ -1132,6 +1139,9 @@ sys.stdout.flush()
                         "[DONE] turns=" + (.num_turns // 0 | tostring) +
                         " cost=$" + ((.total_cost_usd // 0) * 100 | floor / 100 | tostring) +
                         " duration=" + ((.duration_ms // 0) / 1000 | tostring) + "s" +
+                        " cache_read=" + ((.usage.cache_read_input_tokens // 0) | tostring) +
+                        " cache_write=" + ((.usage.cache_creation_input_tokens // 0) | tostring) +
+                        " input=" + ((.usage.input_tokens // 0) | tostring) +
                         " session=" + (.session_id // "?")
                     else empty end
                 ' >> "$DAILY_LOG" 2>/dev/null || true
@@ -1201,7 +1211,7 @@ if [ "$_DRY_RUN" = "1" ]; then
         | tee -a "$RAW_LOG" \
         | jq --unbuffered -r '
             if .type == "assistant" then "[ASSISTANT] [DRY RUN] No API call made."
-            elif .type == "result" then "[DONE] turns=0 cost=$0 duration=0.1s session=dryrun"
+            elif .type == "result" then "[DONE] turns=0 cost=$0 duration=0.1s cache_read=0 cache_write=0 input=0 session=dryrun"
             else empty end
         ' >> "$DAILY_LOG" 2>/dev/null || true
 else
