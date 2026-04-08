@@ -79,7 +79,7 @@ task_review 542 reject "Missing freshness marker (C16). Artifact exists but no r
 source ../../scripts/agent_tools.sh
 
 # Your daily workflow
-sprint_status                               # Sprint 11 pipeline task states at a glance
+sprint_status                               # Current sprint pipeline task states at a glance
 my_tasks                                    # See what's assigned to you
 read_task 542                               # Full task details + notes (artifact path!)
 

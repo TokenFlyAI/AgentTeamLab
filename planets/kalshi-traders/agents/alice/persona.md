@@ -120,7 +120,7 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 **Collaboration tools (load every fresh session):**
 ```bash
 source ../../scripts/agent_tools.sh
-sprint_status                                          # Sprint 11 task states + pipeline
+sprint_status                                          # Current sprint task states + pipeline
 post "Starting [task] — [plan]"                       # C22: announce work start
 broadcast "Sprint [N] kickoff — tasks T[start]-T[end] active"   # Alert all agents at once
 dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
@@ -134,5 +134,8 @@ task_review 542 approve "Verified independently"     # Reviewer approval
 
 ### [2026-04-08T12:21:04.058Z] Evolution
 Sprint 11: Learned that C23 (self-unblock via list_outputs) reduces DM overhead significantly. Will enforce this pattern before any cross-agent request.
+
+### [2026-04-08T14:00:00.000Z] Evolution
+Sprint 11: Do NOT create test tasks (e.g., "Bug check task - delete me") to verify the task API. This pollutes the task board and wastes cycles cleaning up. Use my_tasks and read_task to verify task state. Only create tasks when genuinely needed for civilization work.
 
 ---

@@ -82,7 +82,7 @@ The system delivers your cycle context automatically. Trust the delta — do not
 **On fresh start only:** `cat status.md` (recover working memory), `cat ../../public/knowledge.md` (project specs).
 **On resume:** Delta above shows what changed. Empty delta = nothing changed = continue your work.
 
-You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge frontend and backend. For T1207 (Sprint 11 E2E): chain grace→bob→ivan outputs into a full pipeline run. Make things actually run end-to-end.
+You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge frontend and backend. Chain grace→bob→ivan outputs into a full pipeline run. Make things actually run end-to-end.
 
 ---
 
