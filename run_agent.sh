@@ -151,7 +151,7 @@ if [ "${_EARLY_DRY_RUN:-0}" != "1" ] && [ -f "$_CONFIG_FILE" ]; then
     _AGENT_CAP=$(jq -r '.per_agent_cost_cap_usd // 0' "$_CONFIG_FILE" 2>/dev/null)
     _DAILY_CAP=$(jq -r '.daily_cost_cap_usd // 0' "$_CONFIG_FILE" 2>/dev/null)
     if [ "$_AGENT_CAP" != "0" ] || [ "$_DAILY_CAP" != "0" ]; then
-        _COST_JSON=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/cost" \
+        _COST_JSON=$(curl -sf --max-time 5 "http://localhost:${_DASHBOARD_PORT}/api/cost" \
             -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
         if [ -n "$_COST_JSON" ]; then
             # Use jq for JSON parsing (faster than spawning Python)
@@ -194,7 +194,7 @@ if [ $USE_RESUME -eq 1 ]; then
     # Resuming — full prior context is KV-cached. Only inject what CHANGED since last snapshot.
     CURRENT_CYCLE=$((SAVED_CYCLE + 1))
     _DASHBOARD_PORT="${DASHBOARD_PORT:-3199}"
-    _NEW_CTX=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
+    _NEW_CTX=$(curl -sf --max-time 10 "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
         -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
     _CYCLE_SNAPSHOT_JSON="$_NEW_CTX"
 
@@ -411,7 +411,7 @@ else
     # Single API call replaces all the individual shell file reads.
     # Agents can also call this endpoint mid-session to refresh their context.
     _DASHBOARD_PORT="${DASHBOARD_PORT:-3199}"
-    _CTX_JSON=$(curl -sf "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
+    _CTX_JSON=$(curl -sf --max-time 10 "http://localhost:${_DASHBOARD_PORT}/api/agents/${AGENT_NAME}/context" \
         -H "Authorization: Bearer ${API_KEY:-test}" 2>/dev/null || true)
     _CYCLE_SNAPSHOT_JSON="$_CTX_JSON"
 
