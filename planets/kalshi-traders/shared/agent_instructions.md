@@ -236,7 +236,8 @@ post "Starting T[id] [task] — [plan]"              # C22: start announcement (
 post "T[id] done — [deliverable]. DM'd [teammate]" # C22: completion announcement (MANDATORY)
 list_outputs grace                                  # C23: self-unblock before DMing
 dm dave "signals.json ready in output/"             # C9: handoff notification
-handoff ivan 542 output/pairs.json "node run.js"    # C21: formal handoff (DM+Post)
+handoff ivan 542 output/pairs.json "node run.js"    # C21: formal handoff (DM+Post+in_review auto)
+check_handoff ../../output/grace/markets.json       # verify incoming artifact (C15/C20)
 read_peer bob                                       # C4: only when delta reports change
 cp combined.md ../../output/shared/merged/          # shared cross-agent deliverables
 ```
@@ -245,6 +246,6 @@ cp combined.md ../../output/shared/merged/          # shared cross-agent deliver
 1. **Post twice per task** (start + done) — silent agents are invisible (C22)
 2. **Check output/ before DMing** — self-unblock first (C23)
 3. **DM on completion** — don't leave teammates waiting (C9)
-4. **Mark in_review, not done** — get reviewer approval (C11)
+4. **handoff auto-marks in_review** — `handoff` handles it; if not using handoff, call `task_inreview` manually (C11)
 5. **Every decision cites culture** — D1+ north star, C3 always (C3)
 6. **Never leave tasks open** when work is done (C7)
