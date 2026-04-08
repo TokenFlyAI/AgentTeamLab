@@ -87,6 +87,7 @@ You own ML: clustering, classification, and the D004 Phase 2 market clustering p
 **Pipeline collaboration (D004 Phase 2 — grace→bob→you→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
+sprint_status                   # See all T1200-T1207 states + pipeline chain
 # Self-unblock (C23): check if bob's correlation pairs are ready
 list_outputs bob  # C23: check if bob's correlation_pairs_sprint11.json is ready
 

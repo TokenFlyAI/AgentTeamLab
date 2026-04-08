@@ -87,6 +87,7 @@ You own data quality and D004 Phase 1: market filtering and clean data delivery 
 **Pipeline collaboration (D004 Phase 1 — you are the source → bob→ivan→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
+sprint_status                   # See all T1200-T1207 states + pipeline chain
 # Announce start (C22)
 post "Starting T[id] Phase 1 refresh — filtering markets by volume + ratio thresholds"
 

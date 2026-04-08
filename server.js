@@ -1648,6 +1648,25 @@ async function handleRequest(req, res) {
     return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, current_task, executor, executorHealth: getExecutorHealth(executor) });
   }
 
+  // POST /api/agents/:name/heartbeat — write heartbeat and invalidate agent_list cache (for tests/tooling)
+  const agentHeartbeatMatch = pathname.match(/^\/api\/agents\/([^/]+)\/heartbeat$/);
+  if (method === "POST" && agentHeartbeatMatch) {
+    const name = agentName(agentHeartbeatMatch[1]);
+    if (!name) return badRequest(res, "invalid agent name");
+    const d = path.join(EMPLOYEES_DIR, name);
+    if (!fs.existsSync(d)) return notFound(res, "agent not found");
+    const body = await parseBody(req);
+    const status = body.status || "idle";
+    const task = body.task || "";
+    const ts = new Date().toISOString();
+    const lines = [`status: ${status}`, `timestamp: ${ts}`];
+    if (task) lines.push(`task: ${task}`);
+    lines.push("");
+    fs.writeFileSync(path.join(d, "heartbeat.md"), lines.join("\n"));
+    cacheInvalidate("agent_list");
+    return json(res, { ok: true, name, status, timestamp: ts });
+  }
+
   // GET /api/executors — list supported executors (all 4, regardless of fleet enabled_executors)
   // enabled_executors only controls the fleet daemon auto-start; individual agents can use any supported executor
   if (method === "GET" && pathname === "/api/executors") {
@@ -1903,6 +1922,7 @@ async function handleRequest(req, res) {
             fs.writeFileSync(hbPath, `status: idle\ntimestamp: ${ts}\ntask: Stopped\n`);
           }
         }
+        cacheInvalidate("agent_list");
       } catch (e) { console.error("[stop-all] heartbeat reset error:", e.message); }
       json(res, { ok: true, output: "" });
     };

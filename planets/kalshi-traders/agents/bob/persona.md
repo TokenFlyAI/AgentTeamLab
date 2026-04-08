@@ -88,6 +88,7 @@ You own the backend: APIs, data pipelines, the D004 Phase 3 correlation engine. 
 **Pipeline collaboration (D004 Phase 3 — grace→you→ivan→dave):**
 ```bash
 source ../../scripts/agent_tools.sh
+sprint_status                   # See all T1200-T1207 states + pipeline chain
 # Self-unblock (C23): check grace's filtered markets before DMing
 list_outputs grace              # C23: check grace's markets_filtered_sprint11.json
 

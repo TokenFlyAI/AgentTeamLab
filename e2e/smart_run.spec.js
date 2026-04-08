@@ -34,36 +34,44 @@ function _resolvePlanetDir(dir) { const pj = path.join(dir, "planet.json"); if (
 const AGENTS_DIR = path.join(_resolvePlanetDir(DIR), "agents");
 const ALL_AGENTS = ["alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy","karl","liam","mia","nick","olivia","pat","quinn","rosa","sam","tina"];
 
-function resetAllHeartbeats() {
-  for (const name of ALL_AGENTS) resetHeartbeat(name);
+async function resetAllHeartbeats() {
+  await Promise.all(ALL_AGENTS.map(name => resetHeartbeat(name)));
 }
 
-function setHeartbeat(agentName, status) {
+async function setHeartbeat(agentName, status) {
+  // Use the API endpoint so the server's agent_list cache is invalidated immediately.
+  // Fallback to direct file write if the server is not running (e.g. beforeAll setup).
+  try {
+    const res = await fetch(`${BASE_URL}/api/agents/${agentName}/heartbeat`, {
+      method: "POST",
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) return;
+  } catch (_) {}
+  // Fallback: direct file write
   const hbPath = path.join(AGENTS_DIR, agentName, "heartbeat.md");
   fs.writeFileSync(
     hbPath,
-    [
-      `status: ${status}`,
-      `agent: ${agentName}`,
-      `timestamp: ${new Date().toISOString()}`,
-      `cycle: 1`,
-      "",
-    ].join("\n")
+    [`status: ${status}`, `agent: ${agentName}`, `timestamp: ${new Date().toISOString()}`, `cycle: 1`, ""].join("\n")
   );
 }
 
-function resetHeartbeat(agentName) {
+async function resetHeartbeat(agentName) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/agents/${agentName}/heartbeat`, {
+      method: "POST",
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({ status: "idle" }),
+    });
+    if (res.ok) return;
+  } catch (_) {}
+  // Fallback: direct file write
   const hbPath = path.join(AGENTS_DIR, agentName, "heartbeat.md");
   if (fs.existsSync(hbPath)) {
     fs.writeFileSync(
       hbPath,
-      [
-        `status: idle`,
-        `agent: ${agentName}`,
-        `timestamp: ${new Date().toISOString()}`,
-        `cycle: 0`,
-        "",
-      ].join("\n")
+      [`status: idle`, `agent: ${agentName}`, `timestamp: ${new Date().toISOString()}`, `cycle: 0`, ""].join("\n")
     );
   }
 }
@@ -73,7 +81,7 @@ test.describe("Smart Run button state", () => {
 
   test.beforeAll(async () => {
     // Reset all heartbeats so tests in this file aren't polluted by prior specs
-    resetAllHeartbeats();
+    await resetAllHeartbeats();
     // Ensure smart-run is enabled so button clicks work in this test suite
     const cfg = await apiGet("/api/smart-run/config");
     _origSmartRunConfig = cfg.config || cfg;
@@ -91,11 +99,11 @@ test.describe("Smart Run button state", () => {
     // processes whose EXIT traps write "idle" heartbeats — these can race with the next test's
     // setHeartbeat() call and silently overwrite the "running" state the test depends on.
     await apiPost("/api/agents/stop-all");
-    resetAllHeartbeats();
+    await resetAllHeartbeats();
   });
 
   test("button shows ⚡ Smart Run when no agents running", async ({ page }) => {
-    resetAllHeartbeats();
+    await resetAllHeartbeats();
     await page.goto("/");
     const btn = page.locator("#smart-start-btn");
     await expect(btn).toBeVisible();
@@ -114,8 +122,8 @@ test.describe("Smart Run button state", () => {
   test("button stays 🟢 Stop after page refresh when agents are running", async ({
     page,
   }) => {
-    // Simulate a running agent by writing its heartbeat directly
-    setHeartbeat("alice", "running");
+    // Simulate a running agent by writing its heartbeat (via API so cache is invalidated)
+    await setHeartbeat("alice", "running");
 
     // Load page fresh (simulates refresh with agents running)
     await page.goto("/");
@@ -126,7 +134,7 @@ test.describe("Smart Run button state", () => {
   });
 
   test("button reverts to ⚡ Smart Run after stop", async ({ page }) => {
-    setHeartbeat("alice", "running");
+    await setHeartbeat("alice", "running");
     await page.goto("/");
     const btn = page.locator("#smart-start-btn");
     await expect(btn).toContainText("Stop", { timeout: 10000 });
@@ -208,13 +216,13 @@ test.describe("Fleet tab — selection mode UI", () => {
 
 test.describe("Fleet panel shows running agents", () => {
   test.afterEach(async () => {
-    resetHeartbeat("alice");
-    resetHeartbeat("bob");
+    await resetHeartbeat("alice");
+    await resetHeartbeat("bob");
   });
 
   test("fleet panel shows 'No agents running' when idle", async ({ page }) => {
-    resetHeartbeat("alice");
-    resetHeartbeat("bob");
+    await resetHeartbeat("alice");
+    await resetHeartbeat("bob");
     await page.goto("/");
     await page.click('[data-tab="fleet"]');
     const fleetSection = page.locator("#fleet-agents");
@@ -226,8 +234,8 @@ test.describe("Fleet panel shows running agents", () => {
   test("fleet panel shows running agent names after smart start", async ({
     page,
   }) => {
-    setHeartbeat("alice", "running");
-    setHeartbeat("bob", "running");
+    await setHeartbeat("alice", "running");
+    await setHeartbeat("bob", "running");
 
     await page.goto("/");
     await page.click('[data-tab="fleet"]');
@@ -244,7 +252,7 @@ test.describe("Fleet panel shows running agents", () => {
     page,
     request,
   }) => {
-    setHeartbeat("alice", "running");
+    await setHeartbeat("alice", "running");
 
     await page.goto("/");
     await page.click('[data-tab="fleet"]');

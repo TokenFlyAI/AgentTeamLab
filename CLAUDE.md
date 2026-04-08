@@ -57,6 +57,7 @@ Key API endpoints:
 | `/api/agents/:name/output/:file` | GET | Read a specific deliverable |
 | `/api/agents/:name/context` | GET | Live context snapshot (inbox, tasks, unassigned_count, pending_review for reviewers, culture) |
 | `/api/agents/:name/inbox/:filename/ack` | POST | Mark file-based inbox message as processed (moves to chat_inbox/processed/) |
+| `/api/agents/:name/heartbeat` | POST | Write heartbeat and invalidate agent_list cache (body: `{status, task}`) |
 | `/api/agents/:name/persona` | GET/PATCH | Read persona or append evolution entry (timestamped log in persona.md) |
 | `/api/agents/:name/log/stream` | GET (SSE) | Live log stream. Requires `?key=<API_KEY>` (EventSource can't send headers) |
 | `/api/tasks` | GET/POST | Task list / create task |
@@ -456,11 +457,8 @@ npx playwright test e2e/smart_run.spec.js
 npx playwright test e2e/message_bus.spec.js
 ```
 
-Test files: `e2e/api.spec.js` (57 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (64 tests), `e2e/coverage.spec.js` (406 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests), `e2e/planet_create.spec.js` (1 test), `e2e/ui_verify.spec.js` (20 tests)
+Test files: `e2e/api.spec.js` (57 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (64 tests), `e2e/coverage.spec.js` (410 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests), `e2e/planet_create.spec.js` (1 test), `e2e/ui_verify.spec.js` (20 tests)
 
-**Total: 651 tests** — typical run: ~629 passed / ~20 skipped / 2 failed (known flaky smart_run)
-
-**Known flaky:**
-- `smart_run.spec.js` tests 97+114 — button state tests require real running agents
+**Total: 655 tests** — typical run: ~635 passed / ~20 skipped / 0 failed
 
 **Remember:** E2E tests verify known scenarios. Visual validation (screenshots + clicks) catches the unknowns. Always do both.

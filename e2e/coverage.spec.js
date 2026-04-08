@@ -1050,6 +1050,35 @@ test.describe("PATCH /api/agents/:name/persona", () => {
   });
 });
 
+// ── Agent heartbeat write ──────────────────────────────────────────────────────
+
+test.describe("POST /api/agents/:name/heartbeat", () => {
+  test("returns 400 for invalid agent name", async () => {
+    const { status } = await apiPost("/api/agents/bad|name/heartbeat", { status: "running" });
+    expect(status).toBe(400);
+  });
+
+  test("returns 404 for unknown agent", async () => {
+    const { status } = await apiPost("/api/agents/unknown_xyz/heartbeat", { status: "running" });
+    expect(status).toBe(404);
+  });
+
+  test("writes heartbeat status and returns ok + timestamp", async () => {
+    const { status, body } = await apiPost("/api/agents/alice/heartbeat", { status: "running" });
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.name).toBe("alice");
+    expect(body.status).toBe("running");
+    expect(typeof body.timestamp).toBe("string");
+  });
+
+  test("heartbeat is readable via GET /api/agents after write", async () => {
+    await apiPost("/api/agents/alice/heartbeat", { status: "running" });
+    const { body } = await apiGet("/api/agents/alice");
+    expect(body.status).toBe("running");
+  });
+});
+
 // ── Agent lastcontext ─────────────────────────────────────────────────────────
 
 test.describe("GET /api/agents/:name/lastcontext", () => {
