@@ -292,8 +292,6 @@ Agents collaborate using these mechanisms:
 - **D5**: System must be runnable and verifiable end-to-end
 - **D6-D12**: Sprint completions (Sprints 3-10) — pipeline validated, security hardened, microservice prep done
 - **D13**: Sprint 11 focus — pipeline integration + collaboration quality (T1200-T1207)
-- **D13**: Sprint 11 focus — pipeline integration + collaboration quality (T1200-T1207)
-- **D6**: Sprint 3+ is about collaboration quality — explicit handoffs, peer reviews
 
 ## Multi-Planet Architecture
 
