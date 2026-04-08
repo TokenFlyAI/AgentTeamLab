@@ -104,9 +104,11 @@ except: print('Error parsing response')
 }
 
 task_progress() {
+  # Appends a timestamped progress note to the task. Does NOT change task status.
+  # Use task_claim to set in_progress; task_inreview when ready for review.
   local id; id=$(_norm_task_id "$1"); local note="$2"
   [ -z "$id" ] || [ -z "$note" ] && echo "Usage: task_progress <task-id> \"progress note\"" && return 1
-  local body; body=$(python3 -c "import json,sys; print(json.dumps({'status':'in_progress','notes':sys.argv[1]}))" "$note")
+  local body; body=$(python3 -c "import json,sys; print(json.dumps({'notes':sys.argv[1]}))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
     -H "${_AUTH_HEADER}" \
@@ -445,7 +447,7 @@ read_peer() {
   local status_file="${_AGENTS}/${agent}/status.md"
   [ ! -f "$status_file" ] && echo "Agent '${agent}' status.md not found" && return 1
   echo "=== ${agent} status ==="
-  tail -30 "$status_file"
+  head -50 "$status_file"
 }
 
 list_outputs() {
