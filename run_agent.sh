@@ -302,15 +302,28 @@ for tid in new_task_ids:
 for t in changed_tasks:
     old_s = prev_tasks[t["id"]].get("status","")
     new_s = t.get("status","")
-    lines.append("{} ({}) moved: {} → {}".format(fmt_task_id(t.get("id","")), t.get("title",""), old_s, new_s))
+    # For rejections (in_review → in_progress), include the last note (rejection reason)
+    rejection_note = ""
+    if old_s == "in_review" and new_s == "in_progress":
+        notes = (t.get("notes") or "").strip()
+        last_note = notes.split(";;")[-1].strip()[:120] if notes else ""
+        if last_note:
+            rejection_note = " — reviewer note: {}".format(last_note)
+    lines.append("{} ({}) moved: {} → {}{}".format(fmt_task_id(t.get("id","")), t.get("title",""), old_s, new_s, rejection_note))
 
-# Tasks that disappeared (deleted or cancelled — no longer in context)
-# Note: tasks that moved to done/cancelled also disappear from context (filtered server-side)
+# Tasks that disappeared (moved to done/cancelled or deleted — filtered server-side)
+# Tasks move off the board when: approved (→done), cancelled, or deleted
 removed_task_ids = set(prev_tasks) - set(curr_tasks)
 for tid in removed_task_ids:
     t = prev_tasks[tid]
-    lines.append("{} (\"{}\") was removed from your queue — it may have been cancelled or deleted.".format(
-        fmt_task_id(t.get("id","")), t.get("title","")))
+    prev_status = prev_tasks[tid].get("status", "")
+    # Infer reason: if it was in_review, most likely approved by a reviewer
+    if prev_status == "in_review":
+        lines.append("{} (\"{}\") — APPROVED and marked done! Great work.".format(
+            fmt_task_id(t.get("id","")), t.get("title","")))
+    else:
+        lines.append("{} (\"{}\") was removed from your queue — it may have been completed, cancelled, or deleted.".format(
+            fmt_task_id(t.get("id","")), t.get("title","")))
 
 # New tasks pending review (for reviewer agents — tina/olivia/alice)
 prev_pr = {t["id"]: t for t in prev.get("pending_review", [])}
