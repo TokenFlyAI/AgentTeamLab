@@ -78,8 +78,8 @@ task_claim() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): tid=str(d.get('id','?')); print(f'Claimed {"T"+tid if tid.isdigit() else tid} for ${agent}')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' claimed for ${agent}')
+  else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
 }
@@ -95,8 +95,8 @@ task_done() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} marked DONE')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' marked DONE')
+  else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
 }
@@ -112,8 +112,8 @@ task_progress() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} updated')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' updated')
+  else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
 }
@@ -131,7 +131,7 @@ import sys,json
 try:
   d=json.load(sys.stdin)
   if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' reviewed')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
 }
@@ -147,8 +147,8 @@ task_inreview() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} marked IN_REVIEW')
-  else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
+  if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' marked IN_REVIEW')
+  else: print('Failed: ' + d.get('error','unknown'))
 except: print('Error parsing response')
 " 2>/dev/null
 }
@@ -181,15 +181,16 @@ read_task() {
 import sys,json
 try:
   t=json.load(sys.stdin)
-  if 'error' in t: print(f'Error: {t[\"error\"]}'); sys.exit(1)
-  tid=str(t['id']); print(f'{"T"+tid if tid.isdigit() else tid}: {t["title"]}')
-  print(f'  Status:   {t.get(\"status\",\"?\")}')
-  print(f'  Assignee: {t.get(\"assignee\",\"unassigned\")}')
-  print(f'  Priority: {t.get(\"priority\",\"?\")}')
+  if 'error' in t: print('Error: ' + t['error']); sys.exit(1)
+  tid=str(t['id']); tdsp=('T'+tid if tid.isdigit() else tid)
+  print(tdsp + ': ' + t.get('title',''))
+  print('  Status:   ' + t.get('status','?'))
+  print('  Assignee: ' + t.get('assignee','unassigned'))
+  print('  Priority: ' + t.get('priority','?'))
   desc=(t.get('description') or '').strip()
-  if desc: print(f'  Desc:     {desc[:200]}')
+  if desc: print('  Desc:     ' + desc[:200])
   notes=(t.get('notes') or '').strip()
-  if notes: print(f'  Notes:    {notes[-300:]}')
+  if notes: print('  Notes:    ' + notes[-300:])
 except: print('Error parsing response')
 " 2>/dev/null
 }
