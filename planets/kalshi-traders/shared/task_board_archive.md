@@ -434,3 +434,9 @@
 | 1390 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
 | 1202 | Dashboard: add collaboration indicators panel | Add a "Collaboration" panel to index_lite.html showing: (1) team_channel message count today, (2) DM activity per agent (inbox message count), (3) last handoff event. Read from /api/team-channel and /api/agents. Write deliverable to output/collaboration_panel.md describing the change + screenshot verification. | medium | all | charlie | done | 2026-04-08 | 2026-04-08 | [2026-04-08] Implemented by Founder assistant: /api/collab-status endpoint + Stats tab collaboration panel + e2e test. Deliverable: output/charlie/collaboration_panel.md |
 | 1392 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1393 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1394 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1395 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1396 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1397 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1394 | e2e-route-check-task |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |

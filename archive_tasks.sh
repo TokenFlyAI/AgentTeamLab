@@ -1,10 +1,10 @@
 #!/bin/bash
-# archive_tasks.sh — Move done tasks from task_board.md to task_board_archive.md
+# archive_tasks.sh — Move done/cancelled tasks from task_board.md to task_board_archive.md
 # Run manually or from a cron to keep the active board lean.
 # Usage: bash archive_tasks.sh [--dry-run]
 #
-# Preserves Directions, Instructions, and all non-done Tasks sections intact.
-# Only archives rows with status=done from the ## Tasks section.
+# Preserves Directions, Instructions, and active Tasks sections intact.
+# Archives rows with status=done or status=cancelled from the ## Tasks section.
 
 COMPANY_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "${COMPANY_DIR}/lib/paths.sh" 2>/dev/null || true
@@ -15,7 +15,7 @@ DRY_RUN=0
 
 [ ! -f "$BOARD" ] && echo "No task_board.md found" && exit 1
 
-# Extract ONLY done rows from the ## Tasks section (not Directions or Instructions)
+# Extract done + cancelled rows from the ## Tasks section (not Directions or Instructions)
 # The parseTaskBoard logic treats numeric IDs as tasks; D*/I* are directions/instructions.
 DONE_ROWS=$(awk '
     /^## Tasks/ { in_tasks=1; next }
@@ -23,8 +23,8 @@ DONE_ROWS=$(awk '
     in_tasks && /^\|/ {
         # Skip header and separator rows
         if ($0 ~ /^\| ID/ || $0 ~ /^\|--/) next
-        # Match done status column (| done | pattern anywhere in the row)
-        if (tolower($0) ~ /\| *done *\|/) print
+        # Match done or cancelled status column
+        if (tolower($0) ~ /\| *(done|cancelled|canceled) *\|/) print
     }
 ' "$BOARD")
 
@@ -32,11 +32,11 @@ DONE_COUNT=$(echo "$DONE_ROWS" | grep -c "^|" 2>/dev/null || echo 0)
 [ -z "$DONE_ROWS" ] && DONE_COUNT=0
 
 if [ "$DONE_COUNT" -eq 0 ]; then
-    echo "No done tasks to archive."
+    echo "No done/cancelled tasks to archive."
     exit 0
 fi
 
-echo "Found ${DONE_COUNT} done task(s) to archive."
+echo "Found ${DONE_COUNT} done/cancelled task(s) to archive."
 
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "[DRY RUN] Would archive:"
@@ -63,7 +63,7 @@ awk '
     /^## /      { if (!/^## Tasks/) in_tasks=0 }
     in_tasks && /^\|/ {
         if ($0 ~ /^\| ID/ || $0 ~ /^\|--/) { print; next }
-        if (tolower($0) ~ /\| *done *\|/) next  # skip done rows
+        if (tolower($0) ~ /\| *(done|cancelled|canceled) *\|/) next  # skip done/cancelled rows
     }
     { print }
 ' "$BOARD" > "${BOARD}.tmp" && mv "${BOARD}.tmp" "$BOARD"
@@ -75,5 +75,5 @@ REMAINING=$(awk '
     END { print count+0 }
 ' "$BOARD")
 
-echo "Archived ${DONE_COUNT} done task(s) → task_board_archive.md"
+echo "Archived ${DONE_COUNT} done/cancelled task(s) → task_board_archive.md"
 echo "Active Tasks section now has ${REMAINING} task(s)."
