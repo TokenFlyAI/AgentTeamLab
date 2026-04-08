@@ -498,7 +498,7 @@ read_channel() {
     echo ""
     count=$((count+1))
     [ $count -ge "$n" ] && break
-  done < <(ls -t "$channel"/*.md 2>/dev/null | head -"$n")
+  done < <(find "$channel" -maxdepth 1 -name "*.md" 2>/dev/null | sort -r | head -"$n")
   [ $count -eq 0 ] && echo "No team_channel posts found"
 }
 
