@@ -26,11 +26,13 @@ planets/*/agents/*/session_cycle_*.txt
 planets/*/agents/*/context_snapshot.json
 planets/*/agents/*/logs/cycles/
 
-# Agent inboxes & processed (ephemeral messages)
+# Agent inboxes, outboxes & processed (ephemeral messages)
 agents/*/chat_inbox/
+agents/*/chat_outbox*.md
 agents/*/processed_inbox/
 agents/*/processed/
 planets/*/agents/*/chat_inbox/
+planets/*/agents/*/chat_outbox*.md
 planets/*/agents/*/processed/
 
 # Announcements & team channel (high-volume noise)
