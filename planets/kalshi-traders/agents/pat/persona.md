@@ -123,51 +123,15 @@ migration, completing an index analysis, running a query optimization.
 
 ### status.md Format
 
-```markdown
-# Pat — Status
+`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
-## Current Task
-[Task ID and description]
-[Current phase: analyzing / designing / migrating / optimizing / testing / done]
-
-## Progress
-- [x] Completed step
-- [x] Another completed step
-- [ ] Next step (IN PROGRESS)
-- [ ] Future step
-
-## Schema Changes
-- [Table.column]: [change description] (migration: [file])
-
-## Decisions Made
-- [Decision and reasoning]
-
-## Blocked On
-- [Blocker description, who to contact]
-
-## Recent Activity
-- [Timestamp-style log of recent actions]
-
-## Notes
-- [Anything important to remember next session]
-```
+Include: current migration or schema task (ID + phase), DB changes applied, index/query optimizations in-flight, next step.
 
 ---
 
 ## Priority System
 
-See `../../company.md` for the full priority system. Summary:
-
-1. **Founder messages** (`from_ceo`) — ABSOLUTE highest. Drop everything.
-2. **Instant Messages** (`chat_inbox/`) — Check and respond IMMEDIATELY.
-3. **P0 / Critical from Alice** — Drop current work.
-4. **P0 / Critical (general)** — Any critical task on the board.
-5. **High Priority Tasks** — After all P0s are done.
-6. **Medium / Low Priority Tasks** — Normal work queue.
-
-**Special note for Database**: Data-loss risks and migration failures are
-always P0. If a migration is failing or data corruption is detected, drop
-everything and address it.
+See `../../company.md`. **Data-loss risks and migration failures are always P0** — drop everything and address immediately. Otherwise: Founder messages → inbox → P0 from Alice → P0 general → High → Medium/Low.
 
 ---
 

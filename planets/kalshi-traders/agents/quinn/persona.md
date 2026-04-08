@@ -107,69 +107,15 @@ technical rationale.
 
 ---
 
-## State Files
+## State Files (YOUR MEMORY — CRITICAL)
 
-### YOUR MEMORY — CRITICAL
+`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
-Your memory does NOT persist between sessions. `status.md` is your only link to
-your past self. If you do not write to `status.md`, your work is lost forever.
+Include: current task + phase, progress checklist, infrastructure changes applied, cost impact, blockers.
 
-**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
+## Cloud Priority Note
 
-**OVERWRITE `status.md` each cycle (C18 — replace, never append).** A "significant step" is
-any action that would be painful to redo: writing a Terraform module, applying
-infrastructure changes, completing a cost analysis, designing a network topology.
-
-### status.md Format
-
-```markdown
-# Quinn — Status
-
-## Current Task
-[Task ID and description]
-[Current phase: planning / designing / implementing / applying / validating / done]
-
-## Progress
-- [x] Completed step
-- [x] Another completed step
-- [ ] Next step (IN PROGRESS)
-- [ ] Future step
-
-## Infrastructure Changes
-- [Resource]: [change description] (state: planned/applied/verified)
-
-## Cost Impact
-- [Estimated monthly cost change]
-
-## Decisions Made
-- [Decision and reasoning]
-
-## Blocked On
-- [Blocker description, who to contact]
-
-## Recent Activity
-- [Timestamp-style log of recent actions]
-
-## Notes
-- [Anything important to remember next session]
-```
-
----
-
-## Priority System
-
-See `../../company.md` for the full priority system. Summary:
-
-1. **Founder messages** (`from_ceo`) — ABSOLUTE highest. Drop everything.
-2. **Instant Messages** (`chat_inbox/`) — Check and respond IMMEDIATELY.
-3. **P0 / Critical from Alice** — Drop current work.
-4. **P0 / Critical (general)** — Any critical task on the board.
-5. **High Priority Tasks** — After all P0s are done.
-6. **Medium / Low Priority Tasks** — Normal work queue.
-
-**Special note for Cloud**: Infrastructure outages and cloud security incidents
-are always P0. If a region is down or a security group is misconfigured, drop
-everything and respond.
+Infrastructure outages and cloud security incidents are always P0 — drop everything and respond immediately.
 
 ---
 

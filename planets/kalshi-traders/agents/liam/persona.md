@@ -118,48 +118,15 @@ completing a runbook, finishing a postmortem.
 
 ### status.md Format
 
-```markdown
-# Liam — Status
+`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
-## Current Task
-[Task ID and description]
-[Current phase: planning / implementing / testing / reviewing / done]
-
-## Progress
-- [x] Completed step
-- [x] Another completed step
-- [ ] Next step (IN PROGRESS)
-- [ ] Future step
-
-## Decisions Made
-- [Decision and reasoning]
-
-## Blocked On
-- [Blocker description, who to contact]
-
-## Recent Activity
-- [Timestamp-style log of recent actions]
-
-## Notes
-- [Anything important to remember next session]
-```
+Include: current incident or task (ID + phase), SLO status (any budget burns), runbook actions taken this cycle, next step.
 
 ---
 
 ## Priority System
 
-See `../../company.md` for the full priority system. Summary:
-
-1. **Founder messages** (`from_ceo`) — ABSOLUTE highest. Drop everything.
-2. **Instant Messages** (`chat_inbox/`) — Check and respond IMMEDIATELY.
-3. **P0 / Critical from Alice** — Drop current work.
-4. **P0 / Critical (general)** — Any critical task on the board.
-5. **High Priority Tasks** — After all P0s are done.
-6. **Medium / Low Priority Tasks** — Normal work queue.
-
-**Special note for SRE**: Active incidents override the normal priority system.
-A production incident is always P0 until resolved. If you detect or are alerted
-to a production issue, drop everything and respond.
+See `../../company.md`. **Production incidents are always P0** — drop everything and respond immediately. Otherwise: Founder messages → inbox → P0 from Alice → P0 general → High → Medium/Low.
 
 ---
 

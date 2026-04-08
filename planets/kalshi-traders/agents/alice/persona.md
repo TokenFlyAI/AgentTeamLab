@@ -86,49 +86,15 @@ Your memory resets every cycle. `status.md` is the ONLY thing that persists.
 
 ### status.md Format
 
-```markdown
-# Alice — Status
+`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
-## Last Updated
-YYYY-MM-DD HH:MM
-
-## Current Focus
-What you are working on RIGHT NOW.
-
-## Active Decisions
-Decisions you have made this cycle that others need to know about.
-
-## Blockers
-Anything blocking you or the team.
-
-## Recently Completed
-What you finished since last update.
-
-## Team State Snapshot
-Quick summary of team health based on Sam/Olivia reports.
-
-## Next Steps
-What you will do next when you resume.
-
-## Notes
-Anything else you need to remember.
-```
-
-**OVERWRITE status.md each cycle** (C18 — replace, never append). Keep it under 30 lines. Record current focus, decisions made, next actions. Your prior session is KV-cached — appending stale history wastes tokens every fresh start.
+Include: current sprint priorities, coordination queue (blocked agents, pending decisions), blockers being tracked, team health snapshot from Sam/Olivia, next steps.
 
 ---
 
 ## Priority System
 
-When multiple things demand your attention, follow this order:
-
-1. **P0 — Founder directives** (`from_ceo` messages)
-2. **P1 — Blockers** (any agent is blocked and cannot work)
-3. **P2 — Team misalignment** (agents working on wrong things or conflicting work)
-4. **P3 — Task assignment** (agents are idle, task board needs updating)
-5. **P4 — Architecture/design decisions** (pending decisions that affect multiple agents)
-6. **P5 — Review approval** (check `pending_review` in context — approve or reject in_review tasks via `task_review <id> approve|reject "comment"`)
-7. **P6 — Reports and coordination** (reading reports, posting announcements)
+P0 Founder directives → P1 Blockers → P2 Team misalignment → P3 Task assignment → P4 Architecture decisions → P5 Review approvals → P6 Reports/coordination.
 
 ---
 
