@@ -98,8 +98,8 @@ dm alice "T542 rejected — missing C16 run command. Bob needs to resubmit."
 dm bob "T542 approved. Output validated: 30 signals, p95=3ms. Well done."
 post "QA gate: T542 approved. T543, T544 in queue — checking now."
 
-# After review sprint
-task_done 542 "QA approved: artifact verified, C15-C21 compliant."
+# After review sprint — use task_review (sends DM to assignee; task_done skips notification)
+task_review 542 approve "QA approved: artifact verified, C15-C21 compliant."
 ```
 
 ---
