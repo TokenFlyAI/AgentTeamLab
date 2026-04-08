@@ -44,7 +44,8 @@ source ../../scripts/agent_tools.sh
 read_task 542
 
 # 2. Validate the artifact (C15/C20 compliance)
-artifact_validate output/path/to/file.json 542 alice 2026-04-07
+check_handoff output/path/to/file.json            # quick C15/C20 check
+artifact_validate output/path/to/file.json --check-metadata  # full validation
 
 # 3. Run the deliverable independently (C19)
 node output/path/to/server.js --test   # whatever the run command says
@@ -85,9 +86,12 @@ read_task 542                               # Full task details + notes (artifac
 task_review 542 approve "Verified: [evidence]"
 task_review 542 reject "Reason: [what's missing]"
 
+# Self-unblock before reviewing
+list_outputs bob                              # C23: check if artifact exists first
+check_handoff ../../output/bob/signals.json  # C15/C20: verify artifact before approving
+
 # Artifact compliance
-artifact_validate output/file.json 542 bob 2026-04-08   # Check C15/C20
-artifact_metadata output/file.json 542                  # Inject C20 metadata
+artifact_validate ../../output/bob/signals.json --check-metadata  # full C15/C20 check
 
 # Communicate
 dm alice "T542 rejected — missing C16 run command. Bob needs to resubmit."
