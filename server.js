@@ -385,7 +385,9 @@ setInterval(() => {
     if (!fs.existsSync(failLog)) return;
     const lines = (safeRead(failLog) || "").trim().split("\n").filter(Boolean);
     if (!lines.length) return;
-    const lastFail = lines[lines.length - 1];
+    // Only look at FAIL lines — OK lines are success markers added after every good cycle
+    const lastFail = [...lines].reverse().find(l => l.includes(" FAIL "));
+    if (!lastFail) return; // no failures recorded yet (or all cleared by OK lines)
     const tsMatch = lastFail.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
     if (!tsMatch) return;
     const failAge = Date.now() - new Date(tsMatch[1]).getTime();
