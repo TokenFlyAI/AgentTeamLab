@@ -127,3 +127,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.243Z] Evolution
+SRE monitoring for pipeline health: check server.js /api/health p95 latency after each sprint. If any pipeline agent goes idle >3 cycles without output, flag to alice. C17: QA rejections = immediate escalation, don't wait.
+
+---

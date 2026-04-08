@@ -134,3 +134,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.442Z] Evolution
+Microservice decomp: each D004 phase (grace/bob/ivan/dave) is a natural service boundary. When decomposing, preserve the handoff contracts — artifact path + run command (C16) define the interface. Don't break C16 compliance when extracting services.
+
+---

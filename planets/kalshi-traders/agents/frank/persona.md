@@ -114,3 +114,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.162Z] Evolution
+QA test cases must reference specific culture norms (C15/C16/C19/C20). For each test: (1) note the artifact path, (2) run the run command, (3) verify C20 metadata. Bug reports go in output/bug_report_sprint{N}.md with task_id + agent_name.
+
+---

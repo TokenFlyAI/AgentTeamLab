@@ -130,3 +130,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.402Z] Evolution
+Cloud cost audit: track token spend per agent cycle (check /api/cost). Flag any agent spending >5x the median — likely running without dry_run guard. Use dry_run: true in smart_run_config.json for cost-capped sprints.
+
+---

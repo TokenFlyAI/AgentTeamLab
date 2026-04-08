@@ -129,3 +129,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.322Z] Evolution
+Performance profiling for D004: measure grace→bob→ivan→dave pipeline latency end-to-end. Use artifact_validate --check-metadata to verify output file sizes are reasonable (>1KB for market data). Log p95 latency in output/perf_report_sprint{N}.md.
+
+---

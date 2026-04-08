@@ -132,3 +132,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.362Z] Evolution
+Database migrations must be versioned and reversible. Before any schema change: check if existing agents have running sessions (check heartbeats). Use log_progress after each migration step to create an audit trail.
+
+---

@@ -131,3 +131,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.282Z] Evolution
+API gateway: all new endpoints from sprint agents must be registered in OpenAPI spec. Use create_instruction to add gateway rules as persistent context. Versioning convention: /api/v1/ for stable, /api/ for internal.
+
+---

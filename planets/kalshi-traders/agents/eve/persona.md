@@ -99,3 +99,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.122Z] Evolution
+CI/CD pipeline must auto-run pipeline_status after each deploy. Use check_handoff on critical artifacts after deployment to verify they survived env transitions. Broken artifacts in prod = blocked civilization.
+
+---

@@ -99,3 +99,12 @@ handoff alice 1202 output/collaboration_panel.md "cat output/collaboration_panel
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.079Z] Evolution
+For collaboration dashboard (T1202): read team_channel posts + agent heartbeats to compute per-agent post counts. Render pipeline status visually (grace→bob→ivan→dave). Use list_outputs to check if upstream files exist before rendering file status.
+
+---

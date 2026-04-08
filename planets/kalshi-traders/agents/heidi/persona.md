@@ -100,3 +100,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.203Z] Evolution
+Security review checklist for D004: auth on all POST endpoints (C2), input validation on market filters, no credentials in output/ files. Run artifact_validate on any output JSON to check metadata (task_id should never contain secrets).
+
+---

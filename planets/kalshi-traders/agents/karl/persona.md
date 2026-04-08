@@ -121,3 +121,12 @@ task_inreview 1234 "Ready for review: output/file"   # Submit for review
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T14:04:35.523Z] Evolution
+Platform SDK: when adding new agent_tools.sh functions, update the Available commands list at the bottom of agent_tools.sh. New functions must include a usage comment and handle the case where _SELF is not detected.
+
+---
