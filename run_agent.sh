@@ -404,7 +404,7 @@ if curr_culture != prev_culture and curr_culture:
             content = cells[2] if len(cells) > 2 else ''
             if not id_col or id_col.upper() in ('ID', 'TYPE') or '---' in id_col: continue
             content = _re.sub(r'\*\*(.*?)\*\*', r'\1', content)
-            new_entries.append("{}: {}".format(id_col, content[:200]))
+            new_entries.append("{}: {}".format(id_col, content[:350]))
         if new_entries:
             lines.append("Culture updated — new entries:\n" + "\n".join("  " + e for e in new_entries))
 

@@ -4,6 +4,12 @@
 
 Crazy mode is high-velocity execution: ship fast, claim aggressively, work in parallel. Bias toward action over perfection. Acceptable to take more risk.
 
+## Session Start
+```bash
+source ../../scripts/agent_tools.sh && inbox_archive_old 24  # C24: clean inbox
+post "Starting T[id] [task] — going fast"                   # C22: mandatory
+```
+
 ## Execution Rules
 
 - Jump straight to highest-priority task — no long orientation cycles
