@@ -498,3 +498,7 @@
 | 1040 | Sprint 10: QA gate — validate T1038 security fixes | Independently verify Bob's security fixes from T1038. Run correlation_engine tests; confirm no regressions. | high | all | tina | done | 2026-04-08 | 2026-04-08 | Sprint 10 complete. Security fixes validated. No regressions. QA approved. |
 | 1043 | Sprint 10: Sprint metrics and T236 escalation brief | Generate Sprint 10 velocity metrics. Escalate T236 (Kalshi API credentials) blocker to Alice/Founder. | medium | all | sam | done | 2026-04-08 | 2026-04-08 | Sprint 10 complete. Sprint 10 metrics delivered. T236 blocker escalation documented. output/sam/sprint10_metrics.md |
 | 1303 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1309 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1312 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1315 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |
+| 1318 | Bug check task - delete me |  | low | all | alice | cancelled | 2026-04-08 | 2026-04-08 |  |

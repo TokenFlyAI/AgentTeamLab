@@ -442,6 +442,15 @@ test.describe("POST /api/agents/watchdog", () => {
 // POST /api/ceo/command — CEO quick command routing
 // ---------------------------------------------------------------------------
 test.describe("POST /api/ceo/command", () => {
+  const _inboxCleanup = []; // track created inbox files for cleanup: {agent, filename}
+
+  test.afterAll(async () => {
+    for (const { agent, filename } of _inboxCleanup) {
+      await apiPost(`/api/agents/${agent}/inbox/${filename}/ack`).catch(() => {});
+    }
+    _inboxCleanup.length = 0;
+  });
+
   test("returns 400 when command is missing", async () => {
     const { status } = await apiPost("/api/ceo/command", {});
     expect(status).toBe(400);
@@ -465,6 +474,7 @@ test.describe("POST /api/ceo/command", () => {
     expect(body.action).toBe("dm");
     expect(body.agent).toBe("alice");
     expect(typeof body.filename).toBe("string");
+    if (body.filename) _inboxCleanup.push({ agent: "alice", filename: body.filename });
   });
 
   test("returns 404 for @unknown agent mention", async () => {
@@ -492,6 +502,7 @@ test.describe("POST /api/ceo/command", () => {
     expect(body.ok).toBe(true);
     expect(body.action).toBe("routed_to_alice");
     expect(typeof body.filename).toBe("string");
+    if (body.filename) _inboxCleanup.push({ agent: "alice", filename: body.filename });
   });
 
   test("deduplicates identical lord messages within 30 min", async () => {
@@ -501,6 +512,7 @@ test.describe("POST /api/ceo/command", () => {
     expect(r1.status).toBe(200);
     expect(r1.body.ok).toBe(true);
     expect(r1.body.action).toBe("routed_to_alice");
+    if (r1.body.filename) _inboxCleanup.push({ agent: "alice", filename: r1.body.filename });
     // Second identical message within 30 min must be deduplicated
     expect(r2.status).toBe(200);
     expect(r2.body.ok).toBe(true);
@@ -525,6 +537,35 @@ test.describe("POST /api/ceo/command", () => {
 
     // Restore original mode
     await apiPost("/api/ceo/command", { command: `/mode ${originalMode}` });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/agents/:name/inbox/:filename/ack — inbox message acknowledgement
+// ---------------------------------------------------------------------------
+test.describe("POST /api/agents/:name/inbox/:filename/ack", () => {
+  test("returns 404 for non-existent message", async () => {
+    const { status, body } = await apiPost("/api/agents/alice/inbox/nonexistent_file.md/ack");
+    expect(status).toBe(404);
+    expect(body.error).toBe("message not found");
+  });
+
+  test("returns 400 for invalid agent name", async () => {
+    const { status } = await apiPost("/api/agents/bad|name/inbox/test.md/ack");
+    expect(status).toBe(400);
+  });
+
+  test("moves message to processed/ and returns ok", async () => {
+    // Create a test inbox message first
+    const { body: created } = await apiPost("/api/agents/alice/inbox", { message: "ack test", from: "e2e_test" });
+    expect(created.filename).toBeTruthy();
+
+    // Ack it
+    const { status, body } = await apiPost(`/api/agents/alice/inbox/${created.filename}/ack`);
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.filename).toBe(created.filename);
+    expect(body.moved_to).toBe("processed/");
   });
 });
 

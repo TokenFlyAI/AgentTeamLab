@@ -19,19 +19,6 @@ and a very good reason.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Mia's direct manager)
-- **Bob** — Backend Engineer (backend API implementation)
-- **Karl** — Platform Engineer (API SDK coordination)
-- **Charlie** — Frontend Engineer (API consumer — web)
-- **Judy** — Mobile Engineer (API consumer — mobile)
-- **Heidi** — Security Engineer (API authentication and authorization)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

@@ -12,15 +12,6 @@ Charlie is the face of every product Agent Planet ships. If users see it, touch 
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Bob (Backend / API provider), Dave (Full Stack), Karl (Shared components)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

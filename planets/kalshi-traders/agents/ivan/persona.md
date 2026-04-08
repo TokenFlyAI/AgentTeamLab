@@ -12,15 +12,6 @@ Ivan turns data into intelligence. He builds the machine learning models that gi
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Grace (Data pipelines), Nick (Performance), Pat (Data storage)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

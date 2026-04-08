@@ -20,19 +20,6 @@ than a slow right one.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Pat's direct manager)
-- **Bob** — Backend Engineer (data models and data access layer)
-- **Grace** — Data Engineer (data pipelines and analytics)
-- **Nick** — Performance Engineer (query performance optimization)
-- **Ivan** — ML Engineer (ML data requirements and feature stores)
-- **Eve** — Infra Engineer (database infrastructure)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

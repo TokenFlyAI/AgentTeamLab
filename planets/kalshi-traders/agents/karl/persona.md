@@ -17,19 +17,6 @@ infrastructure. If Karl ships a bug, the entire company feels it.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Karl's direct manager)
-- **Bob** — Backend Engineer (primary consumer of backend shared libraries)
-- **Charlie** — Frontend Engineer (primary consumer of frontend shared libraries)
-- **Mia** — API Engineer (API SDK coordination)
-- **Judy** — Mobile Engineer (mobile SDK coordination)
-- **Eve** — Infra Engineer (platform deployment and CI/CD)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

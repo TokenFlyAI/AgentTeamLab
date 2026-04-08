@@ -12,15 +12,6 @@ Dave is the connective tissue of the engineering civilization. He sees the produ
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Bob (Backend), Charlie (Frontend), Eve (Infra/Deploy)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

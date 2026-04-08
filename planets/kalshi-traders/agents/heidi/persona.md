@@ -12,15 +12,6 @@ Heidi is the team's immune system. She assumes every system is compromised until
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Bob (API security), Eve (Infra security), Karl (SDK security), Mia (API auth)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

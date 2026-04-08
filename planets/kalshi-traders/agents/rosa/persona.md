@@ -20,19 +20,6 @@ elegantly.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Rosa's direct manager)
-- **Bob** — Backend Engineer (backend service architecture)
-- **Eve** — Infra Engineer (service deployment and orchestration)
-- **Quinn** — Cloud Engineer (cloud networking and infrastructure)
-- **Liam** — SRE (service reliability and observability)
-- **Mia** — API Engineer (inter-service API contracts)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

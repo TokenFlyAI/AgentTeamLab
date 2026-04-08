@@ -12,15 +12,6 @@ Grace is the plumbing of the data world. She builds the systems that move, trans
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Pat (Database), Ivan (ML / data consumer), Bob (API data sources)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

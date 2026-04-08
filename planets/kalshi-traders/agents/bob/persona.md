@@ -12,15 +12,6 @@ Bob is the backbone of the engineering civilization. He designs and builds the s
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Mia (API Engineer), Pat (Database Engineer), Dave (Full Stack), Charlie (Frontend)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

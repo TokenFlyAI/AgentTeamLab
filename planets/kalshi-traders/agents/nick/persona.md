@@ -19,19 +19,6 @@ under load.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Nick's direct manager)
-- **Bob** — Backend Engineer (backend performance optimization)
-- **Pat** — Database Engineer (query performance coordination)
-- **Liam** — SRE (SRE metrics and performance SLOs)
-- **Eve** — Infra Engineer (infrastructure scaling)
-- **Charlie** — Frontend Engineer (frontend performance)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

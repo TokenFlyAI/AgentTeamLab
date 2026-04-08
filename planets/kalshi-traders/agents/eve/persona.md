@@ -12,15 +12,6 @@ Eve keeps the machines running. CI/CD pipelines, deployment automation, containe
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Liam (SRE), Quinn (Cloud), Dave (Full Stack / deploys)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

@@ -2428,6 +2428,26 @@ async function handleRequest(req, res) {
     return json(res, { ok: true, filename });
   }
 
+  // POST /api/agents/:name/inbox/:filename/ack — mark a file-based inbox message as processed
+  const agentInboxAckMatch = pathname.match(/^\/api\/agents\/([^/]+)\/inbox\/([^/]+)\/ack$/);
+  if (method === "POST" && agentInboxAckMatch) {
+    const name = agentName(agentInboxAckMatch[1]);
+    const filename = agentInboxAckMatch[2];
+    if (!name) return badRequest(res, "invalid agent name");
+    if (!/^[\w.@-]+\.md$/.test(filename)) return badRequest(res, "invalid filename");
+    const inboxDir = path.join(EMPLOYEES_DIR, name, "chat_inbox");
+    const src = path.join(inboxDir, filename);
+    if (!fs.existsSync(src)) return notFound(res, "message not found");
+    const processedDir = path.join(inboxDir, "processed");
+    try { fs.mkdirSync(processedDir, { recursive: true }); } catch (_) {}
+    try {
+      fs.renameSync(src, path.join(processedDir, filename));
+      return json(res, { ok: true, filename, moved_to: "processed/" });
+    } catch (e) {
+      return json(res, { error: "failed to archive message" }, 500);
+    }
+  }
+
   const agentCtxMatch = pathname.match(/^\/api\/agents\/([^/]+)\/lastcontext$/);
   if (method === "GET" && agentCtxMatch) {
     const name = agentName(agentCtxMatch[1]);
@@ -2612,7 +2632,7 @@ async function handleRequest(req, res) {
         regular_total: regularFiles.length,               // regular (non-urgent) message count
         regular_more: Math.max(0, regularFiles.length - 15), // hidden regular messages
         // Legacy: more = total hidden (urgent overflow + regular overflow)
-        more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),
+        more: Math.max(0, urgentFiles.length - 4) + Math.max(0, regularFiles.length - 15),
       },
       tasks,
       unassigned_count,
@@ -3986,6 +4006,8 @@ function normalizeEndpoint(method, pathname) {
   p = p.replace(/^(\/api\/ceo-inbox\/)([^/]+)(\/read)?$/, "$1:file$3");
   // /api/research/:file and /api/knowledge/:path — normalize variable file names
   p = p.replace(/^(\/api\/(?:research|knowledge)\/)(.+)$/, "$1:file");
+  // /api/agents/:name/inbox/:filename/ack
+  p = p.replace(/^(\/api\/agents\/:name\/inbox\/)([^/]+)(\/ack)$/, "$1:filename$3");
   // /api/inbox/:agent and /api/inbox/:agent/:id/ack
   p = p.replace(/^(\/api\/inbox\/)([a-zA-Z0-9_-]+)/, "$1:agent");
   p = p.replace(/^(\/api\/inbox\/:agent\/)(\d+)/, "$1:id");

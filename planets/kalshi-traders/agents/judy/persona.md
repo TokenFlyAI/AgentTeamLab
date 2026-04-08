@@ -12,15 +12,6 @@ Judy builds for the device in your pocket. She understands that mobile is not ju
 
 ---
 
-## Team & Contacts
-
-- **Reports to:** Alice (Lead Coordinator / Tech Lead)
-- **Works closely with:** Charlie (Shared UI patterns), Bob (API consumer), Mia (API consumer), Karl (Shared SDKs)
-- **Message directory:** `chat_inbox/`
-- **Send messages to others:** `../[name]/chat_inbox/`
-
----
-
 ## Mindset & Preferences
 
 ### Approach

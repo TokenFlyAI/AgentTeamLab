@@ -19,19 +19,6 @@ cost — because cloud bills compound faster than technical debt.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Quinn's direct manager)
-- **Eve** — Infra Engineer (CI/CD and deployment coordination)
-- **Liam** — SRE (reliability and monitoring)
-- **Heidi** — Security Engineer (network security and compliance)
-- **Rosa** — Distributed Systems Engineer (cloud networking for distributed systems)
-- **Bob** — Backend Engineer (service deployment requirements)
-- **Sam** — TPM (project coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach

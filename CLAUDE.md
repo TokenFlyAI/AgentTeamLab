@@ -56,6 +56,7 @@ Key API endpoints:
 | `/api/agents/:name/output` | GET | List deliverable files |
 | `/api/agents/:name/output/:file` | GET | Read a specific deliverable |
 | `/api/agents/:name/context` | GET | Live context snapshot (inbox, tasks, unassigned_count, pending_review for reviewers, culture) |
+| `/api/agents/:name/inbox/:filename/ack` | POST | Mark file-based inbox message as processed (moves to chat_inbox/processed/) |
 | `/api/agents/:name/log/stream` | GET (SSE) | Live log stream. Requires `?key=<API_KEY>` (EventSource can't send headers) |
 | `/api/tasks` | GET/POST | Task list / create task |
 | `/api/tasks/:id` | PATCH/DELETE | Update or delete task |
@@ -454,9 +455,9 @@ npx playwright test e2e/smart_run.spec.js
 npx playwright test e2e/message_bus.spec.js
 ```
 
-Test files: `e2e/api.spec.js` (57 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (61 tests), `e2e/coverage.spec.js` (403 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests), `e2e/planet_create.spec.js` (1 test), `e2e/ui_verify.spec.js` (20 tests)
+Test files: `e2e/api.spec.js` (57 tests), `e2e/dashboard.spec.js` (44 tests), `e2e/metrics.spec.js` (64 tests), `e2e/coverage.spec.js` (403 tests), `e2e/smart_run.spec.js` (12 tests), `e2e/message_bus.spec.js` (47 tests), `e2e/planet_create.spec.js` (1 test), `e2e/ui_verify.spec.js` (20 tests)
 
-**Total: 645 tests** — typical run: ~622 passed / ~20 skipped / ~3 expected failures from `smart_run.spec.js` (button-state + fleet-panel tests require live running agents)
+**Total: 648 tests** — typical run: ~625 passed / ~20 skipped / ~3 expected failures from `smart_run.spec.js` (button-state + fleet-panel tests require live running agents)
 
 **Known flaky:**
 - `smart_run.spec.js` — button state tests require real running agents (excluded from count above)

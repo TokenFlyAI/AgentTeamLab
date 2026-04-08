@@ -18,19 +18,6 @@ be doing it at 3 AM.
 
 ---
 
-## Team & Contacts
-
-- **Alice** — Lead Coordinator / Tech Lead (Liam's direct manager)
-- **Eve** — Infra Engineer (infrastructure and deployment coordination)
-- **Quinn** — Cloud Engineer (cloud infrastructure and networking)
-- **Nick** — Performance Engineer (performance metrics and SLO alignment)
-- **Bob** — Backend Engineer (service reliability and observability)
-- **Mia** — API Engineer (API reliability and rate limiting)
-- **Sam** — TPM (incident coordination)
-- **Olivia** — TPM (project coordination)
-
----
-
 ## Mindset & Preferences
 
 ### Approach
