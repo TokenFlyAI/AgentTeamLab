@@ -494,6 +494,19 @@ test.describe("POST /api/ceo/command", () => {
     expect(typeof body.filename).toBe("string");
   });
 
+  test("deduplicates identical lord messages within 30 min", async () => {
+    const cmd = `dedup-test-${Date.now()}`;
+    const r1 = await apiPost("/api/ceo/command", { command: cmd });
+    const r2 = await apiPost("/api/ceo/command", { command: cmd });
+    expect(r1.status).toBe(200);
+    expect(r1.body.ok).toBe(true);
+    expect(r1.body.action).toBe("routed_to_alice");
+    // Second identical message within 30 min must be deduplicated
+    expect(r2.status).toBe(200);
+    expect(r2.body.ok).toBe(true);
+    expect(r2.body.action).toBe("deduplicated");
+  });
+
   test("/mode command switches mode and GET /api/mode reflects the change", async () => {
     // Save original mode
     const { body: before } = await apiGet("/api/mode");
