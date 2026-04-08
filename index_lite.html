@@ -4208,7 +4208,8 @@ function openTaskDetail(id) {
   const t = (Array.isArray(tasks) ? tasks : []).find(x => String(x.id) === String(id) || x.id === id);
   if (!t) return;
   currentTaskDetailId = id;
-  document.getElementById('task-detail-title-heading').textContent = 'Task #' + id;
+  const typeLabel = t.task_type === 'direction' ? 'Direction' : t.task_type === 'instruction' ? 'Instruction' : 'Task #';
+  document.getElementById('task-detail-title-heading').textContent = typeLabel + (t.task_type && t.task_type !== 'task' ? ' ' + id : id);
   document.getElementById('td-title').textContent = t.title || 'Untitled';
   document.getElementById('td-desc').textContent = t.description || '—';
   document.getElementById('td-status').textContent = (t.status || 'open').replace('_', ' ');
@@ -6143,7 +6144,7 @@ function renderMobileTaskCard(task) {
   const status = task.status || 'open';
   
   return `
-    <div class="mobile-task-card" onclick="openTaskDetail(${task.id})">
+    <div class="mobile-task-card" onclick="openTaskDetail(${JSON.stringify(task.id)})">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="task-priority ${priorityClass}">${priorityLabel}</span>
         <span class="task-title">${esc(task.title)}</span>
