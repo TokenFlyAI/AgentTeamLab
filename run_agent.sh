@@ -495,8 +495,10 @@ if pending:
         notes = (t.get("notes") or "").strip()
         last_note = notes.split(";;")[-1].strip()[:120] if notes else ""
         note_str = " — note: {}".format(last_note) if last_note else ""
-        out.append("  T{} [in_review] {}: {} (assignee: {}){}".format(
-            t.get("id",""), t.get("priority","medium"), t.get("title",""), t.get("assignee",""), note_str))
+        tid = str(t.get("id",""))
+        tid_display = "T" + tid if tid.isdigit() else tid
+        out.append("  {} [in_review] {}: {} (assignee: {}){}".format(
+            tid_display, t.get("priority","medium"), t.get("title",""), t.get("assignee",""), note_str))
     out.append("")
 
 # Team channel (last 5)
