@@ -149,7 +149,7 @@ import sys,json
 tasks=json.load(sys.stdin)
 assignee='${assignee}'.lower() if '${assignee}' else None
 active=[t for t in tasks if t.get('status') in ('open','in_progress','in_review')]
-if assignee: active=[t for t in active if (t.get('assignee','') or '').lower()==assignee]
+if assignee: active=[t for t in active if assignee in [a.strip() for a in (t.get('assignee','') or '').lower().split(',')]]
 if not active: print('No active tasks' + (f' for {assignee}' if assignee else '')); sys.exit()
 for t in active:
   print(f'[{t[\"id\"]}] {t[\"status\"]:12s} P:{t.get(\"priority\",\"?\"):8s} {t.get(\"assignee\",\"unassigned\"):10s} {t[\"title\"][:60]}')
@@ -170,7 +170,7 @@ import sys,json
 try:
   t=json.load(sys.stdin)
   if 'error' in t: print(f'Error: {t[\"error\"]}'); sys.exit(1)
-  print(f'T{t[\"id\"]}: {t[\"title\"]}')
+  tid=str(t['id']); print(f'{"T"+tid if tid.isdigit() else tid}: {t["title"]}')
   print(f'  Status:   {t.get(\"status\",\"?\")}')
   print(f'  Assignee: {t.get(\"assignee\",\"unassigned\")}')
   print(f'  Priority: {t.get(\"priority\",\"?\")}')
