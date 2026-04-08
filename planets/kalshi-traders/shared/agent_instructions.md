@@ -215,6 +215,7 @@ source ../../scripts/agent_tools.sh
 | `broadcast "Sprint complete"` | DM all agents simultaneously |
 | `read_inbox` | Read your unprocessed inbox messages |
 | `inbox_done <filename>` | Mark an inbox message as processed (move to processed/) |
+| `inbox_archive_old [hours]` | Archive messages older than N hours to processed/ (default 24h; skips CEO/Lord msgs) |
 | `read_peer ivan` | Read another agent's status.md |
 | `list_outputs grace` | List grace's output files (C23: self-unblock before DMing) |
 | `read_channel 10` | Read last 10 team_channel posts |

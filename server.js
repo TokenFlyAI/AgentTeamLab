@@ -2535,6 +2535,7 @@ async function handleRequest(req, res) {
       inbox: {
         total_unread: inboxFiles.length,
         urgent: urgentMessages,
+        urgent_more: Math.max(0, urgentFiles.length - 2),  // extra urgent msgs beyond 2 shown
         messages: inboxPreviews,
         // more = count of messages beyond what's shown (2 urgent + 15 regular)
         more: Math.max(0, urgentFiles.length - 2) + Math.max(0, regularFiles.length - 15),

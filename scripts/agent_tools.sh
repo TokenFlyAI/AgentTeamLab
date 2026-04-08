@@ -327,6 +327,24 @@ inbox_done() {
   mv "$src" "$dest" && echo "Moved to processed: $fname" || echo "Failed to move: $fname"
 }
 
+inbox_archive_old() {
+  # inbox_archive_old [hours] — move messages older than N hours to processed/ (default: 24h)
+  # Use this to clean up your inbox backlog after you've handled all pending messages.
+  # Messages from_ceo/from_lord are KEPT (not archived) so Founder messages are always visible.
+  local hours="${1:-24}"
+  [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
+  local inbox="${_AGENTS}/${_SELF}/chat_inbox"
+  mkdir -p "${inbox}/processed"
+  local count=0
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    # Never archive CEO/Lord messages — they're too important to auto-hide
+    case "$(basename "$f")" in *from_ceo*|*from_lord*) continue ;; esac
+    mv "$f" "${inbox}/processed/$(basename "$f")" 2>/dev/null && count=$((count+1))
+  done < <(find "$inbox" -maxdepth 1 -name "*.md" -mmin "+$((hours*60))" 2>/dev/null)
+  echo "Archived ${count} messages older than ${hours}h to processed/"
+}
+
 # ── Handoff & Artifacts (C15, C16, C20) ──────────────────────────────────────
 
 artifact_validate() {
@@ -530,4 +548,4 @@ log_progress() {
   echo "Progress logged to logs/progress.log"
 }
 
-echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"
+echo "[agent_tools] Loaded for ${_SELF:-unknown}. Available: task_claim, task_done, task_inreview, task_review, task_progress, task_list, my_tasks, read_task, create_task, create_direction, create_instruction, post, announce, dm, broadcast, read_inbox, inbox_done, inbox_archive_old, read_peer, list_outputs, read_channel, read_knowledge, read_culture, add_culture, pipeline_status, log_progress, artifact_validate, artifact_metadata, handoff, check_handoff"

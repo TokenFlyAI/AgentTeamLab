@@ -447,18 +447,22 @@ if sop:
 out.append("")
 
 # Urgent messages (full content)
-urgent = d.get("inbox", {}).get("urgent", [])
+inbox_obj = d.get("inbox", {})
+urgent = inbox_obj.get("urgent", [])
+urgent_more = inbox_obj.get("urgent_more", 0)
 if urgent:
     out.append("### ⚠️ URGENT — Founder/Lord Messages (handle FIRST)")
     for m in urgent:
         out.append(m["content"].strip())
         out.append("")
+    if urgent_more > 0:
+        out.append("⚠️ {} MORE Founder/Lord messages not shown — process these first, then run `read_inbox` to see all.".format(urgent_more))
+        out.append("")
 
 # Inbox previews
-inbox = d.get("inbox", {})
-total = inbox.get("total_unread", 0)
-msgs = inbox.get("messages", [])
-more = inbox.get("more", 0)
+total = inbox_obj.get("total_unread", 0)
+msgs = inbox_obj.get("messages", [])
+more = inbox_obj.get("more", 0)
 if total > 0:
     suffix = " ({} more not shown)".format(more) if more > 0 else ""
     out.append("**Unread inbox** ({} messages{}):".format(total, suffix))
