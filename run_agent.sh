@@ -666,14 +666,34 @@ for raw in sys.stdin:
         print(raw[:MAX_RAW])
         continue
     if isinstance(event, dict):
-        text = event.get("text") or event.get("message") or event.get("content")
-        if isinstance(text, str) and text.strip():
-            print("[ASSISTANT] " + text.strip())
-            continue
         etype = str(event.get("type") or event.get("event") or "").lower()
+        # Handle item.completed — extract agent_message text or command summary
+        if etype == "item.completed":
+            item = event.get("item") or {}
+            itype = str(item.get("type") or "").lower()
+            if itype == "agent_message":
+                text = item.get("text") or item.get("content") or ""
+                if isinstance(text, str) and text.strip():
+                    print("[ASSISTANT] " + text.strip()[:500])
+            elif itype == "command_execution":
+                cmd = (item.get("command") or "")[:100]
+                out = (item.get("aggregated_output") or "")[:150]
+                print("[TOOL] {}".format(cmd))
+                if out.strip():
+                    print("[TOOL_RESULT] " + out.strip()[:150])
+            continue
+        # result/completed — emit [DONE] in cycles parser format
         if etype in ("result", "completed", "done", "final"):
             sid = event.get("session_id") or event.get("conversation_id") or event.get("thread_id") or "?"
-            print("[DONE] session=" + str(sid))
+            turns = event.get("num_turns") or 0
+            cost = event.get("total_cost_usd") or 0
+            duration_ms = event.get("duration_ms") or 0
+            duration_s = round(duration_ms / 1000, 3)
+            print("[DONE] turns={} cost=${} duration={}s session={}".format(turns, cost, duration_s, sid))
+            continue
+        text = event.get("text") or event.get("message") or event.get("content")
+        if isinstance(text, str) and text.strip():
+            print("[ASSISTANT] " + text.strip()[:500])
             continue
     dumped = json.dumps(event, ensure_ascii=True)
     print(dumped[:MAX_RAW] + ("…" if len(dumped) > MAX_RAW else ""))
