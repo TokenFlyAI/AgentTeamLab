@@ -2435,6 +2435,37 @@ test.describe("POST /api/agents/start-all", () => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /api/agents/:name/inbox/:filename/ack — file-based inbox acknowledgement
+// ---------------------------------------------------------------------------
+test.describe("POST /api/agents/:name/inbox/:filename/ack", () => {
+  test("returns 400 for invalid agent name", async () => {
+    const { status } = await apiPost("/api/agents/bad|name/inbox/test.md/ack");
+    expect(status).toBe(400);
+  });
+
+  test("returns 404 for non-existent message", async () => {
+    const { status, body } = await apiPost("/api/agents/alice/inbox/nonexistent_abc123.md/ack");
+    expect(status).toBe(404);
+    expect(body.error).toBe("message not found");
+  });
+
+  test("returns 200 and moves message to processed/", async () => {
+    // Create a message first
+    const { body: created } = await apiPost("/api/agents/alice/inbox", {
+      message: "ack endpoint coverage test",
+      from: "coverage_test",
+    });
+    expect(created.filename).toBeTruthy();
+
+    // Ack it — should move to processed/
+    const { status, body } = await apiPost(`/api/agents/alice/inbox/${created.filename}/ack`);
+    expect(status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.filename).toBe(created.filename);
+    expect(body.moved_to).toBe("processed/");
+  });
+});
+
 // POST /api/agents/:name/inbox — functional tests (GAP-010)
 // ---------------------------------------------------------------------------
 test.describe("POST /api/agents/:name/inbox", () => {
