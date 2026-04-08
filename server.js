@@ -3911,6 +3911,64 @@ async function handleRequest(req, res) {
     return json(res, metricsData);
   }
 
+  // GET /api/collab-status — collaboration health: team_channel posts, DM backlog, last handoff
+  if (method === "GET" && pathname === "/api/collab-status") {
+    const collabData = cached("collab_status", 20_000, () => {
+      const agentNames = listAgentNames();
+      const tcDir = path.join(PUBLIC_DIR, "team_channel");
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, "_");
+
+      // Team channel posts per agent today
+      const tcFiles = listDir(tcDir).filter(f => f.endsWith(".md"));
+      const tcToday = tcFiles.filter(f => f.startsWith(today));
+      const tcPerAgent = {};
+      for (const f of tcToday) {
+        const m = f.match(/_from_(\w+)\.md$/);
+        if (m) tcPerAgent[m[1]] = (tcPerAgent[m[1]] || 0) + 1;
+      }
+
+      // DM backlog per agent (unread inbox, excluding CEO/lord)
+      const dmBacklog = {};
+      for (const ag of agentNames) {
+        const inboxDir = path.join(EMPLOYEES_DIR, ag, "chat_inbox");
+        if (!fs.existsSync(inboxDir)) continue;
+        const files = listDir(inboxDir).filter(f =>
+          f.endsWith(".md") && !f.includes("from_ceo") && !f.includes("from_lord")
+        );
+        if (files.length > 0) dmBacklog[ag] = files.length;
+      }
+
+      // Last handoff event (most recent team_channel post containing "HANDOFF:")
+      let lastHandoff = null;
+      const tcSorted = [...tcFiles].sort().reverse();
+      for (const f of tcSorted.slice(0, 50)) {
+        const content = safeRead(path.join(tcDir, f)) || "";
+        if (content.includes("HANDOFF:")) {
+          const m = f.match(/_from_(\w+)\.md$/);
+          const tsMatch = f.match(/^(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/);
+          lastHandoff = {
+            from: m ? m[1] : "unknown",
+            timestamp: tsMatch ? tsMatch[1].replace(/_/g, "-").replace(/^(.{10})-(.{2})-(.{2})-(.{2})$/, "$1T$2:$3:$4") : null,
+            preview: content.split("\n").find(l => l.includes("HANDOFF:"))?.slice(0, 100) || ""
+          };
+          break;
+        }
+      }
+
+      // Agents with no team_channel post today (C22 violations)
+      const silentAgents = agentNames.filter(ag => !tcPerAgent[ag]);
+
+      return {
+        team_channel: { today_total: tcToday.length, per_agent: tcPerAgent },
+        dm_backlog: dmBacklog,
+        last_handoff: lastHandoff,
+        silent_agents: silentAgents,
+        total_agents: agentNames.length
+      };
+    });
+    return json(res, collabData);
+  }
+
   // Bob's agent metrics sub-routes: /api/metrics/agents, /api/metrics/tasks, /api/metrics/health
   if (pathname.startsWith("/api/metrics/")) {
     if (handleAgentMetricsRequest(req, res, PLANET_DIR)) return;

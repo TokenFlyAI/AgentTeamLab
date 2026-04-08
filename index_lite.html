@@ -1773,6 +1773,12 @@ body {
         <em>No auto-restarts yet</em>
       </div>
     </div>
+    <div class="chart-section" id="collab-panel">
+      <h3>🤝 Collaboration Health</h3>
+      <div id="collab-content" style="font-size:0.85rem;">
+        <em style="color:#888">Loading...</em>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: Fleet Control -->
@@ -2596,6 +2602,7 @@ async function refresh() {
       safeFetch('/api/mode'),         // 7
       safeFetch('/api/ceo-inbox'),    // 8
       safeFetch('/api/cost'),         // 9
+      safeFetch('/api/collab-status'), // 10
     ]);
     if (results[0].status === 'fulfilled' && results[0].value) {
       const raw0 = results[0].value;
@@ -2659,6 +2666,9 @@ async function refresh() {
         costEl.title = `Today: $${(c.today_usd||0).toFixed(2)} (${c.today_cycles||0} cycles)\n7-day: $${(c.total_7d_usd||0).toFixed(2)} (${c.total_7d_cycles||0} cycles)`;
         costEl.__costData = c;
       }
+    }
+    if (results[10] && results[10].status === 'fulfilled' && results[10].value) {
+      renderCollabPanel(results[10].value);
     }
     updateTabBadges();
     if (!sseConnected) setConnected(false);
@@ -4887,6 +4897,73 @@ async function submitConsensusEntry() {
       showToast('Error: ' + (data.error || 'unknown'), 3000);
     }
   } catch (e) { showToast('Consensus error: ' + e.message, 3000); }
+}
+
+// ===== COLLAB PANEL =====
+function renderCollabPanel(data) {
+  const el = document.getElementById('collab-content');
+  if (!el || !data) return;
+
+  const tcTotal = (data.team_channel || {}).today_total || 0;
+  const perAgent = (data.team_channel || {}).per_agent || {};
+  const dmBacklog = data.dm_backlog || {};
+  const lastHandoff = data.last_handoff;
+  const silentAgents = data.silent_agents || [];
+  const totalAgents = data.total_agents || 20;
+
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+
+  // Team channel summary
+  html += `<div style="background:#1a1a2e;border-radius:6px;padding:10px">
+    <div style="font-size:0.75rem;color:#888;margin-bottom:4px">Team Channel Posts Today</div>
+    <div style="font-size:1.4rem;font-weight:bold;color:#4ecdc4">${tcTotal}</div>`;
+  if (Object.keys(perAgent).length > 0) {
+    const sorted = Object.entries(perAgent).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    html += '<div style="margin-top:6px;font-size:0.75rem">';
+    for (const [ag, cnt] of sorted) {
+      html += `<span style="color:#aaa">${ag}:</span><span style="color:#fff;margin-right:8px"> ${cnt}</span>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // DM backlog summary
+  const backlogCount = Object.keys(dmBacklog).length;
+  const backlogTotal = Object.values(dmBacklog).reduce((s,v) => s+v, 0);
+  html += `<div style="background:#1a1a2e;border-radius:6px;padding:10px">
+    <div style="font-size:0.75rem;color:#888;margin-bottom:4px">DM Backlog</div>
+    <div style="font-size:1.4rem;font-weight:bold;color:${backlogTotal > 10 ? '#ff6b6b' : backlogTotal > 0 ? '#ffd93d' : '#4ecdc4'}">${backlogTotal}</div>
+    <div style="font-size:0.75rem;color:#aaa">${backlogCount} agents with unread DMs</div>`;
+  if (backlogCount > 0) {
+    html += '<div style="margin-top:4px;font-size:0.75rem">';
+    for (const [ag, cnt] of Object.entries(dmBacklog).sort((a,b) => b[1]-a[1]).slice(0, 5)) {
+      html += `<span style="color:#ff9f43">${ag}: ${cnt}</span> `;
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  // Silent agents (C22 violation: no team_channel post today)
+  if (silentAgents.length > 0) {
+    const shown = silentAgents.slice(0, 8).join(', ');
+    const rest = silentAgents.length > 8 ? ` +${silentAgents.length - 8} more` : '';
+    html += `<div style="background:#2a1a1a;border-radius:6px;padding:8px;margin-bottom:8px;font-size:0.8rem">
+      <span style="color:#ff6b6b">⚠ Silent today (C22):</span> <span style="color:#aaa">${shown}${rest}</span>
+    </div>`;
+  }
+
+  // Last handoff
+  if (lastHandoff) {
+    html += `<div style="background:#1a1a2e;border-radius:6px;padding:8px;font-size:0.8rem">
+      <span style="color:#888">Last handoff:</span>
+      <span style="color:#4ecdc4"> ${lastHandoff.from}</span>
+      <span style="color:#666"> — ${lastHandoff.preview}</span>
+    </div>`;
+  } else {
+    html += `<div style="font-size:0.8rem;color:#555">No handoffs yet this sprint</div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 // ===== STATS =====
