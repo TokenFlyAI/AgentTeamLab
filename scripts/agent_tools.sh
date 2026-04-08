@@ -251,7 +251,11 @@ broadcast() {
     local agent=$(basename "$agent_dir")
     [ "$agent" = "$from" ] && continue
     local inbox="${agent_dir}chat_inbox"
-    [ -d "$inbox" ] && printf "# Broadcast from %s\n\n%s\n" "$from" "$msg" > "${inbox}/${ts}_from_${from}.md" && count=$((count+1))
+    if [ -d "$inbox" ]; then
+      local bfile="${inbox}/${ts}_from_${from}.md"
+      [ -f "$bfile" ] && bfile="${inbox}/${ts}_from_${from}_$$.md"
+      printf "# Broadcast from %s\n\n%s\n" "$from" "$msg" > "$bfile" && count=$((count+1))
+    fi
   done
   echo "Broadcast sent to ${count} agents"
 }
@@ -278,7 +282,9 @@ announce() {
   local ts=$(date +%Y_%m_%d_%H_%M_%S)
   local dir="${_SHARED}/announcements"
   mkdir -p "$dir"
-  printf "# Announcement from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "${dir}/${ts}_from_${from}.md"
+  local outfile="${dir}/${ts}_from_${from}.md"
+  [ -f "$outfile" ] && outfile="${dir}/${ts}_from_${from}_$$.md"
+  printf "# Announcement from %s\n\nDate: %s\n\n%s\n" "$from" "$(date +%Y-%m-%d)" "$msg" > "$outfile"
   echo "Announcement posted"
 }
 
