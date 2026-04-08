@@ -284,19 +284,24 @@ curr_tasks = {t["id"]: t for t in curr.get("tasks", [])}
 new_task_ids = set(curr_tasks) - set(prev_tasks)
 changed_tasks = [t for tid, t in curr_tasks.items()
                  if tid in prev_tasks and t.get("status") != prev_tasks[tid].get("status")]
+def fmt_task_id(tid):
+    """Prefix numeric IDs with T; leave alphanumeric IDs (D001, I001) as-is."""
+    s = str(tid)
+    return "T" + s if s.isdigit() else s
+
 for tid in new_task_ids:
     t = curr_tasks[tid]
     desc = (t.get("description") or "").strip()
     if desc:
-        lines.append("New task assigned to you — T{}: \"{}\" ({})\n  {}".format(
-            t.get("id",""), t.get("title",""), t.get("status",""), desc))
+        lines.append("New task assigned to you — {}: \"{}\" ({})\n  {}".format(
+            fmt_task_id(t.get("id","")), t.get("title",""), t.get("status",""), desc))
     else:
-        lines.append("New task assigned to you — T{}: \"{}\" ({})".format(
-            t.get("id",""), t.get("title",""), t.get("status","")))
+        lines.append("New task assigned to you — {}: \"{}\" ({})".format(
+            fmt_task_id(t.get("id","")), t.get("title",""), t.get("status","")))
 for t in changed_tasks:
     old_s = prev_tasks[t["id"]].get("status","")
     new_s = t.get("status","")
-    lines.append("T{} ({}) moved: {} → {}".format(t.get("id",""), t.get("title",""), old_s, new_s))
+    lines.append("{} ({}) moved: {} → {}".format(fmt_task_id(t.get("id","")), t.get("title",""), old_s, new_s))
 
 # New tasks pending review (for reviewer agents — tina/olivia/alice)
 prev_pr = {t["id"]: t for t in prev.get("pending_review", [])}
@@ -308,14 +313,14 @@ for tid in new_pr_ids:
     # Extract the last note line (most recent progress update)
     last_note = notes.split(";;")[-1].strip()[:120] if notes else ""
     note_suffix = " — note: {}".format(last_note) if last_note else ""
-    lines.append("T{} ({}) is now in_review — assigned to {}, awaiting your review.{}".format(
-        t.get("id",""), t.get("title",""), t.get("assignee",""), note_suffix))
+    lines.append("{} ({}) is now in_review — assigned to {}, awaiting your review.{}".format(
+        fmt_task_id(t.get("id","")), t.get("title",""), t.get("assignee",""), note_suffix))
 # Also notify when a pending_review task is resolved (approved/rejected)
 removed_pr_ids = set(prev_pr) - set(curr_pr)
 for tid in removed_pr_ids:
     t = prev_pr[tid]
-    lines.append("T{} ({}) is no longer in_review — resolved or reassigned.".format(
-        t.get("id",""), t.get("title","")))
+    lines.append("{} ({}) is no longer in_review — resolved or reassigned.".format(
+        fmt_task_id(t.get("id","")), t.get("title","")))
 
 # Teammate status changes
 prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
@@ -469,7 +474,10 @@ tasks = d.get("tasks", [])
 if tasks:
     out.append("**Your open tasks**:")
     for t in tasks:
-        out.append("  T{} [{}] {}: {}".format(t.get("id",""), t.get("status",""), t.get("priority","medium"), t.get("title","")))
+        tid = str(t.get("id",""))
+        # Numeric IDs get T prefix; alphanumeric (D001, I001) are shown as-is
+        tid_display = "T" + tid if tid.isdigit() else tid
+        out.append("  {} [{}] {}: {}".format(tid_display, t.get("status",""), t.get("priority","medium"), t.get("title","")))
         desc = (t.get("description") or "").strip()
         if desc:
             # Truncate long descriptions (D004 is 2000+ chars) — agents read full spec from knowledge.md
@@ -507,7 +515,7 @@ if anns:
         out.append("  - {}: \"{}\"".format(sender_from_filename(a["filename"]), a["preview"]))
     out.append("")
 
-# Teammates
+# Teammates — show active/running ones in full; compress idle list to save tokens
 teammates = d.get("teammates", [])
 if teammates:
     working = [t for t in teammates if t["status"] not in ("idle", "unknown")]
@@ -516,7 +524,13 @@ if teammates:
         out.append("**Active teammates**: {}".format(", ".join(
             "{} ({})".format(t["name"], t["status"]) for t in working)))
     if idle:
-        out.append("**Idle teammates**: {}".format(", ".join(t["name"] for t in idle)))
+        # Only name the first 5 idle teammates; condense the rest to a count
+        shown_idle = idle[:5]
+        rest = len(idle) - len(shown_idle)
+        idle_str = ", ".join(t["name"] for t in shown_idle)
+        if rest > 0:
+            idle_str += " (+ {} more idle)".format(rest)
+        out.append("**Idle teammates**: {}".format(idle_str))
     out.append("")
 
 # Culture / consensus — agents need the full file to see all norms and sprint decisions

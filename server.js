@@ -2802,14 +2802,14 @@ async function handleRequest(req, res) {
       await updateTaskRow(id, { status: "done", notes: noteText });
       const updated = parseTaskBoard().find((t) => String(t.id) === String(id));
       // Notify all assignees via inbox so they see the approval in their delta
-      notifyAssignees(`# Task T${id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
+      notifyAssignees(`# Task ${/^\d+$/.test(String(id)) ? "T" + id : id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
       broadcastWS("task_updated", { id: parseTaskId(id), status: "done", reviewer });
       return json(res, { ok: true, verdict: "approved", deliverable_found: deliverableFound, deliverable_location: deliverableLocation, task: updated });
     } else {
       const noteText = `[REJECTED by ${reviewer || "unknown"}] ${comment || "Needs revision"}`;
       await updateTaskRow(id, { status: "in_progress", notes: noteText });
       // Notify all assignees via inbox
-      notifyAssignees(`# Task T${id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
+      notifyAssignees(`# Task ${/^\d+$/.test(String(id)) ? "T" + id : id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
       broadcastWS("task_updated", { id: parseTaskId(id), status: "in_progress", reviewer });
       return json(res, { ok: true, verdict: "rejected", comment, task_id: id });
     }
@@ -2965,7 +2965,6 @@ async function handleRequest(req, res) {
         fs.writeFileSync(tbPath, filtered.join("\n"));
         cacheInvalidate("task_board");
         deleteResult = { ok: true, deleted: { ...taskToDelete, id: parseTaskId(taskToDelete.id) } };
-        broadcastWS("task_deleted", { id: parseTaskId(id) });
       } catch (e) {
         deleteResult = { error: "failed to write task board", status: 500 };
       }
