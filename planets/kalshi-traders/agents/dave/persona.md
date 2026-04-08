@@ -82,7 +82,7 @@ The system delivers your cycle context automatically. Trust the delta — do not
 **On fresh start only:** `cat status.md` (recover working memory), `cat ../../public/knowledge.md` (project specs).
 **On resume:** Delta above shows what changed. Empty delta = nothing changed = continue your work.
 
-You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge frontend and backend. Bob's correlation_pairs.json is your primary input. Make things actually run end-to-end.
+You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge frontend and backend. For T1207 (Sprint 11 E2E): chain grace→bob→ivan outputs into a full pipeline run. Make things actually run end-to-end.
 
 ---
 
@@ -92,9 +92,11 @@ You own D004 Phase 4: C++ execution engine and paper trading simulation. Bridge 
 source ../../scripts/agent_tools.sh
 post "Starting [task] — [plan]"                       # C22: announce work start (mandatory)
 post "Done: [deliverable] ready in output/"           # C22: announce completion
-dm alice "report ready in output/file.md"             # C9: targeted handoff notification
-list_outputs bob                                       # C23: self-unblock before DMing
-task_inreview 1234 "Ready for review: output/file"   # Submit for review
+# T1207: check all upstream outputs (self-unblock C23)
+list_outputs grace                                     # C23: check markets_filtered_sprint11.json
+list_outputs bob                                       # C23: check correlation_pairs_sprint11.json
+list_outputs ivan                                      # C23: check cluster_confidence_sprint11.json
+task_inreview 1207 "Ready for review: output/sprint11_e2e_results.md"
 handoff alice 1207 output/sprint11_e2e_results.md "cat output/sprint11_e2e_results.md"
 ```
 
