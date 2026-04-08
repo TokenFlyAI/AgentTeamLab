@@ -346,15 +346,17 @@ handoff() {
 
   local from="${_SELF:-unknown}"
   local ts=$(date +%Y-%m-%d\ %H:%M:%S)
-  local msg="### Handoff: T${task_id} from ${from}
+  # Prefix numeric IDs with T; leave D/I prefix IDs as-is
+  local task_display; task_display=$(echo "$task_id" | python3 -c "import sys; s=sys.stdin.read().strip(); print('T'+s if s.isdigit() else s)")
+  local msg="### Handoff: ${task_display} from ${from}
 - **Artifact**: ${path}
 - **Run Command**: \`${cmd}\`
 - **Freshness**: ${ts}
 - **Notes**: ${notes}"
 
   dm "$to" "$msg"
-  post "HANDOFF: T${task_id} to ${to} — Artifact: ${path}"
-  echo "Handoff complete. Remember to mark T${task_id} as in_review or done."
+  post "HANDOFF: ${task_display} to ${to} — Artifact: ${path}"
+  echo "Handoff complete. Remember to mark ${task_display} as in_review or done."
 }
 
 # ── Information ──────────────────────────────────────────────────────────────
