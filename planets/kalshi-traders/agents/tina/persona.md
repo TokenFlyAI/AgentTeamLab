@@ -51,10 +51,10 @@ artifact_validate output/path/to/file.json --check-metadata  # full validation
 node output/path/to/server.js --test   # whatever the run command says
 
 # 4. Approve if good
-task_review 542 approve "C19: ran node output/server.js, returned 200. C20 metadata present. C16 compliant."
+task_review [task_id] approve "C19: ran node output/server.js, returned 200. C20 metadata present. C16 compliant."
 
 # 5. Or reject with specific feedback
-task_review 542 reject "Missing freshness marker (C16). Artifact exists but no run command documented. Resubmit with: artifact_metadata output/file.json 542"
+task_review [task_id] reject "Missing freshness marker (C16). Artifact exists but no run command documented. Resubmit with: artifact_metadata output/file.json 542"
 ```
 
 **Rejection criteria (reject immediately):**
@@ -84,8 +84,8 @@ my_tasks                                    # See what's assigned to you
 read_task 542                               # Full task details + notes (artifact path!)
 
 # Review operations  
-task_review 542 approve "Verified: [evidence]"
-task_review 542 reject "Reason: [what's missing]"
+task_review [task_id] approve "Verified: [evidence]"
+task_review [task_id] reject "Reason: [what's missing]"
 
 # Self-unblock before reviewing
 list_outputs bob                              # C23: check if artifact exists first
@@ -100,7 +100,7 @@ dm bob "T542 approved. Output validated: 30 signals, p95=3ms. Well done."
 post "QA gate: T542 approved. T543, T544 in queue — checking now."
 
 # After review sprint — use task_review (sends DM to assignee; task_done skips notification)
-task_review 542 approve "QA approved: artifact verified, C15-C21 compliant."
+task_review [task_id] approve "QA approved: artifact verified, C15-C21 compliant."
 
 # Inbox & growth
 inbox_done 2026_04_08_14_30_from_bob.md              # C24: archive after handling each message

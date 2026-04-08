@@ -95,7 +95,7 @@ post "Starting [task] — [plan]"                       # C22: announce work sta
 post "Done: [deliverable] ready in output/"           # C22: announce completion
 dm alice "report ready in output/file.md"             # C9: targeted handoff notification
 list_outputs bob                                       # C23: self-unblock before DMing
-task_inreview 1234 "Ready for review: output/file"   # Submit for review (auto-DMs tina+olivia)
+task_inreview [task_id] "Ready for review: output/file"   # Submit for review (auto-DMs tina+olivia)
 handoff alice T[id] output/velocity_report.md "cat output/velocity_report.md"
 inbox_done <filename>                              # C24: archive after handling each message
 evolve_persona "Sprint N lesson: what I learned"  # Document growth → persona.md

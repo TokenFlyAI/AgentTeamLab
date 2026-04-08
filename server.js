@@ -2923,13 +2923,27 @@ async function handleRequest(req, res) {
       if (files.length > 0) { deliverableFound = true; deliverableLocation = `task_outputs/${files[0]}`; }
     }
 
-    // Check assignee's output/ (support comma-separated multi-assignees)
+    // Check assignee's output/ — try to find specific artifact from notes first
     if (!deliverableFound && assignee && EMPLOYEES_DIR) {
+      // Parse notes for explicit artifact path (e.g. "Artifact: output/file.json" or "Handoff to X: output/file.json")
+      const notes = (task.notes || "");
+      const artifactMatch = notes.match(/output\/([^\s,;)]+\.\w+)/i);
       for (const ag of assignee.split(",").map(a => a.trim()).filter(Boolean)) {
+        if (artifactMatch) {
+          // Specific file mentioned in notes — check that exact file
+          const specificFile = path.join(EMPLOYEES_DIR, ag, artifactMatch[0]);
+          if (fs.existsSync(specificFile)) {
+            deliverableFound = true;
+            deliverableLocation = `agents/${ag}/${artifactMatch[0]}`;
+            break;
+          }
+        }
+        // Fallback: any file in output/ (loose check — better than nothing)
         const agentOutDir = path.join(EMPLOYEES_DIR, ag, "output");
-        if (fs.existsSync(agentOutDir) && listDir(agentOutDir).length > 0) {
+        const outFiles = fs.existsSync(agentOutDir) ? listDir(agentOutDir).filter(f => !f.startsWith(".")) : [];
+        if (outFiles.length > 0) {
           deliverableFound = true;
-          deliverableLocation = `agents/${ag}/output/`;
+          deliverableLocation = `agents/${ag}/output/ (${outFiles.length} file${outFiles.length > 1 ? "s" : ""})`;
           break;
         }
       }

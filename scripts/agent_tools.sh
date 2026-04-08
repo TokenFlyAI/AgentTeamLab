@@ -333,10 +333,11 @@ create_instruction() {
 }
 
 read_inbox() {
-  # read_inbox — show unread messages from chat_inbox
+  # read_inbox — show unread messages: CEO/Lord first, then newest regular messages
   [ -z "$_SELF" ] && echo "Cannot detect agent name" && return 1
   local inbox="${_AGENTS}/${_SELF}/chat_inbox"
   local count=0 found=0
+  # CEO/Lord messages first (highest priority), then newest-first for regular messages
   while IFS= read -r f; do
     [ -f "$f" ] || continue
     found=1
@@ -345,7 +346,10 @@ read_inbox() {
     echo ""
     (( count++ ))
     [ $count -ge 20 ] && break
-  done < <(find "$inbox" -maxdepth 1 -name "*.md" ! -name "read_*" ! -name "processed_*" ! -name "*.processed.md" 2>/dev/null | sort)
+  done < <({
+    find "$inbox" -maxdepth 1 -name "*from_ceo*.md" -o -name "*from_lord*.md" 2>/dev/null | sort -r
+    find "$inbox" -maxdepth 1 -name "*.md" ! -name "read_*" ! -name "processed_*" ! -name "*.processed.md" ! -name "*from_ceo*" ! -name "*from_lord*" 2>/dev/null | sort -r
+  })
   [ $found -eq 0 ] && echo "No unread messages"
 }
 
