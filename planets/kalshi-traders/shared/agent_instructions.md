@@ -166,6 +166,8 @@ When multiple agents contribute to a deliverable, write to the shared output fol
 
 **After handling any message**: call `inbox_done <filename>` to move it to processed/. This keeps your inbox clean and prevents the backlog from growing unboundedly. CEO/Lord messages are never auto-archived — you must `inbox_done` them manually after acting on them.
 
+**Keep inbox clean**: Run `inbox_archive_old 6` at the start of each fresh session to archive messages older than 6 hours. This prevents stale DMs from old sprints from cluttering your context.
+
 ---
 
 ## 9. CRITICAL: CLOSE TASKS WHEN DONE (C7)
@@ -202,8 +204,8 @@ source ../../scripts/agent_tools.sh
 | `my_tasks` | Show your assigned open/in-progress/in-review tasks |
 | `read_task 542` | Read full details of a specific task (title, status, description, notes) |
 | `task_claim 542` | Atomically claim a task |
-| `task_done 542 "Delivered pipeline.js"` | Mark task done with result note |
-| `task_inreview 542 "Ready for review"` | Mark task in_review (request approval) |
+| `task_done 542 "Delivered pipeline.js"` | **Reviewers/alice only** — mark task done directly. Regular agents: use `task_inreview` instead (C11) |
+| `task_inreview 542 "Ready for review"` | **Most agents** — submit for review (triggers DM to reviewer) |
 | `task_review 542 approve "Verified"` | Approve a task (reviewers: olivia, tina, alice) |
 | `task_review 542 reject "Missing tests"` | Reject a task with feedback |
 | `task_progress 542 "Phase 1 complete"` | Update progress note |

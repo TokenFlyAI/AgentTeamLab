@@ -3354,8 +3354,18 @@ async function handleRequest(req, res) {
       if (!fs.existsSync(agDir)) return notFound(res, `agent '${targetAgent}' not found`);
       const inboxDir = path.join(agDir, "chat_inbox");
       try { fs.mkdirSync(inboxDir, { recursive: true }); } catch (_) {}
+      // Dedup: skip if identical lord message delivered in last 30 min
+      const dmContent = `# Lord's Priority Message\n\n${msg}\n`;
+      const dmCutoffMs = Date.now() - 30 * 60 * 1000;
+      const existingDm = listDir(inboxDir).filter(f => f.includes("from_lord") && !f.includes("processed_"));
+      const dmDuplicate = existingDm.some(f => {
+        const mtime = fs.statSync(path.join(inboxDir, f)).mtimeMs;
+        if (mtime < dmCutoffMs) return false;
+        return safeRead(path.join(inboxDir, f)) === dmContent;
+      });
+      if (dmDuplicate) return json(res, { ok: true, action: "deduplicated", agent: targetAgent, note: "identical message already in inbox" });
       const fname = `${ts()}_from_lord.md`;
-      try { fs.writeFileSync(path.join(inboxDir, fname), `# Lord's Priority Message\n\n${msg}\n`); } catch (e) { return json(res, { error: "failed to deliver message" }, 500); }
+      try { fs.writeFileSync(path.join(inboxDir, fname), dmContent); } catch (e) { return json(res, { error: "failed to deliver message" }, 500); }
       return json(res, { ok: true, action: "dm", agent: targetAgent, filename: fname });
     }
 
@@ -3465,10 +3475,20 @@ async function handleRequest(req, res) {
     }
 
     // Default: send to alice as Lord's priority
+    // Dedup: skip if an identical unprocessed lord message was delivered in the last 30 min
     const aliceInbox = path.join(EMPLOYEES_DIR, "alice", "chat_inbox");
     try { fs.mkdirSync(aliceInbox, { recursive: true }); } catch (_) {}
+    const dedupContent = `# Lord's Priority Message\n\n${cmd}\n`;
+    const cutoffMs = Date.now() - 30 * 60 * 1000;
+    const existingLord = listDir(aliceInbox).filter(f => f.includes("from_lord") && !f.includes("processed_"));
+    const isDuplicate = existingLord.some(f => {
+      const mtime = fs.statSync(path.join(aliceInbox, f)).mtimeMs;
+      if (mtime < cutoffMs) return false;
+      return safeRead(path.join(aliceInbox, f)) === dedupContent;
+    });
+    if (isDuplicate) return json(res, { ok: true, action: "deduplicated", note: "identical message already in alice inbox" });
     const fname = `${ts()}_from_lord.md`;
-    try { fs.writeFileSync(path.join(aliceInbox, fname), `# Lord's Priority Message\n\n${cmd}\n`); } catch (e) { return json(res, { error: "failed to route message" }, 500); }
+    try { fs.writeFileSync(path.join(aliceInbox, fname), dedupContent); } catch (e) { return json(res, { error: "failed to route message" }, 500); }
     return json(res, { ok: true, action: "routed_to_alice", filename: fname });
   }
 
