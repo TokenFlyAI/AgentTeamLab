@@ -3846,6 +3846,12 @@ function normalizeEndpoint(method, pathname) {
   p = p.replace(/^(\/api\/agents\/:name\/output\/)(.+)/, "$1:file");
   // /api/tasks/:id and /api/tasks/:id/... (numeric or D/I prefix like D001, I001)
   p = p.replace(/^(\/api\/tasks\/)([A-Z]\d+|\d+)/, "$1:id");
+  // /api/consensus/entry/:id (C1, D4, or numeric)
+  p = p.replace(/^(\/api\/consensus\/entry\/)([A-Z]\d+|\d+)/, "$1:id");
+  // /api/ceo-inbox/:file/read — filename is a unique timestamp, normalize to :file
+  p = p.replace(/^(\/api\/ceo-inbox\/)([^/]+)(\/read)?$/, "$1:file$3");
+  // /api/research/:file and /api/knowledge/:path — normalize variable file names
+  p = p.replace(/^(\/api\/(?:research|knowledge)\/)(.+)$/, "$1:file");
   // /api/inbox/:agent and /api/inbox/:agent/:id/ack
   p = p.replace(/^(\/api\/inbox\/)([a-zA-Z0-9_-]+)/, "$1:agent");
   p = p.replace(/^(\/api\/inbox\/:agent\/)(\d+)/, "$1:id");
