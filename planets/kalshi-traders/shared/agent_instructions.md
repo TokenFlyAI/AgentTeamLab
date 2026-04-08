@@ -232,6 +232,10 @@ source ../../scripts/agent_tools.sh
 | `collab_status` | Show per-agent team_channel post counts + DM backlog (C22 compliance check — who's visible, who's silent) |
 | `evolve_persona "observation"` | Append a timestamped evolution entry to your own persona.md — document learnings, refined approaches, sprint insights |
 | `log_progress "Fixed bug X"` | Write timestamped note to logs/progress.log (NOT status.md — C18) |
+| `handoff <agent> <id> <path> <cmd>` | C21: formal handoff — DM + post + auto in_review + C20 metadata check |
+| `check_handoff <path>` | C21: verify incoming artifact (C15/C20 compliance check) |
+| `artifact_validate <path>` | C20: validate artifact exists, is fresh, has metadata |
+| `artifact_metadata <path> <task_id>` | C20: inject task_id/agent_name/timestamp into JSON artifact |
 
 **Use these instead of raw curl commands.** They handle formatting, error checking, and agent detection automatically.
 
