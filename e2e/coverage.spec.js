@@ -2619,6 +2619,17 @@ test.describe("POST /api/consensus/entry pipe sanitization (GAP-009)", () => {
     });
     expect(status).toBe(400);
   });
+
+  test("type 'norm' is valid and creates entry (regression: was missing from VALID_TYPES)", async () => {
+    const { status, body } = await apiPost("/api/consensus/entry", {
+      type: "norm",
+      content: "e2e regression guard for norm type",
+      section: "Core Behavioral Norms (Must Follow)",
+    });
+    expect(status).toBe(201);
+    expect(body.ok).toBe(true);
+    if (body.id) _consensusIds.push(body.id);
+  });
 });
 
 // ── DELETE /api/consensus/entry/:id ───────────────────────────────────────────
