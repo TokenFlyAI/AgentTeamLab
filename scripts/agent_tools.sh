@@ -165,6 +165,11 @@ if not active: print('No active tasks' + (f' for {assignee}' if assignee else ''
 for t in active:
   tid=str(t['id']); tid_display='T'+tid if tid.isdigit() else tid
   print(f'[{tid_display}] {t[\"status\"]:12s} P:{t.get(\"priority\",\"?\"):8s} {t.get(\"assignee\",\"unassigned\"):10s} {t[\"title\"][:60]}')
+  desc=(t.get('description') or '').strip()
+  if desc: print(f'          {desc[:100]}')
+  notes=(t.get('notes') or '').strip()
+  last_note=notes.split(';;')[-1].strip()[:80] if notes else ''
+  if last_note: print(f'          Note: {last_note}')
 " 2>/dev/null
 }
 

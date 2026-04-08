@@ -2532,7 +2532,14 @@ async function handleRequest(req, res) {
       allAgents.map(n => {
         const hb = safeRead(path.join(EMPLOYEES_DIR, n, "heartbeat.md")) || "";
         const stMatch = hb.match(/^status:\s*(.+)$/m);
-        return { name: n, status: stMatch ? stMatch[1].trim() : "unknown" };
+        const tsMatch = hb.match(/^timestamp:\s*(.+)$/m);
+        const taskMatch = hb.match(/^task:\s*(.+)$/m);
+        return {
+          name: n,
+          status: stMatch ? stMatch[1].trim() : "unknown",
+          timestamp: tsMatch ? tsMatch[1].trim() : null,
+          task: taskMatch ? taskMatch[1].trim() : null,
+        };
       })
     ).filter(t => t.name !== name);
 

@@ -239,6 +239,7 @@ if new_urgent:
         if len(body) > MAX_CEO_CHARS:
             body = body[:MAX_CEO_CHARS] + "\n...[truncated]"
         lines.append(body)
+        lines.append("_After handling: `inbox_done {}`_".format(m["filename"]))
 
 # New regular inbox messages — preview only
 prev_msgs = {m["filename"] for m in prev.get("inbox", {}).get("messages", [])}
@@ -248,13 +249,13 @@ new_msgs = [m for m in curr.get("inbox", {}).get("messages", []) if m["filename"
 if new_msgs:
     if len(new_msgs) == 1:
         m = new_msgs[0]
-        lines.append("{} sent you a message: \"{}\"".format(
-            sender_from_filename(m["filename"]), m["preview"]))
+        lines.append("{} sent you a message: \"{}\" — `inbox_done {}`".format(
+            sender_from_filename(m["filename"]), m["preview"], m["filename"]))
     else:
         lines.append("You have {} new messages:".format(len(new_msgs)))
         for m in new_msgs:
-            lines.append("  - {}: \"{}\"".format(
-                sender_from_filename(m["filename"]), m["preview"]))
+            lines.append("  - {}: \"{}\" — `inbox_done {}`".format(
+                sender_from_filename(m["filename"]), m["preview"], m["filename"]))
 
 # New team channel — preview only
 prev_tc = {m["filename"] for m in prev.get("team_channel", [])}
@@ -345,14 +346,21 @@ prev_tm = {t["name"]: t["status"] for t in prev.get("teammates", [])}
 curr_tm = {t["name"]: t["status"] for t in curr.get("teammates", [])}
 tm_changes = [(n, prev_tm[n], curr_tm[n]) for n in curr_tm
               if n in prev_tm and curr_tm[n] != prev_tm[n]]
+curr_tm_full = {t["name"]: t for t in curr.get("teammates", [])}
 for name, old, new_s in tm_changes:
+    tm_data = curr_tm_full.get(name, {})
+    task_info = tm_data.get("task", "")
+    # Only show custom task info (not the generic launcher-set messages)
+    task_suffix = ""
+    if task_info and task_info not in ("Processing work cycle", "Available for assignment"):
+        task_suffix = " — working on: {}".format(task_info[:60])
     if new_s == "idle":
         lines.append("{} is now idle (was: {}) — available for new work.".format(
             name.capitalize(), old))
     elif new_s in ("working", "running"):
-        lines.append("{} started working (was: {}).".format(name.capitalize(), old))
+        lines.append("{} started working (was: {}).{}".format(name.capitalize(), old, task_suffix))
     else:
-        lines.append("{}: {} → {}.".format(name.capitalize(), old, new_s))
+        lines.append("{}: {} → {}.{}".format(name.capitalize(), old, new_s, task_suffix))
 
 # Culture / consensus changes — only new entries (in compact format, not raw table lines)
 prev_culture = (prev.get("culture") or "").strip()
@@ -539,6 +547,11 @@ if tasks:
             # Truncate long descriptions (D004 is 2000+ chars) — agents read full spec from knowledge.md
             desc_preview = desc[:200] + "…" if len(desc) > 200 else desc
             out.append("    {}".format(desc_preview))
+        # Show most recent note (progress update) so agents resume in-context after session reset
+        notes = (t.get("notes") or "").strip()
+        last_note = notes.split(";;")[-1].strip()[:150] if notes else ""
+        if last_note:
+            out.append("    _Note: {}_".format(last_note))
 else:
     unassigned = d.get("unassigned_count", 0)
     if unassigned > 0:
@@ -588,7 +601,9 @@ if teammates:
     idle = [t for t in teammates if t["status"] == "idle"]
     if working:
         out.append("**Active teammates**: {}".format(", ".join(
-            "{} ({})".format(t["name"], t["status"]) for t in working)))
+            "{} ({}{})".format(t["name"], t["status"],
+                " — {}".format(t["task"]) if t.get("task") and t["task"] not in ("Processing work cycle", "Available for assignment") else "")
+            for t in working)))
     if idle:
         # Only name the first 5 idle teammates; condense the rest to a count
         shown_idle = idle[:5]
@@ -654,8 +669,8 @@ PYEOF
             echo "[warn:${AGENT_NAME}] Live snapshot render failed — using minimal fallback" >&2
             LIVE_SNAPSHOT="## Live State Snapshot
 - Snapshot render failed — read files directly this cycle
-- Inbox: check chat_inbox/ for unread messages
-- Tasks: grep your name from public/task_board.md"
+- Inbox: \`source ../../scripts/agent_tools.sh && read_inbox\`
+- Tasks: \`source ../../scripts/agent_tools.sh && my_tasks\`"
         }
         rm -f "$_CTX_TMP"
         # Save snapshot for delta diffing on subsequent resume cycles
@@ -666,8 +681,8 @@ PYEOF
         echo "[session:${AGENT_NAME}] Warning: dashboard unavailable, using minimal snapshot"
         LIVE_SNAPSHOT="## Live State Snapshot
 - Dashboard offline — read files directly this cycle
-- Inbox: check chat_inbox/ for unread messages
-- Tasks: grep your name from public/task_board.md"
+- Inbox: \`source ../../scripts/agent_tools.sh && read_inbox\`
+- Tasks: \`source ../../scripts/agent_tools.sh && my_tasks\`"
     fi
 
     # Assemble final prompt: static prefix → memory → live snapshot (dynamic content last)

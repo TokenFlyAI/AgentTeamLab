@@ -52,11 +52,11 @@ for msg in "${SORTED_FILES[@]}"; do
     [ $SHOWN -ge $MAX_MSGS ] && break
     [ -z "$msg" ] || [ ! -f "$msg" ] && continue
     MSG_CONTENT=$(head -25 "$msg")
-    OUTPUT="${OUTPUT}--- Message: $(basename "$msg") ---\n${MSG_CONTENT}\n"
+    BASENAME_MSG="$(basename "$msg")"
+    OUTPUT="${OUTPUT}--- Message: ${BASENAME_MSG} ---\n${MSG_CONTENT}\n_After handling: \`inbox_done ${BASENAME_MSG}\`_\n"
     SHOWN=$((SHOWN+1))
 done
 [ $TOTAL -gt $MAX_MSGS ] && OUTPUT="${OUTPUT}... and $((TOTAL - MAX_MSGS)) more — process these first, then re-check.\n"
-OUTPUT="${OUTPUT}REQUIRED: Run inbox_done <filename> after handling each message (or mv to chat_inbox/processed/)\n"
 
 # Within-cycle dedup: skip if inbox content unchanged since last emission this cycle.
 STAMP_FILE="/tmp/.inbox_hook_${AGENT_NAME}"

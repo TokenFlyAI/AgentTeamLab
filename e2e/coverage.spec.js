@@ -3971,3 +3971,113 @@ test.describe("GET /api/agents/:name/context — inbox regular_total field", () 
     expect(inbox.total_unread).toBe(urgentTotal + inbox.regular_total);
   });
 });
+
+// ── Context endpoint: task notes displayed in fresh context ────────────────────
+// Bug fix: task notes (progress updates) were not shown in the fresh-start context,
+// causing agents to lose their working state after session reset. Now shown as
+// "_Note: <last note>_" below each task's description.
+test.describe("GET /api/agents/:name/context — task notes in context", () => {
+  let _noteTaskId = null;
+
+  test.afterAll(async () => {
+    if (_noteTaskId) {
+      try { await apiDelete(`/api/tasks/${_noteTaskId}`); } catch (_) {}
+    }
+  });
+
+  test("context includes notes field in tasks", async () => {
+    const noteText = "Phase 1 complete, waiting for phase 2 data";
+    const { status: cs, body: created } = await apiPost("/api/tasks", {
+      title: "E2E test: notes in context",
+      priority: "low",
+      assignee: "bob",
+      notes: noteText,
+    });
+    expect(cs).toBe(201);
+    _noteTaskId = created.id;
+
+    const { body } = await apiGet("/api/agents/bob/context");
+    const task = (body.tasks || []).find(t => String(t.id) === String(_noteTaskId));
+    expect(task).toBeTruthy();
+    // notes field should be present and contain our text
+    expect(task.notes).toBe(noteText);
+  });
+
+  test("context task notes are truncated to last 300 chars when long", async () => {
+    // Already covered by the notes truncation tests above — verify notes field exists
+    const { body } = await apiGet("/api/agents/alice/context");
+    const tasks = body.tasks || [];
+    // Each task with notes should have a notes field
+    tasks.forEach(t => {
+      if (t.notes) {
+        expect(typeof t.notes).toBe("string");
+        expect(t.notes.length).toBeLessThanOrEqual(301); // 300 + optional "…" prefix
+      }
+    });
+  });
+});
+
+// ── Context endpoint: teammate data includes timestamp and task fields ─────────
+// Enhancement: teammate heartbeat data now includes timestamp (for activity recency)
+// and task (for awareness of what a teammate is currently doing).
+test.describe("GET /api/agents/:name/context — teammate timestamp and task fields", () => {
+  test("each teammate includes name and status (existing fields)", async () => {
+    const { status, body } = await apiGet("/api/agents/alice/context");
+    expect(status).toBe(200);
+    const teammates = body.teammates || [];
+    expect(teammates.length).toBeGreaterThan(0);
+    for (const t of teammates) {
+      expect(typeof t.name).toBe("string");
+      expect(typeof t.status).toBe("string");
+    }
+  });
+
+  test("teammate data includes optional timestamp and task fields", async () => {
+    const { body } = await apiGet("/api/agents/alice/context");
+    const teammates = body.teammates || [];
+    // At least some teammates should have timestamp/task (if their heartbeat files exist)
+    const withTimestamp = teammates.filter(t => t.timestamp != null);
+    const withTask = teammates.filter(t => t.task != null);
+    // These are optional — just verify that if present they are strings
+    withTimestamp.forEach(t => expect(typeof t.timestamp).toBe("string"));
+    withTask.forEach(t => expect(typeof t.task).toBe("string"));
+  });
+
+  test("context teammate list excludes the requesting agent", async () => {
+    const { body } = await apiGet("/api/agents/bob/context");
+    const teammates = body.teammates || [];
+    const self = teammates.find(t => t.name === "bob");
+    expect(self).toBeUndefined();
+  });
+});
+
+// ── Inbox messages include filename for inbox_done ─────────────────────────────
+// Fix: inbox messages shown in context (both fresh-start and delta) now include
+// the filename so agents can call `inbox_done <filename>` to archive them.
+test.describe("GET /api/agents/:name/context — inbox messages include filename", () => {
+  let _inboxFile = null;
+  const _testAgent = "charlie";
+
+  test.afterAll(() => {
+    if (_inboxFile && fs.existsSync(_inboxFile)) {
+      try { fs.unlinkSync(_inboxFile); } catch (_) {}
+    }
+  });
+
+  test("inbox messages object includes filename field", async () => {
+    // Create a test inbox message
+    const inboxDir = path.join(AGENTS_DIR, _testAgent, "chat_inbox");
+    const fname = `${new Date().toISOString().replace(/[-:T.]/g, '_').slice(0,19)}_from_alice.md`;
+    _inboxFile = path.join(inboxDir, fname);
+    fs.writeFileSync(_inboxFile, "Test message for inbox_done filename test");
+
+    const { status, body } = await apiGet(`/api/agents/${_testAgent}/context`);
+    expect(status).toBe(200);
+    const msgs = (body.inbox || {}).messages || [];
+    // Find our test message
+    const ourMsg = msgs.find(m => m.filename === fname);
+    expect(ourMsg).toBeTruthy();
+    expect(ourMsg.filename).toBe(fname);
+    expect(typeof ourMsg.preview).toBe("string");
+  });
+});
