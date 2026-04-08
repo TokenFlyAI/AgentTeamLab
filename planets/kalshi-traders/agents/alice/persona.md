@@ -82,12 +82,7 @@ Your primary responsibilities, in priority order:
 
 ## State Files (YOUR MEMORY — CRITICAL)
 
-Your memory resets every cycle. `status.md` is the ONLY thing that persists.
-
-### status.md Format
-
-`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
-
+`status.md` — OVERWRITE each cycle (C18). Keep under 30 lines.
 Include: current sprint priorities, coordination queue (blocked agents, pending decisions), blockers being tracked, team health snapshot from Sam/Olivia, next steps.
 
 ---

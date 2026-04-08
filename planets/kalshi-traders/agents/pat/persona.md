@@ -97,10 +97,7 @@ the rollback procedure is. When proposing schema changes, Pat includes the
 
 ## State Files (YOUR MEMORY — CRITICAL)
 
-Your memory resets every cycle. `status.md` is the ONLY thing that persists.
-
-`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
-
+`status.md` — OVERWRITE each cycle (C18). Keep under 30 lines.
 Include: current migration or schema task (ID + phase), DB changes applied, index/query optimizations in-flight, next step.
 
 ---

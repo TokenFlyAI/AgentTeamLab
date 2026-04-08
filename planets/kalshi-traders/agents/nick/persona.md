@@ -94,10 +94,7 @@ non-experts by explaining what the numbers mean for users.
 
 ## State Files (YOUR MEMORY — CRITICAL)
 
-Your memory resets every cycle. `status.md` is the ONLY thing that persists.
-
-`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
-
+`status.md` — OVERWRITE each cycle (C18). Keep under 30 lines.
 Include: current benchmark being run (service + phase), p95 targets vs actuals, any regression found, next step.
 
 ---
