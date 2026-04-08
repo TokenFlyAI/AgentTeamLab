@@ -212,9 +212,9 @@ try:
   print('  Assignee: ' + t.get('assignee','unassigned'))
   print('  Priority: ' + t.get('priority','?'))
   desc=(t.get('description') or '').strip()
-  if desc: print('  Desc:     ' + desc[:200])
+  if desc: print('  Desc:     ' + desc)
   notes=(t.get('notes') or '').strip()
-  if notes: print('  Notes:    ' + notes[-300:])
+  if notes: print('  Notes:    ' + notes[-500:])
 except: print('Error parsing response')
 " 2>/dev/null
 }
