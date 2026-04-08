@@ -2763,8 +2763,9 @@ async function handleRequest(req, res) {
   const taskReviewMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)\/review$/);
   if (method === "POST" && taskReviewMatch) {
     const id = taskReviewMatch[1];
+    const normId = /^T(\d+)$/.test(id) ? id.slice(1) : id;
     const body = await parseBody(req);
-    const task = parseTaskBoard().find((t) => String(t.id) === String(id));
+    const task = parseTaskBoard().find((t) => String(t.id) === normId || String(t.id) === String(id));
     if (!task) return notFound(res, "task not found");
 
     const reviewer = (body.reviewer || "").trim();
@@ -2814,19 +2815,21 @@ async function handleRequest(req, res) {
 
     if (verdict === "approve") {
       const noteText = `[REVIEWED by ${reviewer || "unknown"}] ${comment || "Approved"}${deliverableFound ? " — deliverable: " + deliverableLocation : " — no deliverable file found (manual verify)"}`;
-      await updateTaskRow(id, { status: "done", notes: noteText });
-      const updated = parseTaskBoard().find((t) => String(t.id) === String(id));
+      await updateTaskRow(normId, { status: "done", notes: noteText });
+      const updated = parseTaskBoard().find((t) => String(t.id) === normId);
+      const displayId = /^\d+$/.test(String(task.id)) ? "T" + task.id : task.id;
       // Notify all assignees via inbox so they see the approval in their delta
-      notifyAssignees(`# Task ${/^\d+$/.test(String(id)) ? "T" + id : id} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
-      broadcastWS("task_updated", { id: parseTaskId(id), status: "done", reviewer });
+      notifyAssignees(`# Task ${displayId} Review: APPROVED\n\nYour task "${task.title}" was approved by ${reviewer || "a reviewer"}.\n\n${comment ? "**Comment:** " + comment + "\n\n" : ""}Task is now done. Great work!`);
+      broadcastWS("task_updated", { id: parseTaskId(task.id), status: "done", reviewer });
       return json(res, { ok: true, verdict: "approved", deliverable_found: deliverableFound, deliverable_location: deliverableLocation, task: updated });
     } else {
       const noteText = `[REJECTED by ${reviewer || "unknown"}] ${comment || "Needs revision"}`;
-      await updateTaskRow(id, { status: "in_progress", notes: noteText });
+      await updateTaskRow(normId, { status: "in_progress", notes: noteText });
+      const displayId = /^\d+$/.test(String(task.id)) ? "T" + task.id : task.id;
       // Notify all assignees via inbox
-      notifyAssignees(`# Task ${/^\d+$/.test(String(id)) ? "T" + id : id} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
-      broadcastWS("task_updated", { id: parseTaskId(id), status: "in_progress", reviewer });
-      return json(res, { ok: true, verdict: "rejected", comment, task_id: id });
+      notifyAssignees(`# Task ${displayId} Review: REJECTED\n\nYour task "${task.title}" was rejected by ${reviewer || "a reviewer"}.\n\n**Reason:** ${comment || "Needs revision"}\n\nPlease fix and resubmit.`);
+      broadcastWS("task_updated", { id: parseTaskId(task.id), status: "in_progress", reviewer });
+      return json(res, { ok: true, verdict: "rejected", comment, task_id: normId });
     }
   }
 
@@ -2909,6 +2912,7 @@ async function handleRequest(req, res) {
   const taskClaimMatch = pathname.match(/^\/api\/tasks\/([A-Z]\d+|\d+)\/claim$/);
   if (method === "POST" && taskClaimMatch) {
     const id = taskClaimMatch[1];
+    const normId = /^T(\d+)$/.test(id) ? id.slice(1) : id;
     const body = await parseBody(req);
     const claimant = agentName(body.agent || query.agent || "");
     if (!claimant) return badRequest(res, "missing agent name");
@@ -2918,7 +2922,7 @@ async function handleRequest(req, res) {
       const raw = safeRead(tbPath);
       if (!raw) { result = { ok: false, error: "task board not found", status: 404 }; return; }
       const tasks = parseTaskBoard();
-      const task = tasks.find((t) => String(t.id) === String(id));
+      const task = tasks.find((t) => String(t.id) === normId || String(t.id) === String(id));
       if (!task) { result = { ok: false, error: "task not found", status: 404 }; return; }
       if (task.status === "done") { result = { ok: false, error: "task already done", status: 409 }; return; }
       const existingAssignees = (task.assignee || "").toLowerCase().split(",").map(a => a.trim()).filter(a => a && a !== "unassigned" && a !== "undefined" && a !== "-");
@@ -2935,7 +2939,7 @@ async function handleRequest(req, res) {
       for (let i = 0; i < lines.length; i++) {
         if (!lines[i].trim().startsWith("|")) continue;
         const cols = lines[i].split("|").slice(1, -1).map((c) => c.trim());
-        if (cols.length < 2 || String(cols[0]) !== String(id)) continue;
+        if (cols.length < 2 || (String(cols[0]) !== normId && String(cols[0]) !== String(id))) continue;
         // Pad to full 10-column schema: ID|Title|Desc|Priority|Group|Assignee|Status|Created|Updated|Notes
         while (cols.length < 10) cols.push("");
         // If task already has assigned agent(s), preserve them — only update status
