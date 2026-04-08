@@ -206,21 +206,22 @@ Fleet tab manages the Smart Run daemon. Unlike the one-shot Smart Run on the Age
 
 ---
 
-## E2E Test Status (2026-04-03)
+## E2E Test Status (2026-04-08)
 
-**572 passed / 17 skipped / 0 failed** across 6 test files (589 total):
-_(1 timing-sensitive: `smart_run.spec.js:100` — passes on retry)_
+**634 passed / 23 skipped / 0 failed** across 8 test files (657 total)
 
 | File | Tests | Focus |
 |------|-------|-------|
-| `e2e/api.spec.js` | 49 | Core API endpoints |
+| `e2e/api.spec.js` | 58 | Core API endpoints |
 | `e2e/dashboard.spec.js` | 44 | Dashboard UI E2E |
-| `e2e/metrics.spec.js` | 59 | Metrics/stats |
-| `e2e/coverage.spec.js` | 360 | Full API coverage + response shapes |
+| `e2e/metrics.spec.js` | 64 | Metrics/stats |
+| `e2e/coverage.spec.js` | 410 | Full API coverage + response shapes |
 | `e2e/smart_run.spec.js` | 12 | Smart Run UI + button state + selection mode E2E |
 | `e2e/message_bus.spec.js` | 47 | SQLite message bus |
+| `e2e/planet_create.spec.js` | 1 | Planet creation API |
+| `e2e/ui_verify.spec.js` | 21 | Visual UI verification + collaboration panel |
 
-The 17 skipped tests are auth enforcement tests (skip when `API_KEY` env var is not set in dev mode).
+The 23 skipped tests are auth enforcement tests (skip when `API_KEY` env var is not set in dev mode).
 
 ### Coverage strategy in coverage.spec.js
 Every API endpoint has:
@@ -289,7 +290,7 @@ aicompany/
 ├── *.sh                   # Platform shell scripts (run_agent, smart_run, etc.)
 ├── lib/                   # Shared libraries (executor_config.sh)
 ├── scripts/               # Support utilities
-├── e2e/                   # E2E test suites (572+ tests, 6 files)
+├── e2e/                   # E2E test suites (657 tests, 8 files)
 ├── tests/                 # Unit test suites
 ├── infrastructure/        # Terraform/Docker deployment
 ├── agents/                # 20 agent directories
