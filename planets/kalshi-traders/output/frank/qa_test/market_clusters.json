@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-04-07T19:32:47.700Z",
+  "phase": 2,
+  "clusters": [
+    {
+      "id": "crypto_internal",
+      "label": "Crypto Markets",
+      "markets": [
+        "KXBTCDOM-26OCT15-T068",
+        "KXSOL-27APR16-T450"
+      ],
+      "correlation_strength": 0.95,
+      "correlation_type": "internal"
+    },
+    {
+      "id": "economics_internal",
+      "label": "Economics Markets",
+      "markets": [
+        "KXINF-26JUN-T030",
+        "KXUNEMP-26SEP05-T072"
+      ],
+      "correlation_strength": 0.9,
+      "correlation_type": "internal"
+    }
+  ],
+  "totalMarkets": 4
+}

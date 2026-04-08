@@ -1,0 +1,50 @@
+[
+  {
+    "numMarkets": 10,
+    "historyLength": 60,
+    "genDuration": 0,
+    "corrDuration": 0,
+    "totalDuration": 0,
+    "pairsAnalyzed": 45
+  },
+  {
+    "numMarkets": 50,
+    "historyLength": 60,
+    "genDuration": 1,
+    "corrDuration": 1,
+    "totalDuration": 2,
+    "pairsAnalyzed": 1225
+  },
+  {
+    "numMarkets": 100,
+    "historyLength": 60,
+    "genDuration": 0,
+    "corrDuration": 1,
+    "totalDuration": 1,
+    "pairsAnalyzed": 4950
+  },
+  {
+    "numMarkets": 200,
+    "historyLength": 60,
+    "genDuration": 0,
+    "corrDuration": 5,
+    "totalDuration": 5,
+    "pairsAnalyzed": 19900
+  },
+  {
+    "numMarkets": 500,
+    "historyLength": 60,
+    "genDuration": 0,
+    "corrDuration": 23,
+    "totalDuration": 23,
+    "pairsAnalyzed": 124750
+  },
+  {
+    "numMarkets": 1000,
+    "historyLength": 60,
+    "genDuration": 1,
+    "corrDuration": 84,
+    "totalDuration": 85,
+    "pairsAnalyzed": 499500
+  }
+]

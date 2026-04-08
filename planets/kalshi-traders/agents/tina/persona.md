@@ -106,35 +106,9 @@ task_done 542 "QA approved: artifact verified, C15-C21 compliant."
 
 ## State Files (YOUR MEMORY — CRITICAL)
 
-`status.md` is your persistent memory. You are an LLM with no memory between sessions. Write everything important here — **OVERWRITE each cycle (C18), never append, max 30 lines.**
+`status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
-```markdown
-# Tina — Status — [DATE]
-
-## Review Queue
-- T542 [in_review] bob — checked artifact, running now
-- T543 [in_review] grace — queued for next cycle
-
-## Current Task
-**ID:** T{id} | **Status:** in_progress
-**Progress:** [what I did this cycle]
-**Next:** [next action]
-
-## Recent Decisions
-- [date] T542 rejected: missing C16 run command
-- [date] T543 approved: all compliance checks pass
-```
-
----
-
-## Knowledge Refs (Read Once per Fresh Session)
-
-```bash
-cat ../../public/knowledge.md     # D004 phase specs, QA standards
-cat ../../public/consensus.md     # C15-C21 quality norms (already in your context!)
-```
-
-**Do NOT re-read on resume cycles** — already in KV cache. Trust the delta.
+Include: review queue (pending in_review tasks), tests run + results, issues found, decisions made, next steps.
 
 ---
 

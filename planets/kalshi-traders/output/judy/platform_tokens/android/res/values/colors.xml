@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kalshi Alpha — Shared Design Tokens (Android)
+  Synced from: agents/charlie/output/design_tokens.css
+  Agent: judy | Generated: 2026-04-07
+  Web source: --color-* CSS custom properties
+-->
+<resources>
+
+    <!-- Backgrounds -->
+    <color name="color_bg">#0f172a</color>           <!-- slate-900 — app background -->
+    <color name="color_surface">#1e293b</color>       <!-- slate-800 — cards, panels, sheets -->
+    <color name="color_surface_2">#0d1117</color>     <!-- darker variant — outer chrome -->
+    <color name="color_border">#334155</color>        <!-- slate-700 — dividers, card outlines -->
+
+    <!-- Text -->
+    <color name="color_text_primary">#f8fafc</color>    <!-- slate-50 — headings, primary labels -->
+    <color name="color_text_secondary">#94a3b8</color>  <!-- slate-400 — subtitles, metadata -->
+    <color name="color_text_dim">#64748b</color>        <!-- slate-500 — disabled, placeholders -->
+
+    <!-- Signal / Status -->
+    <color name="color_positive">#22c55e</color>   <!-- green-500 — high confidence (≥0.95), gains -->
+    <color name="color_negative">#ef4444</color>   <!-- red-500  — low confidence, losses -->
+    <color name="color_warning">#f59e0b</color>    <!-- amber-500 — mid confidence, caution -->
+    <color name="color_accent">#3b82f6</color>     <!-- blue-500  — CTAs, active states, progress -->
+    <color name="color_purple">#8b5cf6</color>     <!-- violet-500 — in-review, secondary accent -->
+
+    <!-- Confidence thresholds (maps to Phase 3 arbitrage_confidence) -->
+    <!-- confidence_high  → @color/color_positive  (≥ 0.90) -->
+    <!-- confidence_mid   → @color/color_warning   (0.75–0.89) -->
+    <!-- confidence_low   → @color/color_negative  (< 0.75) -->
+
+</resources>

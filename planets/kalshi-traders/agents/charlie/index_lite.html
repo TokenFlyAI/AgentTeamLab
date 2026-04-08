@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<!-- artifact: task_id=T1006, agent=charlie, generated=2026-04-07, version=4 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-task-id" content="T1006">
+    <meta name="x-agent" content="charlie">
+    <meta name="x-generated" content="2026-04-07">
+    <title>D004 Pipeline Status (Lite)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b1120;
+            color: #e2e8f0;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 1.25rem;
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .last-update {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .go-badge {
+            padding: 0.375rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .go-badge.go { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e; }
+        .go-badge.no-go { background: #ef444422; color: #ef4444; border: 1px solid #ef4444; }
+        .refresh-btn {
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover { background: #475569; }
+
+        .container { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+
+        /* Summary stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: #22c55e;
+        }
+        .stat-value.warning { color: #f59e0b; }
+        .stat-value.danger { color: #ef4444; }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Monitoring Section */
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .panel {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+        .panel-header {
+            background: #334155;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-badge {
+            background: #22c55e33;
+            color: #22c55e;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .panel-badge.warning { background: #f59e0b33; color: #f59e0b; }
+        .panel-badge.danger { background: #ef444433; color: #ef4444; }
+        
+        .panel-content {
+            padding: 1rem;
+        }
+        
+        /* Health Trend */
+        .health-trend {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 60px;
+            padding: 4px 0;
+        }
+        .trend-bar {
+            flex: 1;
+            background: #38bdf8;
+            border-radius: 2px 2px 0 0;
+            min-width: 8px;
+            transition: height 0.3s;
+        }
+        .trend-bar.slow { background: #f59e0b; }
+        .trend-bar.critical { background: #ef4444; }
+        .trend-bar.fail { background: #7f1d1d; border: 1px solid #ef4444; height: 100% !important; }
+        
+        .uptime-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 1rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+        th {
+            text-align: left;
+            color: #64748b;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #334155;
+        }
+        td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1;
+        }
+        
+        .ticker { font-family: monospace; color: #38bdf8; }
+
+        /* Topology Section */
+        .topology-section { margin-bottom: 2rem; }
+        .topology-section .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+        .topology-pipeline {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            overflow-x: auto;
+            padding: 0.5rem 0 1rem;
+        }
+        .topo-node {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            min-width: 140px;
+            max-width: 160px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .topo-node.healthy { border-color: #22c55e; }
+        .topo-node.degraded { border-color: #f59e0b; }
+        .topo-node.down { border-color: #ef4444; }
+        .topo-node.unknown { border-color: #475569; }
+        .topo-node .svc-phase {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.2rem;
+        }
+        .topo-node .svc-name {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+        .topo-node .svc-owner {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+        .topo-node .svc-status {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .svc-status.healthy { background: rgba(34,197,94,.15); color: #22c55e; }
+        .svc-status.degraded { background: rgba(245,158,11,.15); color: #f59e0b; }
+        .svc-status.down { background: rgba(239,68,68,.15); color: #ef4444; }
+        .svc-status.phase-a { background: rgba(59,130,246,.12); color: #60a5fa; }
+        .topo-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            color: #475569;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            align-self: center;
+            margin-top: -16px;
+        }
+        .topo-split {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .topo-legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        .legend-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .legend-dot.healthy { background: #22c55e; }
+        .legend-dot.phase-a { background: #3b82f6; }
+        .legend-dot.unknown { background: #475569; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>D004 Pipeline Status (Lite)</h1>
+        <div class="header-right">
+            <span id="goNogo" class="go-badge no-go">Loading...</span>
+            <span id="lastUpdate" class="last-update">Loading...</span>
+            <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Summary Stats -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-card">
+                <div class="stat-value" id="statMarkets">--</div>
+                <div class="stat-label">Markets Filtered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statArb">--</div>
+                <div class="stat-label">Arb Signals</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAlerts">--</div>
+                <div class="stat-label">Active Alerts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statUptime">--</div>
+                <div class="stat-label">Platform Uptime</div>
+            </div>
+        </div>
+
+        <!-- Monitoring Section -->
+        <div class="monitoring-grid">
+            <!-- Health Monitoring Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>🏥 Platform Health</span>
+                    <span class="panel-badge" id="healthStatus">OK</span>
+                </div>
+                <div class="panel-content" id="healthPanel">
+                    <div class="uptime-value" id="uptimeDisplay">Uptime: --</div>
+                    <div class="stat-label">p99 Latency Trend (last 10 probes)</div>
+                    <div class="health-trend" id="latencyTrend">
+                        <!-- Bars injected by JS -->
+                    </div>
+                    <div class="stat-label" style="margin-top: 0.5rem;" id="latestP99">Latest p99: -- ms</div>
+                </div>
+            </div>
+
+            <!-- Alerts Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>⚠️ System Alerts</span>
+                    <span class="panel-badge" id="alertBadge">0</span>
+                </div>
+                <div class="panel-content" id="alertsPanel">
+                    <div id="alertSummary">No active alerts detected.</div>
+                    <div class="stat-label" id="alertsLastUpdate" style="margin-top: 1rem;">Last checked: --</div>
+                </div>
+            </div>
+
+            <!-- Server Stats Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>⚙️ Server Stats</span>
+                    <span class="panel-badge" id="serverBadge">--</span>
+                </div>
+                <div class="panel-content">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <div class="stat-label">Active Agents</div>
+                            <div style="font-size:1.25rem;font-weight:600;" id="serverAgents">--</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Heap Used</div>
+                            <div style="font-size:1.25rem;font-weight:600;" id="serverHeap">-- MB</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">SSE Clients</div>
+                            <div style="font-size:1.25rem;font-weight:600;" id="serverSSE">--</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Server Uptime</div>
+                            <div style="font-size:1.25rem;font-weight:600;" id="serverUptime">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Microservice Topology (Sprint 9 Phase A — T1006) -->
+        <div class="topology-section">
+            <div class="section-title">Microservice Topology — Sprint 9 Phase A (T954)</div>
+            <div class="topology-pipeline" id="topoView">
+                <!-- Ingestion -->
+                <div class="topo-node" id="svc-ingestion">
+                    <div class="svc-phase">Svc 1</div>
+                    <div class="svc-name">Market Data Ingestion</div>
+                    <div class="svc-owner">Quinn + Eve</div>
+                    <span class="svc-status phase-a">Phase A</span>
+                </div>
+                <div class="topo-arrow">→</div>
+                <!-- Market Filter -->
+                <div class="topo-node healthy" id="svc-filter">
+                    <div class="svc-phase">Svc 2 · Phase 1</div>
+                    <div class="svc-name">Market Filter</div>
+                    <div class="svc-owner">Grace</div>
+                    <span class="svc-status healthy" id="svc-filter-status">Live</span>
+                </div>
+                <div class="topo-arrow">→</div>
+                <!-- Cluster Intel -->
+                <div class="topo-node healthy" id="svc-cluster">
+                    <div class="svc-phase">Svc 3 · Phase 2</div>
+                    <div class="svc-name">Cluster Intel</div>
+                    <div class="svc-owner">Ivan</div>
+                    <span class="svc-status healthy" id="svc-cluster-status">Live</span>
+                </div>
+                <div class="topo-arrow">→</div>
+                <!-- Correlation — Phase B extracted microservice :3210 -->
+                <div class="topo-node healthy" id="svc-correlation">
+                    <div class="svc-phase">Svc 4 · Phase 3 · :3210</div>
+                    <div class="svc-name">Correlation Detection</div>
+                    <div class="svc-owner">Bob</div>
+                    <span class="svc-status healthy" id="svc-corr-status">Live</span>
+                </div>
+                <div class="topo-arrow">→</div>
+                <!-- Risk + Execution (parallel) -->
+                <div class="topo-split">
+                    <div class="topo-node phase-a" id="svc-risk" style="border-color:#3b82f6">
+                        <div class="svc-phase">Svc 5</div>
+                        <div class="svc-name">Risk Manager</div>
+                        <div class="svc-owner">Bob + Rosa</div>
+                        <span class="svc-status phase-a">Phase A</span>
+                    </div>
+                    <div class="topo-node healthy" id="svc-execution">
+                        <div class="svc-phase">Svc 6 · Phase 4</div>
+                        <div class="svc-name">Execution Engine</div>
+                        <div class="svc-owner">Dave (C++)</div>
+                        <span class="svc-status healthy" id="svc-exec-status">Live</span>
+                    </div>
+                </div>
+                <div class="topo-arrow">→</div>
+                <!-- Observability -->
+                <div class="topo-node healthy" id="svc-observability">
+                    <div class="svc-phase">Svc 7</div>
+                    <div class="svc-name">Observability</div>
+                    <div class="svc-owner">Liam + Charlie</div>
+                    <span class="svc-status healthy" id="svc-obs-status">Live</span>
+                </div>
+            </div>
+            <div class="topo-legend">
+                <span class="legend-item"><span class="legend-dot healthy"></span>Live (monolith, Phase 1-4 running)</span>
+                <span class="legend-item"><span class="legend-dot phase-a"></span>Phase A (schema only, not yet extracted)</span>
+                <span class="legend-item"><span class="legend-dot unknown"></span>Not started</span>
+            </div>
+        </div>
+
+        <!-- Data panels -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Phase 1: Filtered Markets</span>
+                <span class="panel-badge" id="marketsCount">--</span>
+            </div>
+            <div class="panel-content" id="marketsPanel">
+                <div class="loading">Loading markets</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = ''; // Same origin
+
+        // State
+        let readinessData = null;
+        let healthData = null;
+        let alertData = null;
+        let marketsData = null;
+
+        async function fetchJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        async function loadReadiness() {
+            try {
+                readinessData = await fetchJSON(API_BASE + '/api/readiness');
+                document.getElementById('statMarkets').textContent = readinessData.phases?.phase1_market_filtering?.markets_filtered || 0;
+                document.getElementById('statArb').textContent = readinessData.phases?.phase3_correlation?.arbitrage_opportunities || 0;
+                updateTopology(readinessData);
+
+                const badge = document.getElementById('goNogo');
+                const gng = readinessData.go_no_go || {};
+                badge.textContent = gng.status || 'NO-GO';
+                badge.className = 'go-badge ' + (gng.status === 'GO' ? 'go' : 'no-go');
+            } catch (e) { console.error('Readiness load failed', e); }
+        }
+
+        async function loadHealth() {
+            try {
+                healthData = await fetchJSON(API_BASE + '/api/monitoring/health');
+                if (healthData.success) {
+                    // Uptime
+                    const uptimeHrs = (healthData.uptime_ms / 3600000).toFixed(1);
+                    document.getElementById('statUptime').textContent = uptimeHrs + 'h';
+                    document.getElementById('uptimeDisplay').textContent = `Uptime: ${uptimeHrs} hours`;
+                    
+                    // Latency Trend
+                    const trendContainer = document.getElementById('latencyTrend');
+                    const trend = healthData.p99_latency_trend || [];
+                    const maxLatency = Math.max(...trend.map(t => t.p99_ms), 10);
+                    
+                    trendContainer.innerHTML = trend.map(t => {
+                        if (t.status === 'FAIL') {
+                            return `<div class="trend-bar fail" title="${t.timestamp}: FAILED"></div>`;
+                        }
+                        const height = (t.p99_ms / maxLatency) * 100;
+                        const statusClass = t.p99_ms > 200 ? 'critical' : (t.p99_ms > 50 ? 'slow' : '');
+                        return `<div class="trend-bar ${statusClass}" style="height: ${height}%" title="${t.timestamp}: ${t.p99_ms}ms"></div>`;
+                    }).join('');
+                    
+                    const latest = trend[trend.length - 1];
+                    document.getElementById('latestP99').textContent = latest?.status === 'FAIL' ? 'Latest: FAILED' : `Latest p99: ${latest?.p99_ms || 0} ms`;
+                    
+                    const healthStatus = document.getElementById('healthStatus');
+                    if (latest?.status === 'FAIL' || latest?.p99_ms > 200) { healthStatus.textContent = 'DEGRADED'; healthStatus.className = 'panel-badge danger'; }
+                    else if (latest?.p99_ms > 50) { healthStatus.textContent = 'WARN'; healthStatus.className = 'panel-badge warning'; }
+                    else { healthStatus.textContent = 'OK'; healthStatus.className = 'panel-badge'; }
+                }
+            } catch (e) { console.error('Health load failed', e); }
+        }
+
+        async function loadAlerts() {
+            try {
+                alertData = await fetchJSON(API_BASE + '/api/monitoring/alerts');
+                if (alertData.success) {
+                    document.getElementById('statAlerts').textContent = alertData.count;
+                    document.getElementById('statAlerts').className = 'stat-value' + (alertData.count > 0 ? ' danger' : '');
+                    document.getElementById('alertBadge').textContent = alertData.count;
+                    document.getElementById('alertBadge').className = 'panel-badge' + (alertData.count > 0 ? ' danger' : '');
+                    document.getElementById('alertSummary').textContent = alertData.count > 0 
+                        ? `${alertData.count} active system alert(s) requiring attention.` 
+                        : 'No active alerts detected. All systems operational.';
+                    document.getElementById('alertsLastUpdate').textContent = `Last updated: ${alertData.last_updated || 'Unknown'}`;
+                }
+            } catch (e) { console.error('Alerts load failed', e); }
+        }
+
+        async function loadMarkets() {
+            try {
+                marketsData = await fetchJSON(API_BASE + '/api/pipeline/markets');
+                const panel = document.getElementById('marketsPanel');
+                const markets = marketsData?.qualifying_markets || marketsData?.markets || [];
+                document.getElementById('marketsCount').textContent = markets.length;
+
+                if (markets.length === 0) {
+                    panel.innerHTML = '<div class="loading">No qualifying markets found</div>';
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>Ticker</th><th>Vol</th><th>Ratio</th></tr></thead><tbody>';
+                markets.slice(0, 10).forEach(m => {
+                    html += `<tr>
+                        <td><span class="ticker">${m.ticker}</span></td>
+                        <td>${(m.volume || 0).toLocaleString()}</td>
+                        <td>${m.yes_ratio || 0}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                panel.innerHTML = html;
+            } catch (e) { console.error('Markets load failed', e); }
+        }
+
+        function updateTopoNode(nodeId, statusId, status) {
+            const node = document.getElementById(nodeId);
+            const badge = document.getElementById(statusId);
+            if (!node || !badge) return;
+            const cls = status === 'complete' ? 'healthy' : status === 'incomplete' ? 'degraded' : 'unknown';
+            const label = status === 'complete' ? 'Live' : status === 'incomplete' ? 'Degraded' : '?';
+            node.className = `topo-node ${cls}`;
+            badge.className = `svc-status ${cls}`;
+            badge.textContent = label;
+        }
+
+        function updateTopology(readiness) {
+            if (!readiness?.phases) return;
+            const p = readiness.phases;
+            updateTopoNode('svc-filter', 'svc-filter-status', p.phase1_market_filtering?.status);
+            updateTopoNode('svc-cluster', 'svc-cluster-status', p.phase2_clustering?.status);
+            updateTopoNode('svc-execution', 'svc-exec-status', p.phase4_execution?.status);
+            // Observability is always live (we're serving the dashboard)
+            const obs = document.getElementById('svc-observability');
+            if (obs) obs.className = 'topo-node healthy';
+        }
+
+        async function updateCorrelationService() {
+            try {
+                const data = await fetchJSON(API_BASE + '/api/services/correlation');
+                const node = document.getElementById('svc-correlation');
+                const badge = document.getElementById('svc-corr-status');
+                if (!node || !badge) return;
+                if (data.proxy_status === 'ok') {
+                    node.className = 'topo-node healthy';
+                    badge.className = 'svc-status healthy';
+                    badge.textContent = 'Live :3210';
+                } else {
+                    node.className = 'topo-node degraded';
+                    badge.className = 'svc-status degraded';
+                    badge.textContent = data.proxy_status;
+                }
+            } catch (e) {
+                const badge = document.getElementById('svc-corr-status');
+                if (badge) { badge.className = 'svc-status degraded'; badge.textContent = 'Unknown'; }
+            }
+        }
+
+        async function loadServerStats() {
+            try {
+                const data = await fetchJSON('http://localhost:3199/api/health');
+                const heapMB = (data.memory?.heapUsed / 1048576).toFixed(1);
+                const uptimeHrs = (data.uptime_ms / 3600000).toFixed(1);
+                document.getElementById('serverAgents').textContent = data.activeAgents ?? '--';
+                document.getElementById('serverHeap').textContent = heapMB + ' MB';
+                document.getElementById('serverSSE').textContent = data.sseClients ?? '--';
+                document.getElementById('serverUptime').textContent = uptimeHrs + 'h';
+                const badge = document.getElementById('serverBadge');
+                badge.textContent = data.status === 'ok' ? 'OK' : 'ERR';
+                badge.className = 'panel-badge' + (data.status !== 'ok' ? ' danger' : '');
+            } catch (e) {
+                document.getElementById('serverBadge').textContent = 'OFFLINE';
+                document.getElementById('serverBadge').className = 'panel-badge danger';
+            }
+        }
+
+        async function loadAll() {
+            await Promise.all([loadReadiness(), loadHealth(), loadAlerts(), loadMarkets(), loadServerStats(), updateCorrelationService()]);
+            document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        }
+
+        loadAll();
+        setInterval(loadAll, 30000);
+    </script>
+</body>
+</html>

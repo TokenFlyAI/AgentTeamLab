@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-04-07T20:50:44.000Z",
+  "phase": 3,
+  "config": {
+    "min_correlation": 0.75
+  },
+  "pairs": [
+    {
+      "cluster": "economics_internal",
+      "market_a": "KXINF-26JUN-T030",
+      "market_b": "KXUNEMP-26SEP05-T072",
+      "pearson_correlation": 0.9867,
+      "is_arbitrage_opportunity": false,
+      "arbitrage_confidence": 0.7,
+      "direction": "buy_A_sell_B"
+    }
+  ]
+}

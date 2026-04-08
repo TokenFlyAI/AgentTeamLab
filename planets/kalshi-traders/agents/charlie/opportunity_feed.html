@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<!-- artifact: task_id=T1025, agent=charlie, generated=2026-04-07, version=1 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="x-task-id" content="T1025">
+<meta name="x-agent" content="charlie">
+<meta name="x-generated" content="2026-04-07">
+<title>Opportunity Feed — Kalshi Alpha</title>
+<style>
+/* Design tokens (mirrors design_tokens.css) */
+:root {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-2: #0d1117;
+  --color-border: #334155;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-dim: #64748b;
+  --color-positive: #22c55e;
+  --color-negative: #ef4444;
+  --color-warning: #f59e0b;
+  --color-accent: #3b82f6;
+  --color-purple: #8b5cf6;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  padding: 24px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+header h1 { font-size: 1.25rem; }
+.header-meta { font-size: 0.75rem; color: var(--color-text-dim); }
+
+/* Feed layout */
+.feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+/* Opportunity Card — mirrors OpportunityCardView.swift */
+.opp-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.opp-card:hover { transform: translateY(-1px); }
+.opp-card:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* Confidence left-border accent */
+.opp-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  background: var(--conf-color, var(--color-text-dim));
+}
+
+/* Card header row */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Cluster badge — mirrors ClusterBadge in SwiftUI */
+.cluster-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(59,130,246,0.12);
+  color: var(--color-accent);
+}
+
+/* Uncertain flag */
+.uncertain-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(245,158,11,0.12);
+  color: var(--color-warning);
+}
+
+/* Market pair */
+.market-pair {
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}
+.market-name {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.pair-arrow {
+  color: var(--color-text-dim);
+  margin: 0 6px;
+  font-size: 0.7rem;
+}
+
+/* Confidence bar — mirrors ConfidenceBar in SwiftUI */
+.confidence-section { margin-bottom: 10px; }
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+.confidence-value { font-weight: 600; }
+.conf-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.conf-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--conf-color, var(--color-text-dim));
+  transition: width 0.4s ease;
+}
+
+/* Stats row */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.stat-item { flex: 1; }
+.stat-label { font-size: 0.65rem; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { font-size: 0.85rem; font-weight: 600; }
+
+/* Direction pill — mirrors DirectionPill in SwiftUI */
+.direction-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.direction-pill.sell-buy {
+  background: rgba(139,92,246,0.12);
+  color: var(--color-purple);
+}
+.direction-pill.buy-sell {
+  background: rgba(34,197,94,0.12);
+  color: var(--color-positive);
+}
+
+/* Empty / Loading / Error states */
+.feed-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--color-text-dim);
+}
+.feed-state .state-icon { font-size: 2rem; margin-bottom: 8px; }
+.feed-state .state-msg { font-size: 0.875rem; }
+.feed-state.stale {
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-warning);
+}
+
+/* Detail overlay */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.detail-overlay.open { opacity: 1; pointer-events: all; }
+.detail-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.detail-close {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.detail-close:hover { color: var(--color-text-primary); }
+.detail-pair-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  margin-top: 4px;
+  margin-bottom: 16px;
+  word-break: break-all;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.detail-stat { background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); padding: 10px 12px; }
+.detail-stat .stat-label { font-size: 0.65rem; }
+.detail-stat .stat-value { font-size: 1rem; }
+.detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.btn {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--color-accent); color: #fff; }
+.btn-secondary { background: rgba(255,255,255,0.07); color: var(--color-text-secondary); }
+
+/* Refresh button */
+.refresh-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.refresh-btn:hover { background: rgba(255,255,255,0.1); }
+
+@media (max-width: 480px) {
+  body { padding: 12px; }
+  .feed { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Opportunity Feed</h1>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="header-meta" id="lastUpdate">Loading…</span>
+    <button class="refresh-btn" onclick="loadFeed()">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="feed" id="feed">
+  <div class="feed-state">
+    <div class="state-icon">⏳</div>
+    <div class="state-msg">Loading opportunities…</div>
+  </div>
+</div>
+
+<!-- Detail overlay — mirrors OpportunityDetailView.swift -->
+<div class="detail-overlay" id="detailOverlay" role="dialog" aria-modal="true">
+  <div class="detail-panel" id="detailPanel">
+    <button class="detail-close" onclick="closeDetail()" aria-label="Close">✕</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<script>
+// Mirrors design_tokens.js confidenceColor() + confidenceHex()
+function confidenceColor(score) {
+  if (score >= 0.90) return 'var(--color-positive)';
+  if (score >= 0.75) return 'var(--color-warning)';
+  return 'var(--color-negative)';
+}
+function confidenceHex(score) {
+  if (score >= 0.90) return '#22c55e';
+  if (score >= 0.75) return '#f59e0b';
+  return '#ef4444';
+}
+function confidenceTier(score) {
+  if (score >= 0.90) return 'High';
+  if (score >= 0.75) return 'Mid';
+  return 'Low';
+}
+
+// Direction label — mirrors TradeDirection.label(marketA:marketB:) in Swift
+function directionLabel(direction, marketA, marketB) {
+  if (!direction) return 'Unknown';
+  if (direction.includes('sell_A')) return `Sell ${marketA} · Buy ${marketB}`;
+  if (direction.includes('buy_A')) return `Buy ${marketA} · Sell ${marketB}`;
+  return direction.replace(/_/g, ' ');
+}
+function directionClass(direction) {
+  return direction && direction.includes('sell_A') ? 'sell-buy' : 'buy-sell';
+}
+
+function formatCluster(cluster) {
+  if (!cluster) return '—';
+  return cluster.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Render one card
+function renderCard(opp) {
+  const conf = opp.confidence ?? opp.weighted_confidence ?? opp.arbitrage_confidence ?? 0;
+  const confColor = confidenceColor(conf);
+  const confPct = (conf * 100).toFixed(0);
+  const spreadZ = typeof opp.spread_zscore === 'number' ? opp.spread_zscore.toFixed(2) : '—';
+  const pearson = typeof opp.pearson_correlation === 'number' ? opp.pearson_correlation.toFixed(3) : '—';
+  const dirClass = directionClass(opp.direction);
+  const dirLabel = directionLabel(opp.direction, opp.market_a, opp.market_b);
+
+  const div = document.createElement('div');
+  div.className = 'opp-card';
+  div.style.setProperty('--conf-color', confColor);
+  div.setAttribute('tabindex', '0');
+  div.setAttribute('role', 'button');
+  div.setAttribute('aria-label', `${opp.market_a} vs ${opp.market_b}, ${confPct}% confidence`);
+
+  div.innerHTML = `
+    <div class="card-header">
+      <span class="cluster-badge">${formatCluster(opp.cluster)}</span>
+      ${opp.uncertain_flag ? '<span class="uncertain-badge">Uncertain</span>' : ''}
+    </div>
+    <div class="market-pair">
+      <span class="market-name">${opp.market_a}</span>
+      <span class="pair-arrow">↔</span>
+      <span class="market-name">${opp.market_b}</span>
+    </div>
+    <div class="confidence-section">
+      <div class="confidence-label">
+        <span>Confidence</span>
+        <span class="confidence-value" style="color:${confColor}">${confPct}% · ${confidenceTier(conf)}</span>
+      </div>
+      <div class="conf-bar-track">
+        <div class="conf-bar-fill" style="width:${confPct}%"></div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-label">Spread σ</div>
+        <div class="stat-value">${spreadZ}σ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Pearson r</div>
+        <div class="stat-value">${pearson}</div>
+      </div>
+    </div>
+    <span class="direction-pill ${dirClass}">${dirLabel}</span>
+  `;
+
+  div.addEventListener('click', () => openDetail(opp));
+  div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openDetail(opp); });
+  return div;
+}
+
+// Detail view — mirrors OpportunityDetailView.swift
+function openDetail(opp) {
+  const conf = opp.confidence ?? opp.weighted_confidence ?? opp.arbitrage_confidence ?? 0;
+  const confColor = confidenceColor(conf);
+  const confPct = (conf * 100).toFixed(1);
+  const spreadZ = typeof opp.spread_zscore === 'number' ? opp.spread_zscore.toFixed(3) : '—';
+  const pearson = typeof opp.pearson_correlation === 'number' ? opp.pearson_correlation.toFixed(4) : '—';
+  const arbConf = typeof opp.arbitrage_confidence === 'number' ? (opp.arbitrage_confidence * 100).toFixed(1) + '%' : '—';
+  const weightedConf = typeof opp.weighted_confidence === 'number' ? (opp.weighted_confidence * 100).toFixed(1) + '%' : '—';
+  const dirLabel = directionLabel(opp.direction, opp.market_a, opp.market_b);
+  const dirClass = directionClass(opp.direction);
+  const dashboardUrl = `http://localhost:3457`;
+
+  document.getElementById('detailContent').innerHTML = `
+    <h2 style="font-size:1rem;margin-bottom:4px">${formatCluster(opp.cluster)} Opportunity</h2>
+    <div class="detail-pair-id">${opp.pair_id || `${opp.market_a}|${opp.market_b}`}</div>
+    <div class="detail-grid">
+      <div class="detail-stat">
+        <div class="stat-label">Confidence</div>
+        <div class="stat-value" style="color:${confColor}">${confPct}%</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Spread σ</div>
+        <div class="stat-value">${spreadZ}σ</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Pearson r</div>
+        <div class="stat-value">${pearson}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Arb Confidence</div>
+        <div class="stat-value">${arbConf}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Weighted Conf</div>
+        <div class="stat-value">${weightedConf}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Uncertain Flag</div>
+        <div class="stat-value" style="color:${opp.uncertain_flag ? 'var(--color-warning)' : 'var(--color-positive)'}">
+          ${opp.uncertain_flag ? 'Yes' : 'No'}
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div class="stat-label" style="margin-bottom:6px">Direction</div>
+      <span class="direction-pill ${dirClass}" style="font-size:0.8rem">${dirLabel}</span>
+    </div>
+    ${opp.timestamp ? `<div class="header-meta" style="margin-bottom:12px">Generated: ${new Date(opp.timestamp).toLocaleString()}</div>` : ''}
+    <div class="detail-actions">
+      <a href="${dashboardUrl}" target="_blank" class="btn btn-primary">View Dashboard ↗</a>
+      <button class="btn btn-secondary" onclick="navigator.clipboard.writeText('${(opp.pair_id||'').replace(/'/g,"\\'")}').then(()=>this.textContent='Copied!').catch(()=>{})">Copy pair_id</button>
+    </div>
+  `;
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').focus();
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+document.getElementById('detailOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDetail();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// Load feed from /api/pipeline/pairs
+async function loadFeed() {
+  const feed = document.getElementById('feed');
+
+  try {
+    const res = await fetch('http://localhost:3457/api/pipeline/pairs');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const pairs = data.pairs || [];
+
+    if (pairs.length === 0) {
+      feed.innerHTML = `
+        <div class="feed-state">
+          <div class="state-icon">📭</div>
+          <div class="state-msg">No opportunities found. Pipeline may be waiting for data (T236).</div>
+        </div>`;
+    } else {
+      feed.innerHTML = '';
+      pairs.forEach(opp => feed.appendChild(renderCard(opp)));
+    }
+
+    const total = data.total || 0;
+    const uncertain = data.uncertain_count || 0;
+    const ts = data.generated_at ? new Date(data.generated_at).toLocaleTimeString() : 'unknown';
+    document.getElementById('lastUpdate').textContent =
+      `${total} pair${total !== 1 ? 's' : ''} · ${uncertain} uncertain · generated ${ts}`;
+
+  } catch (e) {
+    feed.innerHTML = `
+      <div class="feed-state stale">
+        <div class="state-icon">⚠️</div>
+        <div class="state-msg">Pipeline offline — ${e.message}<br><small>Start: node output/serve_pipeline_dashboard.js</small></div>
+      </div>`;
+    document.getElementById('lastUpdate').textContent = 'Offline';
+  }
+}
+
+loadFeed();
+setInterval(loadFeed, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,2435 @@
+openapi: 3.1.0
+info:
+  title: Agent Planet Dashboard API
+  version: 1.0.0
+  description: |
+    REST API for the Agent Planet civilization dashboard (server.js).
+    Manages agents, tasks, consensus culture, cost tracking, and civilization mode.
+
+    **Author:** Mia (API Engineer)
+    **Generated:** 2026-04-07
+    **Sprint:** Sprint 8 — T950
+
+    ## Authentication
+    All `/api/*` endpoints require a Bearer token in the `Authorization` header,
+    **except** `/api/health` and `/api/events` which are public.
+
+    ```
+    Authorization: Bearer <API_KEY>
+    ```
+
+    Unauthenticated requests return `401 Unauthorized`.
+
+  contact:
+    name: Mia — API Engineer (Agent Planet)
+
+servers:
+  - url: http://localhost:3199
+    description: Default dashboard server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key authentication. Set via API_KEY env var when starting server.js.
+
+  schemas:
+    # ---- Shared primitives ----
+    AgentName:
+      type: string
+      pattern: "^[a-zA-Z0-9_-]+$"
+      example: alice
+
+    TaskStatus:
+      type: string
+      enum: [open, in_progress, done, blocked, in_review, cancelled]
+
+    TaskPriority:
+      type: string
+      enum: [low, medium, high, critical]
+
+    ExecutorType:
+      type: string
+      enum: [claude, kimi, codex, gemini]
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: "task not found"
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    # ---- Agent schemas ----
+    AgentHealth:
+      type: object
+      properties:
+        score:
+          type: number
+          description: Health score 0–100
+          example: 87
+        grade:
+          type: string
+          enum: [A, B, C, D, F]
+          example: B
+        dimensions:
+          type: object
+          additionalProperties:
+            type: number
+
+    AgentSummary:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/AgentName'
+        role:
+          type: string
+          example: "API Engineer"
+        status:
+          type: string
+          enum: [running, idle, stopped, unknown]
+          example: running
+        current_task:
+          type: string
+          nullable: true
+          example: "T950 — Generate OpenAPI spec"
+        cycles:
+          type: integer
+          description: Cycle count for current session
+          example: 4
+        last_update:
+          type: string
+          nullable: true
+          description: Timestamp of last status update
+        lastSeenSecs:
+          type: integer
+          nullable: true
+          description: Seconds since last heartbeat
+          example: 47
+        heartbeat_age_ms:
+          type: integer
+          nullable: true
+          description: Milliseconds since last heartbeat
+          example: 47000
+        auth_error:
+          type: boolean
+          description: True if agent has an executor authentication error
+          example: false
+        executor_health:
+          type: object
+          description: Health status of the agent's executor
+        executor_issue:
+          type: string
+          nullable: true
+          description: Executor issue description if auth_error is true
+        alive:
+          type: boolean
+          description: True if heartbeat < 5 minutes old
+        unread_messages:
+          type: integer
+          example: 2
+        health:
+          $ref: '#/components/schemas/AgentHealth'
+        executor:
+          $ref: '#/components/schemas/ExecutorType'
+
+    AgentDetail:
+      allOf:
+        - $ref: '#/components/schemas/AgentSummary'
+        - type: object
+          properties:
+            heartbeat:
+              type: string
+              nullable: true
+              description: Last heartbeat timestamp
+            statusMd:
+              type: string
+              nullable: true
+              description: Raw contents of agent's status.md
+            persona:
+              type: string
+              nullable: true
+              description: Raw contents of agent's persona.md
+            todo:
+              type: string
+              nullable: true
+              description: Raw contents of agent's todo.md
+            inbox:
+              type: array
+              items:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  read:
+                    type: boolean
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Task'
+            executorHealth:
+              type: object
+
+    # ---- Task schemas ----
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 542
+        title:
+          type: string
+          example: "Implement rate limiting"
+        description:
+          type: string
+          example: "Add per-IP rate limiting to all POST endpoints"
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        group:
+          type: string
+          example: all
+        assignee:
+          type: string
+          example: bob
+          nullable: true
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        task_type:
+          type: string
+          example: task
+        created:
+          type: string
+          format: date
+          example: "2026-04-07"
+        updated:
+          type: string
+          format: date
+          example: "2026-04-07"
+        notes:
+          type: string
+          nullable: true
+        notesList:
+          type: array
+          items:
+            type: string
+
+    # ---- Consensus schemas ----
+    ConsensusEntry:
+      type: object
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+          example: "C1"
+        section:
+          type: string
+          example: "Core Behavioral Norms (Must Follow)"
+        type:
+          type: string
+          example: "NORM"
+        content:
+          type: string
+          example: "Paper trading mode required before live orders."
+        author:
+          type: string
+        updated:
+          type: string
+          format: date
+          example: "2026-04-03"
+
+    # ---- Planet schemas ----
+    Planet:
+      type: object
+      properties:
+        name:
+          type: string
+          example: kalshi-traders
+        active:
+          type: boolean
+          example: true
+
+    # ---- Smart-run config ----
+    SmartRunConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: If false, smart-start returns 403 and watchdog is disabled
+          example: true
+        dry_run:
+          type: boolean
+          description: Run agent loop without actual API calls
+          example: false
+        max_agents:
+          type: integer
+          description: Max concurrent agents to start
+          example: 20
+        selection_mode:
+          type: string
+          enum: [deterministic, random]
+          example: deterministic
+        session_max_cycles:
+          type: integer
+          description: Cycles per Claude session before reset
+          example: 20
+        daily_cost_cap_usd:
+          type: number
+          description: Total daily spend limit across all agents. 429 when exceeded.
+          example: 20
+        per_agent_cost_cap_usd:
+          type: number
+          description: Per-agent daily limit. Agent stops if exceeded.
+          example: 5
+
+paths:
+  # ============================================================
+  # Core / Health
+  # ============================================================
+  /api/health:
+    get:
+      summary: Server health check
+      description: |
+        Returns server uptime and memory stats. **Public endpoint — no auth required.**
+      security: []
+      operationId: getHealth
+      tags: [Core]
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  uptime_ms:
+                    type: integer
+                    example: 86400000
+                  uptime:
+                    type: integer
+                    description: Uptime in seconds
+                    example: 86400
+                  memory:
+                    type: object
+                    properties:
+                      rss:
+                        type: integer
+                      heapUsed:
+                        type: integer
+                      heapTotal:
+                        type: integer
+                  activeAgents:
+                    type: integer
+                    example: 5
+                  sseClients:
+                    type: integer
+                    example: 2
+
+  /api/events:
+    get:
+      summary: Server-Sent Events stream
+      description: |
+        SSE stream for real-time dashboard refresh signals. **Public endpoint — no auth required.**
+        EventSource cannot send custom headers; this stream sends only opaque `refresh` events.
+      security: []
+      operationId: getEvents
+      tags: [Core]
+      responses:
+        '200':
+          description: SSE stream opened
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: "event: refresh\ndata: {}\n\n"
+
+  /api/config:
+    get:
+      summary: Get server configuration
+      operationId: getConfig
+      tags: [Core]
+      responses:
+        '200':
+          description: Config values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  companyName:
+                    type: string
+                    example: "Agent Planet"
+                  directory:
+                    type: string
+                    example: "/Users/user/aicompany"
+
+  /api/dashboard:
+    get:
+      summary: Combined dashboard snapshot
+      description: Returns agents, tasks, mode, and archive count in a single call.
+      operationId: getDashboard
+      tags: [Core]
+      responses:
+        '200':
+          description: Combined dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentSummary'
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  mode:
+                    type: string
+                    example: normal
+                  activeCount:
+                    type: integer
+                    example: 3
+                  archivedDoneCount:
+                    type: integer
+                    example: 42
+
+  /api/search:
+    get:
+      summary: Search across agents, tasks, and announcements
+      operationId: search
+      tags: [Core]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Search query (case-insensitive)
+          example: "rate limiting"
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+                  total:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [agent, tasks, announcements]
+                        agent:
+                          type: string
+                          nullable: true
+                        file:
+                          type: string
+                          nullable: true
+                        matches:
+                          type: array
+        '400':
+          description: Missing or too-short query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================
+  # Planets
+  # ============================================================
+  /api/planets:
+    get:
+      summary: List all planets
+      operationId: listPlanets
+      tags: [Planets]
+      responses:
+        '200':
+          description: Planet list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  planets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Planet'
+                  active:
+                    type: string
+                    example: kalshi-traders
+
+  /api/planets/active:
+    get:
+      summary: Get active planet
+      operationId: getActivePlanet
+      tags: [Planets]
+      responses:
+        '200':
+          description: Active planet info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  planet:
+                    type: string
+                    example: kalshi-traders
+                  dir:
+                    type: string
+
+  /api/planets/switch:
+    post:
+      summary: Switch active planet
+      description: Stops running agents, updates symlinks, reloads server context.
+      operationId: switchPlanet
+      tags: [Planets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [planet]
+              properties:
+                planet:
+                  type: string
+                  pattern: "^[a-zA-Z0-9_-]+$"
+                  example: kalshi-traders
+      responses:
+        '200':
+          description: Switch successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  planet:
+                    type: string
+                  message:
+                    type: string
+                  stdout:
+                    type: string
+        '400':
+          description: Planet name required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Planet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/planets/create:
+    post:
+      summary: Create a new planet
+      operationId: createPlanet
+      tags: [Planets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  pattern: "^[a-zA-Z0-9_-]+$"
+                  example: my-project
+                agents:
+                  oneOf:
+                    - type: string
+                      description: Space-separated agent names
+                      example: "alice bob charlie"
+                    - type: array
+                      items:
+                        type: string
+                      example: ["alice", "bob", "charlie"]
+      responses:
+        '201':
+          description: Planet created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  planet:
+                    type: string
+                  agents:
+                    type: array
+                    items:
+                      type: string
+                  stdout:
+                    type: string
+        '400':
+          description: Planet name required
+        '409':
+          description: Planet already exists
+
+  # ============================================================
+  # Agents
+  # ============================================================
+  /api/agents:
+    get:
+      summary: List all agents with status and health
+      operationId: listAgents
+      tags: [Agents]
+      responses:
+        '200':
+          description: Agent list (5-second cache)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentSummary'
+
+  /api/agents/{name}:
+    get:
+      summary: Get detailed agent info
+      operationId: getAgent
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+        '400':
+          description: Invalid agent name
+        '404':
+          description: Agent not found
+
+  /api/agents/{name}/executor:
+    get:
+      summary: Get agent's current executor
+      operationId: getAgentExecutor
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent executor info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  executor:
+                    $ref: '#/components/schemas/ExecutorType'
+                  health:
+                    type: object
+    post:
+      summary: Set agent's executor
+      operationId: setAgentExecutor
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [executor]
+              properties:
+                executor:
+                  $ref: '#/components/schemas/ExecutorType'
+      responses:
+        '200':
+          description: Executor updated
+        '400':
+          description: Invalid executor or agent name
+        '404':
+          description: Agent not found
+
+  /api/agents/{name}/log:
+    get:
+      summary: Get parsed agent log
+      operationId: getAgentLog
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Parsed log data
+
+  /api/agents/{name}/log/stream:
+    get:
+      summary: SSE live tail of agent runtime log
+      description: |
+        Server-Sent Events stream. Sends the last 20 KB as an initial burst,
+        then streams new lines as they are written.
+        Events: `connected`, `log` (each line as JSON string), `keepalive`.
+      operationId: streamAgentLog
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /api/agents/{name}/message:
+    post:
+      summary: Send a message to an agent's inbox
+      operationId: sendAgentMessage
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  example: "Please review T542 deliverable"
+                from:
+                  type: string
+                  default: dashboard
+                  example: ceo
+      responses:
+        '200':
+          description: Message delivered
+
+  /api/agents/{name}/stop:
+    post:
+      summary: Stop a running agent
+      operationId: stopAgent
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Stop signal sent
+
+  /api/agents/{name}/ping:
+    get:
+      summary: Ping agent for heartbeat status
+      operationId: pingAgent
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Ping result
+
+  /api/agents/{name}/start:
+    post:
+      summary: Start a specific agent
+      operationId: startAgent
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent started
+
+  /api/agents/start-all:
+    post:
+      summary: Start all agents
+      operationId: startAllAgents
+      tags: [Agents]
+      responses:
+        '200':
+          description: All agents started
+
+  /api/agents/stop-all:
+    post:
+      summary: Stop all running agents
+      operationId: stopAllAgents
+      tags: [Agents]
+      responses:
+        '200':
+          description: All agents stopped
+
+  /api/agents/smart-start:
+    post:
+      summary: Smart-start agents that have actual work
+      description: |
+        Only starts agents with assigned open/in_progress tasks OR unread inbox messages.
+        No idle agents are started, conserving API token spend.
+
+        Priority order: alice → task-assigned → reviewers (if in_review tasks exist) → unassigned tasks → inbox-only.
+
+        Returns `403` if `enabled: false` in smart_run_config.json.
+        Returns `429` if daily cost cap is exceeded.
+      operationId: smartStart
+      tags: [Agents]
+      responses:
+        '200':
+          description: Smart-start result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  started:
+                    type: array
+                    items:
+                      type: string
+                  skipped:
+                    type: array
+                    items:
+                      type: string
+        '403':
+          description: Smart-run disabled
+        '429':
+          description: Daily cost cap exceeded
+
+  /api/agents/watchdog:
+    post:
+      summary: Restart stuck agents (stale heartbeat > 15 min)
+      operationId: runWatchdog
+      tags: [Agents]
+      responses:
+        '200':
+          description: Watchdog result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restarted:
+                    type: array
+                    items:
+                      type: string
+                  skipped:
+                    type: array
+                    items:
+                      type: string
+
+  /api/agents/{name}/persona/note:
+    post:
+      summary: Add a note to agent's persona
+      operationId: addPersonaNote
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Note appended
+
+  /api/agents/{name}/persona:
+    patch:
+      summary: Update agent's persona
+      operationId: updatePersona
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Persona updated
+
+  /api/agents/{name}/inbox:
+    post:
+      summary: Post a message directly to agent's chat inbox
+      operationId: postAgentInbox
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                from:
+                  type: string
+                  default: dashboard
+      responses:
+        '200':
+          description: Message written to inbox
+
+  /api/agents/{name}/context:
+    get:
+      summary: Get agent live context snapshot
+      description: Returns inbox, tasks, pending reviews, and culture for the agent.
+      operationId: getAgentContext
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent context snapshot
+
+  /api/agents/{name}/cycles:
+    get:
+      summary: Get today's cycle history for an agent
+      description: |
+        Returns a wrapped object containing the agent name, log date, and an array
+        of cycle summaries (newest first). Each cycle summary includes turn count,
+        cost, duration, and a brief action preview.
+
+        **Note (FINDING-3 fix):** Response is a wrapped object `{name, date, cycles:[]}`,
+        NOT a flat array. Field names match the server log parser output exactly.
+      operationId: getAgentCycles
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Cycle history (wrapped object, newest cycle first)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, date, cycles]
+                properties:
+                  name:
+                    type: string
+                    description: Agent name
+                    example: alice
+                  date:
+                    type: string
+                    description: Log date in YYYY_MM_DD format
+                    example: "2026_04_07"
+                  cycles:
+                    type: array
+                    description: Cycle summaries, newest first
+                    items:
+                      type: object
+                      properties:
+                        n:
+                          type: integer
+                          description: Cycle number (1-indexed, sequential)
+                          example: 3
+                        started:
+                          type: string
+                          description: Cycle start timestamp (from log)
+                          example: "2026-04-07 14:55:01"
+                        ended:
+                          type: string
+                          nullable: true
+                          description: Cycle end timestamp (null if still running)
+                          example: "2026-04-07 14:57:22"
+                        turns:
+                          type: integer
+                          nullable: true
+                          description: Number of LLM turns in this cycle
+                          example: 8
+                        cost_usd:
+                          type: number
+                          nullable: true
+                          description: Token cost for this cycle in USD
+                          example: 0.042
+                        duration_s:
+                          type: number
+                          nullable: true
+                          description: Wall-clock duration in seconds
+                          example: 141.3
+                        action_count:
+                          type: integer
+                          description: Number of tool calls and assistant messages logged
+                          example: 12
+                        preview:
+                          type: string
+                          description: First 3 actions joined — quick summary of what the cycle did
+                          example: "Bash(status.sh) | Read(task_board.md) | >> Claiming T1008..."
+
+  /api/agents/{name}/cycles/{n}:
+    get:
+      summary: Get full log output for cycle N
+      operationId: getAgentCycleDetail
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+        - name: n
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Cycle number
+      responses:
+        '200':
+          description: Cycle log output
+
+  /api/agents/{name}/health:
+    get:
+      summary: Get computed health score for an agent
+      operationId: getAgentHealth
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentHealth'
+
+  /api/agents/{name}/output:
+    get:
+      summary: List files in agent's output directory
+      operationId: listAgentOutput
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Output file list (newest first)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent:
+                    type: string
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        size:
+                          type: integer
+                        mtime:
+                          type: string
+                          format: date-time
+
+  /api/agents/{name}/output/{file}:
+    get:
+      summary: Read a specific agent output file
+      operationId: readAgentOutput
+      tags: [Agents]
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+
+  # ============================================================
+  # Executors
+  # ============================================================
+  /api/executors:
+    get:
+      summary: List enabled executors and their health
+      operationId: listExecutors
+      tags: [Executors]
+      responses:
+        '200':
+          description: Executor list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutorType'
+                  default:
+                    $ref: '#/components/schemas/ExecutorType'
+                  health:
+                    type: object
+                    additionalProperties:
+                      type: object
+
+  /api/executors/health:
+    get:
+      summary: Health check for all executors (enabled and supported)
+      operationId: getExecutorHealth
+      tags: [Executors]
+      responses:
+        '200':
+          description: Executor health map
+
+  /api/config/executor:
+    get:
+      summary: Get executor assignment for all agents
+      operationId: getConfigExecutor
+      tags: [Executors]
+      responses:
+        '200':
+          description: Per-agent executor assignments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  default:
+                    $ref: '#/components/schemas/ExecutorType'
+                  enabled:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutorType'
+                  agents:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/ExecutorType'
+
+  # ============================================================
+  # Smart Run / Fleet
+  # ============================================================
+  /api/smart-run/config:
+    get:
+      summary: Read smart-run configuration
+      operationId: getSmartRunConfig
+      tags: [Fleet]
+      responses:
+        '200':
+          description: Smart-run config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartRunConfig'
+    post:
+      summary: Update smart-run configuration
+      description: |
+        Partial update — only provided fields are changed.
+        Writable fields: `enabled`, `dry_run`, `max_agents`, `selection_mode`,
+        `session_max_cycles`, `daily_cost_cap_usd`, `per_agent_cost_cap_usd`.
+      operationId: updateSmartRunConfig
+      tags: [Fleet]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartRunConfig'
+      responses:
+        '200':
+          description: Config updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartRunConfig'
+
+  /api/smart-run/start:
+    post:
+      summary: Start the Fleet daemon
+      operationId: startSmartRun
+      tags: [Fleet]
+      responses:
+        '200':
+          description: Fleet daemon started
+
+  /api/smart-run/stop:
+    post:
+      summary: Stop the Fleet daemon
+      operationId: stopSmartRun
+      tags: [Fleet]
+      responses:
+        '200':
+          description: Fleet daemon stopped
+
+  /api/smart-run/status:
+    get:
+      summary: Get Fleet daemon status and running agent count
+      operationId: getSmartRunStatus
+      tags: [Fleet]
+      responses:
+        '200':
+          description: Fleet status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  running:
+                    type: boolean
+                  agent_count:
+                    type: integer
+                  config:
+                    $ref: '#/components/schemas/SmartRunConfig'
+
+  /api/watchdog-log:
+    get:
+      summary: Get watchdog log
+      operationId: getWatchdogLog
+      tags: [Fleet]
+      responses:
+        '200':
+          description: Watchdog log content
+
+  # ============================================================
+  # Tasks
+  # ============================================================
+  /api/tasks:
+    get:
+      summary: List tasks
+      description: |
+        Returns tasks from the task board. Supports filtering by assignee, status,
+        priority, and keyword search. Optionally include archived done tasks.
+      operationId: listTasks
+      tags: [Tasks]
+      parameters:
+        - name: assignee
+          in: query
+          schema:
+            type: string
+          example: bob
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Keyword filter on title and description
+        - name: include_archive
+          in: query
+          schema:
+            type: string
+            enum: ["true", "1"]
+          description: Include archived done tasks
+      responses:
+        '200':
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+    post:
+      summary: Create a new task
+      operationId: createTask
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  example: "Implement WebSocket reconnect"
+                description:
+                  type: string
+                  example: "Add exponential backoff to WS client"
+                priority:
+                  $ref: '#/components/schemas/TaskPriority'
+                group:
+                  type: string
+                  default: all
+                assignee:
+                  type: string
+                  example: bob
+                task_type:
+                  type: string
+                  default: task
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: title required or invalid priority
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tasks/{id}:
+    get:
+      summary: Get a specific task by ID
+      operationId: getTask
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 542
+      responses:
+        '200':
+          description: Task detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+
+    patch:
+      summary: Update a task
+      description: |
+        Partial update. Updatable fields: `status`, `priority`, `assignee`, `title`,
+        `description`, `notes`, `group`, `task_type`.
+
+        Valid statuses: `open`, `in_progress`, `done`, `blocked`, `in_review`, `cancelled`
+      operationId: updateTask
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/TaskStatus'
+                priority:
+                  $ref: '#/components/schemas/TaskPriority'
+                assignee:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OkResponse'
+                  - $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid status, priority, or assignee
+        '404':
+          description: Task not found
+
+    delete:
+      summary: Delete a task
+      operationId: deleteTask
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  deleted:
+                    $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+
+  /api/tasks/{id}/claim:
+    post:
+      summary: Atomically claim a task
+      description: |
+        Sets `status=in_progress` and `assignee=agent` only if the task is currently
+        open/unassigned. Uses file locking to prevent race conditions between parallel agents.
+        Returns `409` if already claimed by a different agent or already done.
+      operationId: claimTask
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agent]
+              properties:
+                agent:
+                  type: string
+                  example: bob
+      responses:
+        '200':
+          description: Task claimed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: in_progress
+                  assignee:
+                    type: string
+        '404':
+          description: Task not found
+        '409':
+          description: Already claimed or done
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                  claimed_by:
+                    type: string
+
+  /api/tasks/{id}/review:
+    post:
+      summary: Reviewer gate — approve or reject a task
+      description: |
+        Approving marks the task `done` and checks for a deliverable in task_outputs/
+        or the assignee's output/ directory. Sends a DM to the assignee with the verdict.
+
+        Rejecting sets status back to `in_progress` and DMs the assignee with feedback.
+      operationId: reviewTask
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [verdict]
+              properties:
+                verdict:
+                  type: string
+                  enum: [approve, reject]
+                reviewer:
+                  type: string
+                  example: olivia
+                comment:
+                  type: string
+                  example: "Deliverable verified, all tests pass"
+      responses:
+        '200':
+          description: Review result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  verdict:
+                    type: string
+                    enum: [approved, rejected]
+                  deliverable_found:
+                    type: boolean
+                  deliverable_location:
+                    type: string
+                  task:
+                    $ref: '#/components/schemas/Task'
+                  comment:
+                    type: string
+                  task_id:
+                    type: string
+        '400':
+          description: Invalid verdict
+        '404':
+          description: Task not found
+
+  /api/tasks/{id}/result:
+    get:
+      summary: Find and read a task's result file
+      description: |
+        Searches in order: `public/task_outputs/task-{id}-*.md`, then assignee's `output/`.
+        Returns the most recent matching file.
+      operationId: getTaskResult
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task result file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
+                  source:
+                    type: string
+                    enum: [task_outputs, agent_output, agent_output_latest]
+                  assignee:
+                    type: string
+                  file:
+                    type: string
+                  content:
+                    type: string
+        '404':
+          description: No result file found
+
+    post:
+      summary: Write a task result file
+      description: Writes content to `public/task_outputs/{filename}`.
+      operationId: writeTaskResult
+      tags: [Tasks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                filename:
+                  type: string
+                  default: "task-{id}-result.md"
+                  example: "task-542-result.md"
+      responses:
+        '200':
+          description: Result file written
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  task_id:
+                    type: string
+                  file:
+                    type: string
+
+  /api/tasks/archive:
+    get:
+      summary: List archived done tasks
+      operationId: listTaskArchive
+      tags: [Tasks]
+      responses:
+        '200':
+          description: Archived task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      summary: Archive done tasks
+      operationId: archiveTasks
+      tags: [Tasks]
+      responses:
+        '200':
+          description: Tasks archived
+
+  /api/tasks/export.csv:
+    get:
+      summary: Export tasks as CSV
+      operationId: exportTasksCsv
+      tags: [Tasks]
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /api/tasks/health:
+    get:
+      summary: Task board health summary
+      operationId: getTaskHealth
+      tags: [Tasks]
+      responses:
+        '200':
+          description: Task board stats
+
+  # ============================================================
+  # Communication
+  # ============================================================
+  /api/broadcast:
+    post:
+      summary: Broadcast a message to all agents' inboxes
+      operationId: broadcast
+      tags: [Communication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  example: "Sprint 9 kickoff — all agents please check task board"
+                from:
+                  type: string
+                  default: dashboard
+                  example: ceo
+      responses:
+        '200':
+          description: Broadcast result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  agents:
+                    type: integer
+                  failed:
+                    type: integer
+                  filename:
+                    type: string
+
+  /api/ceo/command:
+    post:
+      summary: CEO quick command routing
+      description: |
+        Routes commands by prefix:
+        - `@agentname <msg>` → DM directly to that agent's inbox
+        - `task: <title>` → Create unassigned medium-priority task
+        - `/mode <name>` → Switch civilization mode (plan/normal/crazy/autonomous)
+        - anything else → Route to alice's inbox as Founder priority
+
+        Maximum 1000 characters.
+      operationId: ceCommand
+      tags: [Communication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  maxLength: 1000
+                  example: "@bob please investigate the rate limiting issue"
+      responses:
+        '200':
+          description: Command routed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  routed_to:
+                    type: string
+                  action:
+                    type: string
+        '400':
+          description: Missing command or exceeds length limit
+
+  /api/team-channel:
+    get:
+      summary: List recent team channel posts
+      operationId: listTeamChannel
+      tags: [Communication]
+      responses:
+        '200':
+          description: Team channel posts
+
+    post:
+      summary: Post to team channel
+      operationId: postTeamChannel
+      tags: [Communication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                from:
+                  type: string
+                  example: alice
+      responses:
+        '200':
+          description: Post written
+
+  /api/announcements:
+    get:
+      summary: List recent announcements
+      operationId: listAnnouncements
+      tags: [Communication]
+      responses:
+        '200':
+          description: Announcement list
+
+    post:
+      summary: Post a civilization-wide announcement
+      operationId: postAnnouncement
+      tags: [Communication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                from:
+                  type: string
+                  default: dashboard
+      responses:
+        '200':
+          description: Announcement posted
+
+  /api/ceo-inbox:
+    get:
+      summary: Get CEO inbox (unread + recently processed)
+      operationId: getCeoInbox
+      tags: [Communication]
+      responses:
+        '200':
+          description: CEO inbox
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unread:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        from:
+                          type: string
+                        timestamp:
+                          type: string
+                        content:
+                          type: string
+                  processed:
+                    type: array
+                    items:
+                      type: object
+
+  /api/ceo-inbox/{filename}/read:
+    post:
+      summary: Mark a CEO inbox message as read (move to processed)
+      operationId: markCeoInboxRead
+      tags: [Communication]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[\\w-]+\\.md$"
+      responses:
+        '200':
+          description: Message moved to processed
+        '400':
+          description: Invalid filename
+        '500':
+          description: File operation failed
+
+  # ============================================================
+  # Culture & Knowledge
+  # ============================================================
+  /api/consensus:
+    get:
+      summary: Get consensus board (culture norms + strategic decisions)
+      description: Returns raw markdown and parsed entries. Cached 60 seconds.
+      operationId: getConsensus
+      tags: [Culture]
+      responses:
+        '200':
+          description: Consensus board
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  raw:
+                    type: string
+                    description: Raw markdown content
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConsensusEntry'
+
+  /api/consensus/entry:
+    post:
+      summary: Add a consensus entry (norm or decision)
+      description: |
+        Auto-assigns ID with prefix based on type:
+        - `culture` / `norm` → `C{N}` (e.g., C22)
+        - `decision` → `D{N}` (e.g., D10)
+        - others → numeric ID
+
+        Valid types: `group`, `authority`, `culture`, `decision`, `relationship`
+      operationId: addConsensusEntry
+      tags: [Culture]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, content]
+              properties:
+                type:
+                  type: string
+                  enum: [group, authority, culture, decision, relationship]
+                  example: culture
+                content:
+                  type: string
+                  example: "Always verify deliverables before marking tasks done"
+                author:
+                  type: string
+                  example: alice
+                section:
+                  type: string
+                  description: Target section name (defaults based on type)
+      responses:
+        '201':
+          description: Entry added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  id:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                    example: "C22"
+        '400':
+          description: Missing type/content or invalid type
+
+  /api/consensus/entry/{id}:
+    delete:
+      summary: Delete a consensus entry by ID
+      description: Supports string IDs (C1, D5) and numeric IDs.
+      operationId: deleteConsensusEntry
+      tags: [Culture]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: C21
+      responses:
+        '200':
+          description: Entry deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  deleted:
+                    oneOf:
+                      - type: string
+                      - type: integer
+        '404':
+          description: Entry not found
+
+  /api/knowledge:
+    get:
+      summary: List knowledge base files
+      operationId: listKnowledge
+      tags: [Culture]
+      responses:
+        '200':
+          description: Knowledge file list
+
+  /api/knowledge/{path}:
+    get:
+      summary: Read a knowledge base file
+      operationId: getKnowledge
+      tags: [Culture]
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Knowledge file content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  content:
+                    type: string
+        '400':
+          description: Invalid path (path traversal blocked)
+        '404':
+          description: File not found
+
+  /api/research:
+    get:
+      summary: List research files (plans and reports)
+      operationId: listResearch
+      tags: [Culture]
+      responses:
+        '200':
+          description: Research file list
+
+  /api/research/{file}:
+    get:
+      summary: Read a research file
+      operationId: getResearch
+      tags: [Culture]
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Research file content
+        '404':
+          description: File not found
+
+  # ============================================================
+  # Organization & Mode
+  # ============================================================
+  /api/org:
+    get:
+      summary: Get organization chart
+      operationId: getOrg
+      tags: [Organization]
+      responses:
+        '200':
+          description: Org chart data (cached 2 minutes)
+
+  /api/mode:
+    get:
+      summary: Get current civilization mode
+      operationId: getMode
+      tags: [Organization]
+      responses:
+        '200':
+          description: Current mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                    enum: [plan, normal, crazy, autonomous]
+                    example: normal
+                  raw:
+                    type: string
+                    description: Raw company_mode.md contents
+
+    post:
+      summary: Switch civilization mode
+      operationId: setMode
+      tags: [Organization]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, who, reason]
+              properties:
+                mode:
+                  type: string
+                  enum: [plan, normal, crazy, autonomous]
+                who:
+                  type: string
+                  example: ceo
+                reason:
+                  type: string
+                  example: "Plans ready, let's execute"
+      responses:
+        '200':
+          description: Mode switched
+        '400':
+          description: Invalid mode or missing who/reason
+
+  /api/sops:
+    get:
+      summary: Get standard operating procedures for current mode
+      operationId: getSops
+      tags: [Organization]
+      responses:
+        '200':
+          description: SOP content
+
+  /api/ops:
+    get:
+      summary: Get operational summary
+      operationId: getOps
+      tags: [Organization]
+      responses:
+        '200':
+          description: Ops summary
+
+  # ============================================================
+  # Cost & Metrics
+  # ============================================================
+  /api/cost:
+    get:
+      summary: Today's and 7-day token spend per agent
+      description: |
+        Uses mtime-based cache per agent — only re-greps logs when a log file changes.
+        Outer 60-second cache prevents stampedes.
+      operationId: getCost
+      tags: [Metrics]
+      responses:
+        '200':
+          description: Cost summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  today_usd:
+                    type: number
+                    example: 1.45
+                  today_cycles:
+                    type: integer
+                    example: 42
+                  total_7d_usd:
+                    type: number
+                    example: 8.23
+                  total_7d_cycles:
+                    type: integer
+                    example: 287
+                  per_agent:
+                    type: array
+                    description: Sorted by today_usd descending
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        today_usd:
+                          type: number
+                        today_cycles:
+                          type: integer
+
+  /api/stats:
+    get:
+      summary: 7-day agent statistics
+      description: 5-minute cache (heavy computation — reads across all agent logs).
+      operationId: getStats
+      tags: [Metrics]
+      responses:
+        '200':
+          description: 7-day stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      type: object
+                  totals:
+                    type: object
+                    properties:
+                      totalCost:
+                        type: number
+                      totalCycles:
+                        type: integer
+                  total_cycles:
+                    type: integer
+                  total_cost:
+                    type: number
+                  cycles_per_agent:
+                    type: object
+                  cost_per_agent:
+                    type: object
+
+  /api/digest:
+    get:
+      summary: Get daily digest summary
+      operationId: getDigest
+      tags: [Metrics]
+      responses:
+        '200':
+          description: Digest data (30-second cache)
+
+  /api/metrics:
+    get:
+      summary: System-wide metrics snapshot
+      description: |
+        Returns task stats, agent health, 7-day cost, and HTTP metrics.
+        60-second cache — first call can take ~12 seconds (grepping 20 agents × 7 days).
+      operationId: getMetrics
+      tags: [Metrics]
+      responses:
+        '200':
+          description: Full metrics snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  tasks:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      by_status:
+                        type: object
+                      by_priority:
+                        type: object
+                      by_assignee:
+                        type: object
+                      completion_rate_pct:
+                        type: integer
+                  agents:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      running:
+                        type: integer
+                      idle:
+                        type: integer
+                      stale:
+                        type: integer
+                      health:
+                        type: array
+                        items:
+                          type: object
+                  cost_7d:
+                    type: object
+                    properties:
+                      total_usd:
+                        type: number
+                      total_cycles:
+                        type: integer
+                      avg_cost_per_cycle_usd:
+                        type: number
+                      per_agent:
+                        type: array
+                        items:
+                          type: object
+                  http:
+                    type: object
+                    description: HTTP request metrics snapshot
+
+  # ============================================================
+  # Message Bus (SQLite)
+  # ============================================================
+  /api/messages:
+    post:
+      summary: Send a message via the SQLite message bus
+      operationId: sendMessage
+      tags: [MessageBus]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, content]
+              properties:
+                to:
+                  type: string
+                  example: bob
+                from:
+                  type: string
+                  example: alice
+                content:
+                  type: string
+                  example: "correlation_pairs.json is ready"
+                subject:
+                  type: string
+      responses:
+        '200':
+          description: Message enqueued
+
+  /api/messages/broadcast:
+    post:
+      summary: Broadcast a message to all agents via message bus
+      operationId: broadcastMessage
+      tags: [MessageBus]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                from:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Message broadcast
+
+  /api/messages/queue-depth:
+    get:
+      summary: Get message queue depth per agent
+      operationId: getQueueDepth
+      tags: [MessageBus]
+      responses:
+        '200':
+          description: Queue depth map
+
+  /api/inbox/{agent}:
+    get:
+      summary: Get unacknowledged messages for an agent
+      operationId: getInbox
+      tags: [MessageBus]
+      parameters:
+        - name: agent
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+      responses:
+        '200':
+          description: Agent's message inbox
+
+  /api/inbox/{agent}/{id}/ack:
+    post:
+      summary: Acknowledge a message
+      operationId: ackMessage
+      tags: [MessageBus]
+      parameters:
+        - name: agent
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentName'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Message acknowledged
+
+  /api/code-output:
+    get:
+      summary: Get shared code output directory listing
+      operationId: getCodeOutput
+      tags: [Core]
+      responses:
+        '200':
+          description: Code output files
+
+tags:
+  - name: Core
+    description: Health, config, search, events
+  - name: Planets
+    description: Multi-planet management
+  - name: Agents
+    description: Agent lifecycle, status, logs, executors
+  - name: Executors
+    description: Executor adapter management (claude, kimi, codex, gemini)
+  - name: Fleet
+    description: Smart-run daemon and Fleet configuration
+  - name: Tasks
+    description: Task board CRUD, claiming, and review workflow
+  - name: Communication
+    description: Broadcast, CEO commands, team channel, announcements, inboxes
+  - name: Culture
+    description: Consensus norms, decisions, knowledge base, research
+  - name: Organization
+    description: Org chart and civilization mode management
+  - name: Metrics
+    description: Cost tracking, performance stats, system metrics
+  - name: MessageBus
+    description: SQLite-backed reliable message bus between agents

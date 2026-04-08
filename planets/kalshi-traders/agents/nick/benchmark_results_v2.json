@@ -1,0 +1,38 @@
+[
+  {
+    "numMarkets": 100,
+    "historyLength": 60,
+    "genDuration": 1,
+    "corrDuration": 4,
+    "sortDuration": 0,
+    "totalDuration": 5,
+    "numPairs": 1004
+  },
+  {
+    "numMarkets": 500,
+    "historyLength": 60,
+    "genDuration": 1,
+    "corrDuration": 34,
+    "sortDuration": 9,
+    "totalDuration": 44,
+    "numPairs": 31524
+  },
+  {
+    "numMarkets": 1000,
+    "historyLength": 60,
+    "genDuration": 1,
+    "corrDuration": 117,
+    "sortDuration": 40,
+    "totalDuration": 158,
+    "numPairs": 132130
+  },
+  {
+    "numMarkets": 2000,
+    "historyLength": 60,
+    "genDuration": 2,
+    "corrDuration": 472,
+    "sortDuration": 240,
+    "totalDuration": 714,
+    "numPairs": 557555
+  }
+]

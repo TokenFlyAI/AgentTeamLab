@@ -1,0 +1,65 @@
+{
+  "qualifying_markets": [
+    {
+      "id": "live-phase1-002",
+      "ticker": "KXINF-26JUN-T030",
+      "title": "Will CPI print above 3.0% in June 2026?",
+      "category": "Economics",
+      "volume": 88000,
+      "yes_bid": 27,
+      "yes_ask": 31,
+      "no_bid": 69,
+      "no_ask": 73,
+      "yes_ratio": 29,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-003",
+      "ticker": "KXUNEMP-26SEP05-T072",
+      "title": "Will US unemployment be above 7.2% in September 2026?",
+      "category": "Economics",
+      "volume": 143500,
+      "yes_bid": 72,
+      "yes_ask": 76,
+      "no_bid": 24,
+      "no_ask": 28,
+      "yes_ratio": 74,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-004",
+      "ticker": "KXBTCDOM-26OCT15-T068",
+      "title": "Will Bitcoin dominance close above 68% on Oct 15, 2026?",
+      "category": "Crypto",
+      "volume": 114300,
+      "yes_bid": 24,
+      "yes_ask": 28,
+      "no_bid": 72,
+      "no_ask": 76,
+      "yes_ratio": 26,
+      "recommendation": "proceed_to_clustering"
+    },
+    {
+      "id": "live-phase1-005",
+      "ticker": "KXSOL-27APR16-T450",
+      "title": "Will Solana trade above $450 on Apr 16, 2027?",
+      "category": "Crypto",
+      "volume": 96750,
+      "yes_bid": 18,
+      "yes_ask": 22,
+      "no_bid": 78,
+      "no_ask": 82,
+      "yes_ratio": 20,
+      "recommendation": "proceed_to_clustering"
+    }
+  ],
+  "summary": {
+    "total_markets": 9,
+    "after_volume_filter": 8,
+    "qualifying_markets": 4,
+    "excluded_low_volume": 1,
+    "excluded_middle_range": 2,
+    "extreme_ratio": 2,
+    "rejected_invalid_markets": 2
+  }
+}

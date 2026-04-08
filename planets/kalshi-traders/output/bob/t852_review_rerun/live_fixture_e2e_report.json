@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-04-07T17:58:48.126Z",
+  "task": "T852",
+  "source_fixture": {
+    "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json",
+    "generated_at": "2026-04-07T16:15:00.125Z",
+    "freshness_marker": "2026-04-07T16:51:35.860Z"
+  },
+  "artifacts": {
+    "phase1": {
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun/markets_filtered.json",
+      "freshness_marker": "2026-04-07T17:58:48.084Z",
+      "qualifying_markets": 4
+    },
+    "phase2": {
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun/market_clusters.json",
+      "freshness_marker": "2026-04-07T17:58:48.084Z",
+      "total_clusters": 1
+    },
+    "phase3": {
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun/correlation_pairs.json",
+      "freshness_marker": "2026-04-07T17:58:48.085Z",
+      "total_pairs": 1,
+      "arbitrage_opportunities": 1
+    },
+    "phase4": {
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun/pnl_summary.json",
+      "freshness_marker": "2026-04-07T17:58:48.085Z",
+      "total_trades": 2,
+      "total_pnl": 0.25
+    },
+    "trade_signals": {
+      "path": "/Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/trade_signals.json",
+      "freshness_marker": "2026-04-07T17:58:48.124Z",
+      "source": "phase1_live_fixture",
+      "market_count": 4,
+      "signal_count": 1,
+      "approved_signal_count": 1
+    }
+  },
+  "run_commands": {
+    "pipeline": "node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/run_pipeline.js --phase1-input /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json --artifact-dir /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun --with-signals",
+    "trade_signals": "node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/backend/strategies/live_runner.js --market-fixture /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json",
+    "rerun_all": "node /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/run_live_fixture_pipeline.js --phase1-input /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/grace/filtered_markets_live_fixture.json --artifact-dir /Users/chenyangcui/Documents/code/aicompany/planets/kalshi-traders/output/bob/t852_review_rerun"
+  }
+}

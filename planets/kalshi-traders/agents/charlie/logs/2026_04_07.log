@@ -957,3 +957,51 @@
 
 ========== CYCLE START — 2026_04_07_10_37_07 [session:RESUME] [executor:codex] ==========
 ========== CYCLE END — 2026_04_07_10_37_07 ==========
+
+========== CYCLE START — 2026_04_07_23_55_22 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h57m3s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_55_24 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_55_57 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h56m28s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_55_59 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_56_31 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h55m53s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_56_34 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_57_06 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h55m18s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_57_09 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_57_41 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h54m44s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_57_43 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_58_16 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h54m9s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_58_18 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_58_50 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h53m34s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_58_53 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed
+
+========== CYCLE START — 2026_04_07_23_59_25 [session:FRESH] [executor:gemini] ==========
+[API_ERROR] [API Error: You have exhausted your capacity on this model. Your quota will reset after 20h52m59s.]
+[DONE] turns=0 cost=$0 duration=0.0s session=ERROR
+========== CYCLE END — 2026_04_07_23_59_28 ==========
+[WARN] charlie: API error detected (quota exhausted / auth failure) — marking cycle failed

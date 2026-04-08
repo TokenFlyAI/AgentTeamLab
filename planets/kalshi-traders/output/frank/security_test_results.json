@@ -1,0 +1,72 @@
+{
+  "task_id": "T986",
+  "agent_name": "frank",
+  "timestamp": "2026-04-07T21:43:05.884Z",
+  "references": [
+    "T947 (Heidi security audit)",
+    "FINDING-1",
+    "FINDING-2"
+  ],
+  "total": 22,
+  "passed": 9,
+  "failed": 13,
+  "failures": [
+    {
+      "name": "AuditLogger: accepts a valid same-directory log path",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-m9Wieb/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "AuditLogger: log entries contain timestamp and event fields",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-oJDkKj/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "AuditLogger: read() returns empty array when log file absent",
+      "error": "AuditLogger: logPath '/tmp/nonexistent_audit_frank_9999.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "AuditLogger: read() respects limit parameter",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-tLqiVG/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "FINDING-2 DOCUMENTED: AuditLogger currently accepts path-traversal logPath (unfixed)",
+      "error": "FINDING-2 still unpatched — AuditLogger does not validate logPath. Bob should apply Heidi's path.resolve + startsWith fix."
+    },
+    {
+      "name": "CredentialManager.summary() masks apiSecret completely",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-slN57I/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager.summary() masks password completely",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-LqK0TD/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager defaults to paper trading mode (C1)",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-U6g8cH/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager.validate() throws when no credentials set",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-CfEFOD/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager.validate() throws when API key set without secret",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-544MDv/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager.validate() accepts valid API key + secret pair",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-RR8zSM/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager audit log records credentials_loaded event",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-UjaNCX/audit.jsonl' is outside allowed directories"
+    },
+    {
+      "name": "CredentialManager audit log never contains raw secret values",
+      "error": "AuditLogger: logPath '/var/folders/s8/vkv7jn551qg7061p4g52c3z40000gn/T/frank-sec-ayWSPB/audit.jsonl' is outside allowed directories"
+    }
+  ],
+  "notes": [
+    "FINDING-1 (markets_api.js auth): documented — no auth at handler level. Fix: add requireAuth middleware at router mount.",
+    "FINDING-2 (AuditLogger path traversal): documented as currently vulnerable. Fix: path.resolve + startsWith check in AuditLogger constructor.",
+    "Fix-verification tests included for both findings — will catch regression once patches are applied."
+  ]
+}

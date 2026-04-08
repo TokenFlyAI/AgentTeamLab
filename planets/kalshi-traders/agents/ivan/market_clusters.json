@@ -1,0 +1,109 @@
+{
+  "generated_at": "2026-04-07T13:51:27.077110",
+  "task": "T575 (improved from T546/T344)",
+  "method": "Multi-dimensional embedding: semantic + volatility + news sentiment + confidence scoring",
+  "features": [
+    "keyword_semantic",
+    "bid_ask_volatility",
+    "price_implied_sentiment",
+    "category_baseline_sentiment",
+    "volume_weight"
+  ],
+  "clusters": [
+    {
+      "id": "cluster_1",
+      "label": "Economics + Rates",
+      "markets": [
+        "KXFED-25MAY-HOLD",
+        "KXGDP-25Q2-3PCT"
+      ],
+      "strength": 0.273,
+      "confidence": 0.624,
+      "stability": 0.273,
+      "cohesion": 0.273,
+      "separation": 1.0,
+      "uncertain_markets": [
+        "KXFED-25MAY-HOLD",
+        "KXGDP-25Q2-3PCT"
+      ],
+      "avg_volatility": 0.35,
+      "avg_sentiment": 0.017,
+      "cross_category": true,
+      "description": "2 markets spanning Economics, Rates | similarity=0.27 | dominant sentiment: neutral"
+    },
+    {
+      "id": "singleton_KXETH-25APR-5K",
+      "label": "Crypto Singleton",
+      "markets": [
+        "KXETH-25APR-5K"
+      ],
+      "strength": 0.0,
+      "confidence": 0.0,
+      "stability": 0.0,
+      "cohesion": 0.0,
+      "separation": 0.0,
+      "uncertain_markets": [],
+      "avg_volatility": 0.3,
+      "avg_sentiment": 0.217,
+      "cross_category": false,
+      "description": "Standalone market with no same-theme match: Ethereum above $5K by April 2025?"
+    }
+  ],
+  "hidden_correlations": [],
+  "market_features": {
+    "KXETH-25APR-5K": {
+      "category": "Crypto",
+      "volatility": 0.3,
+      "sentiment": 0.217,
+      "sentiment_label": "bullish",
+      "volume": 18000
+    },
+    "KXFED-25MAY-HOLD": {
+      "category": "Rates",
+      "volatility": 0.3,
+      "sentiment": -0.067,
+      "sentiment_label": "neutral",
+      "volume": 32000
+    },
+    "KXGDP-25Q2-3PCT": {
+      "category": "Economics",
+      "volatility": 0.4,
+      "sentiment": 0.1,
+      "sentiment_label": "bullish",
+      "volume": 15000
+    }
+  },
+  "grace_cross_validation": {
+    "grace_markets_count": 3,
+    "all_passed_volume_filter": true,
+    "all_passed_ratio_filter": true,
+    "cluster_volume_distribution": {
+      "cluster_1": {
+        "min": 15000,
+        "max": 32000,
+        "mean": 23500,
+        "cv": 0.723
+      }
+    },
+    "cluster_ratio_spread": {
+      "cluster_1": {
+        "min": 20,
+        "max": 73.27,
+        "spread": 53.269999999999996
+      }
+    },
+    "warnings": [
+      "Cluster cluster_1 has wide ratio spread (20-73.27)"
+    ]
+  },
+  "summary": {
+    "total_markets": 3,
+    "total_clusters": 1,
+    "singleton_markets": 1,
+    "total_markets_clustered": 2,
+    "hidden_correlations_found": 0,
+    "avg_cluster_strength": 0.273,
+    "avg_confidence": 0.624,
+    "avg_stability": 0.273
+  }
+}

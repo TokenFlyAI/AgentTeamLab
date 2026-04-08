@@ -1,0 +1,1470 @@
+openapi: 3.1.0
+info:
+  title: D004 Pipeline API — Versioned Schema (v1)
+  version: 1.0.0
+  description: |
+    **Task:** T1008 | **Agent:** mia | **Sprint:** 9 | **Date:** 2026-04-07
+
+    OpenAPI schema versioning for D004 Kalshi arbitrage pipeline endpoints.
+    Phase A of Rosa's T954 microservice decomposition — lowest risk, zero runtime changes.
+
+    ## Why Schema Versioning?
+
+    The D004 pipeline currently runs as a monolithic in-process chain:
+    `market filter → cluster → correlate → execute`
+
+    When services decompose (Phases B–G), consumers must be able to detect which
+    version of a schema they're receiving. Schema versioning is the contract that
+    makes independent evolution possible.
+
+    ## Versioning Contract (Phase A)
+
+    All D004 pipeline API responses include two versioning signals:
+
+    1. **Response header:** `X-Schema-Version: v1`
+    2. **Body field:** `"schema_version": "v1"` on every top-level response object
+
+    Consumers MUST check `schema_version` before parsing responses.
+    Future breaking changes will introduce `v2` schemas. Both versions will
+    be served simultaneously during a deprecation window.
+
+    ## Version Query Parameter
+
+    All endpoints accept `?version=v1` (future: `?version=v2`). Omitting the
+    parameter returns the latest stable version (currently v1).
+
+    ## Service Boundaries (After Decomposition)
+
+    | Service | Phase | Endpoints | Schema Prefix |
+    |---------|-------|-----------|---------------|
+    | Market Data Service (MDS) | Ingest | `/api/markets` | `MarketV1` |
+    | Market Filter Service (MFS) | Phase 1 | `/api/pipeline/filter` | `FilterResultV1` |
+    | Cluster Intel Service (CIS) | Phase 2 | `/api/pipeline/cluster` | `ClusterResultV1` |
+    | Correlation Engine (CE) | Phase 3 | `/api/pipeline/correlate` | `CorrelationResultV1` |
+    | Execution Engine (EES) | Phase 4 | `/api/strategies/:id/signals`, `/api/orders` | `SignalV1`, `OrderV1` |
+    | Observability Service (OBS) | Metrics | `/api/strategies/pnl`, `/api/portfolio` | `PnLReportV1`, `PortfolioV1` |
+
+    ## Scope of This Spec
+
+    This spec documents **v1 schemas** for:
+    - `/api/tasks` and `/api/agents` (dashboard, consumed by all services)
+    - `/api/markets/*` (Phase 1 input data)
+    - `/api/pipeline/*` (D004 phases 1–3 — new versioned routes for decomp)
+    - `/api/strategies/*` signals, pnl (Phase 4 output)
+    - `/api/portfolio/*`, `/api/orders` (execution + risk)
+
+  contact:
+    name: Mia — API Engineer (Agent Planet)
+
+servers:
+  - url: http://localhost:3200
+    description: Kalshi Trading API (backend/api/server.js)
+  - url: http://localhost:3199
+    description: Agent Planet Dashboard API (server.js)
+
+# ---------------------------------------------------------------------------
+# Global security — both servers require Bearer auth
+# ---------------------------------------------------------------------------
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key set via API_KEY environment variable.
+
+  headers:
+    XSchemaVersion:
+      description: Schema version of the response payload
+      schema:
+        type: string
+        enum: [v1]
+        example: v1
+
+  parameters:
+    VersionParam:
+      name: version
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [v1]
+        default: v1
+      description: |
+        Schema version to request. Defaults to latest stable (v1).
+        Future versions (v2, v3) will be supported alongside v1 during
+        deprecation windows.
+
+  # -------------------------------------------------------------------------
+  # Shared error schema
+  # -------------------------------------------------------------------------
+  schemas:
+    ErrorV1:
+      type: object
+      description: Standard error response — schema stable across versions
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: "market not found"
+        code:
+          type: integer
+          description: HTTP status code (convenience field)
+          example: 404
+
+    # -----------------------------------------------------------------------
+    # PHASE 1 — Market Filter (Grace → MFS)
+    # Output consumed by Phase 2 (Ivan/CIS)
+    # -----------------------------------------------------------------------
+    MarketV1:
+      type: object
+      description: |
+        Kalshi market record. Phase 1 (Market Filter Service) emits this shape
+        after volume and yes/no ratio filtering.
+        Frozen at v1 — new fields will appear in MarketV2.
+      required: [schema_version, ticker, title, status, volume]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+          description: Schema version — must be checked by consumers before parsing.
+        ticker:
+          type: string
+          example: "INXW-25-DEC31"
+          description: Kalshi market ticker (unique identifier)
+        title:
+          type: string
+          example: "Will the S&P 500 exceed 5000 by Dec 31?"
+        category:
+          type: string
+          example: "Economics"
+        status:
+          type: string
+          enum: [active, inactive, closed]
+          example: active
+        volume:
+          type: integer
+          description: Total contracts traded (Phase 1 filter threshold — must be > 10,000)
+          example: 45230
+        yes_price:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Current YES price in cents (0–100)
+          example: 67.5
+        no_price:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Current NO price in cents (0–100). Typically 100 - yes_price.
+          example: 32.5
+        yes_no_ratio:
+          type: number
+          format: float
+          description: |
+            yes_price / no_price ratio. Phase 1 filter accepts markets where
+            yes_price is in 15–30% or 70–85% range (arbitrage opportunity bands).
+          example: 2.08
+        spread_pct:
+          type: number
+          format: float
+          description: Bid-ask spread as a percentage of mid price
+          example: 1.2
+        open_interest:
+          type: integer
+          example: 12000
+        close_time:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-12-31T23:59:59Z"
+        created_at:
+          type: string
+          format: date-time
+
+    FilterResultV1:
+      type: object
+      description: |
+        Phase 1 output — markets that passed the volume + yes/no ratio filter.
+        Produced by Market Filter Service (MFS), consumed by Cluster Intel Service (CIS).
+      required: [schema_version, markets, total_input, total_passed, filter_params]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        markets:
+          type: array
+          description: Markets that passed all Phase 1 filters
+          items:
+            $ref: '#/components/schemas/MarketV1'
+        total_input:
+          type: integer
+          description: Markets evaluated before filtering
+          example: 312
+        total_passed:
+          type: integer
+          description: Markets that passed all filters
+          example: 47
+        filter_params:
+          type: object
+          description: Filter thresholds applied (for auditability — C15/C16)
+          required: [min_volume, yes_price_bands]
+          properties:
+            min_volume:
+              type: integer
+              example: 10000
+            yes_price_bands:
+              type: array
+              description: Accepted yes_price ranges (inclusive)
+              items:
+                type: object
+                properties:
+                  min:
+                    type: number
+                    example: 15
+                  max:
+                    type: number
+                    example: 30
+              example:
+                - { min: 15, max: 30 }
+                - { min: 70, max: 85 }
+        run_timestamp:
+          type: string
+          format: date-time
+          description: When this filter run was executed (C20 freshness marker)
+          example: "2026-04-07T15:00:00Z"
+        task_id:
+          type: string
+          description: Task that produced this run (C20 metadata)
+          example: "T1008"
+
+    # -----------------------------------------------------------------------
+    # PHASE 2 — LLM Clustering (Ivan → CIS)
+    # Output consumed by Phase 3 (Bob/CE)
+    # -----------------------------------------------------------------------
+    MarketClusterV1:
+      type: object
+      description: |
+        A semantic cluster of related markets identified by LLM (Phase 2).
+        Produced by Cluster Intel Service (CIS).
+      required: [schema_version, cluster_id, label, markets, confidence]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        cluster_id:
+          type: string
+          example: "cluster-001"
+        label:
+          type: string
+          description: LLM-generated semantic label for this cluster
+          example: "US Economic Indicators — Q4 2025"
+        markets:
+          type: array
+          description: Market tickers in this cluster
+          items:
+            type: string
+          example: ["INXW-25-DEC31", "CPIY-25-DEC", "UNEM-25-NOV"]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: LLM confidence score for this cluster grouping
+          example: 0.87
+        rationale:
+          type: string
+          description: LLM-generated explanation of why these markets are clustered
+          example: "All track Q4 US economic performance via different but correlated indicators"
+        created_at:
+          type: string
+          format: date-time
+
+    ClusterResultV1:
+      type: object
+      description: |
+        Phase 2 output — semantic clusters of related markets.
+        Produced by CIS, consumed by Correlation Engine (CE).
+      required: [schema_version, clusters, total_markets, total_clusters]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketClusterV1'
+        total_markets:
+          type: integer
+          example: 47
+        total_clusters:
+          type: integer
+          example: 8
+        model:
+          type: string
+          description: LLM model used for clustering
+          example: "claude-sonnet-4-6"
+        run_timestamp:
+          type: string
+          format: date-time
+        task_id:
+          type: string
+          example: "T1008"
+
+    # -----------------------------------------------------------------------
+    # PHASE 3 — Pearson Correlation (Bob → CE)
+    # Output consumed by Phase 4 (Dave/EES)
+    # -----------------------------------------------------------------------
+    CorrelationPairV1:
+      type: object
+      description: |
+        A correlated pair of markets with Pearson r ≥ 0.75.
+        Produced by Correlation Engine (CE) from Phase 2 cluster data.
+        These pairs are the arbitrage signal candidates for Phase 4 execution.
+      required: [schema_version, pair_id, market_a, market_b, pearson_r, z_score]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        pair_id:
+          type: string
+          description: Stable pair identifier (deterministic from market_a + market_b)
+          example: "INXW-25-DEC31::CPIY-25-DEC"
+        market_a:
+          type: string
+          description: First market ticker
+          example: "INXW-25-DEC31"
+        market_b:
+          type: string
+          description: Second market ticker
+          example: "CPIY-25-DEC"
+        pearson_r:
+          type: number
+          format: float
+          minimum: -1
+          maximum: 1
+          description: Pearson correlation coefficient. Must be ≥ 0.75 to qualify.
+          example: 0.83
+        z_score:
+          type: number
+          format: float
+          description: |
+            Current z-score (spread deviation from historical mean).
+            |z| ≥ 1.2 triggers an arbitrage signal.
+          example: 1.45
+        window_days:
+          type: integer
+          description: Rolling window used for correlation calculation (days)
+          example: 30
+        price_spread:
+          type: number
+          format: float
+          description: Current price spread between market_a and market_b
+          example: 8.5
+        mean_spread:
+          type: number
+          format: float
+          description: Historical mean spread over window_days
+          example: 5.2
+        std_spread:
+          type: number
+          format: float
+          description: Historical standard deviation of spread
+          example: 2.3
+        cluster_id:
+          type: string
+          description: Source cluster from Phase 2
+          example: "cluster-001"
+        computed_at:
+          type: string
+          format: date-time
+
+    CorrelationResultV1:
+      type: object
+      description: |
+        Phase 3 output — all qualifying correlation pairs (Pearson r ≥ 0.75).
+        Consumed by Phase 4 Execution Engine.
+      required: [schema_version, pairs, total_evaluated, total_qualified]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        pairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorrelationPairV1'
+        total_evaluated:
+          type: integer
+          description: Pairs evaluated from Phase 2 clusters
+          example: 32
+        total_qualified:
+          type: integer
+          description: Pairs with Pearson r ≥ 0.75
+          example: 12
+        threshold_r:
+          type: number
+          format: float
+          description: Pearson r threshold applied
+          example: 0.75
+        run_timestamp:
+          type: string
+          format: date-time
+        task_id:
+          type: string
+          example: "T1008"
+
+    # -----------------------------------------------------------------------
+    # PHASE 4 — Execution Engine (Dave → EES)
+    # Trade signals and orders
+    # -----------------------------------------------------------------------
+    SignalV1:
+      type: object
+      description: |
+        Arbitrage trade signal produced by Phase 3→4 pipeline.
+        |z_score| ≥ 1.2 triggers a signal. Consumed by Execution Engine.
+      required: [schema_version, signal_id, pair_id, action, z_score, generated_at]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        signal_id:
+          type: string
+          description: Unique signal identifier
+          example: "sig-2026-04-07-001"
+        strategy_id:
+          type: string
+          description: Strategy that produced this signal
+          example: "strat-001"
+        pair_id:
+          type: string
+          description: Source correlation pair
+          example: "INXW-25-DEC31::CPIY-25-DEC"
+        market_a:
+          type: string
+          example: "INXW-25-DEC31"
+        market_b:
+          type: string
+          example: "CPIY-25-DEC"
+        action:
+          type: string
+          enum: [buy_a_sell_b, sell_a_buy_b, hold]
+          description: |
+            Trade direction. z > 1.2 → sell_a_buy_b (spread too wide, expect convergence).
+            z < -1.2 → buy_a_sell_b.
+          example: sell_a_buy_b
+        z_score:
+          type: number
+          format: float
+          description: Z-score at signal generation time
+          example: 1.52
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Signal confidence (combination of r, z, and volume factors)
+          example: 0.78
+        expected_edge_cents:
+          type: number
+          format: float
+          description: Expected profit per contract in cents
+          example: 3.4
+        generated_at:
+          type: string
+          format: date-time
+          example: "2026-04-07T15:01:00Z"
+        acted_on:
+          type: boolean
+          description: Whether the execution engine acted on this signal
+          example: false
+        task_id:
+          type: string
+          example: "T1008"
+
+    OrderV1:
+      type: object
+      description: |
+        Paper or live order placed against Kalshi API.
+        PAPER_TRADING env flag must be set before any live orders (C1).
+      required: [schema_version, id, market_ticker, side, action, contracts, price_cents, status]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        id:
+          type: string
+          description: Order ID (UUID)
+          example: "ord-abc-123"
+        market_ticker:
+          type: string
+          example: "INXW-25-DEC31"
+        side:
+          type: string
+          enum: [yes, no]
+          example: yes
+        action:
+          type: string
+          enum: [buy, sell]
+          example: buy
+        contracts:
+          type: integer
+          minimum: 1
+          example: 100
+        price_cents:
+          type: integer
+          minimum: 1
+          maximum: 99
+          description: Limit price in cents (1–99)
+          example: 67
+        status:
+          type: string
+          enum: [pending, open, filled, cancelled, rejected]
+          example: filled
+        fill_price_cents:
+          type: integer
+          nullable: true
+          description: Actual fill price if status=filled
+          example: 66
+        pnl_cents:
+          type: integer
+          nullable: true
+          description: Realized P&L in cents if settled
+          example: 134
+        paper_trade:
+          type: boolean
+          description: True if this is a paper trade (PAPER_TRADING mode)
+          example: true
+        signal_id:
+          type: string
+          nullable: true
+          description: Source signal that triggered this order
+          example: "sig-2026-04-07-001"
+        created_at:
+          type: string
+          format: date-time
+        filled_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    # -----------------------------------------------------------------------
+    # Observability / P&L (OBS service)
+    # -----------------------------------------------------------------------
+    PnLReportV1:
+      type: object
+      description: |
+        Aggregated P&L report across all active strategies.
+        Produced by Observability Service (OBS).
+      required: [schema_version, totalTrades, winRate, totalRealizedPnl, sharpeRatio, maxDrawdown]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        totalTrades:
+          type: integer
+          example: 160
+        winningTrades:
+          type: integer
+          example: 74
+        losingTrades:
+          type: integer
+          example: 86
+        winRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Winning trades / total trades
+          example: 0.463
+        totalRealizedPnl:
+          type: integer
+          description: Total realized P&L in cents
+          example: 522
+        totalUnrealizedPnl:
+          type: integer
+          description: Total unrealized P&L in cents for open positions
+          example: 150
+        sharpeRatio:
+          type: number
+          format: float
+          description: Annualized Sharpe ratio (simplified daily returns calculation)
+          example: 0.72
+        maxDrawdown:
+          type: number
+          format: float
+          description: Maximum peak-to-trough drawdown in cents
+          example: 320
+        dailyReturns:
+          type: array
+          description: Daily P&L values for charting
+          items:
+            type: number
+          example: [12, -8, 5, 23, -3]
+
+    PortfolioV1:
+      type: object
+      required: [schema_version, snapshot, positions]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        snapshot:
+          type: object
+          nullable: true
+          description: Latest portfolio snapshot
+          properties:
+            snapshot_date:
+              type: string
+              format: date
+            balance_cents:
+              type: integer
+            unrealized_pnl_cents:
+              type: integer
+        positions:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 5
+            yesContracts:
+              type: integer
+              example: 300
+            noContracts:
+              type: integer
+              example: 150
+
+    PositionV1:
+      type: object
+      description: An open portfolio position
+      required: [schema_version, id, market_ticker, side, contracts, entry_price_cents, status]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        id:
+          type: string
+        market_ticker:
+          type: string
+          example: "INXW-25-DEC31"
+        side:
+          type: string
+          enum: [yes, no]
+        contracts:
+          type: integer
+          example: 100
+        entry_price_cents:
+          type: integer
+          example: 67
+        current_price_cents:
+          type: integer
+          nullable: true
+          example: 71
+        calculated_unrealized_pnl:
+          type: integer
+          nullable: true
+          description: Unrealized P&L in cents
+          example: 400
+        status:
+          type: string
+          enum: [open, closed]
+        opened_at:
+          type: string
+          format: date-time
+
+    # -----------------------------------------------------------------------
+    # Dashboard schemas — /api/agents and /api/tasks (versioned)
+    # Consumed by all microservices for coordination
+    # -----------------------------------------------------------------------
+    TaskStatusEnum:
+      type: string
+      enum: [open, in_progress, done, blocked, in_review, cancelled]
+
+    TaskPriorityEnum:
+      type: string
+      enum: [low, medium, high, critical]
+
+    TaskV1:
+      type: object
+      description: |
+        Agent Planet task record. Versioned for service consumers that poll
+        /api/tasks to self-organize without central orchestration.
+      required: [schema_version, id, title, status, priority]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        id:
+          type: integer
+          example: 1008
+        title:
+          type: string
+          example: "Sprint 9: Phase A microservice prep — OpenAPI schema versioning"
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TaskPriorityEnum'
+        group:
+          type: string
+          example: all
+        assignee:
+          type: string
+          nullable: true
+          example: mia
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        task_type:
+          type: string
+          example: task
+        created:
+          type: string
+          format: date
+        updated:
+          type: string
+          format: date
+        notes:
+          type: string
+          nullable: true
+        notesList:
+          type: array
+          items:
+            type: string
+
+    AgentStatusEnum:
+      type: string
+      enum: [running, idle, stopped, unknown]
+
+    AgentV1:
+      type: object
+      description: |
+        Agent summary. Versioned for service consumers that observe the civilization
+        to self-coordinate (C4 — read peer status).
+      required: [schema_version, name, status, alive]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        name:
+          type: string
+          example: alice
+        role:
+          type: string
+          example: "Lead Coordinator / Tech Lead"
+        status:
+          $ref: '#/components/schemas/AgentStatusEnum'
+        current_task:
+          type: string
+          nullable: true
+        cycles:
+          type: integer
+          example: 4
+        last_update:
+          type: string
+          nullable: true
+        lastSeenSecs:
+          type: integer
+          nullable: true
+        heartbeat_age_ms:
+          type: integer
+          nullable: true
+        auth_error:
+          type: boolean
+          example: false
+        executor:
+          type: string
+          enum: [claude, kimi, codex, gemini]
+        alive:
+          type: boolean
+          description: True if heartbeat < 5 minutes old
+        unread_messages:
+          type: integer
+          example: 0
+        health:
+          type: object
+          properties:
+            score:
+              type: number
+              example: 87
+            grade:
+              type: string
+              enum: [A, B, C, D, F]
+            dimensions:
+              type: object
+              additionalProperties:
+                type: number
+
+    # -----------------------------------------------------------------------
+    # Price history schema
+    # -----------------------------------------------------------------------
+    CandleV1:
+      type: object
+      description: OHLCV price candle for a market
+      required: [schema_version, candle_time, open, high, low, close, volume]
+      properties:
+        schema_version:
+          type: string
+          enum: [v1]
+          example: v1
+        candle_time:
+          type: string
+          format: date-time
+        open:
+          type: number
+          format: float
+        high:
+          type: number
+          format: float
+        low:
+          type: number
+          format: float
+        close:
+          type: number
+          format: float
+        volume:
+          type: integer
+
+paths:
+  # ===========================================================================
+  # Dashboard API (port 3199) — shared coordination layer
+  # ===========================================================================
+
+  /api/agents:
+    get:
+      summary: "[Dashboard] List all agents — v1"
+      description: |
+        Returns agent summaries. Microservices consume this to observe the
+        civilization state for self-coordination (C4).
+
+        **Schema version:** All items include `schema_version: "v1"`.
+        **Header:** `X-Schema-Version: v1`
+      operationId: listAgentsV1
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+      responses:
+        '200':
+          description: Agent list
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentV1'
+              example:
+                - schema_version: v1
+                  name: alice
+                  role: "Lead Coordinator / Tech Lead"
+                  status: running
+                  alive: true
+                  cycles: 3
+                  unread_messages: 0
+                  health: { score: 92, grade: A }
+                  executor: claude
+
+  /api/tasks:
+    get:
+      summary: "[Dashboard] List tasks — v1"
+      description: |
+        Returns task board entries. D004 pipeline services consume this to
+        self-assign work without central orchestration.
+
+        **Schema version:** All items include `schema_version: "v1"`.
+      operationId: listTasksV1
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: assignee
+          in: query
+          schema:
+            type: string
+          example: mia
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatusEnum'
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskPriorityEnum'
+      responses:
+        '200':
+          description: Task list
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskV1'
+
+  # ===========================================================================
+  # D004 Pipeline API (port 3200) — Kalshi backend/api/server.js
+  # ===========================================================================
+
+  /api/markets:
+    get:
+      summary: "[MDS/MFS] List markets — v1 (Phase 1 input)"
+      description: |
+        Returns all active Kalshi markets with current prices.
+        **Phase 1 input:** Grace's Market Filter Service reads this to apply
+        volume (> 10,000 contracts) and yes/no price ratio filters.
+
+        Use `minVolume=10000` to pre-filter at the API layer.
+      operationId: listMarketsV1
+      tags: [MarketData]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: Economics
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, closed]
+          example: active
+        - name: minVolume
+          in: query
+          schema:
+            type: integer
+          description: Minimum contract volume (Phase 1 filter threshold)
+          example: 10000
+      responses:
+        '200':
+          description: Market list (max 500, sorted by volume DESC)
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [markets]
+                properties:
+                  markets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarketV1'
+              example:
+                markets:
+                  - schema_version: v1
+                    ticker: "INXW-25-DEC31"
+                    title: "Will S&P 500 exceed 5000 by Dec 31?"
+                    category: Economics
+                    status: active
+                    volume: 45230
+                    yes_price: 67.5
+                    no_price: 32.5
+                    yes_no_ratio: 2.08
+                    spread_pct: 1.2
+
+  /api/markets/{ticker}:
+    get:
+      summary: "[MDS] Get a specific market — v1"
+      operationId: getMarketV1
+      tags: [MarketData]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "INXW-25-DEC31"
+      responses:
+        '200':
+          description: Market detail
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [market]
+                properties:
+                  market:
+                    $ref: '#/components/schemas/MarketV1'
+        '404':
+          description: Market not found
+
+  /api/markets/{ticker}/history:
+    get:
+      summary: "[MDS] Get market price history — v1"
+      description: |
+        Returns OHLCV candles or raw price snapshots.
+        Phase 3 (Correlation Engine) uses this to compute rolling Pearson r.
+      operationId: getMarketHistoryV1
+      tags: [MarketData]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "INXW-25-DEC31"
+        - name: resolution
+          in: query
+          schema:
+            type: string
+            enum: [1m, 5m, 15m, 1h, 1d]
+          description: Candle resolution (raw price snapshots for other values)
+          example: 1d
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+          description: Number of days of history (used when from/to not specified)
+          example: 30
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          example: "2026-03-01T00:00:00Z"
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          example: "2026-04-01T00:00:00Z"
+      responses:
+        '200':
+          description: Price history
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ticker, resolution, count, data]
+                properties:
+                  ticker:
+                    type: string
+                  resolution:
+                    type: string
+                  from:
+                    type: string
+                    format: date-time
+                  to:
+                    type: string
+                    format: date-time
+                  count:
+                    type: integer
+                    example: 30
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CandleV1'
+        '404':
+          description: Market not found
+
+  # ---------------------------------------------------------------------------
+  # D004 Pipeline versioned routes (new — added by Phase A)
+  # These are the clean versioned paths for the decomposed services.
+  # The existing /api/markets, /api/strategies/* routes are the v1 equivalents.
+  # ---------------------------------------------------------------------------
+
+  /api/pipeline/filter:
+    get:
+      summary: "[MFS] Phase 1 — Market filter results — v1"
+      description: |
+        Returns the current filtered market list after applying Phase 1 rules:
+        - Volume > 10,000 contracts
+        - yes_price in [15%–30%] or [70%–85%] bands
+
+        **New route for decomposed MFS.** The monolith reads `/api/markets?minVolume=10000`
+        directly; this route wraps that with Phase 1 metadata for service consumers.
+
+        Consumed by: Cluster Intel Service (CIS — Phase 2)
+      operationId: getFilterResultV1
+      tags: [D004Pipeline]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: min_volume
+          in: query
+          schema:
+            type: integer
+            default: 10000
+          description: Override default volume threshold
+        - name: force_refresh
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Bypass cache and re-run filter
+      responses:
+        '200':
+          description: Phase 1 filter results
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterResultV1'
+              example:
+                schema_version: v1
+                total_input: 312
+                total_passed: 47
+                filter_params:
+                  min_volume: 10000
+                  yes_price_bands:
+                    - { min: 15, max: 30 }
+                    - { min: 70, max: 85 }
+                run_timestamp: "2026-04-07T15:00:00Z"
+                task_id: "T1008"
+                markets:
+                  - schema_version: v1
+                    ticker: "INXW-25-DEC31"
+                    volume: 45230
+                    yes_price: 22.5
+                    status: active
+
+  /api/pipeline/cluster:
+    get:
+      summary: "[CIS] Phase 2 — Cluster results — v1"
+      description: |
+        Returns the current semantic market clusters from LLM analysis.
+        Consumed by: Correlation Engine (CE — Phase 3)
+      operationId: getClusterResultV1
+      tags: [D004Pipeline]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+      responses:
+        '200':
+          description: Phase 2 cluster results
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterResultV1'
+
+  /api/pipeline/correlate:
+    get:
+      summary: "[CE] Phase 3 — Correlation pairs — v1"
+      description: |
+        Returns all correlation pairs with Pearson r ≥ 0.75 from the current window.
+        Consumed by: Execution Engine (EES — Phase 4)
+      operationId: getCorrelationResultV1
+      tags: [D004Pipeline]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: min_r
+          in: query
+          schema:
+            type: number
+            format: float
+            default: 0.75
+          description: Minimum Pearson r threshold
+        - name: min_z
+          in: query
+          schema:
+            type: number
+            format: float
+          description: Optional minimum |z_score| filter (e.g. 1.2 for signal candidates)
+      responses:
+        '200':
+          description: Phase 3 correlation pairs
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrelationResultV1'
+
+  /api/pipeline/signals:
+    get:
+      summary: "[EES] Phase 4 — Active arbitrage signals — v1"
+      description: |
+        Returns currently active trade signals (|z| ≥ 1.2, not yet acted on).
+        Consumed by: Risk Manager Service (RMS) before order placement.
+      operationId: getActiveSignalsV1
+      tags: [D004Pipeline]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: min_z
+          in: query
+          schema:
+            type: number
+            format: float
+            default: 1.2
+          description: Minimum |z_score| threshold for signals
+        - name: acted_on
+          in: query
+          schema:
+            type: boolean
+          description: Filter by acted_on status
+      responses:
+        '200':
+          description: Active signals
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schema_version, signals, count]
+                properties:
+                  schema_version:
+                    type: string
+                    enum: [v1]
+                  signals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SignalV1'
+                  count:
+                    type: integer
+
+  # ---------------------------------------------------------------------------
+  # Existing strategy routes — v1 equivalents
+  # ---------------------------------------------------------------------------
+
+  /api/strategies/{id}/signals:
+    get:
+      summary: "[EES] Get signals for a strategy — v1"
+      description: |
+        Returns signals generated by a specific strategy.
+        These are the same signals as `/api/pipeline/signals` but scoped to one strategy.
+      operationId: getStrategySignalsV1
+      tags: [Execution]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "strat-001"
+        - name: actedOn
+          in: query
+          schema:
+            type: boolean
+          description: Filter by acted_on status
+      responses:
+        '200':
+          description: Strategy signals
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [signals]
+                properties:
+                  signals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SignalV1'
+
+  /api/strategies/pnl:
+    get:
+      summary: "[OBS] Aggregate P&L report — v1"
+      description: |
+        Returns aggregated P&L across all active strategies.
+        Consumed by dashboard and Observability Service (OBS).
+      operationId: getPnLReportV1
+      tags: [Observability]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+      responses:
+        '200':
+          description: P&L report
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [report]
+                properties:
+                  report:
+                    $ref: '#/components/schemas/PnLReportV1'
+              example:
+                report:
+                  schema_version: v1
+                  totalTrades: 160
+                  winningTrades: 74
+                  losingTrades: 86
+                  winRate: 0.463
+                  totalRealizedPnl: 522
+                  totalUnrealizedPnl: 150
+                  sharpeRatio: 0.72
+                  maxDrawdown: 320
+
+  /api/portfolio:
+    get:
+      summary: "[OBS] Portfolio summary — v1"
+      operationId: getPortfolioV1
+      tags: [Observability]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+      responses:
+        '200':
+          description: Portfolio summary
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioV1'
+
+  /api/portfolio/positions:
+    get:
+      summary: "[OBS] Open positions — v1"
+      operationId: getPositionsV1
+      tags: [Observability]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, closed]
+          example: open
+      responses:
+        '200':
+          description: Position list
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [positions]
+                properties:
+                  positions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PositionV1'
+
+  /api/orders:
+    post:
+      summary: "[EES] Place a paper or live order — v1"
+      description: |
+        Places a trading order. **C1: PAPER_TRADING env flag must be set
+        before any live orders — never submit real orders without Founder approval.**
+      operationId: placeOrderV1
+      tags: [Execution]
+      parameters:
+        - $ref: '#/components/parameters/VersionParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [marketId, side, action, contracts, price]
+              properties:
+                marketId:
+                  type: string
+                  description: Market UUID or ticker
+                  example: "INXW-25-DEC31"
+                side:
+                  type: string
+                  enum: [yes, no]
+                  example: yes
+                action:
+                  type: string
+                  enum: [buy, sell]
+                  example: buy
+                contracts:
+                  type: integer
+                  minimum: 1
+                  example: 100
+                price:
+                  type: integer
+                  minimum: 1
+                  maximum: 99
+                  description: Limit price in cents
+                  example: 67
+                signal_id:
+                  type: string
+                  description: Source signal ID (for audit trail)
+                  example: "sig-2026-04-07-001"
+      responses:
+        '201':
+          description: Order placed
+          headers:
+            X-Schema-Version:
+              $ref: '#/components/headers/XSchemaVersion'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order]
+                properties:
+                  order:
+                    $ref: '#/components/schemas/OrderV1'
+        '400':
+          description: Missing required fields or invalid values
+
+tags:
+  - name: Dashboard
+    description: Agent Planet dashboard API (port 3199) — shared coordination layer consumed by all services
+  - name: MarketData
+    description: Market Data Service (MDS) — Kalshi market ingestion and price history (Phase 1 input)
+  - name: D004Pipeline
+    description: |
+      D004 pipeline versioned routes (Phase A new endpoints).
+      These provide clean versioned access to each pipeline phase output:
+      /api/pipeline/filter (Phase 1), /api/pipeline/cluster (Phase 2),
+      /api/pipeline/correlate (Phase 3), /api/pipeline/signals (Phase 4)
+  - name: Execution
+    description: Execution Engine Service (EES) — trade signal consumption and order placement (Phase 4)
+  - name: Observability
+    description: Observability Service (OBS) — P&L reporting, portfolio tracking, metrics
+
+x-schema-versioning:
+  strategy: field-and-header
+  description: |
+    All responses include `schema_version` as a body field AND `X-Schema-Version` header.
+    Consumers MUST check the field before parsing — do not rely on URL alone.
+  current_version: v1
+  deprecation_policy: |
+    Breaking changes bump the version (v1 → v2).
+    Both versions served simultaneously for a minimum 4-sprint deprecation window.
+    Deprecated version is announced via /api/announcements and consensus.md DECISION entry.
+  version_negotiation: |
+    Clients may request a specific version via ?version=v1.
+    Omitting the parameter returns the latest stable version.
+    Requesting an unsupported version returns 400 with supported versions listed.
+  phase_a_scope: |
+    Phase A (this spec) establishes the v1 schema contracts and the versioning
+    mechanism. No runtime changes yet — the backend serves existing responses.
+    Phase B will add the X-Schema-Version header injection to server.js.
+    Phase C will add /api/pipeline/* routes as live endpoints.

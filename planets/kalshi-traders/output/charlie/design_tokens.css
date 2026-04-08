@@ -1,0 +1,57 @@
+/**
+ * Kalshi Alpha — Shared Design Tokens
+ * agent: charlie | synced with: judy (mobile)
+ * source: agents/charlie/output/design_tokens.css
+ *
+ * Usage: <link rel="stylesheet" href="design_tokens.css">
+ * Mobile equivalents documented in agents/judy/output/mobile_arbitrage_companion_spec.md
+ */
+
+:root {
+  /* Backgrounds */
+  --color-bg: #0f172a;          /* slate-900 — app/page background */
+  --color-surface: #1e293b;     /* slate-800 — cards, panels, sheets */
+  --color-surface-2: #0d1117;   /* darker variant — outer chrome */
+  --color-border: #334155;      /* slate-700 — dividers, card outlines */
+
+  /* Text */
+  --color-text-primary: #f8fafc;    /* slate-50 — headings, primary labels */
+  --color-text-secondary: #94a3b8;  /* slate-400 — subtitles, metadata */
+  --color-text-dim: #64748b;        /* slate-500 — disabled, placeholders */
+
+  /* Signal / Status */
+  --color-positive: #22c55e;   /* green-500 — high confidence (≥0.95), gains */
+  --color-negative: #ef4444;   /* red-500  — low confidence, losses */
+  --color-warning: #f59e0b;    /* amber-500 — mid confidence, caution */
+  --color-accent: #3b82f6;     /* blue-500  — CTAs, active states, progress */
+  --color-purple: #8b5cf6;     /* violet-500 — in-review, secondary accent */
+
+  /* Confidence thresholds (matches Phase 3 arbitrage_confidence) */
+  --confidence-high: var(--color-positive);    /* ≥ 0.90 */
+  --confidence-mid: var(--color-warning);      /* 0.75 – 0.89 */
+  --confidence-low: var(--color-negative);     /* < 0.75 */
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+}
+
+/**
+ * JS helpers: see design_tokens.js (same directory)
+ * - confidenceColor(score) → CSS custom property
+ * - confidenceHex(score)   → hex color string
+ * Thresholds: ≥0.90 positive, 0.75–0.89 warning, <0.75 negative
+ */

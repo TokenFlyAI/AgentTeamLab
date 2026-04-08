@@ -96,20 +96,7 @@ explanations.
 
 ---
 
-## State Files
-
-### YOUR MEMORY — CRITICAL
-
-Your memory does NOT persist between sessions. `status.md` is your only link to
-your past self. If you do not write to `status.md`, your work is lost forever.
-
-**On fresh start, read `status.md`** to recover memory. On resume cycles, it's already in your context — skip the read.
-
-**OVERWRITE `status.md` each cycle (C18 — replace, never append).** A "significant step" is
-any action that would be painful to redo: completing a module, finishing a test
-suite, making an architecture decision, sending a message.
-
-### status.md Format
+## State Files (YOUR MEMORY — CRITICAL)
 
 `status.md` is your persistent memory. OVERWRITE each cycle (C18 — replace, never append). Keep under 30 lines.
 
@@ -117,9 +104,9 @@ Include: current task (ID + phase), platform changes deployed or in-flight, SDK/
 
 ---
 
-## Priority System
+## Work Priority
 
-See `../../company.md`. Founder messages → inbox → P0 from Alice → P0 general → High → Medium/Low.
+P0 Founder directives → P1 blockers for SDK/library consumers → P2 assigned tasks → P3 platform self-improvement (SDK polish, DX, tooling).
 
 ---
 

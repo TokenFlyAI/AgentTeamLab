@@ -1,0 +1,49 @@
+{
+  "task_id": "T1028",
+  "agent_name": "dave",
+  "timestamp": "2026-04-07T22:25:47.704Z",
+  "verdict": "PASS",
+  "phases_passed": 4,
+  "phases_total": 4,
+  "elapsed_s": 0.01,
+  "within_10s": true,
+  "run_command": "node agents/dave/output/e2e_smoke.js",
+  "input_fixture": "public/markets_filtered.json (Grace T1016, 119-market canonical)",
+  "phases": [
+    {
+      "phase": "phase1_market_filter",
+      "passed": true,
+      "qualifying_markets": 119,
+      "total_input": 200,
+      "source": "grace_t1016_phase1_refresh",
+      "generated_at": "2026-04-07T22:11:09.639Z",
+      "elapsed_s": 0.001
+    },
+    {
+      "phase": "phase2_clustering",
+      "passed": true,
+      "clusters": 5,
+      "clustered_markets": 119,
+      "total_markets": 119,
+      "task": "T575 (improved from T546/T344)",
+      "generated_at": "2026-04-07T15:21:22.006498",
+      "note": "canonical_artifact",
+      "elapsed_s": 0.002
+    },
+    {
+      "phase": "phase3_pearson_correlation",
+      "passed": true,
+      "pairs": 655,
+      "arbitrage_opportunities": 333,
+      "elapsed_s": 0.009
+    },
+    {
+      "phase": "phase4_signal_generation",
+      "passed": true,
+      "signals": 472,
+      "z_threshold": 1.2,
+      "source": "derived_from_phase3",
+      "elapsed_s": 0.01
+    }
+  ]
+}

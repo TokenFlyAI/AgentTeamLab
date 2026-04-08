@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D004 Pipeline Status</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0b1120;
+            color: #e2e8f0;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 1.25rem;
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .last-update {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .go-badge {
+            padding: 0.375rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .go-badge.go { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e; }
+        .go-badge.no-go { background: #ef444422; color: #ef4444; border: 1px solid #ef4444; }
+        .refresh-btn {
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover { background: #475569; }
+        .refresh-btn:focus { outline: 2px solid #22c55e; outline-offset: 2px; }
+
+        .container { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+
+        /* Pipeline Flow */
+        .pipeline-flow {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding: 1rem 0;
+        }
+        .phase-card {
+            flex: 1;
+            min-width: 200px;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .phase-card.complete { border-color: #22c55e; }
+        .phase-card.incomplete { border-color: #f59e0b; }
+        .phase-card.error { border-color: #ef4444; }
+        .phase-card.unknown { border-color: #64748b; }
+        .phase-header {
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .phase-card.complete .phase-header { background: #22c55e22; color: #22c55e; }
+        .phase-card.incomplete .phase-header { background: #f59e0b22; color: #f59e0b; }
+        .phase-card.error .phase-header { background: #ef444422; color: #ef4444; }
+        .phase-card.unknown .phase-header { background: #64748b22; color: #64748b; }
+        .phase-body {
+            padding: 1rem;
+        }
+        .phase-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            font-size: 0.8125rem;
+            color: #94a3b8;
+        }
+        .phase-stat span:last-child { color: #e2e8f0; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .phase-owner {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #334155;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        .arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            color: #475569;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 2rem;
+        }
+        .arrow.active { color: #22c55e; }
+
+        /* Blocker Banner */
+        .blocker-banner {
+            background: #ef444411;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .blocker-banner h3 {
+            color: #ef4444;
+            font-size: 0.9375rem;
+            margin-bottom: 0.5rem;
+        }
+        .blocker-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+            font-size: 0.8125rem;
+            color: #fca5a5;
+        }
+        .blocker-badge {
+            background: #ef444433;
+            color: #ef4444;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .no-blockers {
+            background: #22c55e11;
+            border: 1px solid #22c55e33;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            color: #86efac;
+            font-size: 0.875rem;
+        }
+
+        /* Data Grid */
+        .grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        .panel {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+        .panel-header {
+            background: #334155;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-badge {
+            background: #22c55e33;
+            color: #22c55e;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .panel-content {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+        th {
+            text-align: left;
+            color: #64748b;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+        }
+        td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1;
+        }
+        tr:hover td { background: #334155; }
+        .ticker {
+            font-family: 'SF Mono', Consolas, monospace;
+            color: #38bdf8;
+            font-size: 0.75rem;
+        }
+        .r-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .r-value.high { color: #22c55e; }
+        .r-value.medium { color: #f59e0b; }
+        .r-value.low { color: #94a3b8; }
+        .arb-yes { color: #22c55e; font-weight: 600; }
+        .arb-no { color: #64748b; }
+        .category-badge {
+            display: inline-block;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+        }
+        .category-badge.crypto { background: #f59e0b22; color: #f59e0b; }
+        .category-badge.economics { background: #3b82f622; color: #3b82f6; }
+        .category-badge.politics { background: #a855f722; color: #a855f7; }
+        .category-badge.climate { background: #22c55e22; color: #22c55e; }
+        .category-badge.default { background: #64748b22; color: #94a3b8; }
+
+        /* Cluster visualization */
+        .cluster-group {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .cluster-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .cluster-markets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+        }
+        .market-chip {
+            background: #334155;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'SF Mono', Consolas, monospace;
+            color: #38bdf8;
+        }
+        .strength-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .strength-dot.strong { background: #22c55e; }
+        .strength-dot.moderate { background: #f59e0b; }
+        .strength-dot.weak { background: #64748b; }
+
+        /* Loading/error states */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #334155;
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+            font-size: 0.875rem;
+        }
+
+        /* Summary stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: #22c55e;
+        }
+        .stat-value.warning { color: #f59e0b; }
+        .stat-value.danger { color: #ef4444; }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 767px) {
+            .pipeline-flow { flex-direction: column; align-items: stretch; }
+            .arrow { transform: rotate(90deg); justify-content: center; padding: 0.25rem 0; margin-top: 0; }
+            .phase-card { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>D004 Pipeline Status</h1>
+        <div class="header-right">
+            <span id="goNogo" class="go-badge no-go">Loading...</span>
+            <span id="lastUpdate" class="last-update">Loading...</span>
+            <button class="refresh-btn" onclick="loadAll()" aria-label="Refresh data">Refresh</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Summary Stats -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-card">
+                <div class="stat-value" id="statMarkets">--</div>
+                <div class="stat-label">Markets Filtered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statClusters">--</div>
+                <div class="stat-label">Clusters</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statPairs">--</div>
+                <div class="stat-label">Correlated Pairs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statArb">--</div>
+                <div class="stat-label">Arbitrage Signals</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statBlockers">--</div>
+                <div class="stat-label">Blockers</div>
+            </div>
+        </div>
+
+        <!-- Pipeline Phase Cards -->
+        <div class="pipeline-flow" id="pipelineFlow">
+            <div class="loading" id="pipelineLoading">Loading pipeline status</div>
+        </div>
+
+        <!-- Blockers -->
+        <div id="blockersSection"></div>
+
+        <!-- Data panels -->
+        <div class="grid">
+            <!-- Markets Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Phase 1: Filtered Markets</span>
+                    <span class="panel-badge" id="marketsCount">--</span>
+                </div>
+                <div class="panel-content" id="marketsPanel">
+                    <div class="loading">Loading markets</div>
+                </div>
+            </div>
+
+            <!-- Clusters Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Phase 2: Market Clusters</span>
+                    <span class="panel-badge" id="clustersCount">--</span>
+                </div>
+                <div class="panel-content" id="clustersPanel">
+                    <div class="loading">Loading clusters</div>
+                </div>
+            </div>
+
+            <!-- Correlation Pairs (full width) -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span>Phase 3: Correlation Pairs</span>
+                    <span class="panel-badge" id="pairsCount">--</span>
+                </div>
+                <div class="panel-content" style="max-height: 500px;" id="pairsPanel">
+                    <div class="loading">Loading correlation pairs</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Config: point to Bob's dashboard API
+        const API_BASE = window.location.port === '3199'
+            ? ''  // same origin if served from main dashboard
+            : 'http://localhost:3456';  // Bob's backend default
+
+        const PHASE_META = {
+            phase1_market_filtering: { num: 1, name: 'Market Filtering', owner: 'Grace', icon: 'P1' },
+            phase2_clustering: { num: 2, name: 'LLM Clustering', owner: 'Ivan', icon: 'P2' },
+            phase3_correlation: { num: 3, name: 'Pearson Correlation', owner: 'Bob', icon: 'P3' },
+            phase4_execution: { num: 4, name: 'C++ Execution', owner: 'Dave', icon: 'P4' }
+        };
+
+        // State
+        let readinessData = null;
+        let marketsData = null;
+        let clustersData = null;
+        let pairsData = null;
+
+        // ---- Data Loading ----
+
+        async function fetchJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        async function loadReadiness() {
+            try {
+                readinessData = await fetchJSON(API_BASE + '/api/readiness');
+                renderPipeline();
+                renderBlockers();
+                renderStats();
+            } catch (e) {
+                document.getElementById('pipelineFlow').innerHTML =
+                    '<div class="error-msg">Failed to load readiness data. Is the backend running?<br><code>' +
+                    escapeHtml(e.message) + '</code></div>';
+            }
+        }
+
+        async function loadMarkets() {
+            try {
+                // Try fetching via API; fallback to direct file
+                let data;
+                try {
+                    data = await fetchJSON(API_BASE + '/api/pipeline/markets');
+                } catch {
+                    data = await fetchJSON('/public/markets_filtered.json');
+                }
+                marketsData = data;
+                renderMarkets();
+            } catch (e) {
+                document.getElementById('marketsPanel').innerHTML =
+                    '<div class="error-msg">Markets data unavailable</div>';
+            }
+        }
+
+        async function loadClusters() {
+            try {
+                let data;
+                try {
+                    data = await fetchJSON(API_BASE + '/api/pipeline/clusters');
+                } catch {
+                    data = await fetchJSON('/public/market_clusters.json');
+                }
+                clustersData = data;
+                renderClusters();
+            } catch (e) {
+                document.getElementById('clustersPanel').innerHTML =
+                    '<div class="error-msg">Clusters data unavailable</div>';
+            }
+        }
+
+        async function loadPairs() {
+            try {
+                let data;
+                try {
+                    data = await fetchJSON(API_BASE + '/api/arbitrage');
+                } catch {
+                    data = await fetchJSON('/public/correlation_pairs.json');
+                }
+                pairsData = data;
+                renderPairs();
+            } catch (e) {
+                document.getElementById('pairsPanel').innerHTML =
+                    '<div class="error-msg">Correlation pairs unavailable</div>';
+            }
+        }
+
+        async function loadAll() {
+            await Promise.all([loadReadiness(), loadMarkets(), loadClusters(), loadPairs()]);
+            document.getElementById('lastUpdate').textContent =
+                'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // ---- Rendering ----
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function renderPipeline() {
+            if (!readinessData?.phases) return;
+            const phases = readinessData.phases;
+            const container = document.getElementById('pipelineFlow');
+            let html = '';
+            const keys = Object.keys(PHASE_META);
+
+            keys.forEach((key, i) => {
+                const phase = phases[key] || {};
+                const meta = PHASE_META[key];
+                const status = phase.status || 'unknown';
+
+                html += `<div class="phase-card ${status}">
+                    <div class="phase-header">
+                        <span>${meta.icon}: ${meta.name}</span>
+                        <span>${statusIcon(status)}</span>
+                    </div>
+                    <div class="phase-body">
+                        ${phaseStats(key, phase)}
+                        <div class="phase-owner">Owner: ${meta.owner}</div>
+                    </div>
+                </div>`;
+
+                if (i < keys.length - 1) {
+                    const nextStatus = (phases[keys[i + 1]] || {}).status;
+                    const active = status === 'complete';
+                    html += `<div class="arrow${active ? ' active' : ''}">&rarr;</div>`;
+                }
+            });
+
+            container.innerHTML = html;
+
+            // Go/No-Go badge
+            const badge = document.getElementById('goNogo');
+            const gng = readinessData.go_no_go || {};
+            badge.textContent = gng.status || 'NO-GO';
+            badge.className = 'go-badge ' + (gng.status === 'GO' ? 'go' : 'no-go');
+            badge.title = gng.reason || '';
+        }
+
+        function statusIcon(status) {
+            switch (status) {
+                case 'complete': case 'ready': return '\u2705';
+                case 'incomplete': return '\u23F3';
+                case 'error': return '\u274C';
+                default: return '\u2753';
+            }
+        }
+
+        function phaseStats(key, phase) {
+            switch (key) {
+                case 'phase1_market_filtering':
+                    return `<div class="phase-stat"><span>Markets</span><span>${phase.markets_filtered || 0}</span></div>
+                            <div class="phase-stat"><span>File</span><span>${phase.file_exists ? 'Yes' : 'No'}</span></div>`;
+                case 'phase2_clustering':
+                    return `<div class="phase-stat"><span>Clusters</span><span>${phase.clusters || 0}</span></div>
+                            <div class="phase-stat"><span>Markets</span><span>${phase.markets_clustered || 0}</span></div>
+                            <div class="phase-stat"><span>File</span><span>${phase.file_exists ? 'Yes' : 'No'}</span></div>`;
+                case 'phase3_correlation':
+                    return `<div class="phase-stat"><span>Pairs</span><span>${phase.pairs || 0}</span></div>
+                            <div class="phase-stat"><span>Arb Opps</span><span>${phase.arbitrage_opportunities || 0}</span></div>
+                            <div class="phase-stat"><span>File</span><span>${phase.file_exists ? 'Yes' : 'No'}</span></div>`;
+                case 'phase4_execution':
+                    return `<div class="phase-stat"><span>Engine</span><span>${phase.engine_ready ? 'Built' : 'Not built'}</span></div>
+                            <div class="phase-stat"><span>Status</span><span>${phase.status || 'unknown'}</span></div>`;
+                default: return '';
+            }
+        }
+
+        function renderBlockers() {
+            const section = document.getElementById('blockersSection');
+            const blockers = readinessData?.blockers || [];
+
+            document.getElementById('statBlockers').textContent = blockers.length;
+            document.getElementById('statBlockers').className = 'stat-value' + (blockers.length > 0 ? ' danger' : '');
+
+            if (blockers.length === 0) {
+                section.innerHTML = '<div class="no-blockers">No blockers detected. All pipeline phases are operational.</div>';
+                return;
+            }
+
+            let html = '<div class="blocker-banner"><h3>Blockers (' + blockers.length + ')</h3>';
+            blockers.forEach(b => {
+                html += `<div class="blocker-item">
+                    <span class="blocker-badge">${escapeHtml(b.id || b.type)}</span>
+                    <span>${escapeHtml(b.message)}</span>
+                </div>`;
+            });
+            html += '</div>';
+            section.innerHTML = html;
+        }
+
+        function renderStats() {
+            if (!readinessData?.phases) return;
+            const p = readinessData.phases;
+            document.getElementById('statMarkets').textContent = p.phase1_market_filtering?.markets_filtered || 0;
+            document.getElementById('statClusters').textContent = p.phase2_clustering?.clusters || 0;
+            document.getElementById('statPairs').textContent = p.phase3_correlation?.pairs || 0;
+            document.getElementById('statArb').textContent = p.phase3_correlation?.arbitrage_opportunities || 0;
+
+            const arbCount = p.phase3_correlation?.arbitrage_opportunities || 0;
+            document.getElementById('statArb').className = 'stat-value' + (arbCount > 0 ? '' : ' warning');
+        }
+
+        function renderMarkets() {
+            const panel = document.getElementById('marketsPanel');
+            const markets = marketsData?.qualifying_markets || marketsData?.markets || [];
+            document.getElementById('marketsCount').textContent = markets.length;
+
+            if (markets.length === 0) {
+                panel.innerHTML = '<div class="error-msg">No qualifying markets found</div>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Ticker</th><th>Category</th><th>Volume</th><th>Yes Ratio</th></tr></thead><tbody>';
+            markets.forEach(m => {
+                const cat = (m.category || '').toLowerCase();
+                const catClass = ['crypto', 'economics', 'politics', 'climate'].includes(cat) ? cat : 'default';
+                html += `<tr>
+                    <td><span class="ticker">${escapeHtml(m.ticker)}</span></td>
+                    <td><span class="category-badge ${catClass}">${escapeHtml(m.category || 'N/A')}</span></td>
+                    <td>${(m.volume || 0).toLocaleString()}</td>
+                    <td>${m.yes_ratio || 0}%</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            panel.innerHTML = html;
+        }
+
+        function renderClusters() {
+            const panel = document.getElementById('clustersPanel');
+            const clusters = clustersData?.clusters || [];
+            document.getElementById('clustersCount').textContent = clusters.length;
+
+            if (clusters.length === 0) {
+                panel.innerHTML = '<div class="error-msg">No clusters found</div>';
+                return;
+            }
+
+            let html = '';
+            clusters.forEach(c => {
+                const strength = (c.strength || 0) > 0.7 ? 'strong' : (c.strength || 0) > 0.4 ? 'moderate' : 'weak';
+                html += `<div class="cluster-group">
+                    <div class="cluster-name">
+                        <span class="strength-dot ${strength}"></span>
+                        ${escapeHtml(c.name || 'Unnamed Cluster')}
+                        <span style="color:#64748b;font-size:0.75rem">(${(c.markets || []).length} markets)</span>
+                    </div>
+                    <div class="cluster-markets">
+                        ${(c.markets || []).map(m => `<span class="market-chip">${escapeHtml(typeof m === 'string' ? m : m.ticker || '')}</span>`).join('')}
+                    </div>
+                </div>`;
+            });
+            panel.innerHTML = html;
+        }
+
+        function renderPairs() {
+            const panel = document.getElementById('pairsPanel');
+            const allPairs = pairsData?.pairs || pairsData?.correlation_pairs || [];
+            document.getElementById('pairsCount').textContent = allPairs.length;
+
+            if (allPairs.length === 0) {
+                panel.innerHTML = '<div class="error-msg">No correlation pairs found</div>';
+                return;
+            }
+
+            // Sort: arbitrage opportunities first, then by absolute r value
+            const sorted = [...allPairs].sort((a, b) => {
+                if (a.is_arbitrage_opportunity !== b.is_arbitrage_opportunity)
+                    return a.is_arbitrage_opportunity ? -1 : 1;
+                return Math.abs(b.pearson_r || 0) - Math.abs(a.pearson_r || 0);
+            });
+
+            let html = '<table><thead><tr><th>Market A</th><th>Market B</th><th>Pearson r</th><th>Z-Score</th><th>Edge</th><th>Arb?</th></tr></thead><tbody>';
+            sorted.forEach(p => {
+                const r = p.pearson_r || 0;
+                const absR = Math.abs(r);
+                const rClass = absR >= 0.75 ? 'high' : absR >= 0.5 ? 'medium' : 'low';
+                const isArb = p.is_arbitrage_opportunity;
+                html += `<tr>
+                    <td><span class="ticker">${escapeHtml(p.market_a || '')}</span></td>
+                    <td><span class="ticker">${escapeHtml(p.market_b || '')}</span></td>
+                    <td><span class="r-value ${rClass}">${r.toFixed(4)}</span></td>
+                    <td>${(p.spread_zscore || 0).toFixed(2)}</td>
+                    <td>${(p.estimated_edge_cents || 0).toFixed(1)}c</td>
+                    <td><span class="${isArb ? 'arb-yes' : 'arb-no'}">${isArb ? 'YES' : 'no'}</span></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            panel.innerHTML = html;
+        }
+
+        // ---- Init ----
+        loadAll();
+        setInterval(loadAll, 30000);  // Auto-refresh every 30s
+    </script>
+</body>
+</html>
