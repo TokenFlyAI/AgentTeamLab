@@ -101,6 +101,11 @@ post "QA gate: T542 approved. T543, T544 in queue — checking now."
 
 # After review sprint — use task_review (sends DM to assignee; task_done skips notification)
 task_review 542 approve "QA approved: artifact verified, C15-C21 compliant."
+
+# Inbox & growth
+inbox_done 2026_04_08_14_30_from_bob.md              # C24: archive after handling each message
+inbox_archive_old 24                                  # C24: bulk-clean DMs older than 24h at session start
+evolve_persona "Sprint N QA insight: what I learned" # Document QA growth → appended to persona.md
 ```
 
 ---

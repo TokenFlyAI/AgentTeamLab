@@ -127,6 +127,8 @@ broadcast "Sprint [N] kickoff — tasks T[start]-T[end] active"   # Alert all ag
 dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
 handoff tina 1200 output/collab_audit.md "cat output/collab_audit.md"  # C21: formal handoff w/ DM+Post
 task_review 542 approve "Verified independently"     # Reviewer approval
+inbox_done 2026_04_08_12_30_from_bob.md              # C24: archive after handling each message
+evolve_persona "Sprint N lesson: what I learned"     # Document growth → appended to persona.md
 ```
 
 ---

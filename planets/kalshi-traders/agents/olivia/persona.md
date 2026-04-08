@@ -96,8 +96,10 @@ task_review 542 approve "Verified output exists, quality good"  # Approve a task
 task_review 542 reject "Missing C20 metadata, resubmit"         # Reject with reason
 dm bob "T542 approved — good work"                              # C9: notify assignee
 list_outputs bob                                                 # C23: check deliverable
-task_inreview 999 "Quality report ready"                        # For own tasks
+task_inreview 999 "Quality report ready"                        # For own tasks (auto-DMs tina+olivia)
 post "Done: quality review T[id] approved/rejected"            # C22: completion post
+inbox_done 2026_04_08_14_30_from_tina.md                       # C24: archive after handling
+evolve_persona "Sprint N quality insight: what I learned"      # Document growth → persona.md
 ```
 
 **Key rules:** Check `pending_review` in your context each cycle — that's your primary work queue. Approve/reject with specific evidence (C19). Post at start AND end (C22).

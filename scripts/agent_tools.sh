@@ -225,6 +225,8 @@ dm() {
   local to="$1" msg="$2"
   [ -z "$to" ] || [ -z "$msg" ] && echo "Usage: dm <agent> \"message\"" && return 1
   local from="${_SELF:-system}"
+  # Silently skip self-DMs (e.g. when task_inreview auto-DMs tina+olivia and caller is olivia)
+  [ "$to" = "$from" ] && return 0
   local ts=$(date +%Y_%m_%d_%H_%M_%S)
   local inbox="${_AGENTS}/${to}/chat_inbox"
   [ ! -d "$inbox" ] && echo "Agent '${to}' not found" && return 1
