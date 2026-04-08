@@ -1519,6 +1519,28 @@ test.describe("GET /api/agents/:name/health", () => {
   });
 });
 
+// ── Agent list: regular_unread_messages field ──────────────────────────────────
+// Bug fix: health score activity dimension was penalizing agents for unarchivable
+// CEO/lord messages; now uses regular_unread_messages (non-CEO/lord only).
+test.describe("GET /api/agents — regular_unread_messages field", () => {
+  test("each agent in list includes regular_unread_messages field (number >= 0)", async () => {
+    const { status, body } = await apiGet("/api/agents");
+    expect(status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+    for (const agent of body) {
+      expect(typeof agent.regular_unread_messages).toBe("number");
+      expect(agent.regular_unread_messages).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  test("regular_unread_messages <= unread_messages for all agents", async () => {
+    const { body } = await apiGet("/api/agents");
+    for (const agent of body) {
+      expect(agent.regular_unread_messages).toBeLessThanOrEqual(agent.unread_messages);
+    }
+  });
+});
+
 // ── Agent sub-resource GET routes ─────────────────────────────────────────────
 
 test.describe("GET /api/agents/:name/inbox", () => {
