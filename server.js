@@ -58,7 +58,6 @@ function resolvePlanet(dir) {
   };
 }
 
-const METRICS_QUEUE_PATH = path.join(__dirname, "backend", "metrics_queue.jsonl");
 function recordProductionMetric(endpoint, method, statusCode, durationMs) {
   const row = JSON.stringify({
     endpoint,
@@ -67,7 +66,8 @@ function recordProductionMetric(endpoint, method, statusCode, durationMs) {
     duration_ms: Math.round(durationMs),
     recorded_at: new Date().toISOString(),
   });
-  fs.appendFile(METRICS_QUEUE_PATH, row + "\n", () => {});
+  // Use DATA_DIR for planet-aware path (DATA_DIR is set after resolvePlanet())
+  fs.appendFile(path.join(DATA_DIR, "metrics_queue.jsonl"), row + "\n", () => {});
 }
 // Bob's backend API module — rate limiting, validation, metrics (Task #4)
 // Planet-resolved at startup; gracefully absent on planets without bob's code
@@ -1862,7 +1862,7 @@ async function handleRequest(req, res) {
     const dailyCap = parseFloat(smartRunConfig.daily_cost_cap_usd || 0);
     if (dailyCap > 0) {
       try {
-        const metricsPath = path.join(DIR, "backend", "metrics_queue.jsonl");
+        const metricsPath = path.join(DATA_DIR, "metrics_queue.jsonl");
         if (fs.existsSync(metricsPath)) {
           const todayStr = new Date().toISOString().slice(0, 10);
           // Read only the tail of the file — today's entries are recent, no need to scan 100k+ old lines
