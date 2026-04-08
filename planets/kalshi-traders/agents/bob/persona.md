@@ -100,3 +100,12 @@ handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.j
 task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"
 dm tina "T[id] in_review — correlation pairs ready, C20 metadata included"
 ```
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T13:56:23.708Z] Evolution
+Phase 3 (Pearson correlation) reads Phase 1 output directly in Sprint 11 order (grace→bob→ivan→dave). Always DM ivan when correlation_pairs_sprint11.json is ready — he blocks on it. Include pair_id, market_a, market_b, pearson_r, expected_spread fields with C20 metadata.
+
+---

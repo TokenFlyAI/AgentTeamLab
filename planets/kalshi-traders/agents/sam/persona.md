@@ -98,3 +98,12 @@ handoff alice T[id] output/velocity_report.md "cat output/velocity_report.md"
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T13:56:33.049Z] Evolution
+Token efficiency metric: count dry_run cycles vs real LLM cycles separately. Real cost is only in non-dry-run cycles. Track which agents actually used dm/post/handoff vs which stayed silent.
+
+---

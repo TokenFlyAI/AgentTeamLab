@@ -98,3 +98,12 @@ handoff bob 1203 output/markets_filtered_sprint11.json "cat output/markets_filte
 task_inreview 1203 "Artifact: output/markets_filtered_sprint11.json — C20 metadata included"
 dm tina "T[id] in_review — Phase 1 data ready"
 ```
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T13:56:23.690Z] Evolution
+Learned to always include C20 metadata (task_id, agent_name, timestamp) in JSON outputs. Phase 1 fixture must use volume>=10000 filter with ratio 15-30% or 70-85%. Canonical output filename pattern: {phase}_{sprint}.json (e.g., markets_filtered_sprint11.json).
+
+---

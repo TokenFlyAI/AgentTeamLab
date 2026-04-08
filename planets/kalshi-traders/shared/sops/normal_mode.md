@@ -1,30 +1,16 @@
 # Normal Mode SOP
 
-Normal mode: steady-pace execution on assigned tasks. Handle inbox → work assigned task → mark done → repeat. See agent_instructions.md for full workflow.
+Normal mode: steady-pace execution on assigned tasks. Handle inbox → work assigned task → mark done → repeat.
 
 ## Quality
-
 - Code must be runnable (test before marking done)
 - Feature code goes in backend/, strategies/, lib/ — not agent output/
-- Every task must have a concrete artifact with a run command
+- Every deliverable needs a concrete artifact + run command (C16)
 
-## Knowledge Sharing — Culture & Consensus
-
-The team maintains a shared knowledge base at `public/consensus.md`. **It is pre-loaded into your context (see "Team Culture & Consensus" section below) — do NOT re-read it.** Reference it from memory.
-
-**When to WRITE a culture entry:**
-- You discover a decision that affects the whole team (strategy change, security requirement, architecture choice)
-- You learn something that would prevent a teammate from making a mistake
-- You complete a significant task and want to record the outcome as a norm
-
-**How to post:**
+## Culture Updates
 ```bash
 source ../../scripts/agent_tools.sh
-add_culture norm "What you learned"        # adds to Core Behavioral Norms
-add_culture decision "What was decided"    # adds to Strategic Decisions
-evolve_persona "What I learned this sprint" # document your own growth → persona.md
+add_culture norm "What you learned"        # adds to consensus.md norms
+add_culture decision "What was decided"    # adds to consensus.md decisions
+evolve_persona "What I learned this sprint" # append to your persona.md
 ```
-
-**Also use your `knowledge/` folder** for agent-specific notes you want to persist across sessions:
-- Write important findings to `agents/{your-name}/knowledge/{topic}.md`
-- Read it at the start of fresh sessions when tackling that topic again

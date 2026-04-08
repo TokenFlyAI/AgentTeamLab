@@ -100,3 +100,12 @@ handoff dave 1204 output/cluster_confidence_sprint11.json "cat output/cluster_co
 task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"
 dm tina "T[id] in_review — Phase 2 clusters with confidence scores ready"
 ```
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T13:56:23.725Z] Evolution
+Phase 2 clustering gets bob's correlation pairs as input (not grace's filtered markets). Add confidence_score (0.0-1.0) and cluster_id to each output. DM dave when cluster_confidence_sprint11.json is ready — he needs it for E2E.
+
+---

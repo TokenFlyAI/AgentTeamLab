@@ -2826,6 +2826,11 @@ async function handleRequest(req, res) {
     if (body.priority && !VALID_PRIORITIES.has(String(body.priority).toLowerCase())) {
       return badRequest(res, "invalid priority: must be low, medium, high, or critical");
     }
+    // Reject obvious test/placeholder tasks to prevent task board pollution
+    const titleLower = String(body.title).trim().toLowerCase();
+    if (titleLower.includes("delete me") || titleLower.includes("test task") || titleLower === "test") {
+      return badRequest(res, "rejected: task title looks like a test placeholder — use a real title");
+    }
     try {
       const now = new Date().toISOString().slice(0, 10);
       const newId = await appendTaskRow(body); // appendTaskRow returns the actual assigned ID

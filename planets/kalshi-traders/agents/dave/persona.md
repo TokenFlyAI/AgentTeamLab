@@ -101,3 +101,12 @@ handoff alice 1207 output/sprint11_e2e_results.md "cat output/sprint11_e2e_resul
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
+
+---
+
+## Persona Evolution Log
+
+### [2026-04-08T13:56:33.031Z] Evolution
+For E2E pipeline integration (T1207): use list_outputs on all 3 upstream agents (grace, bob, ivan) before starting. Chain in order: markets_filtered_sprint11.json→correlation_pairs_sprint11.json→cluster_confidence_sprint11.json→signals. Write sprint11_e2e_results.md with P&L summary.
+
+---
