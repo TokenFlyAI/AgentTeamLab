@@ -353,12 +353,17 @@ PYEOF
             DELTA_TEXT=""
         }
         rm -f "$_DELTA_TMP" "$_SNAP_TMP"
+        # Save a backup of the old snapshot — restored on cycle failure so the delta is replayed next cycle
+        cp "$SNAPSHOT_FILE" "${SNAPSHOT_FILE}.prev" 2>/dev/null || true
         # Update snapshot for next cycle's diff
         echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
     else
         # No snapshot to diff against — just report counts
         _DELTA_TEXT=""
-        [ -n "$_NEW_CTX" ] && echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
+        if [ -n "$_NEW_CTX" ]; then
+            cp "$SNAPSHOT_FILE" "${SNAPSHOT_FILE}.prev" 2>/dev/null || true
+            echo "$_NEW_CTX" > "$SNAPSHOT_FILE"
+        fi
         DELTA_TEXT=""
     fi
 
@@ -561,7 +566,15 @@ fi
 # API error failures (quota exhausted, auth failure).
 _FAILURE_LOG="${AGENT_DIR}/logs/cycle_failures.log"
 if [ -f "$_FAILURE_LOG" ] && [ "$_EARLY_DRY_RUN" != "1" ]; then
-    _CONSEC_FAIL=$(tail -5 "$_FAILURE_LOG" 2>/dev/null | grep -c "FAIL executor=${EXECUTOR}" || true)
+    # Count true consecutive failures: scan from end, stop at first OK or different executor line
+    _CONSEC_FAIL=$(tac "$_FAILURE_LOG" 2>/dev/null | awk -v exec="$EXECUTOR" '
+        /^[^ ]+ OK / { exit }
+        /^[^ ]+ FAIL executor=/ {
+            if (index($0, "FAIL executor=" exec) > 0) count++
+            else exit
+        }
+        END { print count+0 }
+    ' || echo 0)
     if [ "${_CONSEC_FAIL:-0}" -ge 3 ]; then
         _FAIL_WARN="
 
@@ -1106,14 +1119,29 @@ if [ "$_API_ERROR_CYCLE" -eq 1 ]; then
     echo "[WARN] ${AGENT_NAME}: API error detected (quota exhausted / auth failure) — marking cycle failed" | tee -a "$DAILY_LOG"
 fi
 if [ "$_CYCLE_SUCCESS" -eq 0 ]; then
-    # Write failure marker for watchdog/monitoring
-    _FAIL_LOG="${AGENT_DIR}/logs/cycle_failures.log"
-    echo "$(date +%Y-%m-%dT%H:%M:%S) FAIL executor=${EXECUTOR} raw_bytes=${_RAW_SIZE:-0}" >> "$_FAIL_LOG"
-    # Prune to last 200 entries — prevent unbounded growth over months
-    if [ "$(wc -l < "$_FAIL_LOG" 2>/dev/null | tr -d ' ')" -gt 250 ]; then
-        tail -200 "$_FAIL_LOG" > "${_FAIL_LOG}.tmp" && mv "${_FAIL_LOG}.tmp" "$_FAIL_LOG" 2>/dev/null || true
+    # Restore snapshot from backup so the delta is replayed on the next cycle.
+    # This ensures messages/tasks shown in the delta this cycle aren't silently dropped
+    # when the LLM never ran (API error, quota exhausted, etc.).
+    if [ -f "${SNAPSHOT_FILE}.prev" ]; then
+        mv "${SNAPSHOT_FILE}.prev" "$SNAPSHOT_FILE"
+        echo "[session:${AGENT_NAME}] Snapshot restored from backup (cycle failed — delta will replay next cycle)"
     fi
+else
+    # Success — clean up backup to avoid stale .prev files accumulating
+    rm -f "${SNAPSHOT_FILE}.prev"
+fi
+_FAIL_LOG="${AGENT_DIR}/logs/cycle_failures.log"
+if [ "$_CYCLE_SUCCESS" -eq 0 ]; then
+    # Write failure marker for watchdog/monitoring
+    echo "$(date +%Y-%m-%dT%H:%M:%S) FAIL executor=${EXECUTOR} raw_bytes=${_RAW_SIZE:-0}" >> "$_FAIL_LOG"
     echo "[WARN] Failure logged to logs/cycle_failures.log. Watchdog or next smart_run will retry."
+else
+    # Write success marker — so the consecutive-failure counter resets after a good cycle
+    echo "$(date +%Y-%m-%dT%H:%M:%S) OK executor=${EXECUTOR}" >> "$_FAIL_LOG"
+fi
+# Prune to last 200 entries — prevent unbounded growth over months
+if [ "$(wc -l < "$_FAIL_LOG" 2>/dev/null | tr -d ' ')" -gt 250 ]; then
+    tail -200 "$_FAIL_LOG" > "${_FAIL_LOG}.tmp" && mv "${_FAIL_LOG}.tmp" "$_FAIL_LOG" 2>/dev/null || true
 fi
 
 # ── Dump last context ─────────────────────────────────────────────────────────
