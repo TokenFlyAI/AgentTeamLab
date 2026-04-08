@@ -349,10 +349,13 @@ tm_changes = [(n, prev_tm[n], curr_tm[n]) for n in curr_tm
 curr_tm_full = {t["name"]: t for t in curr.get("teammates", [])}
 for name, old, new_s in tm_changes:
     tm_data = curr_tm_full.get(name, {})
+    current_task = tm_data.get("current_task", "")
     task_info = tm_data.get("task", "")
-    # Only show custom task info (not the generic launcher-set messages)
+    # Prefer current_task (from task board) over heartbeat task field
     task_suffix = ""
-    if task_info and task_info not in ("Processing work cycle", "Available for assignment"):
+    if current_task:
+        task_suffix = " — on {}".format(current_task[:60])
+    elif task_info and task_info not in ("Processing work cycle", "Available for assignment"):
         task_suffix = " — working on: {}".format(task_info[:60])
     if new_s == "idle":
         lines.append("{} is now idle (was: {}) — available for new work.".format(
@@ -602,6 +605,7 @@ if teammates:
     if working:
         out.append("**Active teammates**: {}".format(", ".join(
             "{} ({}{})".format(t["name"], t["status"],
+                " on {}".format(t["current_task"]) if t.get("current_task") else
                 " — {}".format(t["task"]) if t.get("task") and t["task"] not in ("Processing work cycle", "Available for assignment") else "")
             for t in working)))
     if idle:

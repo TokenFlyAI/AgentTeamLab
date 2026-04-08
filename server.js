@@ -2528,6 +2528,21 @@ async function handleRequest(req, res) {
     // Teammate statuses from heartbeats (cached 20s — updates every ~60s per agent cycle)
     // This is the hottest path: 19 readFileSync calls per context request, blocking the event loop.
     const allAgents = cached("agent_names", 60_000, () => listAgentNames());
+    // Build a name→in_progress task title map from the task board for enriching teammate data
+    const agentTaskTitles = (() => {
+      const map = {};
+      for (const t of allTasks) {
+        const status = (t.status || "").toLowerCase();
+        if (!["open", "in_progress"].includes(status)) continue;
+        const assignees = (t.assignee || "").toLowerCase().split(",").map(a => a.trim());
+        const tid = String(t.id || "");
+        const tidDisplay = /^\d+$/.test(tid) ? "T" + tid : tid;
+        for (const a of assignees) {
+          if (a && a !== "unassigned") map[a] = `${tidDisplay}: ${(t.title || "").slice(0, 50)}`;
+        }
+      }
+      return map;
+    })();
     const teammates = cached("teammate_statuses", 20_000, () =>
       allAgents.map(n => {
         const hb = safeRead(path.join(EMPLOYEES_DIR, n, "heartbeat.md")) || "";
@@ -2541,7 +2556,11 @@ async function handleRequest(req, res) {
           task: taskMatch ? taskMatch[1].trim() : null,
         };
       })
-    ).filter(t => t.name !== name);
+    ).map(t => ({
+      ...t,
+      // Inject current in_progress task title (not cached — computed fresh each request)
+      current_task: agentTaskTitles[t.name] || null,
+    })).filter(t => t.name !== name);
 
     return json(res, {
       agent: name,
