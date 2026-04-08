@@ -94,9 +94,8 @@ post "Starting T[id] Phase 1 refresh — filtering markets by volume + ratio thr
 # When output is ready, hand off to bob (Phase 3 correlation engine reads your filtered markets)
 handoff bob 1203 output/markets_filtered_sprint11.json "cat output/markets_filtered_sprint11.json | python3 -m json.tool" "42 markets passed filters"  # C21
 
-# Mark for review
+# Mark for review (task_inreview auto-DMs tina+olivia — no separate dm needed)
 task_inreview 1203 "Artifact: output/markets_filtered_sprint11.json — C20 metadata included"
-dm tina "T[id] in_review — Phase 1 data ready"
 ```
 
 ---

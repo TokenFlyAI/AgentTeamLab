@@ -96,9 +96,8 @@ list_outputs grace              # C23: check grace's markets_filtered_sprint11.j
 post "Phase 3 complete: correlation_pairs.json — 30 pairs, z>=1.2"   # C22
 handoff ivan 1201 output/correlation_pairs_sprint11.json "node run_correlation.js" "30 pairs ready"  # C21
 
-# Mark your task for review
+# Mark your task for review (task_inreview auto-DMs tina+olivia)
 task_inreview 1201 "Artifact: output/correlation_pairs_sprint11.json — run: node run_correlation.js"
-dm tina "T[id] in_review — correlation pairs ready, C20 metadata included"
 ```
 
 ---

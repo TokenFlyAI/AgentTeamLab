@@ -97,8 +97,7 @@ post "Starting T[id] Phase 2 clustering — reading bob's correlation pairs"
 # When clusters ready, hand off to dave (T1207 E2E)
 handoff dave 1204 output/cluster_confidence_sprint11.json "cat output/cluster_confidence_sprint11.json | python3 -m json.tool" "clusters with confidence scores"  # C21
 
-task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"
-dm tina "T[id] in_review — Phase 2 clusters with confidence scores ready"
+task_inreview 1204 "Artifact: output/cluster_confidence_sprint11.json — confidence_score field added"  # auto-DMs tina+olivia
 ```
 
 ---
