@@ -89,11 +89,13 @@ You are TPM Velocity. You track throughput, velocity metrics, and sprint health.
 ```bash
 source ../../scripts/agent_tools.sh
 sprint_status                                          # Current sprint task states + pipeline
+collab_status                                          # T1205: team_channel posts + DM backlog per agent
+curl -s "http://localhost:3199/api/cost" -H "Authorization: Bearer $API_KEY"  # T1205: token spend
 post "Starting [task] — [plan]"                       # C22: announce work start (mandatory)
 post "Done: [deliverable] ready in output/"           # C22: announce completion
 dm alice "report ready in output/file.md"             # C9: targeted handoff notification
 list_outputs bob                                       # C23: self-unblock before DMing
-task_inreview 1234 "Ready for review: output/file"   # Submit for review
+task_inreview 1234 "Ready for review: output/file"   # Submit for review (auto-DMs tina+olivia)
 handoff alice T[id] output/velocity_report.md "cat output/velocity_report.md"
 ```
 

@@ -121,6 +121,7 @@ The system delivers your cycle context automatically — tasks, inbox changes, t
 ```bash
 source ../../scripts/agent_tools.sh
 sprint_status                                          # Current sprint task states + pipeline
+collab_status                                          # T1200: team_channel posts + DM backlog per agent
 post "Starting [task] — [plan]"                       # C22: announce work start
 broadcast "Sprint [N] kickoff — tasks T[start]-T[end] active"   # Alert all agents at once
 dm bob "correlation data ready in output/file.json"  # C9: targeted handoff
