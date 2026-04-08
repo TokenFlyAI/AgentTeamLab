@@ -714,10 +714,21 @@ for raw in sys.stdin:
                         print("[ASSISTANT] " + t.strip()[:500])
             continue
         if etype == "content":
+            # content = streaming assistant text delta (not a tool call)
             delta = event.get("delta") or {}
             t = delta.get("text") or delta.get("content") or event.get("text") or ""
             if t.strip():
-                print("[TOOL] " + t.strip()[:200])
+                print("[ASSISTANT] " + t.strip()[:200])
+            continue
+        if etype == "tool_call":
+            name = event.get("name") or "?"
+            inp = event.get("input") or {}
+            cmd = inp.get("command") or inp.get("file_path") or str(inp)[:100]
+            print("[TOOL] {}({})".format(name, cmd[:150]))
+            continue
+        if etype == "tool_result":
+            out = event.get("output") or event.get("content") or ""
+            print("[TOOL_RESULT] " + str(out)[:200])
             continue
         if etype in ("result", "final", "completed"):
             # Extract stats for [DONE] line matching cycles parser format:
@@ -730,7 +741,7 @@ for raw in sys.stdin:
             # Gemini does not report USD cost directly — use 0 (tracked via token counts)
             print("[DONE] turns={} cost=$0 duration={}s session={}".format(turns, duration_s, sid))
             continue
-        # Fallback: print other event types (tool calls, etc.)
+        # Fallback: print other unrecognized event types
         msg = event.get("message") or event.get("text") or event.get("content")
         if isinstance(msg, str) and msg.strip():
             print("[ASSISTANT] " + msg.strip())

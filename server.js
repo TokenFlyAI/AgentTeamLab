@@ -1574,12 +1574,13 @@ async function handleRequest(req, res) {
     return json(res, { name, status, heartbeat, statusMd, persona, todo, inbox, tasks, executor, executorHealth: getExecutorHealth(executor) });
   }
 
-  // GET /api/executors — list supported executors
+  // GET /api/executors — list supported executors (all 4, regardless of fleet enabled_executors)
+  // enabled_executors only controls the fleet daemon auto-start; individual agents can use any supported executor
   if (method === "GET" && pathname === "/api/executors") {
-    const executors = getEnabledExecutorList();
+    const executors = getSupportedExecutors();
     const health = {};
     for (const executor of executors) health[executor] = getExecutorHealth(executor);
-    return json(res, { executors, default: DEFAULT_EXECUTOR, health });
+    return json(res, { executors, default: DEFAULT_EXECUTOR, enabled: getEnabledExecutorList(), health });
   }
 
   if (method === "GET" && pathname === "/api/executors/health") {

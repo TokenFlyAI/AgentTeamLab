@@ -220,7 +220,7 @@ Load the agent toolkit at the start of each cycle for easier operations:
 source ../../scripts/agent_tools.sh
 ```
 
-(Agents run from their own directory, so `../../` reaches the platform root where `scripts/` lives. This works with codex `--skip-git-repo-check`.)
+(Agents run from their own directory, so `../../` reaches the platform root where `scripts/` lives.)
 
 ### Available Commands:
 

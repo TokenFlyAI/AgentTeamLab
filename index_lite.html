@@ -2394,14 +2394,16 @@ function renderExecutorInlineBadge(name) {
 function populateExecutorSelect(selected) {
   const select = document.getElementById('agent-settings-executor');
   if (!select) return;
-  const enabled = Array.isArray(executorCatalog.executors) && executorCatalog.executors.length
+  const all = Array.isArray(executorCatalog.executors) && executorCatalog.executors.length
     ? executorCatalog.executors
     : Object.keys(executorMeta);
-  select.innerHTML = enabled.map((name) => {
+  const fleetEnabled = Array.isArray(executorCatalog.enabled) ? executorCatalog.enabled : all;
+  select.innerHTML = all.map((name) => {
     const meta = getExecutorUi(name);
     const health = (executorCatalog.health || {})[name] || {};
-    const suffix = health.installed === false ? ' (missing CLI)' : '';
-    return '<option value="' + esc(name) + '">' + meta.icon + ' ' + esc(meta.label) + suffix + '</option>';
+    const missing = health.installed === false ? ' (missing CLI)' : '';
+    const notFleet = !fleetEnabled.includes(name) ? ' (not in fleet)' : '';
+    return '<option value="' + esc(name) + '">' + meta.icon + ' ' + esc(meta.label) + missing + notFleet + '</option>';
   }).join('');
   if (selected) select.value = selected;
 }
