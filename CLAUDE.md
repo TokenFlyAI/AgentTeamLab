@@ -77,6 +77,7 @@ Key API endpoints:
 | `/api/broadcast` | POST | Broadcast message to all agents |
 | `/api/mode` | GET/POST | Get/set civilization mode |
 | `/api/metrics` | GET | System-wide metrics |
+| `/api/collab-status` | GET | Collaboration health: team_channel posts today, DM backlog, silent agents (C22), last handoff |
 | `/api/dashboard` | GET | Combined agents + tasks + mode |
 
 ## CEO Quick Command API

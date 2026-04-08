@@ -765,3 +765,20 @@ test.describe("Planet API", () => {
     expect(body.planet).toBeTruthy();
   });
 });
+
+test.describe("Collab Status API", () => {
+  test("GET /api/collab-status returns expected shape", async () => {
+    const { status, body } = await apiGet("/api/collab-status");
+    expect(status).toBe(200);
+    expect(body).toHaveProperty("team_channel");
+    expect(body.team_channel).toHaveProperty("today_total");
+    expect(body.team_channel).toHaveProperty("per_agent");
+    expect(body).toHaveProperty("dm_backlog");
+    expect(body).toHaveProperty("last_handoff");
+    expect(body).toHaveProperty("silent_agents");
+    expect(body).toHaveProperty("total_agents");
+    expect(typeof body.team_channel.today_total).toBe("number");
+    expect(Array.isArray(body.silent_agents)).toBe(true);
+    expect(typeof body.total_agents).toBe("number");
+  });
+});
