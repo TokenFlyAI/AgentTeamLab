@@ -2462,6 +2462,7 @@ async function handleRequest(req, res) {
     try { fs.mkdirSync(processedDir, { recursive: true }); } catch (_) {}
     try {
       fs.renameSync(src, path.join(processedDir, filename));
+      cacheInvalidate("collab_status");
       return json(res, { ok: true, filename, moved_to: "processed/" });
     } catch (e) {
       return json(res, { error: "failed to archive message" }, 500);
@@ -3267,6 +3268,7 @@ async function handleRequest(req, res) {
     try { fs.writeFileSync(path.join(dir, filename), body.message); } catch (e) { return json(res, { error: "failed to write message" }, 500); }
     cacheInvalidate("team_channel");
     cacheInvalidate("team_channel_full");
+    cacheInvalidate("collab_status");
     return json(res, { ok: true, filename });
   }
 
