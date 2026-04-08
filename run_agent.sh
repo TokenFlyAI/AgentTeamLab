@@ -1059,21 +1059,41 @@ fi
     # Only process the current cycle's output (tail from _RAW_LOG_OFFSET bytes).
     # Processing the full daily raw log (charlie: 33MB) through jq cost 2-3s per cycle.
     tail -c +"$((_RAW_LOG_OFFSET + 1))" "$RAW_LOG" 2>/dev/null | jq -r --arg start_time "$(date +%Y-%m-%dT%H:%M:%S)" '
-        # Handle Claude/Kimi JSON plus broader structured executor output
-        # Add timestamps using input_line_number as a proxy for sequence
-        ((if .type == "assistant" then .message.content
-          elif .role == "assistant" then .content
-          elif (.content | type?) == "array" then .content
-          else null end) // [])[]? |
-        ("
-[--- Entry ---]
-" + if .type == "text" then .text
-        elif .type == "think" then "[Thinking] " + .think
-        elif .type == "tool_use" then
+        # Handle Claude format (type="assistant"), Gemini format (type="message",role="assistant"),
+        # and generic role-based format.
+        # Claude: {"type":"assistant","message":{"content":[{"type":"text","text":"..."},{"type":"tool_use","name":"...","input":{...}}]}}
+        # Gemini: {"type":"message","role":"assistant","parts":[{"text":"..."}]}
+        #         {"type":"tool_call","name":"...","input":{...}} or {"type":"tool_result","output":"..."}
+        if .type == "assistant" then
+          # Claude format
+          (.message.content // [])[] |
+          "\n[--- Entry ---]\n" +
+          if .type == "text" then .text
+          elif .type == "think" then "[Thinking] " + .think
+          elif .type == "tool_use" then
             "**[Tool: " + .name + "]**\n" +
             (if .input.file_path then "  file: " + .input.file_path
              elif .input.command then "  cmd: " + (.input.command | tostring | .[0:300])
              else (.input | tostring | .[0:200]) end)
-        else empty end)
+          else empty end
+        elif .type == "message" and .role == "assistant" then
+          # Gemini format
+          "\n[--- Entry ---]\n" +
+          ((.parts // []) | map(.text // "" | select(. != "")) | join("\n"))
+        elif .type == "tool_call" then
+          # Gemini tool call
+          "\n[Tool: " + (.name // "?") + "]\n" +
+          (if .input.file_path then "  file: " + .input.file_path
+           elif .input.command then "  cmd: " + (.input.command | tostring | .[0:300])
+           else (.input | tostring | .[0:200]) end)
+        elif .type == "tool_result" then
+          # Gemini tool result (truncate)
+          "  → " + ((.output // .content // "") | tostring | .[0:200])
+        elif .role == "assistant" and (.content | type) == "array" then
+          # Generic role-based format
+          (.content)[] |
+          "\n[--- Entry ---]\n" +
+          if .type == "text" then .text else empty end
+        else empty end
     ' 2>/dev/null | awk 'NF || printed {printed=1; print}'
 } > "${AGENT_DIR}/last_context.md" 2>/dev/null || true
