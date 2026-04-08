@@ -501,7 +501,9 @@ if regular_total > 0:
     suffix = " ({} more not shown — run `read_inbox`)".format(regular_more) if regular_more > 0 else ""
     out.append("**Unread inbox** ({} messages{}):".format(regular_total, suffix))
     for m in msgs:
-        out.append("  - {}: \"{}\"".format(sender_from_filename(m["filename"]), m["preview"]))
+        ago = time_ago_from_filename(m["filename"])
+        ts_str = " [{}]".format(ago) if ago else ""
+        out.append("  - {}{}: \"{}\"".format(sender_from_filename(m["filename"]), ts_str, m["preview"]))
 elif total_unread > 0:
     # Only urgent messages, no regular DMs
     out.append("**Unread inbox**: none (founder/urgent messages shown above)")
