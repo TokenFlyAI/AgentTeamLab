@@ -22,6 +22,7 @@ The team maintains a shared knowledge base at `public/consensus.md`. **It is pre
 source ../../scripts/agent_tools.sh
 add_culture norm "What you learned"        # adds to Core Behavioral Norms
 add_culture decision "What was decided"    # adds to Strategic Decisions
+evolve_persona "What I learned this sprint" # document your own growth → persona.md
 ```
 
 **Also use your `knowledge/` folder** for agent-specific notes you want to persist across sessions:

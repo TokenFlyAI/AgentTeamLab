@@ -240,6 +240,7 @@ source ../../scripts/agent_tools.sh
 
 ```bash
 source ../../scripts/agent_tools.sh
+sprint_status                                       # See Sprint 11 task states + pipeline ○⟳◎✓
 post "Starting T[id] [task] — [plan]"              # C22: start announcement (MANDATORY)
 post "T[id] done — [deliverable]. DM'd [teammate]" # C22: completion announcement (MANDATORY)
 list_outputs grace                                  # C23: self-unblock before DMing
@@ -248,6 +249,7 @@ handoff ivan 542 output/pairs.json "node run.js"    # C21: formal handoff (DM+Po
 check_handoff ../../output/grace/markets.json       # verify incoming artifact (C15/C20)
 read_peer bob                                       # C4: only when delta reports change
 cp combined.md ../../output/shared/merged/          # shared cross-agent deliverables
+evolve_persona "What I learned this sprint"         # document growth → appended to persona.md
 ```
 
 **Key rules:**

@@ -97,7 +97,7 @@ list_outputs grace                                     # C23: check markets_filt
 list_outputs bob                                       # C23: check correlation_pairs_sprint11.json
 list_outputs ivan                                      # C23: check cluster_confidence_sprint11.json
 task_inreview 1207 "Ready for review: output/sprint11_e2e_results.md"
-handoff alice 1207 output/sprint11_e2e_results.md "cat output/sprint11_e2e_results.md"
+handoff alice 1207 output/sprint11_e2e_results.md "cat output/sprint11_e2e_results.md" "E2E pipeline complete: P&L summary in sprint11_e2e_results.md"
 ```
 
 **Key rules:** Post to team_channel at start AND end of every task (C22). Check peer output/ before asking for files (C23). DM reviewer when in_review (C11).
