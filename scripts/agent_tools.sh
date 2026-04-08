@@ -67,7 +67,7 @@ task_claim() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print(f'Claimed T{d.get(\"id\",\"?\")} for ${agent}')
+  if d.get('ok'): tid=str(d.get('id','?')); print(f'Claimed {"T"+tid if tid.isdigit() else tid} for ${agent}')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -84,7 +84,7 @@ task_done() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} marked DONE')
+  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} marked DONE')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -101,7 +101,7 @@ task_progress() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} updated')
+  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} updated')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -119,7 +119,7 @@ task_review() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print('T' + str(d.get('id','?')) + ' reviewed')
+  if d.get('ok'): tid=str(d.get('id','?')); print(('T'+tid if tid.isdigit() else tid) + ' reviewed')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -136,7 +136,7 @@ task_inreview() {
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('ok'): print(f'T{d.get(\"id\",\"?\")} marked IN_REVIEW')
+  if d.get('ok'): tid=str(d.get('id','?')); print(f'{"T"+tid if tid.isdigit() else tid} marked IN_REVIEW')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
@@ -254,7 +254,7 @@ print(json.dumps(d))
 import sys,json
 try:
   d=json.load(sys.stdin)
-  if d.get('id'): print(f'Task created: T{d[\"id\"]} — {d.get(\"title\",\"\")}')
+  if d.get('id'): tid=str(d['id']); print(f'Task created: {"T"+tid if tid.isdigit() else tid} — {d.get("title","")}')
   else: print(f'Failed: {d.get(\"error\",\"unknown\")}')
 except: print('Error parsing response')
 " 2>/dev/null
