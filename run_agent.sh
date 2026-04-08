@@ -879,8 +879,9 @@ run_executor_cycle() {
                     2>/dev/null \
                 | tee -a "$RAW_LOG" \
                 | python3 -u -c "
-import sys, re
-buf = []; in_tp = False
+import sys, re, time
+buf = []; in_tp = False; saw_turn_end = False
+start_s = time.time()
 def extract_text_from_buf(lines):
     joined = '\n'.join(lines)
     m = re.search(r\"text=(['\\\"])(.*?)\\1\\s*\\n?\\)\", joined, re.DOTALL)
@@ -893,6 +894,8 @@ def extract_text_from_buf(lines):
     return None
 for line in sys.stdin:
     line = line.rstrip('\n')
+    if re.match(r'^TurnEnd', line):
+        saw_turn_end = True
     if re.match(r'^TextPart\(', line):
         in_tp = True; buf = [line]
     elif in_tp:
@@ -905,9 +908,14 @@ for line in sys.stdin:
             in_tp = False; buf = []
     elif not re.match(r'^(TurnBegin|StepBegin|TurnEnd|StatusUpdate|ThinkPart|\s)', line) and line.strip():
         print(line[:500] + ('…' if len(line) > 500 else ''))
+duration_s = round(time.time() - start_s, 1)
+if saw_turn_end:
+    print('[DONE] turns=0 cost=$0 duration={}s session=kimi'.format(duration_s))
+else:
+    print('[API_ERROR] kimi produced no TurnEnd — session may have failed or expired')
+    print('[DONE] turns=0 cost=$0 duration={}s session=ERROR'.format(duration_s))
 sys.stdout.flush()
 " >> "$DAILY_LOG" 2>/dev/null || true
-            echo "[DONE] turns=0 cost=$0 duration=0s session=kimi" >> "$DAILY_LOG"
             ;;
         claude)
             # shellcheck disable=SC2086
