@@ -1,6 +1,7 @@
 #!/bin/bash
 # set_executors.sh — Configure which executor each agent uses
-# Strategy: Alice (Lead Coordinator) on Claude for stability, everyone else on Kimi for cost
+# Strategy: All agents use gemini (default) or codex. NEVER claude.
+# Claude is reserved for the Founder's assistant (Claude Code CLI).
 
 set -e
 
@@ -12,18 +13,13 @@ echo "⚙️  Setting Agent Executors"
 echo "=========================================="
 echo ""
 echo "Strategy:"
-echo "  • Alice → Claude (Lead Coordinator stability)"
-echo "  • Others → Kimi (cost efficient)"
+echo "  • All agents → gemini (Founder directive: never use claude for agents)"
 echo ""
 
-# Set Alice to Claude
-echo "claude" > "${AGENTS_DIR:-${COMPANY_DIR}/agents}/alice/executor.txt"
-echo "✅ Alice → Claude"
-
-# Set all others to Kimi
-for agent in bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina; do
-    echo "kimi" > "${AGENTS_DIR:-${COMPANY_DIR}/agents}/${agent}/executor.txt"
-    echo "✅ ${agent} → Kimi"
+# Set all agents to gemini
+for agent in alice bob charlie dave eve frank grace heidi ivan judy karl liam mia nick olivia pat quinn rosa sam tina; do
+    echo "gemini" > "${AGENTS_DIR:-${COMPANY_DIR}/agents}/${agent}/executor.txt"
+    echo "✅ ${agent} → gemini"
 done
 
 echo ""
@@ -40,5 +36,5 @@ for agent in alice bob charlie dave eve frank grace heidi ivan judy karl liam mi
 done
 
 echo ""
-echo "💡 Cost savings: ~80% by using Kimi for 19/20 agents"
+echo "⚠️  FIRST PRINCIPLE: Agents never use claude. Use gemini or codex only."
 echo ""

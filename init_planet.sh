@@ -107,7 +107,7 @@ echo '{"max_agents":5,"enabled":true,"interval_seconds":30,"dry_run":true,"dry_r
   done
 } > "${PLANET_DIR}/shared/team_directory.md"
 
-echo "claude" > "${PLANET_DIR}/shared/executor_config.md"
+echo "gemini" > "${PLANET_DIR}/shared/executor_config.md"
 
 # Internal public symlink for ../../public/ relative paths from agents
 ln -s shared "${PLANET_DIR}/public"

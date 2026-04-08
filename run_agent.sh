@@ -566,8 +566,8 @@ if [ -f "$_FAILURE_LOG" ] && [ "$_EARLY_DRY_RUN" != "1" ]; then
 
 ⚠️ EXECUTOR WARNING: Your last ${_CONSEC_FAIL} cycles failed with executor '${EXECUTOR}' (no output produced).
 The executor may be unauthenticated, rate-limited, or unavailable.
-To switch back to Claude: Write 'claude' to your executor.txt (e.g., use the Write tool: echo claude > executor.txt).
-Your next session will use the new executor."
+To switch executor: Write 'codex' to your executor.txt if on gemini (or 'gemini' if on codex). NEVER use 'claude'.
+Example: Use the Write tool to write 'codex' to executor.txt. Your next session will use the new executor."
         PROMPT_TEXT="${PROMPT_TEXT}${_FAIL_WARN}"
         echo "[executor-warn:${AGENT_NAME}] ${_CONSEC_FAIL} recent failures with ${EXECUTOR} — injected warning into prompt"
     fi
