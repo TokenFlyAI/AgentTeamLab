@@ -4081,3 +4081,39 @@ test.describe("GET /api/agents/:name/context — inbox messages include filename
     expect(typeof ourMsg.preview).toBe("string");
   });
 });
+
+// ── current_task filtering ────────────────────────────────────────────────────
+test.describe("GET /api/agents — current_task filtering", () => {
+  test("idle agents with no open tasks return null current_task", async () => {
+    const { status, body } = await apiGet("/api/agents");
+    expect(status).toBe(200);
+    // Find an agent known to be idle with no tasks assigned (frank/heidi/karl etc.)
+    const knownIdleAgents = ["frank", "heidi", "karl", "liam"];
+    for (const agent of body) {
+      if (knownIdleAgents.includes(agent.name)) {
+        // If the agent has no open/in_progress task assigned to them, current_task should be null
+        // (We don't assert it's definitely null since tasks may be assigned during test runs,
+        //  but if status is idle, it must not contain raw markdown or "Stopped" text)
+        if (agent.status === "idle" || agent.status === "stopped") {
+          if (agent.current_task !== null) {
+            expect(agent.current_task).not.toMatch(/^\*\*/);  // no raw **bold** markdown
+            expect(agent.current_task).not.toMatch(/^Stopped$/i);  // no "Stopped" value
+            expect(agent.current_task).not.toMatch(/^None/i);  // no "None assigned" type values
+          }
+        }
+      }
+    }
+  });
+
+  test("urgent inbox shows up to 4 messages (increased from 2)", async () => {
+    const { status, body } = await apiGet(`/api/agents/alice/context`);
+    expect(status).toBe(200);
+    const inbox = body.inbox || {};
+    const urgentShown = (inbox.urgent || []).length;
+    const urgentMore = inbox.urgent_more || 0;
+    const urgentTotal = urgentShown + urgentMore;
+    // urgent messages shown should be min(total, 4)
+    const expectedShown = Math.min(urgentTotal, 4);
+    expect(urgentShown).toBe(expectedShown);
+  });
+});

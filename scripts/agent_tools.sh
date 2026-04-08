@@ -85,8 +85,10 @@ except: print('Error parsing response')
 }
 
 task_done() {
+  # NOTE: C11 says use task_inreview for deliverable tasks — task_done bypasses the review step.
+  # Use task_done only for admin/bookkeeping tasks or when you ARE the reviewer approving.
   local id; id=$(_norm_task_id "$1"); local note="$2"
-  [ -z "$id" ] && echo "Usage: task_done <task-id> [\"result note\"]" && return 1
+  [ -z "$id" ] && echo "Usage: task_done <task-id> [\"result note\"]\nNote: For deliverables, use task_inreview instead (C11)" && return 1
   local body; body=$(python3 -c "import json,sys; d={'status':'done'}; d.update({'notes':sys.argv[1]}) if sys.argv[1] else None; print(json.dumps(d))" "$note")
   curl -s -X PATCH "${_API}/api/tasks/${id}" \
     -H "Content-Type: application/json" \
